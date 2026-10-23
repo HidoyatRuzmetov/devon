@@ -1,3 +1,4 @@
+import { notificationDestination } from './notification-destination.js'
 // The notification detail (this module's task: "inbox drawer + page with mark read/archive"). Marking
 // read happens the moment it opens -- reading it *is* the "mark read" action, the same way opening an
 // email marks it read, never a separate button for something that already happened.
@@ -12,7 +13,7 @@ import { pickLocalized, type NotificationDto } from './api.js'
 import { REASON_TONE, ReasonIcon } from './reason-icon.js'
 import { navigate } from '../../lib/router.js'
 
-export function NotificationDetail({
+function NotificationDetail({
   notification,
   onArchive,
   onClose,
@@ -21,6 +22,7 @@ export function NotificationDetail({
   onArchive: (id: string) => void
   onClose?: () => void
 }) {
+  const destination = notificationDestination(notification)
   const t = useT()
   const locale = useLocale()
 
@@ -54,12 +56,12 @@ export function NotificationDetail({
         </p>
       ) : null}
       <div className="flex flex-wrap gap-2 pt-2">
-        {notification.deepLink ? (
+        {destination ? (
           <Button
             variant="secondary"
             onClick={() => {
               onClose?.()
-              navigate(notification.deepLink!)
+              navigate(destination!)
             }}
           >
             <ExternalLink className="size-4" aria-hidden="true" />

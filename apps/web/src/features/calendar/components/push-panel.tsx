@@ -1,3 +1,4 @@
+import { SettingsSection } from '../../accounts/settings-section.js'
 // Web push opt-in (v1.1 SPEC §10, EPIC-019).
 //
 // The opt-in is *per browser*, and the panel says so everywhere rather than pretending there is one
@@ -10,17 +11,7 @@
 // with no explanation is the thing this panel exists to avoid.
 import * as React from 'react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
-import {
-  Badge,
-  Button,
-  Card,
-  Reveal,
-  SectionCard,
-  Stagger,
-  StaggerItem,
-  StateView,
-  toast,
-} from '@devon/ui'
+import { Badge, Button, Card, Reveal, Stagger, StaggerItem, StateView, toast } from '@devon/ui'
 import { AtSign, BellRing, CalendarClock, CheckCircle2, Gavel, Moon, UserPlus } from 'lucide-react'
 import { ApiError } from '../../../lib/api-client.js'
 import { useOnline } from '../../../lib/use-online.js'
@@ -183,7 +174,7 @@ export function PushPanel(): React.JSX.Element {
     const items = devicesQuery.data.items
     if (items.length === 0) return null
     return (
-      <SectionCard title={t('calendar.push.devices.title')}>
+      <SettingsSection title={t('calendar.push.devices.title')}>
         <Stagger as="ul" animateKey={items.length} className="flex flex-col gap-2 pt-2">
           {items.map((device) => {
             const isThis = push.enabledHere && device.browserLabel === thisBrowser
@@ -206,18 +197,18 @@ export function PushPanel(): React.JSX.Element {
             )
           })}
         </Stagger>
-      </SectionCard>
+      </SettingsSection>
     )
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-h3 text-foreground">{t('calendar.push.title')}</h2>
-        <p className="text-body text-muted-foreground">{t('calendar.push.description')}</p>
+        <h3 className="text-body font-semibold text-foreground">{t('calendar.push.title')}</h3>
+        <p className="text-small text-muted-foreground">{t('calendar.push.description')}</p>
       </div>
 
-      <Card className="flex flex-col gap-5">
+      <Card className="flex flex-col gap-4">
         {control()}
 
         <div className="flex flex-col gap-2">

@@ -1,6 +1,6 @@
 // Fan-out from "a notification row now exists" to "the channels its owner asked for" (TECH-SPEC §7:
 // inapp / telegram / email, per-type preferences, quiet hours). `inapp` needs no delivery step at all
-// (the row itself *is* the inapp delivery -- the inbox reads `app.notifications` directly); this file
+// (inapp_visible captures that channel's preference when the row is created); this file
 // implements Telegram delivery. Email has no adapter and cannot be configured in the preferences
 // API/UI; historical email preference rows remain stored for compatibility.
 import type { FastifyBaseLogger } from 'fastify'

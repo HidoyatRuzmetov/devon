@@ -101,9 +101,10 @@ async function loadNotificationForDelivery(
         select n.reason::text as reason, n.title, n.body, n.deep_link, n.subject_type, n.subject_id,
                n.department_id,
                (select count(*)::int from app.notifications u
-                 where u.read_at is null and u.archived_at is null) as unread_count
+                 where app.notification_is_visible(u.id) and u.read_at is null and u.archived_at is null
+                   and (u.snoozed_until is null or u.snoozed_until <= now())) as unread_count
         from app.notifications n
-        where n.id = ${notificationId}
+        where n.id = ${notificationId} and app.notification_is_visible(n.id)
         limit 1
       `)
       return rows[0] ?? null
@@ -286,6 +287,9 @@ export function registerRealtimeEventSubscriptions(
         return
       }
       if (event.type === 'notifications.notification.created') {
+        // Keep the creation event for audit/integrations, but a Telegram-only notification
+        // must not produce an app toast or Web Push alert. Legacy events default to visible.
+        if ((event.payload as Record<string, unknown> | null)?.['inappVisible'] === false) return
         await handleNotificationCreated(
           log,
           (event.payload ?? {}) as Record<string, unknown>,
@@ -312,7 +316,10 @@ export function registerRealtimeEventSubscriptions(
       )
     } catch (err) {
       log.debug(
-        { err: err instanceof Error ? err.message : String(err), eventType: event.type },
+        {
+          err: err instanceof Error ? err.message : String(err),
+          eventType: event.type,
+        },
         'realtime: live delivery failed (the write itself is committed)',
       )
     }

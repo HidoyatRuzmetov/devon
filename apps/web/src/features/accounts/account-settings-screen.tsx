@@ -1,3 +1,4 @@
+import { SettingsSection } from './settings-section.js'
 // Account settings share one shell. Each URL selects a focused pane, with related forms grouped
 // continuously inside it. Legacy entry points redirect here without losing their query state.
 import * as React from 'react'
@@ -15,7 +16,6 @@ import {
   initialsFromName,
   Input,
   PageHeader,
-  SectionCard,
   Stagger,
   StaggerItem,
   StateView,
@@ -119,6 +119,7 @@ function PhotoSection() {
   } else {
     body = (
       <AvatarPicker
+        compact
         currentSrc={avatarUrl(user.avatarKey, 128)}
         file={null}
         alt={t('accounts.photo.alt')}
@@ -134,13 +135,13 @@ function PhotoSection() {
   }
 
   return (
-    <SectionCard
+    <SettingsSection
       id="section-photo"
       title={t('accounts.photo.title')}
       description={t('accounts.photo.subtitle')}
     >
       {body}
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -300,7 +301,7 @@ function SessionsSection() {
   }
 
   return (
-    <SectionCard
+    <SettingsSection
       id="section-sessions"
       title={t('accounts.sessions.title')}
       description={t('accounts.sessions.subtitle')}
@@ -338,7 +339,7 @@ function SessionsSection() {
           </div>
         </DialogContent>
       </Dialog>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -507,7 +508,7 @@ function TwoFactorSection() {
   }
 
   return (
-    <SectionCard
+    <SettingsSection
       id="section-2fa"
       title={t('accounts.twoFactor.title')}
       description={t('accounts.twoFactor.subtitle')}
@@ -556,7 +557,7 @@ function TwoFactorSection() {
           </div>
         </DialogContent>
       </Dialog>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -595,7 +596,7 @@ function PasswordSection() {
   })
 
   return (
-    <SectionCard
+    <SettingsSection
       id="section-password"
       title={t('accounts.password.title')}
       actions={
@@ -661,7 +662,7 @@ function PasswordSection() {
           </p>
         ) : null}
       </form>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -700,7 +701,7 @@ function DeleteAccountSection() {
   const expectedLogin = meQuery.data?.user.login ?? ''
 
   return (
-    <SectionCard
+    <SettingsSection
       id="section-delete"
       className="border-destructive"
       title={t('accounts.delete.title')}
@@ -776,7 +777,7 @@ function DeleteAccountSection() {
           </div>
         </DialogContent>
       </Dialog>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -844,7 +845,7 @@ export default function AccountSettingsScreen() {
       )
   }
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-5">
       <PageHeader
         eyebrow={t('accounts.settings.eyebrow')}
         title={t('accounts.settings.title')}
@@ -867,7 +868,7 @@ export default function AccountSettingsScreen() {
         <section
           key={path}
           aria-label={t('settings.content')}
-          className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20"
+          className="flex min-w-0 flex-1 flex-col gap-4 [&_[id]]:scroll-mt-20"
         >
           <React.Suspense fallback={<StateView kind="loading" titleKey="state.loading" />}>
             {pane}

@@ -1610,6 +1610,13 @@
     },
     "chartEmpty": "Бу давр учун рақам йўқ"
   },
+  "assistantWorkspace.title": "Ёрдамчи",
+  "assistantWorkspace.welcome": "Сизга қандай ёрдам бера оламан?",
+  "assistantWorkspace.search": "Суҳбатларни қидириш",
+  "assistantWorkspace.noMatches": "Мос суҳбат топилмади.",
+  "assistantWorkspace.settings": "AI воситалари ва созламалари",
+  "assistantWorkspace.private": "Шахсий иш майдонингиз",
+  "assistantWorkspace.back": "← Ёрдамчига қайтиш",
   "attachments": {
     "title": "Файллар",
     "add": "Файл юклаш",
@@ -2901,6 +2908,11 @@
       }
     }
   },
+  "cardRefinement": {
+    "task": "Вазифа",
+    "actions": "Бошқа амаллар",
+    "details": "Батафсил маълумот"
+  },
   "departments": {
     "title": "Бошқармалар",
     "subtitle": "Бошқармаларингиз ва янгисига қўшилиш йўллари",
@@ -3956,6 +3968,27 @@
     "savedNotes": "Қайдларда сақланади",
     "privateTaskHint": "Шахсий вазифаларда сана ва муҳимлик қайдларда сақланади. Муддатли топшириқлар учун Карталардан фойдаланинг."
   },
+  "homeRefinement": {
+    "inboxActions": "Кириш қутиси созламалари",
+    "updateActions": "Билдиришнома амаллари",
+    "groupUpdates": "Билдиришномаларни гуруҳлаш",
+    "workOverview": "Ишлар шарҳи",
+    "myWork": "Менинг ишларим",
+    "deadlineFirst": "Муддат, сўнг устуворлик",
+    "workCategory": "Иш тоифаси",
+    "individual": "Шахсий вазифалар",
+    "projects": "Гуруҳ лойиҳалари",
+    "clearStatus": "{status} фильтрини тозалаш",
+    "noMatchingAssignments": "Бу ҳолатга мос топшириқ йўқ.",
+    "inboxGroups": {
+      "tasks": "Вазифалар",
+      "events": "Тадбирлар",
+      "summaries": "Хулосалар",
+      "system": "Тизим"
+    },
+    "loadMore": "Яна юклаш",
+    "allActive": "Барча фаол ишлар"
+  },
   "inbox": {
     "title": "Билдиришномалар",
     "eyebrow": "БИЛДИРИШНОМАЛАР",
@@ -4052,8 +4085,7 @@
         "copy": "Ҳаволани нусхалаш"
       },
       "save": "Сақлаш",
-      "saved": "Сақланди",
-      "alwaysOn": "Доим ёқилган"
+      "saved": "Сақланди"
     }
   },
   "integrationSetup": {
@@ -5282,6 +5314,9 @@
         "body": "Уни фақат улашилган лойиҳа ёки тадбир қатнашчилари кўради."
       }
     }
+  },
+  "settingsRefinement": {
+    "notificationChannels": "Ҳар бир тур учун канални танланг. Ўзгаришлар янги билдиришномаларга қўлланади; мавжудлари сақланади."
   },
   "settings": {
     "accountProfile": "Ҳисоб профили",

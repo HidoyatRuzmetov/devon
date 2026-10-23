@@ -173,8 +173,16 @@ async function recover(tx: Tx, ctx: RequestContext, row: Row): Promise<Row> {
     lease_until: null,
   }
 }
-export async function listConversations(ctx: RequestContext, before?: string, limit = 30) {
+export async function listConversations(
+  ctx: RequestContext,
+  before?: string,
+  limit = 30,
+  query?: string,
+) {
   assertHead(ctx)
+  const term = query?.trim()
+  // Search literal words in the owner's history; SQL wildcards are not user search operators.
+  const pattern = term ? `%${term.replace(/[\\%_]/g, '\\$&')}%` : null
   let cursor: { at: string; id: string } | null = null
   if (before) {
     try {
@@ -194,6 +202,7 @@ export async function listConversations(ctx: RequestContext, before?: string, li
       to_char(updated_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_at,
       jsonb_array_length(messages)::int as message_count from app.ai_conversations
       where department_id=${ctx.departmentId} and owner_user_id=${ctx.userId}
+      ${pattern ? sql`and (title ilike ${pattern} or exists(select 1 from jsonb_array_elements(messages) message where message->>'content' ilike ${pattern}))` : sql``}
       ${cursor ? sql`and (updated_at,id) < (${cursor.at}::timestamptz,${cursor.id}::uuid)` : sql``}
       order by updated_at desc,id desc limit ${limit + 1}`)
     const selected = rows.slice(0, limit)

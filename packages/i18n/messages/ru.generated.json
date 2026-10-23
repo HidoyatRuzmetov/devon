@@ -1610,6 +1610,13 @@
     },
     "chartEmpty": "Пока нет данных"
   },
+  "assistantWorkspace.title": "Ассистент",
+  "assistantWorkspace.welcome": "Чем я могу помочь?",
+  "assistantWorkspace.search": "Поиск по диалогам",
+  "assistantWorkspace.noMatches": "Подходящих диалогов нет.",
+  "assistantWorkspace.settings": "Инструменты и настройки ИИ",
+  "assistantWorkspace.private": "Ваше личное пространство",
+  "assistantWorkspace.back": "← Назад к ассистенту",
   "attachments": {
     "title": "Файлы",
     "add": "Загрузить файл",
@@ -2901,6 +2908,11 @@
       }
     }
   },
+  "cardRefinement": {
+    "task": "Задача",
+    "actions": "Другие действия",
+    "details": "Другие сведения"
+  },
   "departments": {
     "title": "Отделы",
     "subtitle": "Ваши отделы и способы к ним присоединиться",
@@ -3956,6 +3968,27 @@
     "savedNotes": "Сохранится в заметках",
     "privateTaskHint": "В личных задачах дата и приоритет сохраняются в заметках. Для назначений со сроками используйте карточки."
   },
+  "homeRefinement": {
+    "inboxActions": "Настройки входящих",
+    "updateActions": "Действия с уведомлением",
+    "groupUpdates": "Группировать уведомления",
+    "workOverview": "Обзор работы",
+    "myWork": "Моя работа",
+    "deadlineFirst": "Срок, затем приоритет",
+    "workCategory": "Категория работы",
+    "individual": "Личные задачи",
+    "projects": "Групповые проекты",
+    "clearStatus": "Снять фильтр «{status}»",
+    "noMatchingAssignments": "Нет поручений с этим статусом.",
+    "inboxGroups": {
+      "tasks": "Задачи",
+      "events": "События",
+      "summaries": "Сводки",
+      "system": "Система"
+    },
+    "loadMore": "Загрузить ещё",
+    "allActive": "Все активные"
+  },
   "inbox": {
     "title": "Входящие",
     "eyebrow": "УВЕДОМЛЕНИЯ",
@@ -4052,8 +4085,7 @@
         "copy": "Скопировать ссылку"
       },
       "save": "Сохранить",
-      "saved": "Настройки сохранены",
-      "alwaysOn": "Всегда включены"
+      "saved": "Настройки сохранены"
     }
   },
   "integrationSetup": {
@@ -5282,6 +5314,9 @@
         "body": "Её видят только участники проекта или мероприятия, в котором она опубликована."
       }
     }
+  },
+  "settingsRefinement": {
+    "notificationChannels": "Выберите каналы для каждого типа. Изменения применяются к новым уведомлениям; прежние сохраняются."
   },
   "settings": {
     "accountProfile": "Данные аккаунта",

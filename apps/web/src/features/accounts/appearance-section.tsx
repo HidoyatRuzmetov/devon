@@ -1,5 +1,6 @@
+import { SettingsSection } from './settings-section.js'
 import { LOCALES, LOCALE_LABEL, useLocale, useT } from '@devon/i18n'
-import { SectionCard, toast } from '@devon/ui'
+import { toast } from '@devon/ui'
 import { useLocaleMutation } from '../../lib/session.js'
 import { setThemePreference, useThemePreference, type ThemePreference } from '../../lib/theme.js'
 
@@ -12,7 +13,7 @@ export function AppearanceSection() {
   const localeMutation = useLocaleMutation()
   const theme = useThemePreference()
   return (
-    <SectionCard id="section-appearance" title={t('accounts.settings.appearance')}>
+    <SettingsSection id="section-appearance" title={t('accounts.settings.appearance')}>
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr))]">
         <label className="flex flex-col gap-1.5 text-small">
           {t('accounts.register.locale')}
@@ -50,6 +51,6 @@ export function AppearanceSection() {
           </select>
         </label>
       </div>
-    </SectionCard>
+    </SettingsSection>
   )
 }

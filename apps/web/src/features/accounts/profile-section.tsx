@@ -1,7 +1,8 @@
+import { SettingsSection } from './settings-section.js'
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { Button, Input, SectionCard, StateView, toast } from '@devon/ui'
+import { Button, Input, StateView, toast } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import type { Me } from '../../lib/api-schemas.js'
@@ -30,7 +31,7 @@ export function ProfileSection() {
   const t = useT()
   const query = useQuery({ queryKey: ['accounts', 'profile'], queryFn: fetchProfile })
   return (
-    <SectionCard
+    <SettingsSection
       id="section-profile"
       title={t('profileEdit.heading')}
       description={t('profileEdit.description')}
@@ -44,7 +45,7 @@ export function ProfileSection() {
         />
       ) : null}
       {query.data ? <ProfileForm profile={query.data} /> : null}
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -96,7 +97,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
   })
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-3"
       onSubmit={(e) => {
         e.preventDefault()
         if (save.isPending) return
@@ -117,7 +118,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
         })
       }}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 2xl:grid-cols-3">
         {PROFILE_FIELDS.map((field) => (
           <label key={field} className="flex flex-col gap-1.5 text-small">
             <span>
@@ -131,6 +132,19 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
             <Input
               value={values[field] ?? ''}
               type={field === 'email' ? 'email' : 'text'}
+              autoComplete={
+                field === 'givenName'
+                  ? 'given-name'
+                  : field === 'familyName'
+                    ? 'family-name'
+                    : field === 'patronymic'
+                      ? 'additional-name'
+                      : field === 'title'
+                        ? 'organization-title'
+                        : field === 'email'
+                          ? 'email'
+                          : 'username'
+              }
               required={['givenName', 'familyName', 'login'].includes(field)}
               maxLength={
                 field === 'email' ? 256 : field === 'title' ? 150 : field === 'login' ? 64 : 100

@@ -36,7 +36,7 @@ async function openInbox(context: BrowserContext) {
   ).toBeGreaterThanOrEqual(2)
   const page = await context.newPage()
   await page.goto('/inbox')
-  await expect(page.getByRole('heading', { name: 'Inbox', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Inbox(?:\s*\d+)?$/ })).toBeVisible()
   return page
 }
 
@@ -51,17 +51,19 @@ test('@qa inbox archive persists when leaving immediately', async ({ browser }, 
     const notification = (await list(context)).items[0]!
     expect(notification, 'populated synthetic notification fixture').toBeTruthy()
     await row(page, notification.title.en!)
-      .getByRole('button', { name: 'Archive', exact: true })
+      .getByRole('button', { name: 'Update options', exact: true })
       .click()
+    await page.getByRole('menuitem', { name: 'Archive', exact: true }).click()
     await expect(
       page.getByText('Archived', { exact: true }).filter({ visible: true }).last(),
     ).toBeVisible()
-    await page.getByRole('button', { name: 'Notification preferences', exact: true }).click()
-    await expect(page).toHaveURL(/\/account\/notifications$/)
+    await page.getByRole('button', { name: 'Inbox options', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Notification preferences', exact: true }).click()
+    await expect(page).toHaveURL(/\/account\/notifications\?from=overview$/)
     const archived = await list(context, 'archived')
     expect(archived.items.some((item) => item.id === notification.id)).toBe(true)
     await page.goto('/inbox')
-    await expect(page.getByRole('heading', { name: 'Inbox', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /^Inbox(?:\s*\d+)?$/ })).toBeVisible()
     await expect(
       page
         .getByRole('tabpanel')
@@ -86,7 +88,10 @@ test('@qa inbox undo restores only the selected persisted notification', async (
     const [first, second] = (await list(context)).items
     expect(first).toBeTruthy()
     expect(second).toBeTruthy()
-    await row(page, first!.title.en!).getByRole('button', { name: 'Archive', exact: true }).click()
+    await row(page, first!.title.en!)
+      .getByRole('button', { name: 'Update options', exact: true })
+      .click()
+    await page.getByRole('menuitem', { name: 'Archive', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeVisible()
     expect(
       (await authedPost(context, '/api/v1/notifications/archive', { ids: [second!.id] })).status(),
@@ -128,8 +133,9 @@ test('@qa inbox failed archive retains the row and reports failure', async ({ br
       }),
     )
     await row(page, notification.title.en!)
-      .getByRole('button', { name: 'Archive', exact: true })
+      .getByRole('button', { name: 'Update options', exact: true })
       .click()
+    await page.getByRole('menuitem', { name: 'Archive', exact: true }).click()
     await expect(page.getByText('Could not save', { exact: true })).toBeVisible()
     await expect(row(page, notification.title.en!)).toBeVisible()
     expect((await list(context)).items.some((n) => n.id === notification.id)).toBe(true)
@@ -143,10 +149,16 @@ test('@qa inbox toolbar Enter activates its focused control', async ({ browser }
   const context = await newFlowContext(browser)
   try {
     const page = await openInbox(context)
-    const preferences = page.getByRole('button', { name: 'Notification preferences', exact: true })
+    const options = page.getByRole('button', { name: 'Inbox options', exact: true })
+    await options.focus()
+    await options.press('Enter')
+    const preferences = page.getByRole('menuitem', {
+      name: 'Notification preferences',
+      exact: true,
+    })
     await preferences.focus()
     await preferences.press('Enter')
-    await expect(page).toHaveURL(/\/account\/notifications$/)
+    await expect(page).toHaveURL(/\/account\/notifications\?from=overview$/)
     await expect(page.getByRole('dialog')).toHaveCount(0)
   } finally {
     await context.close()
@@ -191,7 +203,7 @@ test('@qa inbox row shortcuts follow visible order and archive the focused row',
   }
 })
 
-test('@qa inbox row Archive button returns focus to a surviving row', async ({ browser }) => {
+test('@qa inbox row Archive menu action returns focus to a surviving row', async ({ browser }) => {
   const context = await newFlowContext(browser)
   try {
     const page = await openInbox(context)
@@ -202,7 +214,10 @@ test('@qa inbox row Archive button returns focus to a surviving row', async ({ b
     const nextId = await second.getAttribute('data-inbox-opener')
     expect(archivedId).toBeTruthy()
     expect(nextId).toBeTruthy()
-    const archive = first.locator('..').getByRole('button', { name: 'Archive', exact: true })
+    const options = first.locator('..').getByRole('button', { name: 'Update options', exact: true })
+    await options.focus()
+    await options.press('Enter')
+    const archive = page.getByRole('menuitem', { name: 'Archive', exact: true })
     await archive.focus()
     await archive.press('Enter')
     await expect

@@ -1,3 +1,4 @@
+import { SettingsSection, SettingsPaneHeader } from '../accounts/settings-section.js'
 import { avatarUrl } from '../../lib/avatar.js'
 // `/department?id=<uuid>` -- detail, settings, invite and membership management for one department
 // (TECH-SPEC §2.2, §2.3). Query-string id, not a path param: `src/lib/router.tsx` supports exact
@@ -28,7 +29,6 @@ import {
   RadioOption,
   ReadOnlyStrip,
   Reveal,
-  SectionCard,
   StateView,
   Switch,
   Tabs,
@@ -140,7 +140,7 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
           while the Imkoniyatlar card directly below it did exactly the right thing ("Ularni boʻlim
           boshligʻi boshqaradi"). Same treatment now: a statement rather than an instruction, and the
           same "your head manages these" caption. */}
-      <SectionCard
+      <SettingsSection
         title={t('departments.settings.permissionsTitle')}
         description={
           isHead
@@ -221,7 +221,7 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
             </RadioGroup>
           </div>
         </div>
-      </SectionCard>
+      </SettingsSection>
       <div id="features">
         <FeaturesCard id={id} isHead={isHead} features={deptQuery.data.settings.features} />
       </div>
@@ -318,7 +318,7 @@ function InviteTab({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <SectionCard
+      <SettingsSection
         title={t('departments.invite.title')}
         description={t('departments.invite.linkDescription')}
         actions={
@@ -418,9 +418,9 @@ function InviteTab({ id }: { id: string }) {
             </div>
           </div>
         ) : null}
-      </SectionCard>
+      </SettingsSection>
 
-      <SectionCard
+      <SettingsSection
         title={t('departments.invite.passwordLabel')}
         description={t('departments.invite.passwordHiddenNotice')}
         actions={
@@ -492,7 +492,7 @@ function InviteTab({ id }: { id: string }) {
             {t('departments.invite.passwordRequirements')}
           </p>
         </div>
-      </SectionCard>
+      </SettingsSection>
 
       <ConfirmDialog
         open={confirmRotate !== null}
@@ -626,14 +626,14 @@ function JoinRequestsCard({ id }: { id: string }) {
 
   if (query.isPending) {
     return (
-      <SectionCard title={t('departments.joinRequests.title')}>
+      <SettingsSection title={t('departments.joinRequests.title')}>
         <StateView kind="loading" titleKey="state.loading" compact />
-      </SectionCard>
+      </SettingsSection>
     )
   }
   if (query.isError) {
     return (
-      <SectionCard title={t('departments.joinRequests.title')}>
+      <SettingsSection title={t('departments.joinRequests.title')}>
         <StateView
           kind="error"
           titleKey="state.error.title"
@@ -644,13 +644,13 @@ function JoinRequestsCard({ id }: { id: string }) {
           }}
           compact
         />
-      </SectionCard>
+      </SettingsSection>
     )
   }
 
   const requests = query.data.requests
   return (
-    <SectionCard
+    <SettingsSection
       // The count belongs next to the heading, not in `actions` -- `SectionCard` renders `actions`
       // as a footer row (that is where "Saqlash" sits on the card above), so a badge there reads as
       // a stray control at the bottom of the card rather than "one person is waiting".
@@ -741,7 +741,7 @@ function JoinRequestsCard({ id }: { id: string }) {
           </DataList>
         </Reveal>
       )}
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -786,7 +786,7 @@ function FeaturesCard({
   })
 
   return (
-    <SectionCard
+    <SettingsSection
       title={t('departments.features.title')}
       description={t(
         isHead ? 'departments.features.description' : 'departments.features.readOnlyDescription',
@@ -817,7 +817,7 @@ function FeaturesCard({
           </div>
         ))}
       </div>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -1223,7 +1223,7 @@ function DangerTab({ id, departmentName }: { id: string; departmentName: string 
     },
   })
   return (
-    <SectionCard
+    <SettingsSection
       title={t('departments.settings.dangerZone')}
       description={t('departments.settings.dangerZoneDescription')}
       className="border-destructive/40"
@@ -1256,7 +1256,7 @@ function DangerTab({ id, departmentName }: { id: string; departmentName: string 
           name: departmentName,
         })}
       />
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -1334,14 +1334,11 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
     <Tabs
       value={!isHead && (tab === 'invite' || tab === 'danger') ? 'general' : tab}
       onValueChange={(v) => setTab(v as Tab)}
-      className="flex flex-col gap-6"
+      className="flex min-w-0 flex-col gap-4"
     >
-      <PageHeader
-        {...(embedded ? {} : { eyebrow: t('departments.title') })}
-        compact={embedded}
-        title={`${dept.emoji ? `${dept.emoji} ` : ''}${dept.name}`}
-        tabs={
-          <TabsList>
+      {embedded ? (
+        <SettingsPaneHeader title={`${dept.emoji ? `${dept.emoji} ` : ''}${dept.name}`}>
+          <TabsList className="flex h-auto min-h-11 flex-wrap">
             <TabsTrigger value="general">{t('departments.settings.general')}</TabsTrigger>
             {isHead ? (
               <TabsTrigger value="invite">{t('departments.invite.title')}</TabsTrigger>
@@ -1351,8 +1348,25 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
               <TabsTrigger value="danger">{t('departments.settings.dangerZone')}</TabsTrigger>
             ) : null}
           </TabsList>
-        }
-      />
+        </SettingsPaneHeader>
+      ) : (
+        <PageHeader
+          eyebrow={t('departments.title')}
+          title={`${dept.emoji ? `${dept.emoji} ` : ''}${dept.name}`}
+          tabs={
+            <TabsList className="flex h-auto min-h-11 flex-wrap">
+              <TabsTrigger value="general">{t('departments.settings.general')}</TabsTrigger>
+              {isHead ? (
+                <TabsTrigger value="invite">{t('departments.invite.title')}</TabsTrigger>
+              ) : null}
+              <TabsTrigger value="members">{t('departments.members.title')}</TabsTrigger>
+              {isHead ? (
+                <TabsTrigger value="danger">{t('departments.settings.dangerZone')}</TabsTrigger>
+              ) : null}
+            </TabsList>
+          }
+        />
+      )}
 
       <TabsContent value="general">
         <GeneralTab key={id} id={id} isHead={isHead} />

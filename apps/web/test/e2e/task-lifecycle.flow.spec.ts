@@ -103,7 +103,8 @@ for (const role of ['head', 'member'] as const) {
       const checklistImage = info.outputPath('checklist-edited.png')
       await checklist.screenshot({ path: checklistImage, animations: 'disabled' })
       await info.attach('Edited checklist', { path: checklistImage, contentType: 'image/png' })
-      await page.getByRole('button', { name: 'Delete', exact: true }).first().click()
+      await page.getByRole('button', { name: 'More actions', exact: true }).click()
+      await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
       await expect(
         page.getByText('Card deleted. Its record remains in the admin audit log.'),
       ).toBeVisible()

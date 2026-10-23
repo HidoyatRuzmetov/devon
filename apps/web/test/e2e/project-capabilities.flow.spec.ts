@@ -55,6 +55,7 @@ test('@flow project conversion/edit preserve original card and persist members/s
     ).toBe(201)
     const page = await head.newPage()
     await page.goto(`/work/card?id=${cardId}`)
+    await page.getByRole('button', { name: 'More actions', exact: true }).click()
     await page.getByRole('button', { name: 'Create group', exact: true }).click()
     const conversion = page.getByRole('dialog', { name: 'Create group', exact: true })
     await conversion.getByRole('checkbox', { name: 'Test Member', exact: true }).check()

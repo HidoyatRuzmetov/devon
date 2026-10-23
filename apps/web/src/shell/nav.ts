@@ -32,7 +32,7 @@ const DEPARTMENT_SCOPED_ENTRY_IDS = new Set([
   'structure',
   'pages',
   'analytics',
-  'ai',
+  'assistant',
 ])
 
 function requireDepartmentFor(entries: readonly NavEntry[]): NavEntry[] {
@@ -64,7 +64,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = requireDepartmentFor([
  * a line here. */
 export const NAV_GROUPS: readonly NavGroup[] = [
   // No heading: the top of a sidebar never needs one to be understood.
-  { id: 'top', entryIds: ['home', 'inbox'] },
+  { id: 'top', entryIds: ['home', 'assistant'] },
   // v1.1 critique SEV1 #5: every labelled group folds. At 1440x900 the head's nav is 968 px of
   // content in 683 px of space, so BOSHQARUV was cut at "Maqsadlar" (at "Цели" in Russian) and the
   // head's three newest destinations sat below the fold with no affordance at all. Folding is the
@@ -85,7 +85,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     id: 'knowledge',
     labelKey: 'shell.nav.group.knowledge',
-    entryIds: ['pages', 'analytics', 'ai'],
+    entryIds: ['pages', 'analytics'],
     collapsible: true,
   },
   /**
@@ -126,7 +126,7 @@ export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = ['team', 'knowle
 /** The five areas the bottom tab bar carries at 390 px (UI-OVERHAUL.md §2: "bottom tab bar for the
  * five most used areas"). Everything else stays one tap away behind ☰, which opens the full sidebar
  * as a sheet. Order matters: it is the order of a working day. */
-export const MOBILE_TAB_IDS: readonly string[] = ['home', 'work', 'personal', 'events', 'inbox']
+export const MOBILE_TAB_IDS: readonly string[] = ['home', 'work', 'personal', 'events', 'assistant']
 
 /**
  * v1.1 critique SEV2 #28 -- "on a phone the head gets the member's app".
@@ -146,7 +146,7 @@ export const MOBILE_TAB_IDS_HEAD: readonly string[] = [
   'people-table',
   'workload',
   'work',
-  'inbox',
+  'assistant',
 ]
 
 /** Shorter labels for those five tabs. A tab is about 78 px wide at 390 px, and "Bildirishnomalar"
@@ -158,7 +158,7 @@ export const MOBILE_TAB_SHORT_LABEL_KEYS: Readonly<Record<string, string>> = {
   work: 'shell.nav.short.work',
   personal: 'shell.nav.short.personal',
   events: 'shell.nav.short.events',
-  inbox: 'shell.nav.short.inbox',
+  assistant: 'assistantWorkspace.title',
   // SEV2 #28: two more fixed 390 px slots needing short keys. "Xodimlar jadvali" and "Yuklama" are
   // the full names, and they stay as the tabs' accessible names (DESIGN.md §5).
   'people-table': 'shell.nav.short.peopleTable',

@@ -23,16 +23,17 @@ function useConversationScope() {
   }
 }
 
-export function useConversationsQuery(enabled: boolean) {
+export function useConversationsQuery(enabled: boolean, query = '') {
   const scope = useConversationScope()
   return useInfiniteQuery({
-    queryKey: [...scope.key, 'list'],
+    queryKey: [...scope.key, 'list', query],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      apiClient.get(
-        pageParam ? `${BASE}?before=${encodeURIComponent(pageParam)}` : BASE,
-        aiConversationsSchema,
-      ),
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams()
+      if (pageParam) params.set('before', pageParam)
+      if (query) params.set('q', query)
+      return apiClient.get(params.size ? `${BASE}?${params}` : BASE, aiConversationsSchema)
+    },
     getNextPageParam: (page) => page.nextCursor,
     enabled: enabled && scope.enabled,
     staleTime: 15_000,

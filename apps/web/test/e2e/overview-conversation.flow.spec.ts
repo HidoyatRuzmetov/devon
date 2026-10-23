@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 import type { AiConversation } from '@devon/contracts'
 import {
   authedPatch,
@@ -57,7 +58,8 @@ test('@flow real conversation queue saves a failed turn and restores it after re
     )
     const page = await context.newPage()
     await page.goto(`/?conversation=${id}`)
-    await expect(page.getByTestId('head-overview')).toHaveAttribute('data-mode', 'conversation')
+    await expect(page).toHaveURL(`/assistant?conversation=${id}`)
+    await expect(page.getByTestId('assistant-workspace')).toBeVisible()
     await expect(page.getByTestId('ai-messages')).toContainText(content)
     await page.reload()
     await expect(page.getByTestId('ai-messages')).toContainText(content)
@@ -73,7 +75,7 @@ test('@flow real conversation queue saves a failed turn and restores it after re
 
 // Controlled provider-facing responses for UI lifecycle verification. API integration tests separately
 // exercise real database persistence, RLS, queue delivery and the complete provider request history.
-test('@flow overview conversation expands, resumes after reload and reopens saved history', async ({
+test('@flow assistant resumes after reload, searches history and preserves source return links', async ({
   browser,
 }, testInfo) => {
   test.setTimeout(120_000)
@@ -98,6 +100,30 @@ test('@flow overview conversation expands, resumes after reload and reopens save
     page.on('pageerror', (error) => errors.push(error.message))
     const conversations = new Map<string, AiConversation>()
     const now = () => new Date().toISOString()
+    for (const title of [
+      'Weekly priorities',
+      'Research unit workload',
+      'Upcoming review',
+      'Draft the project update',
+      'Evidence package',
+      'September delivery review',
+      'Directory publication',
+      'Milestone dependencies',
+      'Workshop follow-up',
+      'Team capacity',
+    ]) {
+      const id = randomUUID()
+      conversations.set(id, {
+        id,
+        title,
+        locale: 'en',
+        createdAt: now(),
+        updatedAt: now(),
+        messageCount: 0,
+        status: 'ready',
+        messages: [],
+      })
+    }
     let active: AiConversation | undefined
     const answer = (content: string) => {
       if (!active) throw new Error('No pending conversation')
@@ -162,14 +188,19 @@ test('@flow overview conversation expands, resumes after reload and reopens save
     )
     await page.route('**/api/v1/ai/conversations**', async (route) => {
       const request = route.request()
-      const path = new URL(request.url()).pathname
+      const requestUrl = new URL(request.url())
+      const path = requestUrl.pathname
       const suffix = path.replace('/api/v1/ai/conversations', '')
       if (!suffix && request.method() === 'GET') {
         return route.fulfill({
           json: {
-            conversations: [...conversations.values()].map(
-              ({ messages: _messages, ...summary }) => summary,
-            ),
+            conversations: [...conversations.values()]
+              .filter((item) =>
+                item.title
+                  .toLowerCase()
+                  .includes((requestUrl.searchParams.get('q') ?? '').toLowerCase()),
+              )
+              .map(({ messages: _messages, ...summary }) => summary),
             nextCursor: null,
           },
         })
@@ -236,14 +267,28 @@ test('@flow overview conversation expands, resumes after reload and reopens save
         json: { status: 400, title: 'Unexpected fixture request' },
       })
     })
-    await page.goto('/')
-    const overview = page.getByTestId('head-overview')
+    await page.goto('/assistant')
+    const workspace = page.getByTestId('assistant-workspace')
     const composer = page.getByRole('textbox', { name: 'Ask about your department', exact: true })
     await expect(composer).toBeVisible()
-    await expect(overview).toHaveAttribute('data-mode', 'overview')
+    await expect(workspace).toBeVisible()
+    const history = page.getByRole('complementary', { name: 'Saved conversations', exact: true })
+    const historyRow = history.getByRole('button', { name: 'Weekly priorities', exact: true })
+    await expect(historyRow).toBeVisible()
+    expect((await historyRow.boundingBox())!.height).toBeLessThanOrEqual(38)
+    await expect(history.getByRole('button', { name: 'Team capacity', exact: true })).toBeVisible()
+    const accessibility = await new AxeBuilder({ page })
+      .include('[data-testid="assistant-workspace"]')
+      .analyze()
+    expect(
+      accessibility.violations.filter(
+        (item) => item.impact === 'serious' || item.impact === 'critical',
+      ),
+    ).toEqual([])
+    await page.screenshot({ path: testInfo.outputPath('assistant-welcome-compact-history.png') })
     await composer.fill('What needs my attention this week?')
     await page.getByRole('button', { name: 'Send message', exact: true }).click()
-    await expect(overview).toHaveAttribute('data-mode', 'conversation')
+    await expect(workspace).toBeVisible()
     await expect(page.getByTestId('ai-messages')).toContainText(
       'What needs my attention this week?',
     )
@@ -251,7 +296,7 @@ test('@flow overview conversation expands, resumes after reload and reopens save
     await expect(page).toHaveURL(/conversation=/)
     // Reload while the model is answering: the saved pending turn remains visible and resumes polling.
     await page.reload()
-    await expect(overview).toHaveAttribute('data-mode', 'conversation')
+    await expect(workspace).toBeVisible()
     await expect(page.getByTestId('ai-messages')).toContainText(
       'What needs my attention this week?',
     )
@@ -270,11 +315,11 @@ test('@flow overview conversation expands, resumes after reload and reopens save
         .getByRole('listitem')
         .filter({ hasText: 'Agree the next delivery date.' }),
     ).toBeVisible()
-    await page.getByRole('button', { name: 'Back to overview', exact: true }).click()
-    await expect(overview).toHaveAttribute('data-mode', 'overview')
-    await page.getByRole('button', { name: 'Saved conversations', exact: true }).click()
+    await page.getByRole('button', { name: 'New conversation', exact: true }).click()
+    await expect(workspace).toBeVisible()
+    await page.getByRole('textbox', { name: 'Search conversations', exact: true }).fill('attention')
     await page.getByRole('button', { name: /What needs my attention this week/ }).click()
-    await expect(overview).toHaveAttribute('data-mode', 'conversation')
+    await expect(workspace).toBeVisible()
     await composer.fill('Which team owns it?')
     await page.getByRole('button', { name: 'Send message', exact: true }).click()
     await expect.poll(() => active?.status).toBe('running')
@@ -299,9 +344,9 @@ test('@flow overview conversation expands, resumes after reload and reopens save
     await page.getByRole('link', { name: /Back to board/ }).click()
     await page.locator('main').getByRole('link', { name: 'Table', exact: true }).click()
     await expect(page).toHaveURL(/\/work\/table\?.*conversation=/)
-    await page.getByRole('link', { name: /Back to overview/ }).click()
+    await page.getByRole('link', { name: /Back to assistant/ }).click()
     await expect(page).toHaveURL(conversationUrl)
-    await expect(overview).toHaveAttribute('data-mode', 'conversation')
+    await expect(workspace).toBeVisible()
     await expect(page.getByTestId('ai-messages')).toContainText('Which team owns it?')
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollHeight))
@@ -351,8 +396,8 @@ test('@flow overview conversation expands, resumes after reload and reopens save
       .poll(() => page.getByTestId('ai-messages').evaluate((el) => el.scrollTop))
       .toBeLessThan(3)
     await page.setViewportSize({ width: 390, height: 844 })
-    await page.getByRole('button', { name: 'Back to overview', exact: true }).click()
-    await expect(overview).toHaveAttribute('data-mode', 'overview')
+    await page.getByRole('button', { name: 'New conversation', exact: true }).click()
+    await expect(workspace).toBeVisible()
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollHeight))
       .toBeLessThanOrEqual(845)

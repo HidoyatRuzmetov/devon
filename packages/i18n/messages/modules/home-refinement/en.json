@@ -1,0 +1,23 @@
+{
+  "homeRefinement": {
+    "inboxActions": "Inbox options",
+    "updateActions": "Update options",
+    "groupUpdates": "Group updates",
+    "workOverview": "Work overview",
+    "myWork": "My work",
+    "deadlineFirst": "Deadline, then priority",
+    "workCategory": "Work category",
+    "individual": "Individual tasks",
+    "projects": "Group projects",
+    "clearStatus": "Clear {status} filter",
+    "noMatchingAssignments": "No assignments match this status.",
+    "inboxGroups": {
+      "tasks": "Tasks",
+      "events": "Events",
+      "summaries": "Summaries",
+      "system": "System"
+    },
+    "loadMore": "Load more",
+    "allActive": "All active"
+  }
+}

@@ -1,3 +1,4 @@
+import { returnContextParams } from '../../../lib/return-context.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // The "one project card in every member's column" outcome (EPIC-005/TECH-SPEC §3.2) is rendered, not
 // stored: a group project has no row in `app.cards` at all (only its objective/subjective *tasks*
@@ -61,7 +62,8 @@ export function ProjectTile({
    * the board card below it already carries assignee/priority/due for that member's own work. */
   compact?: boolean
 }) {
-  const origin = useSearchParams().get('from') === 'overview' ? '&from=overview' : ''
+  const returnParams = returnContextParams(useSearchParams())
+  const origin = returnParams.size ? `&${returnParams}` : ''
   const t = useT()
   const locale = useLocale()
   const percent = Math.round(project.progress * 100)

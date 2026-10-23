@@ -1,0 +1,23 @@
+{
+  "homeRefinement": {
+    "inboxActions": "Kirish qutisi sozlamalari",
+    "updateActions": "Bildirishnoma amallari",
+    "groupUpdates": "Bildirishnomalarni guruhlash",
+    "workOverview": "Ishlar sharhi",
+    "myWork": "Mening ishlarim",
+    "deadlineFirst": "Muddat, soʻng ustuvorlik",
+    "workCategory": "Ish toifasi",
+    "individual": "Shaxsiy vazifalar",
+    "projects": "Guruh loyihalari",
+    "clearStatus": "{status} filtrini tozalash",
+    "noMatchingAssignments": "Bu holatga mos topshiriq yoʻq.",
+    "inboxGroups": {
+      "tasks": "Vazifalar",
+      "events": "Tadbirlar",
+      "summaries": "Xulosalar",
+      "system": "Tizim"
+    },
+    "loadMore": "Yana yuklash",
+    "allActive": "Barcha faol ishlar"
+  }
+}

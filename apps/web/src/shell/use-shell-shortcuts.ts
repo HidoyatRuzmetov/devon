@@ -66,7 +66,7 @@ export function useShellShortcuts({
       }
       if (e.key.toLowerCase() === 'i') {
         e.preventDefault()
-        navigate('/inbox')
+        navigate('/?inbox=all')
       }
     }
     window.addEventListener('keydown', onKeyDown)

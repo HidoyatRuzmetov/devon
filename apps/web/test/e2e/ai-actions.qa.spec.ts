@@ -62,7 +62,7 @@ for (const role of ['head', 'member'] as const) {
         width: role === 'head' ? 1440 : 390,
         height: role === 'head' ? 1000 : 844,
       })
-      await page.goto('/')
+      await page.goto('/assistant')
       const composer = page.getByTestId('ai-composer').getByRole('textbox')
       await expect(composer).toBeVisible()
       await page.locator('input[type="file"][aria-label="Attach files"]').setInputFiles({
@@ -127,8 +127,9 @@ for (const role of ['head', 'member'] as const) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       )
-      await page.getByRole('button', { name: /Back to (overview|home)/ }).click()
-      await page.getByRole('button', { name: 'Saved conversations', exact: true }).click()
+      await page.getByRole('button', { name: 'New conversation', exact: true }).click()
+      if (role === 'member')
+        await page.getByRole('button', { name: 'Saved conversations', exact: true }).click()
       await page
         .getByRole('button', {
           name: new RegExp(isPage ? '^Create a page named' : '^Create a task to'),

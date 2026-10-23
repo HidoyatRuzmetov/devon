@@ -1,3 +1,4 @@
+import { SettingsSection } from '../../accounts/settings-section.js'
 // Per-user secret ICS feeds (v1.1 SPEC §10, EPIC-019): create, copy, renew, delete.
 //
 // The one idea a person has to understand here is that the URL *is* the credential -- there is no
@@ -21,7 +22,6 @@ import {
   RadioGroup,
   RadioOption,
   Reveal,
-  SectionCard,
   Stagger,
   StaggerItem,
   StateView,
@@ -131,7 +131,7 @@ function FeedCard({ feed }: { feed: FeedDto }): React.JSX.Element {
   ]
 
   return (
-    <SectionCard
+    <SettingsSection
       title={feed.label || t(`calendar.feeds.kind.${feed.kind}`)}
       description={t(`calendar.feeds.kind.${feed.kind}`)}
       headerAside={
@@ -227,7 +227,7 @@ function FeedCard({ feed }: { feed: FeedDto }): React.JSX.Element {
           </div>
         </DialogContent>
       </Dialog>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -284,7 +284,7 @@ function CreateFeedDialog({
           if (!open) restoreFocus()
         }}
       >
-        <form onSubmit={submit} className="flex flex-col gap-5">
+        <form onSubmit={submit} className="flex flex-col gap-4">
           <Field label={t('calendar.feeds.create.label')} htmlFor={labelInputId}>
             <Input
               id={labelInputId}
@@ -415,11 +415,11 @@ export function FeedsPanel(): React.JSX.Element {
   }
 
   return (
-    <div className="flex flex-col gap-5" onClickCapture={rememberTrigger}>
+    <div className="flex flex-col gap-4" onClickCapture={rememberTrigger}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h2 className="text-h3 text-foreground">{t('calendar.feeds.title')}</h2>
-          <p className="text-body text-muted-foreground">{t('calendar.feeds.description')}</p>
+          <h3 className="text-body font-semibold text-foreground">{t('calendar.feeds.title')}</h3>
+          <p className="text-small text-muted-foreground">{t('calendar.feeds.description')}</p>
         </div>
         <Button ref={headerTrigger} variant="primary" onClick={() => setCreating(true)}>
           <Plus className="size-4" aria-hidden="true" />

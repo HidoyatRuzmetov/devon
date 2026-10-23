@@ -102,9 +102,15 @@ async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
       // nosemgrep: query-in-loop -- see this file's header comment above.
       const prefs = await getPrefs(userId)
       const digestPref = prefs.find((p) => p.reason === 'digest' && p.channel === 'telegram')
-      const frequency = digestPref?.digestMode
-      if (!digestPref?.enabled || (frequency !== 'daily' && !(frequency === 'weekly' && friday)))
-        continue
+      const inappEnabled =
+        prefs.find((p) => p.reason === 'digest' && p.channel === 'inapp')?.enabled ?? true
+      const telegramDue =
+        digestPref?.enabled &&
+        (digestPref.digestMode === 'daily' || (digestPref.digestMode === 'weekly' && friday))
+      if (!inappEnabled && !telegramDue) continue
+      // One summary per person/day. On Friday the weekly Telegram summary can also appear in-app;
+      // on other days in-app summaries remain available even with Telegram off or weekly.
+      const frequency = telegramDue && digestPref.digestMode === 'weekly' ? 'weekly' : 'daily'
       // nosemgrep: query-in-loop -- see this file's header comment above.
       const counts = await unreadCountsByReason(userId)
       const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0)
@@ -122,7 +128,7 @@ async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
         departmentId,
         title: digest.title,
         body: digest.body,
-        deepLink: '/inbox',
+        deepLink: null,
       })
     }
   }

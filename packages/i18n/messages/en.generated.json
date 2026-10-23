@@ -1610,6 +1610,13 @@
     },
     "chartEmpty": "No data yet"
   },
+  "assistantWorkspace.title": "Assistant",
+  "assistantWorkspace.welcome": "What can I help you with?",
+  "assistantWorkspace.search": "Search conversations",
+  "assistantWorkspace.noMatches": "No matching conversations.",
+  "assistantWorkspace.settings": "AI tools & settings",
+  "assistantWorkspace.private": "Your private workspace",
+  "assistantWorkspace.back": "← Back to assistant",
   "attachments": {
     "title": "Files",
     "add": "Upload a file",
@@ -2901,6 +2908,11 @@
       }
     }
   },
+  "cardRefinement": {
+    "task": "Task",
+    "actions": "More actions",
+    "details": "More details"
+  },
   "departments": {
     "title": "Departments",
     "subtitle": "Your departments, and ways to join more",
@@ -3956,6 +3968,27 @@
     "savedNotes": "Saved in notes",
     "privateTaskHint": "Private tasks keep dates and priority in notes. Use Cards for scheduled assignments."
   },
+  "homeRefinement": {
+    "inboxActions": "Inbox options",
+    "updateActions": "Update options",
+    "groupUpdates": "Group updates",
+    "workOverview": "Work overview",
+    "myWork": "My work",
+    "deadlineFirst": "Deadline, then priority",
+    "workCategory": "Work category",
+    "individual": "Individual tasks",
+    "projects": "Group projects",
+    "clearStatus": "Clear {status} filter",
+    "noMatchingAssignments": "No assignments match this status.",
+    "inboxGroups": {
+      "tasks": "Tasks",
+      "events": "Events",
+      "summaries": "Summaries",
+      "system": "System"
+    },
+    "loadMore": "Load more",
+    "allActive": "All active"
+  },
   "inbox": {
     "title": "Inbox",
     "eyebrow": "NOTIFICATIONS",
@@ -4052,8 +4085,7 @@
         "copy": "Copy link"
       },
       "save": "Save",
-      "saved": "Preferences saved",
-      "alwaysOn": "Always on"
+      "saved": "Preferences saved"
     }
   },
   "integrationSetup": {
@@ -5282,6 +5314,9 @@
         "body": "Only the people in the project or event it was shared to can see it."
       }
     }
+  },
+  "settingsRefinement": {
+    "notificationChannels": "Choose a channel for each type. Changes apply to new notifications; existing items stay in your inbox."
   },
   "settings": {
     "accountProfile": "Account profile",

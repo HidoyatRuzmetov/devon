@@ -643,7 +643,7 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
 test('@flow professional directory, staffing and responsive head overview', async ({
   portal,
 }, testInfo) => {
-  const { context, page, card } = portal
+  const { context, page } = portal
   await page.goto('/people')
   await page
     .getByRole('button')
@@ -678,46 +678,11 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   await page.screenshot({
     path: testInfo.outputPath('structure-desktop.png'),
   })
-  await page.route('**/api/v1/ai/briefing', (route) =>
-    route.fulfill({
-      json: {
-        canRefresh: true,
-        briefing: {
-          day: '2026-10-21',
-          locale: 'en',
-          status: 'ready',
-          generatedAt: new Date().toISOString(),
-          error: null,
-          latencyMs: 100,
-          data: {
-            headline: 'Research is moving forward; the evidence package needs attention.',
-            wins: {
-              text: 'The team has completed its first review and aligned the next delivery milestones.',
-              citedIds: [],
-            },
-            risks: [
-              {
-                cardId: card.id,
-                text: 'Review the evidence package before the upcoming deadline.',
-                severity: 'high',
-              },
-            ],
-            overloaded: [],
-            lookingAhead: {
-              text: 'The workshop will confirm priorities for the next delivery cycle.',
-              citedIds: [],
-            },
-            items: [],
-            moreCount: 0,
-            needsActionCount: 1,
-          },
-        },
-      },
-    }),
-  )
   await page.goto('/')
   await expect(page.getByText('Total workforce', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Read full briefing' })).toBeVisible()
+  await expect(page.getByTestId('home-inbox')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Inbox/ })).toBeVisible()
+  await expect(page.getByTestId('head-overview').getByRole('textbox')).toHaveCount(0)
   const workforceAvatars = page.getByTestId('overview-workforce-avatars')
   await expect(workforceAvatars.getByRole('link')).toHaveCount(5)
   await workforceAvatars.getByRole('link', { name: 'Test Head', exact: true }).hover()
@@ -735,8 +700,8 @@ test('@flow professional directory, staffing and responsive head overview', asyn
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollHeight))
       .toBeLessThanOrEqual(viewport.height + 1)
-    const briefing = await page.getByTestId('overview-briefing').boundingBox()
-    expect(briefing!.y + briefing!.height).toBeLessThanOrEqual(viewport.height)
+    const inbox = await page.getByTestId('home-inbox').boundingBox()
+    expect(inbox!.y + inbox!.height).toBeLessThanOrEqual(viewport.height)
     expect(
       await page
         .getByTestId('head-overview')
@@ -748,9 +713,6 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   }
   /* eslint-enable no-restricted-syntax */
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.getByRole('button', { name: 'Read full briefing' }).click()
-  await expect(page.getByRole('dialog')).toContainText('The workshop will confirm priorities')
-  await page.keyboard.press('Escape')
   await page.screenshot({
     path: testInfo.outputPath('overview-desktop.png'),
   })
@@ -762,14 +724,13 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollHeight))
     .toBeLessThanOrEqual(844)
-  await page.getByRole('radio', { name: 'Workforce', exact: true }).click()
+  await page.getByRole('radio', { name: 'Work overview', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Workforce by unit', exact: true })).toBeVisible()
   await expect(
     page
       .getByRole('region', { name: 'Workforce by unit', exact: true })
       .getByRole('link', { name: /Research unit/ }),
   ).toBeVisible()
-  await page.getByRole('radio', { name: 'Deadlines', exact: true }).click()
   await expect(
     page.getByRole('region', {
       name: 'Upcoming · next 30 days',
@@ -781,8 +742,10 @@ test('@flow professional directory, staffing and responsive head overview', asyn
       .getByRole('region', { name: 'Upcoming · next 30 days', exact: true })
       .getByRole('link', { name: /Review the department research/ }),
   ).toBeVisible()
-  const mobileBriefing = await page.getByTestId('overview-briefing').boundingBox()
-  expect(mobileBriefing!.y + mobileBriefing!.height).toBeLessThan(790)
+  await page.getByRole('radio', { name: 'Inbox', exact: true }).click()
+  const mobileInbox = await page.getByTestId('home-inbox').boundingBox()
+  expect(mobileInbox!.y + mobileInbox!.height).toBeLessThan(790)
+  await page.getByRole('radio', { name: 'Work overview', exact: true }).click()
   await page.screenshot({ path: testInfo.outputPath('overview-mobile.png') })
   await page.setViewportSize({ width: 390, height: 667 })
   await expect

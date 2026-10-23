@@ -378,8 +378,8 @@ const NOTIFICATIONS: DemoNotification[] = [
   },
 ]
 
-// Sensible defaults: every reason on `inapp` (always on, matching the taste rule "no dead ends" --
-// the inbox itself is never optional), `due`/`digest` also on Telegram once linked, everything else
+// Sensible defaults: every reason starts enabled in-app; people may disable each reason in Settings.
+// `due`/`digest` also on Telegram once linked, everything else
 // off Telegram by default until the person opts in from Settings.
 const TELEGRAM_DEFAULT_ON: ReadonlySet<(typeof schema.notificationReasonEnum.enumValues)[number]> =
   new Set(['due', 'digest', 'system'])
@@ -482,7 +482,9 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .insert(schema.notificationDepartmentSettings)
     .values({ departmentId: DEMO_DEPARTMENT.id })
     .onConflictDoNothing()
-    .returning({ departmentId: schema.notificationDepartmentSettings.departmentId })
+    .returning({
+      departmentId: schema.notificationDepartmentSettings.departmentId,
+    })
   written += insertedDeptSettings.length
 
   // A mock Telegram link for the member (MODULE-GUIDE.md task: "a mock Telegram link"). The chat id is
@@ -518,7 +520,9 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
   const deletedDeptSettings = await tx.drizzle
     .delete(schema.notificationDepartmentSettings)
     .where(eq(schema.notificationDepartmentSettings.departmentId, DEMO_DEPARTMENT.id))
-    .returning({ departmentId: schema.notificationDepartmentSettings.departmentId })
+    .returning({
+      departmentId: schema.notificationDepartmentSettings.departmentId,
+    })
   deleted += deletedDeptSettings.length
 
   deleted += await asUser(tx, MEMBER.id, async () => {

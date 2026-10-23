@@ -103,6 +103,7 @@ test('@flow card title resizing is stable and selectable label text remains read
             ),
         )
       }
+      await page.getByRole('button', { name: 'More details', exact: true }).click()
       const choice = page.getByRole('button').filter({ hasText: /^Hisobot$/ })
       await expect(choice).toBeEnabled()
       await expect.soft(choice).toHaveAccessibleName('Hisobot')
@@ -221,6 +222,8 @@ test('@flow card title resizing is stable and selectable label text remains read
       JSON.stringify({ errors, measurements }, null, 2),
     )
     expect(errors).toEqual([])
+    const details = page.getByRole('button', { name: 'More details', exact: true })
+    if ((await details.getAttribute('aria-expanded')) === 'false') await details.click()
     const newLabel = page.getByRole('textbox', { name: 'New label', exact: true })
     const create = page.getByRole('button', { name: 'New label', exact: true })
     await newLabel.fill('Retained local label')
@@ -272,6 +275,7 @@ test('@flow card title resizing is stable and selectable label text remains read
     await reader.goto(`/work/card?id=${card.id}`)
     const readonlyTitle = reader.getByRole('textbox', { name: 'Title', exact: true })
     await expect(readonlyTitle).toHaveAttribute('readonly', '')
+    await reader.getByRole('button', { name: 'More details', exact: true }).click()
     const readonlyLabels = reader.getByRole('region', { name: 'Labels', exact: true })
     await expect(readonlyLabels).toContainText('Hisobot')
     await expect(readonlyLabels.getByRole('button')).toHaveCount(0)

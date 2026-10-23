@@ -1610,6 +1610,13 @@
     },
     "chartEmpty": "Bu davr uchun raqam yoʻq"
   },
+  "assistantWorkspace.title": "Yordamchi",
+  "assistantWorkspace.welcome": "Sizga qanday yordam bera olaman?",
+  "assistantWorkspace.search": "Suhbatlarni qidirish",
+  "assistantWorkspace.noMatches": "Mos suhbat topilmadi.",
+  "assistantWorkspace.settings": "AI vositalari va sozlamalari",
+  "assistantWorkspace.private": "Shaxsiy ish maydoningiz",
+  "assistantWorkspace.back": "← Yordamchiga qaytish",
   "attachments": {
     "title": "Fayllar",
     "add": "Fayl yuklash",
@@ -2901,6 +2908,11 @@
       }
     }
   },
+  "cardRefinement": {
+    "task": "Vazifa",
+    "actions": "Boshqa amallar",
+    "details": "Batafsil maʼlumot"
+  },
   "departments": {
     "title": "Boshqarmalar",
     "subtitle": "Boshqarmalaringiz va yangisiga qoʻshilish yoʻllari",
@@ -3956,6 +3968,27 @@
     "savedNotes": "Qaydlarda saqlanadi",
     "privateTaskHint": "Shaxsiy vazifalarda sana va muhimlik qaydlarda saqlanadi. Muddatli topshiriqlar uchun Kartalardan foydalaning."
   },
+  "homeRefinement": {
+    "inboxActions": "Kirish qutisi sozlamalari",
+    "updateActions": "Bildirishnoma amallari",
+    "groupUpdates": "Bildirishnomalarni guruhlash",
+    "workOverview": "Ishlar sharhi",
+    "myWork": "Mening ishlarim",
+    "deadlineFirst": "Muddat, soʻng ustuvorlik",
+    "workCategory": "Ish toifasi",
+    "individual": "Shaxsiy vazifalar",
+    "projects": "Guruh loyihalari",
+    "clearStatus": "{status} filtrini tozalash",
+    "noMatchingAssignments": "Bu holatga mos topshiriq yoʻq.",
+    "inboxGroups": {
+      "tasks": "Vazifalar",
+      "events": "Tadbirlar",
+      "summaries": "Xulosalar",
+      "system": "Tizim"
+    },
+    "loadMore": "Yana yuklash",
+    "allActive": "Barcha faol ishlar"
+  },
   "inbox": {
     "title": "Bildirishnomalar",
     "eyebrow": "BILDIRISHNOMALAR",
@@ -4052,8 +4085,7 @@
         "copy": "Havolani nusxalash"
       },
       "save": "Saqlash",
-      "saved": "Saqlandi",
-      "alwaysOn": "Doim yoqilgan"
+      "saved": "Saqlandi"
     }
   },
   "integrationSetup": {
@@ -5282,6 +5314,9 @@
         "body": "Uni faqat ulashilgan loyiha yoki tadbir ishtirokchilari koʻradi."
       }
     }
+  },
+  "settingsRefinement": {
+    "notificationChannels": "Har bir tur uchun kanalni tanlang. Oʻzgarishlar yangi bildirishnomalarga qoʻllanadi; mavjudlari saqlanadi."
   },
   "settings": {
     "accountProfile": "Hisob profili",

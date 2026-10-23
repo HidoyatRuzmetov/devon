@@ -37,13 +37,13 @@ function Section({
 }): React.JSX.Element {
   const [open, setOpen] = React.useState(defaultOpen)
   return (
-    <div className="border-t border-border pt-3">
+    <div className="border-t border-border pt-1">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={id}
-        className="flex w-full flex-wrap items-center gap-2 text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
+        className="flex min-h-11 w-full flex-wrap items-center gap-2 text-caption md:min-h-9 font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
       >
         <ChevronDown
           className={cn(

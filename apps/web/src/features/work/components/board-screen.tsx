@@ -43,6 +43,7 @@ import {
 import {
   ArrowDownWideNarrow,
   ChevronsLeftRight,
+  ChevronsRightLeft,
   FolderKanban,
   Info,
   Rows3,
@@ -71,6 +72,7 @@ import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { NewCardDialog } from './new-card-dialog.js'
 import { TouchDragPreviewLayer } from './touch-drag-preview.js'
 import { WorkShell } from './work-shell.js'
+import { useScopeTransition } from '../lib/use-scope-transition.js'
 import type { CardDropSpec } from './card-tile.js'
 import { fullName } from '../lib/format.js'
 import { orderBoardCards, type BoardCardOrder } from '../lib/board-state.js'
@@ -161,6 +163,7 @@ function BoardScreenInner() {
     isBoardDensity,
   )
   const scrollerElRef = React.useRef<HTMLDivElement | null>(null)
+  const changeScope = useScopeTransition(scope, setScope, scrollerElRef)
   const mobileNavigationTargetRef = React.useRef<string | null>(null)
   const edgeObserverRef = React.useRef<ResizeObserver | null>(null)
   const [edges, setEdges] = React.useState({ left: false, right: false })
@@ -576,40 +579,6 @@ function BoardScreenInner() {
         <p className="border-t border-border pt-3 text-caption text-muted-foreground">
           {t(`boardRefinement.sort.${cardOrder}Help`)}
         </p>
-        <div className="hidden flex-wrap gap-2 border-t border-border pt-3 md:flex">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
-          >
-            {density === 'compact' ? (
-              <Rows3 className="size-4" aria-hidden="true" />
-            ) : (
-              <Rows4 className="size-4" aria-hidden="true" />
-            )}
-            {t(density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact')}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setAllCollapsed(collapsedCount !== columnKeys.length)}
-          >
-            <ChevronsLeftRight className="size-4" aria-hidden="true" />
-            {t(
-              collapsedCount === columnKeys.length
-                ? 'work.board.expandAllColumns'
-                : 'work.board.collapseAllColumns',
-            )}
-          </Button>
-          {collapsedCount > 0 ? (
-            <span className="text-caption text-muted-foreground">
-              {t('work.board.columnsShowing', {
-                shown: columnKeys.length - collapsedCount,
-                total: columnKeys.length,
-              })}
-            </span>
-          ) : null}
-        </div>
       </PopoverContent>
     </Popover>
   )
@@ -625,15 +594,53 @@ function BoardScreenInner() {
         canScrollLeft={edges.left}
         canScrollRight={edges.right}
         layoutKey={`${scope}:${density}:${expandAllNonce}`}
-        showEveryone={() => setScope('all')}
+        showEveryone={() => void changeScope('all')}
       />
+      <div
+        className="flex shrink-0 items-center gap-1 border-l border-border pl-1"
+        data-board-layout-controls
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          className="min-h-9 px-2"
+          onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
+        >
+          {density === 'compact' ? (
+            <Rows3 className="size-4" aria-hidden="true" />
+          ) : (
+            <Rows4 className="size-4" aria-hidden="true" />
+          )}
+          {t(density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact')}
+        </Button>
+        <IconButton
+          className="md:size-8"
+          aria-label={t(
+            collapsedCount === columnKeys.length
+              ? 'work.board.expandAllColumns'
+              : 'work.board.collapseAllColumns',
+          )}
+          tooltip={t(
+            collapsedCount === columnKeys.length
+              ? 'work.board.expandAllColumns'
+              : 'work.board.collapseAllColumns',
+          )}
+          onClick={() => setAllCollapsed(collapsedCount !== columnKeys.length)}
+        >
+          {collapsedCount === columnKeys.length ? (
+            <ChevronsLeftRight aria-hidden="true" />
+          ) : (
+            <ChevronsRightLeft aria-hidden="true" />
+          )}
+        </IconButton>
+      </div>
       {ownColumnIndex !== -1 ? (
         <SegmentedControl
           size="sm"
           className="shrink-0 max-md:[&_button]:min-h-10"
           label={t('work.board.scopeLabel')}
           value={isFiltering ? 'all' : scope}
-          onValueChange={setScope}
+          onValueChange={(next) => void changeScope(next)}
           options={[
             { value: 'all', label: t('work.board.scopeAll'), count: board.members.length },
             { value: 'mine', label: t('work.board.scopeMine') },
@@ -675,7 +682,7 @@ function BoardScreenInner() {
             canScrollLeft={edges.left}
             canScrollRight={edges.right}
             layoutKey={`mobile:${scope}:${expandAllNonce}`}
-            showEveryone={() => setScope('all')}
+            showEveryone={() => void changeScope('all')}
           />
         </div>
 
@@ -697,6 +704,7 @@ function BoardScreenInner() {
           <div className="relative min-h-0 min-w-0 flex-1">
             <div
               ref={setScrollerRefs}
+              data-board-scope={isFiltering ? 'all' : scope}
               onScroll={updateEdgeFade}
               // eslint-disable-next-line react/no-unknown-property -- React 19.2 supports scrollend; the pinned React lint plugin predates that event.
               onScrollEnd={reconcileMobilePage}

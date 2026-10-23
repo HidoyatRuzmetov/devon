@@ -1,30 +1,19 @@
-// `/inbox` (this module's task: "inbox drawer + page with mark read/archive"). A department table's
-// usual `department_child` permission does not apply here -- every route reads/writes only the signed
-// -in user's own notifications (`{ kind: 'personal', ownerUserId }`, `apps/api/src/modules/
-// notifications/index.ts`), so the only gate this screen needs is "is anyone signed in at all",
-// exactly like `HomeRoute`.
-//
-// UI-OVERHAUL.md "Inbox to Linear quality": list + detail split at >=768 (the list stays mounted and
-// keeps its scroll position while the right pane swaps -- Linear/Gmail's own shape), stacking to a
-// bottom sheet at 390; unread dot and coloured reason chips; j/k to move the selection, Enter to
-// open, `e` to archive (Gmail's own keys); grouped by reason; an empty inbox that actually celebrates
-// zero instead of showing the same blank illustration as every other empty list.
+import { notificationDestination } from './notification-destination.js'
+// Personal inbox, embedded in Home for members, heads and accounts without a department.
 import * as React from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'motion/react'
 import { useT } from '@devon/i18n'
 import {
   AllDoneIllustration,
   Badge,
   Button,
   Celebrate,
-  Chip,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   EmptyInboxIllustration,
-  PageHeader,
+  IconButton,
   Stagger,
   StaggerItem,
   StateView,
@@ -36,30 +25,42 @@ import {
   toast,
   toastWithUndo,
   useCelebrate,
-  useReducedMotion,
 } from '@devon/ui'
-import { CalendarDays, Check, CheckCheck, SlidersHorizontal, View } from 'lucide-react'
+import {
+  CalendarDays,
+  Check,
+  CheckCheck,
+  SlidersHorizontal,
+  MoreHorizontal,
+  ChevronRight,
+} from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
-import { useMediaQuery } from '../../lib/use-media-query.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
-import { navigate } from '../../lib/router.js'
+import { navigate, replaceSearchParam, useSearchParams } from '../../lib/router.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
-import { fetchIcsUrl, REASONS, type InboxStatus, type NotificationDto } from './api.js'
+import { fetchIcsUrl, type InboxStatus, type NotificationDto } from './api.js'
 import {
   useMarkAllReadMutation,
   useMarkReadMutation,
-  useNotificationsQuery,
+  useNotificationFeed,
   useSnoozeMutation,
   useUndoableArchive,
 } from './hooks.js'
-import { NotificationDetail } from './notification-sheet.js'
 import { NotificationRow } from './notification-row.js'
 import { NotificationSheet } from './notification-sheet.js'
-import { REASON_TONE, ReasonIcon } from './reason-icon.js'
+import { inboxGroup, INBOX_GROUPS, type InboxGroup } from './groups.js'
 
 const TABS: readonly InboxStatus[] = ['inbox', 'unread', 'archived']
 type OpenNotification = (notification: NotificationDto, index: number, opener?: HTMLElement) => void
+
+function visibleInboxOpeners(scope: HTMLElement | null | undefined) {
+  return Array.from(
+    scope?.querySelectorAll<HTMLButtonElement>(
+      '[role="tabpanel"][data-state="active"] [data-inbox-opener]',
+    ) ?? [],
+  ).filter((row) => !row.closest('details:not([open])') && row.getClientRects().length > 0)
+}
 
 /** Which row the j/k cursor is on, by id.
  *
@@ -71,6 +72,12 @@ type OpenNotification = (notification: NotificationDto, index: number, opener?: 
  * all -- the switch is purely the `hidden` attribute on two wrapper `div`s -- and a j/k press
  * re-renders the rows, which is the only thing that actually changed. */
 const SelectedNotificationContext = React.createContext<string | null>(null)
+const GroupCountsContext = React.createContext<{
+  counts: Record<InboxGroup, number> | undefined
+  hasMore: boolean
+  pending: boolean
+  loadMore: () => void
+}>({ counts: undefined, hasMore: false, pending: false, loadMore: () => {} })
 
 function InboxTabs({ unreadCount }: { unreadCount: number }) {
   const t = useT()
@@ -95,16 +102,19 @@ function useListKeyboardNav({
   onSelect,
   onOpen,
   onArchive,
+  scope,
 }: {
+  scope?: React.RefObject<HTMLDivElement | null> | undefined
   items: readonly NotificationDto[]
   selectedId: string | null
   onSelect: (notification: NotificationDto) => void
   onOpen: (notification: NotificationDto) => void
-  onArchive: (id: string) => void
+  onArchive: (id: string, fromRow?: boolean) => void
 }) {
   React.useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null
+      if (scope && (!target || !scope.current?.contains(target))) return
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return
       if (target?.isContentEditable) return
       if (e.ctrlKey || e.metaKey || e.altKey) return
@@ -114,26 +124,32 @@ function useListKeyboardNav({
       // on that actual focused row, including after Tab navigation or closing its detail sheet.
       if (target?.closest('button, a, [role="button"], [role="tab"]') && !focusedRow) return
       if (focusedRow && e.key === 'Enter') return
-      if (items.length === 0) return
+      // Native disclosures can close without a React render. Read visibility when a key is
+      // pressed so keyboard navigation and archive recovery never target a collapsed group.
+      const visibleIds = new Set(
+        visibleInboxOpeners(scope?.current).map((row) => row.dataset['inboxOpener']),
+      )
+      const navigableItems = scope ? items.filter((item) => visibleIds.has(item.id)) : items
+      if (navigableItems.length === 0) return
       const currentId = focusedRow?.dataset['inboxOpener'] ?? selectedId
-      const currentIndex = items.findIndex((item) => item.id === currentId)
+      const currentIndex = navigableItems.findIndex((item) => item.id === currentId)
 
       if (e.key === 'j') {
         e.preventDefault()
-        const next = items[Math.min(items.length - 1, currentIndex + 1)]
+        const next = navigableItems[Math.min(navigableItems.length - 1, currentIndex + 1)]
         if (next) onSelect(next)
       } else if (e.key === 'k') {
         e.preventDefault()
-        const previous = items[Math.max(0, currentIndex - 1)]
+        const previous = navigableItems[Math.max(0, currentIndex - 1)]
         if (previous) onSelect(previous)
       } else if (e.key === 'Enter') {
-        const current = items[currentIndex]
+        const current = navigableItems[currentIndex]
         if (current) {
           e.preventDefault()
           onOpen(current)
         }
       } else if (e.key === 'e') {
-        const current = items[currentIndex]
+        const current = navigableItems[currentIndex]
         if (current) {
           e.preventDefault()
           onArchive(current.id)
@@ -142,7 +158,7 @@ function useListKeyboardNav({
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [items, selectedId, onSelect, onOpen, onArchive])
+  }, [items, selectedId, onSelect, onOpen, onArchive, scope])
 }
 
 /** Motion verdict F5. A tab click cost a 499 ms long task followed by a 238 ms one, and the
@@ -170,7 +186,7 @@ const InboxRow = React.memo(function InboxRow({
   index: number
   showReasonChip?: boolean
   onOpen: OpenNotification
-  onArchive: (id: string) => void
+  onArchive: (id: string, fromRow?: boolean) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
   /** `<Stagger presence>`'s `AnimatePresence mode="popLayout"` clones its presence child with a ref
@@ -196,7 +212,7 @@ const InboxRow = React.memo(function InboxRow({
           {...(showReasonChip === undefined ? {} : { showReasonChip })}
           onOpen={(opener) => onOpen(notification, index, opener)}
           onQuickAction={() => onQuickAction(notification)}
-          onArchive={() => onArchive(notification.id)}
+          onArchive={() => onArchive(notification.id, true)}
           onSnooze={(minutes) => onSnooze(notification.id, minutes)}
         />
       </StaggerItem>
@@ -226,7 +242,7 @@ function InboxList({
   items: readonly NotificationDto[]
   listKey: string
   onOpen: OpenNotification
-  onArchive: (id: string) => void
+  onArchive: (id: string, fromRow?: boolean) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
 }) {
@@ -267,28 +283,31 @@ function GroupedInboxList({
   items: readonly NotificationDto[]
   listKey: string
   onOpen: OpenNotification
-  onArchive: (id: string) => void
+  onArchive: (id: string, fromRow?: boolean) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
 }) {
   const t = useT()
+  const feed = React.useContext(GroupCountsContext)
   const indexOf = new Map(items.map((n, i) => [n.id, i]))
   return (
-    <div className="flex flex-col gap-6">
-      {REASONS.map((reason) => {
-        const group = items.filter((n) => n.reason === reason)
-        if (group.length === 0) return null
+    <div className="flex flex-col gap-4">
+      {INBOX_GROUPS.map((reason) => {
+        const group = items.filter((n) => inboxGroup(n) === reason)
+        const total = feed.counts?.[reason] ?? group.length
+        if (total === 0) return null
         return (
-          <section key={reason} className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <Chip
-                tone={REASON_TONE[reason]}
-                leading={<ReasonIcon reason={reason} className="size-3" />}
-              >
-                {t(`inbox.reason.${reason}`)}
-              </Chip>
-              <span className="text-caption text-muted-foreground">{group.length}</span>
-            </div>
+          <details key={reason} open className="group">
+            <summary className="mb-2 flex min-h-8 cursor-pointer list-none items-center gap-2 rounded-sm px-1 hover:bg-accent [&::-webkit-details-marker]:hidden">
+              <ChevronRight
+                className="size-3.5 text-muted-foreground transition-transform group-open:rotate-90 motion-reduce:transition-none"
+                aria-hidden="true"
+              />
+              <span className="text-caption font-semibold text-muted-foreground">
+                {t(`homeRefinement.inboxGroups.${reason}`)}
+              </span>
+              <span className="text-caption text-muted-foreground">{total}</span>
+            </summary>
             <Stagger
               presence
               as="ul"
@@ -308,7 +327,18 @@ function GroupedInboxList({
                 />
               ))}
             </Stagger>
-          </section>
+            {!group.length && feed.hasMore ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                loading={feed.pending}
+                onClick={feed.loadMore}
+              >
+                {t('homeRefinement.loadMore')}
+              </Button>
+            ) : null}
+          </details>
         )
       })}
     </div>
@@ -346,7 +376,7 @@ const InboxTabPanel = React.memo(function InboxTabPanel({
   onRetry: () => void
   grouped: boolean
   onOpen: OpenNotification
-  onArchive: (id: string) => void
+  onArchive: (id: string, fromRow?: boolean) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
   zeroCelebrate?: { play: boolean; onDone: () => void }
@@ -388,7 +418,7 @@ function InboxBody({
   status: InboxStatus
   grouped: boolean
   onOpen: OpenNotification
-  onArchive: (id: string) => void
+  onArchive: (id: string, fromRow?: boolean) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
   /** UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": inbox zero gets the same one-shot
@@ -396,10 +426,7 @@ function InboxBody({
    * inbox) -- `inbox-screen.tsx` owns that transition detection. */
   zeroCelebrate?: { play: boolean; onDone: () => void }
 }) {
-  if (isPending || items === undefined) {
-    return <StateView kind="loading" titleKey="state.loading" />
-  }
-  if (isError) {
+  if (isError && items === undefined) {
     return (
       <StateView
         kind="error"
@@ -408,6 +435,9 @@ function InboxBody({
         action={{ labelKey: 'state.error.action', onAction: onRetry }}
       />
     )
+  }
+  if (isPending || items === undefined) {
+    return <StateView kind="loading" titleKey="state.loading" />
   }
   if (items.length === 0) {
     return (
@@ -444,25 +474,28 @@ function InboxBody({
   return grouped ? <GroupedInboxList {...props} /> : <InboxList {...props} />
 }
 
-export default function InboxScreen() {
+export function InboxPanel() {
   const t = useT()
   const forced = useForcedState()
   const online = useOnline()
-  const detailCrossfadeReduced = useReducedMotion()
   const meQuery = useMeQuery()
-  const [status, setStatus] = React.useState<InboxStatus>('inbox')
+  const search = useSearchParams()
+  const requested = search.get('inbox')
+  const [status, setStatus] = React.useState<InboxStatus>(
+    requested === 'unread' || requested === 'archived' ? requested : 'inbox',
+  )
+  React.useEffect(() => {
+    if (requested)
+      setStatus(requested === 'unread' || requested === 'archived' ? requested : 'inbox')
+  }, [requested])
   const [openId, setOpenId] = React.useState<string | null>(null)
-  const [selectedIndex, setSelectedIndex] = React.useState(0)
+  const [selectedIndex, setSelectedIndex] = React.useState(-1)
   const inboxRef = React.useRef<HTMLDivElement>(null)
   const openerRef = React.useRef<HTMLElement | null>(null)
   const openerNotificationId = React.useRef<string | null>(null)
   // UI-OVERHAUL.md §8: grouped by reason is the default view, not an opt-in someone has to find --
   // the toggle moved into a "View" menu (below) rather than staying its own header button.
   const [grouped, setGrouped] = React.useState(true)
-  // The sidebar consumes 264px: a tablet-sized viewport cannot fit two readable panes.
-  // Keep the list and open its detail sheet until both panes have useful working space.
-  const hasSplitView = useMediaQuery('(min-width: 1280px)')
-
   const settled = !meQuery.isPending
 
   React.useEffect(() => {
@@ -470,13 +503,11 @@ export default function InboxScreen() {
     if (settled && meQuery.data === null) navigate('/login')
   }, [forced, settled, meQuery.data])
 
-  // Motion verdict F5: all three tab lists stay mounted and the inactive two are hidden, so
-  // Barchasi -> Oʻqilmagan is a visibility change rather than an unmount of thirty rows and a mount
-  // of thirty more. Only the tab in view polls (`useNotificationsQuery`'s `active`).
-  const inboxQuery = useNotificationsQuery('inbox', status === 'inbox')
-  const unreadQuery = useNotificationsQuery('unread', status === 'unread')
-  const archivedQuery = useNotificationsQuery('archived', status === 'archived')
-  const queryByStatus: Record<InboxStatus, ReturnType<typeof useNotificationsQuery>> = {
+  // Keep mounted tabs stable; only the selected tab fetches. Realtime invalidation refreshes it.
+  const inboxQuery = useNotificationFeed('inbox', status === 'inbox')
+  const unreadQuery = useNotificationFeed('unread', status === 'unread')
+  const archivedQuery = useNotificationFeed('archived', status === 'archived')
+  const queryByStatus: Record<InboxStatus, ReturnType<typeof useNotificationFeed>> = {
     inbox: inboxQuery,
     unread: unreadQuery,
     archived: archivedQuery,
@@ -500,7 +531,7 @@ export default function InboxScreen() {
     [notificationsQuery.data?.items],
   )
   const navigationItems = grouped
-    ? REASONS.flatMap((reason) => items.filter((item) => item.reason === reason))
+    ? INBOX_GROUPS.flatMap((group) => items.filter((item) => inboxGroup(item) === group))
     : items
   // A conditional sheet unmount keeps its last close callback. Read current rows through a ref,
   // so that callback does not restore focus to a row still animating out after a successful archive.
@@ -512,7 +543,9 @@ export default function InboxScreen() {
   // memoised and only the rows re-render when the selection moves.
   const selectedId = items[selectedIndex]?.id ?? null
   const unreadCount = notificationsQuery.data?.unreadCount ?? 0
-  const openNotification = items.find((n) => n.id === openId) ?? null
+  const [openSnapshot, setOpenSnapshot] = React.useState<NotificationDto | null>(null)
+  const openNotification =
+    items.find((n) => n.id === openId) ?? (openSnapshot?.id === openId ? openSnapshot : null)
 
   // Inbox zero fires once, on the transition into empty -- the `inbox` tab having *always* been
   // empty (a brand-new account, a hard refresh) is not a moment to celebrate, only clearing it out
@@ -537,7 +570,7 @@ export default function InboxScreen() {
   }, [status, notificationsQuery.data, items.length, zeroCelebrate.fire]) // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    setSelectedIndex(0)
+    setSelectedIndex(-1)
     setOpenId(null)
   }, [status])
 
@@ -553,6 +586,7 @@ export default function InboxScreen() {
       openerNotificationId.current = notification.id
       openerRef.current =
         opener ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
+      setOpenSnapshot(notification)
       setOpenId(notification.id)
       setSelectedIndex(index)
       if (notification.readAt === null) markReadMutate([notification.id])
@@ -563,27 +597,24 @@ export default function InboxScreen() {
   const handleQuickAction = React.useCallback(
     (notification: NotificationDto) => {
       if (notification.readAt === null) markReadMutate([notification.id])
-      if (notification.deepLink) navigate(notification.deepLink)
+      const destination = notificationDestination(notification)
+      if (destination) navigate(destination)
     },
     [markReadMutate],
   )
 
   const handleArchive = React.useCallback(
-    async (id: string) => {
+    async (id: string, fromRow = false) => {
       const focusedRow = document.activeElement?.closest<HTMLElement>('[data-inbox-row]')
-      const restoreRowFocus = focusedRow?.dataset['inboxRow'] === id
-      const visibleRows = Array.from(
-        inboxRef.current?.querySelectorAll<HTMLButtonElement>(
-          '[role="tabpanel"][data-state="active"] [data-inbox-opener]',
-        ) ?? [],
-      )
+      const restoreRowFocus = fromRow || focusedRow?.dataset['inboxRow'] === id
+      const visibleRows = visibleInboxOpeners(inboxRef.current)
       const rowIndex = visibleRows.findIndex((row) => row.dataset['inboxOpener'] === id)
       const nextRow = visibleRows[rowIndex + 1] ?? visibleRows[rowIndex - 1]
       try {
         const { cancel } = await archiveUndoable(id)
         setOpenId((current) => (current === id ? null : current))
         if (restoreRowFocus) {
-          if (nextRow?.isConnected) nextRow.focus()
+          if (nextRow?.isConnected && !nextRow.closest('details:not([open])')) nextRow.focus()
           else
             inboxRef.current
               ?.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')
@@ -633,6 +664,7 @@ export default function InboxScreen() {
   }
 
   useListKeyboardNav({
+    scope: inboxRef,
     items: navigationItems,
     selectedId,
     onSelect: (notification) => {
@@ -642,7 +674,6 @@ export default function InboxScreen() {
           `[role="tabpanel"][data-state="active"] [data-inbox-opener="${CSS.escape(notification.id)}"]`,
         )
         ?.focus()
-      if (hasSplitView) setOpenId(notification.id)
     },
     onOpen: (n) =>
       handleOpen(
@@ -673,22 +704,30 @@ export default function InboxScreen() {
 
   return (
     <Tabs
+      id="home-inbox"
+      data-testid="home-inbox"
       ref={inboxRef}
       value={status}
       onValueChange={(value) => {
-        if (TABS.includes(value as InboxStatus)) setStatus(value as InboxStatus)
+        if (TABS.includes(value as InboxStatus)) {
+          setStatus(value as InboxStatus)
+          replaceSearchParam('inbox', value === 'inbox' ? 'all' : value)
+        }
       }}
-      className="flex flex-col gap-6"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
-      <PageHeader
-        eyebrow={t('inbox.eyebrow')}
-        title={t('inbox.title')}
-        actions={
-          <>
-            {/* Keep this action's space while the count loads or reaches zero, so the list
-                does not move when data arrives. It becomes usable only with unread data. */}
+      <div className="shrink-0 border-b border-border px-3 pt-3 pb-2">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2
+            aria-label={t('inbox.title')}
+            className="flex items-center gap-2 font-display text-h3"
+          >
+            {t('inbox.title')}
+            {unreadCount > 0 ? <Badge tone="info">{unreadCount}</Badge> : null}
+          </h2>
+          <div className="flex items-center gap-1">
             <Button
-              variant="primary"
+              variant="ghost"
               size="sm"
               disabled={
                 unreadCount <= 0 || notificationsQuery.isPending || notificationsQuery.isError
@@ -697,42 +736,34 @@ export default function InboxScreen() {
               onClick={() => markAllRead.mutate()}
             >
               <CheckCheck className="size-4" aria-hidden="true" />
-              {t('inbox.markAllRead')}
+              <span className="text-caption">{t('inbox.markAllRead')}</span>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <View className="size-4" aria-hidden="true" />
-                  {t('inbox.viewMenu.title')}
-                </Button>
+                <IconButton aria-label={t('homeRefinement.inboxActions')}>
+                  <MoreHorizontal className="size-4" aria-hidden="true" />
+                </IconButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onSelect={() => setGrouped((v) => !v)}
-                  className="justify-between"
-                >
-                  {t('inbox.groupByReason')}
-                  {grouped ? <Check className="size-3.5" aria-hidden="true" /> : null}
+                <DropdownMenuItem onSelect={() => setGrouped((v) => !v)}>
+                  {t('homeRefinement.groupUpdates')}
+                  {grouped ? <Check className="ml-auto size-4" aria-hidden="true" /> : null}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleCopyCalendar}>
                   <CalendarDays className="size-4" aria-hidden="true" />
                   {t('inbox.calendarLink')}
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => navigate('/account/notifications?from=overview')}>
+                  <SlidersHorizontal className="size-4" aria-hidden="true" />
+                  {t('inbox.preferences.title')}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/account/notifications')}>
-              <SlidersHorizontal className="size-4" aria-hidden="true" />
-              {t('inbox.preferences.title')}
-            </Button>
-          </>
-        }
-        tabs={<InboxTabs unreadCount={unreadCount} />}
-      />
-
-      {/* `minmax(0,440px)`: the list was ~420px of a 1,144px content column with the detail pane
-          only an 80px bordered box below it (item handoff) -- widening the list a little and letting
-          the detail pane take the rest evens that out. */}
-      <div className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
+          </div>
+        </div>
+        <InboxTabs unreadCount={0} />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
         <SelectedNotificationContext.Provider value={selectedId}>
           <div className="min-w-0">
             {TABS.map((tab) => (
@@ -751,65 +782,49 @@ export default function InboxScreen() {
                   tab === status && 'animate-[devon-rise-in_220ms_var(--ease-out)]',
                 )}
               >
-                <InboxTabPanel
-                  tab={tab}
-                  items={queryByStatus[tab].data?.items}
-                  isPending={queryByStatus[tab].isPending}
-                  isError={queryByStatus[tab].isError}
-                  onRetry={retryByStatus[tab]}
-                  grouped={grouped}
-                  onOpen={handleOpen}
-                  onArchive={handleArchive}
-                  onQuickAction={handleQuickAction}
-                  onSnooze={handleSnooze}
-                  {...(tab === 'inbox' ? { zeroCelebrate: zeroCelebrateProp } : {})}
-                />
+                <GroupCountsContext.Provider
+                  value={{
+                    counts: queryByStatus[tab].data?.groupCounts,
+                    hasMore: Boolean(queryByStatus[tab].hasNextPage),
+                    pending: queryByStatus[tab].isFetchingNextPage,
+                    loadMore: () => {
+                      void queryByStatus[tab].fetchNextPage()
+                    },
+                  }}
+                >
+                  <InboxTabPanel
+                    tab={tab}
+                    items={queryByStatus[tab].data?.items}
+                    isPending={queryByStatus[tab].isPending}
+                    isError={queryByStatus[tab].isError}
+                    onRetry={retryByStatus[tab]}
+                    grouped={grouped}
+                    onOpen={handleOpen}
+                    onArchive={handleArchive}
+                    onQuickAction={handleQuickAction}
+                    onSnooze={handleSnooze}
+                    {...(tab === 'inbox' ? { zeroCelebrate: zeroCelebrateProp } : {})}
+                  />
+                </GroupCountsContext.Provider>
+                {queryByStatus[tab].hasNextPage ? (
+                  <Button
+                    className="mt-3 w-full"
+                    variant="ghost"
+                    size="sm"
+                    loading={queryByStatus[tab].isFetchingNextPage}
+                    onClick={() => void queryByStatus[tab].fetchNextPage()}
+                  >
+                    {t('homeRefinement.loadMore')}
+                  </Button>
+                ) : null}
               </TabsContent>
             ))}
           </div>
         </SelectedNotificationContext.Provider>
-
-        {/* The right pane of the split at >=1280; a sheet carries the same content below that
-            -- `hasSplitView` decides which one is actually mounted, so
-            the two never both claim the same open notification at once. */}
-        {hasSplitView ? (
-          <div className="sticky top-4 h-full min-h-100 self-stretch overflow-hidden rounded-md border border-border bg-card p-6">
-            {/* round2 SEV2 "switching selection swaps the detail pane with no crossfade": keyed on
-                the open notification's id (or the empty-selection state) so picking a different row
-                fades the old content out and the new one in, instead of the swap reading as a
-                flicker. */}
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={openNotification?.id ?? 'empty'}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: detailCrossfadeReduced ? 0.1 : 0.16 }}
-                className="h-full"
-              >
-                {openNotification ? (
-                  <NotificationDetail
-                    notification={openNotification}
-                    onArchive={handleArchiveNow}
-                  />
-                ) : (
-                  // Centred, illustrated "nothing selected" instead of one sentence in an otherwise
-                  // empty box (item handoff: "~600px of nothing below it").
-                  <div className="flex h-full min-h-88 flex-col items-center justify-center gap-3 text-center">
-                    <EmptyInboxIllustration className="w-32" />
-                    <p className="max-w-72 text-body text-muted-foreground">
-                      {t('inbox.detail.emptySelection')}
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        ) : null}
       </div>
 
       <NotificationSheet
-        notification={hasSplitView ? null : openNotification}
+        notification={openNotification}
         onOpenChange={(open) => {
           if (!open) setOpenId(null)
         }}

@@ -59,11 +59,28 @@ export type NotificationDto = z.infer<typeof notificationSchema>
 export const notificationListSchema = z.object({
   items: z.array(notificationSchema).max(200),
   unreadCount: z.number().int().nonnegative(),
+  groupCounts: z.object({
+    tasks: z.number().int().nonnegative(),
+    events: z.number().int().nonnegative(),
+    summaries: z.number().int().nonnegative(),
+    system: z.number().int().nonnegative(),
+  }),
   nextCursor: z.string().nullable(),
 })
 
 export const listQuerySchema = z.object({
-  cursor: z.string().optional(),
+  cursor: z
+    .string()
+    .max(160)
+    .refine((value) => {
+      const parts = value.split('|')
+      return (
+        parts.length <= 2 &&
+        z.string().datetime({ offset: true }).safeParse(parts[0]).success &&
+        (parts.length === 1 || z.string().uuid().safeParse(parts[1]).success)
+      )
+    }, 'Invalid notification cursor')
+    .optional(),
   limit: z.coerce.number().int().min(1).max(100).default(30),
   status: z.enum(['inbox', 'archived', 'unread']).default('inbox'),
   reason: reasonSchema.optional(),
@@ -99,17 +116,18 @@ export const putPrefsSchema = z
           .extend({ digestMode: digestModeSchema.optional() })
           .superRefine((pref, ctx) => {
             // Email has no delivery adapter. Keep historical rows for a future adapter, but do
-            // not accept a setting that cannot take effect. The in-app inbox is always available.
+            // not accept a setting that cannot take effect. In-app delivery has no batching mode.
             if (pref.channel === 'email')
-              ctx.addIssue({ code: 'custom', path: ['channel'], message: 'Channel unavailable' })
-            if (
-              pref.channel === 'inapp' &&
-              (!pref.enabled || (pref.digestMode && pref.digestMode !== 'instant'))
-            )
               ctx.addIssue({
                 code: 'custom',
-                path: ['enabled'],
-                message: 'Inbox is always enabled',
+                path: ['channel'],
+                message: 'Channel unavailable',
+              })
+            if (pref.channel === 'inapp' && pref.digestMode && pref.digestMode !== 'instant')
+              ctx.addIssue({
+                code: 'custom',
+                path: ['digestMode'],
+                message: 'Unsupported delivery frequency',
               })
             if (
               pref.channel === 'telegram' &&
@@ -169,6 +187,8 @@ export const putDepartmentSettingsSchema = z
   })
   .strict()
 
-export const icsTokenParamsSchema = z.object({ token: z.string().min(16).max(200) })
+export const icsTokenParamsSchema = z.object({
+  token: z.string().min(16).max(200),
+})
 
 export { localeSchema }

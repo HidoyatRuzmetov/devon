@@ -1,0 +1,23 @@
+{
+  "homeRefinement": {
+    "inboxActions": "Настройки входящих",
+    "updateActions": "Действия с уведомлением",
+    "groupUpdates": "Группировать уведомления",
+    "workOverview": "Обзор работы",
+    "myWork": "Моя работа",
+    "deadlineFirst": "Срок, затем приоритет",
+    "workCategory": "Категория работы",
+    "individual": "Личные задачи",
+    "projects": "Групповые проекты",
+    "clearStatus": "Снять фильтр «{status}»",
+    "noMatchingAssignments": "Нет поручений с этим статусом.",
+    "inboxGroups": {
+      "tasks": "Задачи",
+      "events": "События",
+      "summaries": "Сводки",
+      "system": "Система"
+    },
+    "loadMore": "Загрузить ещё",
+    "allActive": "Все активные"
+  }
+}

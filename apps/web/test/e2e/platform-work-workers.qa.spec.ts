@@ -359,7 +359,10 @@ test('@qa UI reminder reaches the real queue inbox sent receipt and working card
     const row = inbox.locator(`[data-inbox-row="${notification.id}"]`)
     await expect(row).toBeVisible()
     await f.watching.screenshot({ path: test.info().outputPath('reminder-inbox-reloaded.png') })
-    await row.getByRole('button', { name: label('inbox.row.open'), exact: true }).click()
+    await row
+      .getByRole('button', { name: label('homeRefinement.updateActions'), exact: true })
+      .click()
+    await f.watching.getByRole('menuitem', { name: label('inbox.row.open'), exact: true }).click()
     await expect(f.watching.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(title)
     await f.watching.reload()
     const reloaded = await section(f.watching, `card-reminders-${id}`)

@@ -15,15 +15,17 @@ function label(locale: string, key: string): string {
       'utf8',
     ),
   )
+  const direct = (value as Record<string, unknown>)[key]
+  if (typeof direct === 'string') return direct
   for (const part of key.split('.')) value = (value as Record<string, unknown>)[part]
   if (typeof value !== 'string') throw new Error(`Missing localized key ${locale}:${key}`)
   return value
 }
 async function sidebarGeometry(navLocator: Locator) {
   return navLocator.evaluate((nav) => {
-    const inbox = nav.querySelector('a[href="/inbox"]')!
-    const label = inbox.querySelector('[data-shell-label]')!
-    const badge = inbox.lastElementChild!
+    const assistant = nav.querySelector('a[href="/assistant"]')!
+    const label = assistant.querySelector('[data-shell-label]')!
+    const icon = assistant.querySelector('svg')!
     const range = document.createRange()
     range.selectNodeContents(label)
     const textRects = [...range.getClientRects()].map((rect) => ({
@@ -32,21 +34,24 @@ async function sidebarGeometry(navLocator: Locator) {
       top: rect.top,
       bottom: rect.bottom,
     }))
-    const badgeRect = badge.getBoundingClientRect()
+    const iconRect = icon.getBoundingClientRect()
+    const linkRect = assistant.getBoundingClientRect()
     const overlap = textRects.some(
       (rect) =>
-        rect.left < badgeRect.right &&
-        rect.right > badgeRect.left &&
-        rect.top < badgeRect.bottom &&
-        rect.bottom > badgeRect.top,
+        rect.left < iconRect.right &&
+        rect.right > iconRect.left &&
+        rect.top < iconRect.bottom &&
+        rect.bottom > iconRect.top,
     )
     const scroller = nav.querySelector('.devon-nav-scroller')!
     return {
       label: label.textContent,
-      count: badge.textContent,
       overlap,
+      labelOverflow: textRects.some(
+        (rect) => rect.left < linkRect.left || rect.right > linkRect.right + 1,
+      ),
       textRects,
-      badge: { left: badgeRect.left, right: badgeRect.right },
+      icon: { left: iconRect.left, right: iconRect.right },
       navHeight: scroller.clientHeight,
       navScrollHeight: scroller.scrollHeight,
       sidebarHeight: nav.clientHeight,
@@ -87,7 +92,10 @@ test('@qa sidebar collision probe', async ({ browser }) => {
           pixelInspected: false,
         }) + '\n',
       )
-      expect.soft(geometry.overlap, `768x${height}: label and count do not overlap`).toBe(false)
+      expect.soft(geometry.overlap, `768x${height}: label and icon do not overlap`).toBe(false)
+      expect
+        .soft(geometry.labelOverflow, `768x${height}: assistant label fits its link`)
+        .toBe(false)
       expect
         .soft(geometry.navHeight, `768x${height}: navigation has usable visible height`)
         .toBeGreaterThanOrEqual(88)
@@ -160,11 +168,15 @@ test('@qa sidebar narrow Russian overflow probe', async ({ browser }) => {
 })
 async function visibleFocus(locator: Locator, page: Page) {
   await expect(locator).toBeFocused()
-  const bounds = await locator.boundingBox()
-  expect(bounds).not.toBeNull()
   const viewport = page.viewportSize()!
-  expect(bounds!.y).toBeGreaterThanOrEqual(-1)
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height + 1)
+  // Focusing an off-screen account action scrolls the page smoothly. Assert the settled
+  // result, not the first animation frame before the native focus scroll has completed.
+  await expect
+    .poll(async () => {
+      const bounds = await locator.boundingBox()
+      return bounds !== null && bounds.y >= -1 && bounds.y + bounds.height <= viewport.height + 1
+    })
+    .toBe(true)
 }
 test('@qa sidebar native link focus diagnostic', async ({ browser }) => {
   const context = await newFlowContext(browser)
@@ -316,6 +328,8 @@ for (const locale of locales) {
           let nav = await openSidebar(page, locale, width)
           const geometry = await sidebarGeometry(nav)
           expect(geometry.overlap).toBe(false)
+          expect(geometry.labelOverflow).toBe(false)
+          await expect(nav.locator('a[href="/inbox"]')).toHaveCount(0)
           expect(geometry.navHeight).toBeGreaterThanOrEqual(88)
           const overflow = await page.evaluate(() => ({
             width: innerWidth,
@@ -370,56 +384,39 @@ for (const locale of locales) {
             ),
           ).toContain('knowledge')
           const account = nav.getByRole('button', {
-            name: label(locale, 'shell.account.aria'),
+            name: label(locale, 'accounts.settings.title'),
             exact: true,
           })
           await account.focus()
           await visibleFocus(account, page)
           await account.press('Enter')
-          const menu = page.getByRole('menu')
-          await expect(menu).toBeVisible()
+          await expect(page).toHaveURL(/\/account$/)
+          await waitForLoadedRoute(page, '/account')
+          await expect(page.getByRole('menu')).toHaveCount(0)
+          const signOut = page.getByRole('button', {
+            name: label(locale, 'shell.account.signout'),
+            exact: true,
+          })
+          await signOut.focus()
+          await visibleFocus(signOut, page)
           await settleCapture(page, false)
-          const menuBounds = await menu.boundingBox()
+          const signOutBounds = await signOut.boundingBox()
           const screenshot = test
             .info()
-            .outputPath(`account-menu-${width}-${height}-text${scale * 100}.png`)
+            .outputPath(`account-settings-${width}-${height}-text${scale * 100}.png`)
           await page.screenshot({ path: screenshot })
           appendFileSync(
             test.info().outputPath('captures.jsonl'),
             JSON.stringify({
               ...metadata,
-              surface: 'account-menu',
+              surface: 'account-settings',
               screenshot,
-              menuBounds,
+              signOutBounds,
               pixelInspected: false,
             }) + '\n',
           )
-          expect.soft(menuBounds!.x).toBeGreaterThanOrEqual(-1)
-          expect.soft(menuBounds!.x + menuBounds!.width).toBeLessThanOrEqual(width + 1)
-          expect.soft(menuBounds!.y).toBeGreaterThanOrEqual(-1)
-          expect.soft(menuBounds!.y + menuBounds!.height).toBeLessThanOrEqual(height + 1)
-          await expect(menu.getByRole('menuitem')).toHaveCount(3)
-          await page.keyboard.press('End')
-          await visibleFocus(
-            menu.getByRole('menuitem', {
-              name: label(locale, 'shell.account.signout'),
-              exact: true,
-            }),
-            page,
-          )
-          await page.keyboard.press('Home')
-          const settings = menu.getByRole('menuitem', {
-            name: label(locale, 'shell.account.settings'),
-            exact: true,
-          })
-          await visibleFocus(settings, page)
-          await page.keyboard.press('Escape')
-          await expect(menu).not.toBeVisible()
-          await expect(account).toBeFocused()
-          await account.press('Enter')
-          await settings.press('Enter')
-          await expect(page).toHaveURL(/\/account$/)
-          await waitForLoadedRoute(page, '/account')
+          expect.soft(signOutBounds!.x).toBeGreaterThanOrEqual(-1)
+          expect.soft(signOutBounds!.x + signOutBounds!.width).toBeLessThanOrEqual(width + 1)
           const me = await context.request.get('/api/v1/me')
           expect(me.status()).toBe(200)
           expect((await me.json()).user.locale).toBe(locale)
@@ -446,10 +443,12 @@ for (const locale of locales) {
             await page.reload()
             await waitForLoadedRoute(page, '/account')
             await expect(page.locator('aside nav')).toHaveCSS('width', '64px')
-            const railInbox = page.locator('aside nav a[href="/inbox"]')
-            await railInbox.focus()
-            await railInbox.hover()
-            await expect(page.getByRole('tooltip')).toContainText(label(locale, 'inbox.title'))
+            const railAssistant = page.locator('aside nav a[href="/assistant"]')
+            await railAssistant.focus()
+            await railAssistant.hover()
+            await expect(page.getByRole('tooltip')).toContainText(
+              label(locale, 'assistantWorkspace.title'),
+            )
             const expand = page.getByRole('button', {
               name: label(locale, 'shell.sidebar.expand'),
               exact: true,
@@ -464,45 +463,21 @@ for (const locale of locales) {
         }
         const nav = await openSidebar(page, locale, 360)
         const account = nav.getByRole('button', {
-          name: label(locale, 'shell.account.aria'),
+          name: label(locale, 'accounts.settings.title'),
           exact: true,
         })
         await account.focus()
         await account.press('Enter')
-        await expect(page.getByRole('menu')).toBeVisible()
-        await expect(
-          page.getByRole('menuitem', {
-            name: label(locale, 'shell.account.settings'),
-            exact: true,
-          }),
-        ).toBeFocused()
-        await page.keyboard.press('ArrowDown')
-        await expect(
-          page.getByRole('menuitem', { name: label(locale, 'shell.shortcuts.title'), exact: true }),
-        ).toBeFocused()
-        await page.keyboard.press('Enter')
-        await expect(
-          page.getByRole('dialog', { name: label(locale, 'shell.shortcuts.title'), exact: true }),
-        ).toBeVisible()
-        await page.keyboard.press('Escape')
-        await expect(
-          page.getByRole('dialog', { name: label(locale, 'shell.shortcuts.title'), exact: true }),
-        ).not.toBeVisible()
-        await settleCapture(page, false)
-        await account.focus()
-        await account.press('Enter')
-        await expect(page.getByRole('menu')).toBeVisible()
-        await expect(
-          page.getByRole('menuitem', {
-            name: label(locale, 'shell.account.settings'),
-            exact: true,
-          }),
-        ).toBeFocused()
-        await page.keyboard.press('End')
-        await expect(
-          page.getByRole('menuitem', { name: label(locale, 'shell.account.signout'), exact: true }),
-        ).toBeFocused()
-        await page.keyboard.press('Enter')
+        await expect(page).toHaveURL(/\/account$/)
+        await waitForLoadedRoute(page, '/account')
+        await expect(page.getByRole('menu')).toHaveCount(0)
+        const signOut = page.getByRole('button', {
+          name: label(locale, 'shell.account.signout'),
+          exact: true,
+        })
+        await signOut.focus()
+        await visibleFocus(signOut, page)
+        await signOut.press('Enter')
         await expect(page).toHaveURL(/\/login(?:\?|$)/)
         expect((await context.request.get('/api/v1/me')).status()).toBe(401)
         await page.reload()
@@ -516,7 +491,7 @@ for (const locale of locales) {
   }
 }
 
-test('@qa sidebar short-menu final pixels and shortcut console', async ({ browser }) => {
+test('@qa sidebar direct profile entry, short settings and console', async ({ browser }) => {
   test.setTimeout(180_000)
   const context = await newFlowContext(browser)
   const consoleErrors: string[] = []
@@ -535,28 +510,27 @@ test('@qa sidebar short-menu final pixels and shortcut console', async ({ browse
       await waitForLoadedRoute(page, '/help')
       const nav = await openSidebar(page, locale, 360)
       const account = nav.getByRole('button', {
-        name: label(locale, 'shell.account.aria'),
+        name: label(locale, 'accounts.settings.title'),
         exact: true,
       })
       await account.focus()
       await account.press('Enter')
-      const menu = page.getByRole('menu')
-      await expect(menu).toBeVisible()
-      await expect(
-        menu.getByRole('menuitem', { name: label(locale, 'shell.account.settings'), exact: true }),
-      ).toBeFocused()
-      await page.keyboard.press('End')
-      await visibleFocus(
-        menu.getByRole('menuitem', { name: label(locale, 'shell.account.signout'), exact: true }),
-        page,
-      )
+      await expect(page).toHaveURL(/\/account$/)
+      await waitForLoadedRoute(page, '/account')
+      await expect(page.getByRole('menu')).toHaveCount(0)
+      const signOut = page.getByRole('button', {
+        name: label(locale, 'shell.account.signout'),
+        exact: true,
+      })
+      await signOut.focus()
+      await visibleFocus(signOut, page)
       await settleCapture(page, false)
-      const screenshot = test.info().outputPath(`account-menu-end-${locale}.png`)
+      const screenshot = test.info().outputPath(`account-settings-signout-${locale}.png`)
       await page.screenshot({ path: screenshot })
       appendFileSync(
         test.info().outputPath('captures.jsonl'),
         JSON.stringify({
-          surface: 'account-menu-end',
+          surface: 'account-settings-signout',
           locale,
           theme: 'light',
           width: 360,
@@ -566,32 +540,10 @@ test('@qa sidebar short-menu final pixels and shortcut console', async ({ browse
           pixelInspected: false,
         }) + '\n',
       )
-      await page.keyboard.press('Escape')
-      await expect(account).toBeFocused()
-      await account.press('Enter')
-      await expect(menu).toBeVisible()
-      await expect(
-        menu.getByRole('menuitem', { name: label(locale, 'shell.account.settings'), exact: true }),
-      ).toBeFocused()
-      await page.keyboard.press('ArrowDown')
-      await expect(
-        menu.getByRole('menuitem', { name: label(locale, 'shell.shortcuts.title'), exact: true }),
-      ).toBeFocused()
-      await page.keyboard.press('Enter')
-      await expect(
-        page.getByRole('dialog', { name: label(locale, 'shell.shortcuts.title'), exact: true }),
-      ).toBeVisible()
-      await page.keyboard.press('Escape')
-      await expect(
-        page.getByRole('dialog', { name: label(locale, 'shell.shortcuts.title'), exact: true }),
-      ).not.toBeVisible()
-      await settleCapture(page, false)
       if (locale === 'ru') {
-        await page.keyboard.press('Escape')
-        await expect(
-          page.getByRole('dialog', { name: label(locale, 'shell.menu.open'), exact: true }),
-        ).not.toBeVisible()
         await page.setViewportSize({ width: 320, height: 480 })
+        await page.goto('/help')
+        await waitForLoadedRoute(page, '/help')
         await setTextScale(page, 2)
         const heading = page.getByRole('heading', {
           name: label(locale, 'help.groups.account'),

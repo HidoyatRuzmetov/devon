@@ -61,7 +61,12 @@ export class NotificationRecipientUnavailableError extends Error {
   }
 }
 
-export type PrefRow = { reason: Reason; channel: Channel; enabled: boolean; digestMode: DigestMode }
+export type PrefRow = {
+  reason: Reason
+  channel: Channel
+  enabled: boolean
+  digestMode: DigestMode
+}
 
 export type DepartmentSettingsRow = {
   departmentId: string
@@ -128,6 +133,7 @@ type NotificationSqlRow = {
   archived_at: Date | string | null
   snoozed_until: Date | string | null
   created_at: Date | string
+  cursor_created_at?: string
 }
 
 function toDate(v: Date | string): Date {
@@ -177,15 +183,18 @@ export async function insertNotification(
       `)
         if (!recipients[0]) throw new NotificationRecipientUnavailableError()
       }
-      const rows = await tx.raw<NotificationSqlRow>(sql`
+      const rows = await tx.raw<NotificationSqlRow & { inapp_visible: boolean }>(sql`
       insert into app.notifications
-        (user_id, type, reason, subject_type, subject_id, department_id, title, body, deep_link, event_at)
+        (user_id, type, reason, subject_type, subject_id, department_id, title, body, deep_link, event_at, inapp_visible)
       values (${input.userId}, ${input.type}, ${input.reason}, ${input.subjectType},
               ${input.subjectId ?? null}, ${input.departmentId ?? null},
               ${JSON.stringify(input.title)}::jsonb, ${input.body ? JSON.stringify(input.body) : null}::jsonb,
-              ${input.deepLink ?? null}, ${input.eventAt ?? null})
+              ${input.deepLink ?? null}, ${input.eventAt ?? null},
+              coalesce((select enabled from app.notification_prefs
+                where user_id = ${input.userId} and reason = ${input.reason}
+                  and channel = 'inapp'), true))
       returning id, type, reason, subject_type, subject_id, department_id, title, body, deep_link,
-                event_at, read_at, archived_at, snoozed_until, created_at
+                event_at, read_at, archived_at, snoozed_until, created_at, inapp_visible
     `)
       const row = rows[0]
       if (!row) throw new Error('notifications: insert returned no row')
@@ -193,11 +202,20 @@ export async function insertNotification(
         action: 'notifications.created',
         subjectType: 'notification',
         subjectId: row.id,
-        after: { reason: row.reason, type: row.type },
+        after: {
+          reason: row.reason,
+          type: row.type,
+          inappVisible: row.inapp_visible,
+        },
       })
       tx.emit({
         type: 'notifications.notification.created',
-        payload: { notificationId: row.id, userId: input.userId, reason: input.reason },
+        payload: {
+          notificationId: row.id,
+          userId: input.userId,
+          reason: input.reason,
+          inappVisible: row.inapp_visible,
+        },
       })
       return fromSqlRow(row)
     },
@@ -214,6 +232,7 @@ export type ListOpts = {
 export type ListResult = {
   items: NotificationRow[]
   unreadCount: number
+  groupCounts: Record<'tasks' | 'events' | 'summaries' | 'system', number>
   nextCursor: string | null
 }
 
@@ -223,23 +242,33 @@ export async function listNotifications(userId: string, opts: ListOpts): Promise
       opts.status === 'archived'
         ? sql`archived_at is not null`
         : opts.status === 'unread'
-          ? sql`archived_at is null and read_at is null`
-          : sql`archived_at is null`
+          ? sql`archived_at is null and read_at is null and (snoozed_until is null or snoozed_until <= now())`
+          : sql`archived_at is null and (snoozed_until is null or snoozed_until <= now())`
     const reasonClause = opts.reason ? sql`and reason = ${opts.reason}` : sql``
-    const cursorClause = opts.cursor ? sql`and created_at < ${new Date(opts.cursor)}` : sql``
+    const [cursorDate, cursorId] = opts.cursor?.split('|') ?? []
+    const cursorClause = cursorDate
+      ? cursorId
+        ? sql`and (created_at, id) < (${cursorDate}::timestamptz, ${cursorId}::uuid)`
+        : sql`and created_at < ${cursorDate}::timestamptz`
+      : sql``
 
     const rows = await tx.raw<NotificationSqlRow>(sql`
       select id, type, reason, subject_type, subject_id, department_id, title, body, deep_link,
-             event_at, read_at, archived_at, snoozed_until, created_at
+             event_at, read_at, archived_at, snoozed_until, created_at,
+             to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_created_at
       from app.notifications
       where app.notification_is_visible(id) and ${statusClause} ${reasonClause} ${cursorClause}
-      order by created_at desc
+      order by created_at desc, id desc
       limit ${opts.limit + 1}
     `)
     const hasMore = rows.length > opts.limit
     const page = hasMore ? rows.slice(0, opts.limit) : rows
     const items = page.map(fromSqlRow)
-    const nextCursor = hasMore ? (items[items.length - 1]?.createdAt.toISOString() ?? null) : null
+    const last = page.at(-1)
+    const nextCursor =
+      hasMore && last
+        ? `${last.cursor_created_at ?? toDate(last.created_at).toISOString()}|${last.id}`
+        : null
 
     const unreadRows = await tx.raw<{ n: string }>(sql`
       select count(*)::text as n from app.notifications
@@ -248,7 +277,24 @@ export async function listNotifications(userId: string, opts: ListOpts): Promise
     `)
     const unreadCount = Number(unreadRows[0]?.n ?? '0')
 
-    return { items, unreadCount, nextCursor }
+    // Count the same authorized, filtered collection before the page cursor. These are totals,
+    // not the number already loaded in the browser. Keep category semantics aligned with groups.ts.
+    const grouped = await tx.raw<{
+      category: 'tasks' | 'events' | 'summaries' | 'system'
+      n: string
+    }>(sql`
+      select case
+        when reason = 'digest' then 'summaries'
+        when subject_type in ('event', 'rsvp', 'poll', 'event_poll') or reason in ('rsvp', 'poll') then 'events'
+        when subject_type in ('card', 'project', 'checklist', 'comment', 'task') or reason in ('assigned', 'due') then 'tasks'
+        else 'system' end as category, count(*)::text as n
+      from app.notifications
+      where app.notification_is_visible(id) and ${statusClause} ${reasonClause}
+      group by category
+    `)
+    const groupCounts = { tasks: 0, events: 0, summaries: 0, system: 0 }
+    for (const group of grouped) groupCounts[group.category] = Number(group.n)
+    return { items, unreadCount, groupCounts, nextCursor }
   })
 }
 
@@ -273,7 +319,10 @@ export async function markRead(ctx: AuditCtx, userId: string, ids: string[]): Pr
         after: { ids: rows.map((r) => r.id) },
       })
     if (rows.length > 0)
-      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
+      tx.emit({
+        type: 'notifications.notification.updated',
+        payload: { userId },
+      })
     return rows.length
   })
 }
@@ -282,7 +331,7 @@ export async function markAllRead(ctx: AuditCtx, userId: string): Promise<number
   return withContext(toRequestContext(ctx, { userId }), async (tx) => {
     const rows = await tx.raw<{ id: string }>(sql`
       update app.notifications set read_at = now()
-      where read_at is null and archived_at is null
+      where read_at is null and archived_at is null and app.notification_is_visible(id)
       returning id
     `)
     if (rows.length > 0)
@@ -293,7 +342,10 @@ export async function markAllRead(ctx: AuditCtx, userId: string): Promise<number
         after: { count: rows.length },
       })
     if (rows.length > 0)
-      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
+      tx.emit({
+        type: 'notifications.notification.updated',
+        payload: { userId },
+      })
     return rows.length
   })
 }
@@ -318,7 +370,10 @@ export async function archiveNotifications(
         after: { ids: rows.map((r) => r.id) },
       })
     if (rows.length > 0)
-      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
+      tx.emit({
+        type: 'notifications.notification.updated',
+        payload: { userId },
+      })
     return rows.length
   })
 }
@@ -343,7 +398,10 @@ export async function restoreNotifications(
         subjectId: null,
         after: { ids: rows.map((r) => r.id) },
       })
-      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
+      tx.emit({
+        type: 'notifications.notification.updated',
+        payload: { userId },
+      })
     }
     return rows.length
   })
@@ -357,7 +415,7 @@ export async function getNotificationById(
     const rows = await tx.raw<NotificationSqlRow>(sql`
       select id, type, reason, subject_type, subject_id, department_id, title, body, deep_link,
              event_at, read_at, archived_at, snoozed_until, created_at
-      from app.notifications where id = ${id} and app.notification_is_visible(id)
+      from app.notifications where id = ${id} and app.notification_subject_is_visible(id)
     `)
     const row = rows[0]
     return row ? fromSqlRow(row) : null
@@ -392,7 +450,7 @@ export async function snoozeNotification(
 const CHANNELS: Channel[] = ['inapp', 'telegram', 'email']
 
 /** Default (`enabled`, `digestMode`) for a (reason, channel) pair that has no stored row yet -- inapp
- * is always on (the inbox is never optional, DESIGN.md "no dead ends"); telegram/email default off
+ * starts enabled; telegram/email default off
  * until the person opts in, except `due`/`digest`/`system`, which default on once a channel is linked
  * (the same defaults the demo seed writes for its own accounts). */
 function defaultPref(
@@ -422,7 +480,13 @@ export async function getPrefs(userId: string): Promise<PrefRow[]> {
     for (const reason of REASONS) {
       for (const channel of CHANNELS) {
         const stored = byKey.get(`${reason}:${channel}`)
-        if (channel === 'inapp') out.push({ reason, channel, enabled: true, digestMode: 'instant' })
+        if (channel === 'inapp')
+          out.push({
+            reason,
+            channel,
+            enabled: stored?.enabled ?? true,
+            digestMode: 'instant',
+          })
         else if (stored)
           out.push({
             reason,
@@ -533,7 +597,10 @@ export async function getDepartmentQuietDefault(departmentId: string): Promise<Q
 
 export async function getDepartmentSettings(departmentId: string): Promise<DepartmentSettingsRow> {
   return withContext(
-    toRequestContext(departmentAuditCtx(), { departmentId, actorRole: 'super_admin' }),
+    toRequestContext(departmentAuditCtx(), {
+      departmentId,
+      actorRole: 'super_admin',
+    }),
     async (tx) => {
       const rows = await tx.raw<{
         department_id: string
@@ -618,7 +685,7 @@ export async function listDueNotificationsNeedingTelegram(
       select n.id, n.type, n.reason, n.subject_type, n.subject_id, n.department_id, n.title, n.body,
              n.deep_link, n.event_at, n.read_at, n.archived_at, n.snoozed_until, n.created_at
       from app.notifications n
-      where app.notification_is_visible(n.id) and n.reason = 'due' and n.read_at is null and n.archived_at is null
+      where app.notification_subject_is_visible(n.id) and n.reason = 'due' and n.read_at is null and n.archived_at is null
         and (n.snoozed_until is null or n.snoozed_until <= now())
         and not exists (
           select 1 from app.notification_deliveries d
@@ -637,7 +704,7 @@ export async function unreadCountsByReason(userId: string): Promise<ReasonCounts
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
     const rows = await tx.raw<{ reason: Reason; n: string }>(sql`
       select reason, count(*)::text as n from app.notifications
-      where app.notification_is_visible(id) and read_at is null and archived_at is null and (snoozed_until is null or snoozed_until <= now())
+      where app.notification_subject_is_visible(id) and read_at is null and archived_at is null and (snoozed_until is null or snoozed_until <= now())
         and subject_type <> 'digest'
       group by reason
     `)
@@ -655,7 +722,7 @@ export async function countsByReasonSince(
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
     const rows = await tx.raw<{ reason: Reason; n: string }>(sql`
       select reason, count(*)::text as n from app.notifications
-      where app.notification_is_visible(id) and created_at >= ${since}
+      where app.notification_subject_is_visible(id) and created_at >= ${since}
         and subject_type <> 'digest'
         ${departmentId ? sql`and department_id = ${departmentId}` : sql``}
       group by reason
@@ -690,7 +757,12 @@ export async function recordDelivery(
 
 // --- ICS feed source data ---------------------------------------------------------------------------
 
-export type IcsItem = { id: string; title: LocalizedText; deepLink: string | null; eventAt: Date }
+export type IcsItem = {
+  id: string
+  title: LocalizedText
+  deepLink: string | null
+  eventAt: Date
+}
 
 export async function listUpcomingForIcs(userId: string, fromDaysAgo = 7): Promise<IcsItem[]> {
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
@@ -701,7 +773,7 @@ export async function listUpcomingForIcs(userId: string, fromDaysAgo = 7): Promi
       event_at: Date | string
     }>(sql`
       select id, title, deep_link, event_at from app.notifications
-      where app.notification_is_visible(id) and event_at is not null and event_at >= now() - (${fromDaysAgo} || ' days')::interval
+      where app.notification_subject_is_visible(id) and event_at is not null and event_at >= now() - (${fromDaysAgo} || ' days')::interval
       order by event_at asc
       limit 200
     `)
@@ -718,7 +790,10 @@ export async function listUpcomingForIcs(userId: string, fromDaysAgo = 7): Promi
 
 export async function listActiveMemberUserIds(departmentId: string): Promise<string[]> {
   return withContext(
-    toRequestContext(departmentAuditCtx(), { departmentId, actorRole: 'super_admin' }),
+    toRequestContext(departmentAuditCtx(), {
+      departmentId,
+      actorRole: 'super_admin',
+    }),
     async (tx) => {
       const rows = await tx.raw<{ user_id: string }>(sql`
       select user_id from app.memberships where department_id = ${departmentId} and status = 'active'
@@ -819,7 +894,10 @@ export async function reconcileCommentNotifications(
     : []
   const link = `/work/card?id=${payload['cardId']}#comment-${payload['commentId']}`
   const current = await withContext(
-    toRequestContext(departmentAuditCtx(), { departmentId, actorRole: 'super_admin' }),
+    toRequestContext(departmentAuditCtx(), {
+      departmentId,
+      actorRole: 'super_admin',
+    }),
     async (tx) => {
       const rows = await tx.raw<{
         text: string | null
@@ -857,7 +935,11 @@ export async function reconcileCommentNotifications(
         else
           await tx.raw(sql`update app.notifications set read_at=coalesce(read_at,now()),archived_at=coalesce(archived_at,now())
           where user_id=${userId} and department_id=${departmentId} and type='work.card.commented' and deep_link=${link}`)
-        tx.emit({ type: 'notifications.notification.updated', payload: { userId }, departmentId })
+        tx.emit({
+          type: 'notifications.notification.updated',
+          payload: { userId },
+          departmentId,
+        })
       }),
     ),
   )

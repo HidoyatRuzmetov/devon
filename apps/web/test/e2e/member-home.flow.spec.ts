@@ -11,7 +11,7 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 
-test('@flow member Home owns tasks, projects, event cues and its assistant on desktop and phone', async ({
+test('@flow member Home owns work categories, integrated inbox and event cues on desktop and phone', async ({
   browser,
 }, testInfo) => {
   test.setTimeout(120_000)
@@ -151,53 +151,87 @@ test('@flow member Home owns tasks, projects, event cues and its assistant on de
     })
     await page.goto('/')
     const home = page.getByTestId('member-overview')
+    const work = home.getByRole('region', { name: 'My work', exact: true })
+    const categories = work.getByRole('group', { name: 'Work category', exact: true })
     await expect(home).toBeVisible()
     await expect(home.getByRole('link', { name: 'Research & delivery', exact: true })).toBeVisible()
-    await expect(home.getByRole('button', { name: 'Active tasks 2', exact: true })).toBeVisible()
+    await expect(home.getByRole('button', { name: 'Active tasks', exact: true })).toBeVisible()
     await expect(
-      home.getByRole('button', { name: 'Completed & archived 2', exact: true }),
+      home.getByRole('button', { name: 'Completed & archived', exact: true }),
     ).toBeVisible()
     await expect(
       home.getByRole('heading', { name: 'Your work assistant', exact: true }),
-    ).toBeVisible()
+    ).toHaveCount(0)
     await expect(home.getByRole('link', { name: /Research workshop/ })).toContainText('Event')
     await expect(home.getByText('Someone else’s task', { exact: true })).toHaveCount(0)
     expect(briefingRequests).toEqual([])
     await page.screenshot({ path: testInfo.outputPath('member-home-desktop.png') })
-    await home.getByRole('button', { name: 'Archived 1', exact: true }).click()
+    await home.getByRole('button', { name: 'Archived 1', exact: true }).first().click()
     await expect(home.getByText('Archived unfinished draft', { exact: true })).toBeVisible()
-    await expect(home.getByRole('checkbox', { name: /Archived unfinished draft/ })).toBeDisabled()
+    await expect(home.getByRole('checkbox')).toHaveCount(0)
     await expect(home.getByLabel('Archived · Not completed')).toBeVisible()
-    await expect(home.getByRole('button', { name: 'Restore', exact: true })).toBeVisible()
-    await home.getByRole('radio', { name: 'My projects', exact: true }).click()
-    await expect(home.getByRole('button', { name: /^Service quality review/ })).toBeVisible()
+    await categories.getByRole('button', { name: 'Group projects 1', exact: true }).click()
+    await expect(home.getByRole('link', { name: /^Service quality review/ })).toBeVisible()
     await expect(
       home.getByRole('progressbar', { name: '0 of 1 checklist items completed' }),
     ).toBeVisible()
-    await home.getByRole('link', { name: 'Open project', exact: true }).click()
+    await home.getByRole('link', { name: /^Service quality review/ }).click()
     await expect(page.getByRole('link', { name: /Back to overview$/ })).toBeVisible()
     await page.getByRole('link', { name: /Back to overview$/ }).click()
     await expect(home).toBeVisible()
-    await home.getByRole('button', { name: 'What needs attention?', exact: true }).click()
-    await expect(home).toHaveAttribute('data-mode', 'conversation')
+    // Global totals include both origins; clearing the drill-in restores the last chosen category.
+    await categories.getByRole('button', { name: 'Group projects 1', exact: true }).click()
+    await home.getByRole('button', { name: 'Active tasks', exact: true }).click()
+    await expect(categories.locator('[aria-pressed="true"]')).toHaveCount(0)
+    await expect(work.getByText('Prepare the evidence pack', { exact: true })).toBeVisible()
+    await expect(work.getByText('Review the consultation notes', { exact: true })).toBeVisible()
     await expect(
-      home.getByRole('textbox', { name: 'Ask about your work', exact: true }),
-    ).toHaveValue(/What should I focus on next/)
-    await home.getByRole('button', { name: 'Back to overview', exact: true }).click()
+      work.getByRole('heading', { name: 'Individual tasks 1', exact: true }),
+    ).toBeVisible()
+    await expect(work.getByRole('heading', { name: 'Group projects 1', exact: true })).toBeVisible()
+    await home.getByRole('button', { name: 'In progress 1', exact: true }).click()
+    await expect(categories.locator('[aria-pressed="true"]')).toHaveCount(0)
+    await expect(work.getByText('Prepare the evidence pack', { exact: true })).toBeVisible()
+    await expect(work.getByText('Review the consultation notes', { exact: true })).toHaveCount(0)
+    await home.getByRole('button', { name: 'Clear In progress filter', exact: true }).click()
+    await expect(
+      categories.getByRole('button', { name: 'Group projects 1', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await home.getByRole('button', { name: 'Completed & archived', exact: true }).click()
+    await expect(work.getByText('Submitted report', { exact: true })).toBeVisible()
+    await expect(work.getByText('Archived unfinished draft', { exact: true })).toBeVisible()
+    await expect(categories.locator('[aria-pressed="true"]')).toHaveCount(0)
+    await categories.getByRole('button', { name: 'Individual tasks 1', exact: true }).click()
+    await expect(work.getByText('Prepare the evidence pack', { exact: true })).toHaveCount(0)
+    await expect(work.getByText('Review the consultation notes', { exact: true })).toBeVisible()
+    await expect(home.getByRole('checkbox')).toHaveCount(0)
+    // A real assignment notification opens and stays readable even after it leaves the unread list.
+    const inbox = home.getByTestId('home-inbox')
+    await expect(inbox.getByRole('heading', { name: /^Inbox/ })).toBeVisible()
+    await inbox.getByRole('tab', { name: 'Unread', exact: true }).click()
+    const notification = inbox
+      .locator('[role="tabpanel"][data-state="active"] [data-inbox-opener]')
+      .first()
+    await expect(notification).toBeVisible()
+    const markedRead = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/v1/notifications/read') &&
+        response.request().method() === 'POST',
+    )
+    await notification.click()
+    const detail = page.getByRole('dialog', { name: 'Notification', exact: true })
+    await expect(detail).toBeVisible()
+    expect((await markedRead).status()).toBe(200)
+    await expect(detail).toBeVisible() // persists across the mark-read invalidation
+    await detail.getByRole('button', { name: 'Close', exact: true }).first().click()
+    await inbox.getByRole('tab', { name: 'All', exact: true }).click()
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(home).toHaveAttribute('data-mode', 'overview')
-    const assistantDraft = home.getByRole('textbox', { name: 'Ask about your work', exact: true })
-    await expect(assistantDraft).toHaveAttribute('wrap', 'off')
-    expect((await assistantDraft.boundingBox())?.height).toBe(40)
-    await assistantDraft.focus()
-    await expect(home).toHaveAttribute('data-mode', 'conversation')
-    await expect(assistantDraft).toHaveAttribute('wrap', 'soft')
-    expect((await assistantDraft.boundingBox())?.height).toBeGreaterThan(40)
-    await page.screenshot({ path: testInfo.outputPath('member-chat-phone.png') })
-    await home.getByRole('button', { name: 'Back to overview', exact: true }).click()
-    expect((await assistantDraft.boundingBox())?.height).toBe(40)
-    await expect(home.getByRole('radio', { name: 'Coming up', exact: true })).toBeVisible()
-    await home.getByRole('radio', { name: 'Coming up', exact: true }).click()
+    await home.getByRole('radio', { name: 'Work overview', exact: true }).click()
+    await expect(home.getByRole('combobox', { name: 'Work category', exact: true })).toBeVisible()
+    await home
+      .getByRole('combobox', { name: 'Work category', exact: true })
+      .selectOption('projects')
+    await expect(home.getByRole('link', { name: /^Service quality review/ })).toBeVisible()
     await expect(home.getByRole('link', { name: /Research workshop/ })).toBeVisible()
     await page.screenshot({ path: testInfo.outputPath('member-home-phone.png') })
     expect(
@@ -207,11 +241,29 @@ test('@flow member Home owns tasks, projects, event cues and its assistant on de
       .include('[data-testid="member-overview"]')
       .analyze()
     expect(
-      audit.violations.filter(
-        (violation) => violation.impact === 'serious' || violation.impact === 'critical',
-      ),
+      audit.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical'),
     ).toEqual([])
+    await home.getByRole('radio', { name: 'Inbox', exact: true }).click()
+    await expect(inbox).toBeVisible()
+    await page.screenshot({ path: testInfo.outputPath('member-inbox-phone.png') })
+    await expect(home.getByRole('region', { name: 'My work', exact: true })).toBeHidden()
     expect(failures).toEqual([])
+    // Head receives the same integrated Inbox, a workforce panel and distinct event cues.
+    await authedPatch(head, '/api/v1/me', { locale: 'en' })
+    const headPage = await head.newPage()
+    await headPage.setViewportSize({ width: 1440, height: 1000 })
+    await headPage.goto('/')
+    const headHome = headPage.getByTestId('head-overview')
+    await expect(headHome.getByTestId('home-inbox')).toBeVisible()
+    await expect(headHome.getByText('Research workshop', { exact: true })).toBeVisible()
+    await expect(headHome.getByRole('textbox')).toHaveCount(0)
+    await headPage.screenshot({ path: testInfo.outputPath('head-home-desktop.png') })
+    await headPage.setViewportSize({ width: 390, height: 844 })
+    await headPage.screenshot({ path: testInfo.outputPath('head-home-phone.png') })
+    expect(
+      await headPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true)
+    await headPage.close()
     // Exercise the normal API and deterministic local provider: preview never creates a task.
     await page.goto('/work')
     const column = page.locator(`[data-board-column="${me.user.id}"]`)

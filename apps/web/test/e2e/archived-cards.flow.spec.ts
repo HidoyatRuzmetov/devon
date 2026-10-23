@@ -111,10 +111,12 @@ test('archives retain visible completion and require explicit restoration @flow'
     ).toBe(true)
     await page.screenshot({ path: info.outputPath('archive-list-mobile.png'), fullPage: true })
     await page.getByText('Unfinished archive', { exact: true }).click()
-    await expect(
-      page.getByRole('dialog').getByRole('button', { name: 'Restore', exact: true }),
-    ).toBeVisible()
-    await page.getByRole('dialog').getByRole('button', { name: 'Restore', exact: true }).click()
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'More actions', exact: true })
+      .click()
+    await expect(page.getByRole('button', { name: 'Restore', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Restore', exact: true }).click()
     await expect(page.getByRole('img', { name: 'Archived · Not completed' })).toHaveCount(0)
   } finally {
     await context.close()

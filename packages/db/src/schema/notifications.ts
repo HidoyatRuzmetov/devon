@@ -92,6 +92,8 @@ export const notifications = appSchema.table('notifications', {
    * calendar meaning ('mentioned', 'system', ...). Feeds `ics.ts`'s per-person ICS export (TECH-SPEC
    * §7): only notifications with a non-null `eventAt` ever produce a `VEVENT`. */
   eventAt: timestamp('event_at', { withTimezone: true }),
+  /** Delivery preference captured at creation; changing preferences never hides inbox history. */
+  inappVisible: boolean('inapp_visible').notNull().default(true),
   readAt: timestamp('read_at', { withTimezone: true }),
   archivedAt: timestamp('archived_at', { withTimezone: true }),
   /** Telegram inline "snooze deadline 1 day" (TECH-SPEC §7): the notification drops out of "due now"

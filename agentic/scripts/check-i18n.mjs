@@ -289,6 +289,8 @@ const successToneAllowlist = new Set([
   'apps/web/src/features/inbox/telegram-screen.tsx',
   'apps/web/src/features/personal/sprints-view.tsx',
   'apps/web/src/features/projects/components/project-tile.tsx',
+  // The card drawer uses green only for Done, alongside its check icon and explicit status label.
+  'apps/web/src/features/work/components/card-detail.tsx',
 ])
 // Matches both a literal `tone="success"`/`tone={... 'success' ...}` on a JSX tag and a `'success'`
 // entry in a `STATUS_TONE`-style lookup map later spread onto `tone={...}` -- the exact shape the

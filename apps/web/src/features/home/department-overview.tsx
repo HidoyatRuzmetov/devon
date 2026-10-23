@@ -1,30 +1,26 @@
 import * as React from 'react'
-import { motion } from 'motion/react'
 import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Progress,
-  SegmentedControl,
   StateView,
   Avatar,
   HoverCard,
   HoverCardTrigger,
   HoverCardContent,
   initialsFromName,
-  useReducedMotion,
-  tweenPage,
   cn,
 } from '@devon/ui'
 import { ArrowRight, CalendarDays, Users, FolderKanban, CheckSquare } from 'lucide-react'
 import { useDepartment } from '../../lib/session.js'
-import { RouterLink, useSearchParams } from '../../lib/router.js'
+import { RouterLink } from '../../lib/router.js'
 import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
 import { useMediaQuery } from '../../lib/use-media-query.js'
 import { fetchMembers, fetchUnitsOverview } from '../structure/api.js'
 import { useBoardQuery } from '../work/hooks.js'
 import { useProjectsQuery } from '../projects/hooks.js'
 import { useEventsQuery } from '../events/hooks.js'
-import { OverviewAssistant } from './overview-assistant.js'
+import { HomeWorkspace, HOME_METRIC_INTERACTION } from './home-workspace.js'
 import { avatarUrl } from '../../lib/avatar.js'
 import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
 import type { Member } from '../structure/api.js'
@@ -34,8 +30,7 @@ const calendarMonth = (date: string) => {
   const value = new Date(date)
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`
 }
-/** Fit complete rows, then link to the full destination. The overview itself never needs a
- * desktop scrollbar, even with many units, long translations or a shorter laptop viewport. */
+/** Panel-local scrolling keeps the whole Home viewport stable while every unit remains reachable. */
 function OverviewPanel({
   title,
   href,
@@ -49,22 +44,6 @@ function OverviewPanel({
   rows: React.ReactNode[]
   className?: string
 }) {
-  const desktop = useMediaQuery('(min-width: 1024px)')
-  const body = React.useRef<HTMLDivElement>(null)
-  const [limit, setLimit] = React.useState(rows.length)
-  React.useLayoutEffect(() => {
-    if (!body.current) return
-    const node = body.current
-    const measure = () => setLimit(Math.max(0, Math.floor(node.clientHeight / (desktop ? 40 : 44))))
-    const observer = new ResizeObserver(measure)
-    observer.observe(node)
-    window.addEventListener('resize', measure)
-    measure()
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', measure)
-    }
-  }, [rows.length, desktop])
   return (
     <section
       aria-label={title}
@@ -73,41 +52,23 @@ function OverviewPanel({
         className,
       )}
     >
-      <h2 className="mb-1 hidden shrink-0 font-display text-h3 lg:block">{title}</h2>
-      <div ref={body} className="min-h-0 flex-1">
-        {rows.slice(0, limit)}
-      </div>
+      <h2 className="mb-2 shrink-0 font-display text-h3">{title}</h2>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{rows}</div>
       <RouterLink
         href={href}
         className="mt-2 flex shrink-0 items-center gap-2 text-caption font-medium text-primary"
       >
         {linkLabel}
         <ArrowRight className="size-3.5" aria-hidden="true" />
-        {rows.length > limit ? (
-          <span className="ml-auto tabular-nums text-muted-foreground">
-            {limit} / {rows.length}
-          </span>
-        ) : null}
       </RouterLink>
     </section>
   )
 }
 
-export function DepartmentOverview({
-  header,
-  allowConversationRoute,
-}: {
-  header: React.ReactNode
-  allowConversationRoute: boolean
-}) {
-  const reduced = useReducedMotion()
+export function DepartmentOverview({ header }: { header: React.ReactNode }) {
   const desktop = useMediaQuery('(min-width: 1024px)')
-  const search = useSearchParams()
-  const [expanded, setExpanded] = React.useState(
-    allowConversationRoute && Boolean(search.get('conversation')),
-  )
   const [viewportRef, height] = useViewportBoundedHeight<HTMLDivElement>(0, true)
-  const [panel, setPanel] = React.useState<'staffing' | 'deadlines'>('deadlines')
+  const [panel, setPanel] = React.useState<'inbox' | 'work'>('work')
   const t = useT(),
     locale = useLocale(),
     { departmentId } = useDepartment()
@@ -208,7 +169,7 @@ export function DepartmentOverview({
   ]
     .filter((d) => new Date(d.date) >= range.from && new Date(d.date) <= range.to)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 5)
+
   const projectPercent = projects.length
     ? Math.round((100 * projects.filter((p) => !projectLate(p)).length) / projects.length)
     : 0
@@ -265,225 +226,179 @@ export function DepartmentOverview({
     <div
       ref={viewportRef}
       data-testid="head-overview"
-      data-mode={expanded ? 'conversation' : 'overview'}
-      style={
-        {
-          '--overview-height': height === undefined ? undefined : `${height}px`,
-        } as React.CSSProperties
-      }
-      className="flex h-[var(--overview-height)] min-h-0 flex-col overflow-hidden"
+      data-mode="overview"
+      style={{ height: height ?? 'calc(100dvh - 120px)' }}
+      className="flex min-h-0 flex-col gap-3 overflow-hidden"
     >
-      <motion.div
-        data-testid="overview-dashboard"
-        inert={expanded}
-        aria-hidden={expanded}
-        initial={false}
-        animate={{
-          height: expanded
-            ? 0
-            : Math.max(
-                0,
-                (height ?? 700) -
-                  (desktop ? Math.min(300, Math.max(232, (height ?? 700) * 0.37)) : 216),
-              ),
-          opacity: expanded ? 0 : 1,
-          y: expanded && !reduced ? -12 : 0,
-        }}
-        transition={reduced ? { duration: 0 } : tweenPage}
-        className="grid min-h-0 shrink-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-2 overflow-hidden pb-3 lg:gap-3"
+      {header}
+      <div
+        aria-label={t('overviewChat.metrics')}
+        className="flex shrink-0 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] lg:grid lg:grid-cols-4 lg:gap-3 lg:overflow-visible lg:pb-0"
       >
-        {header}
-        <div
-          aria-label={t('overviewChat.metrics')}
-          className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] lg:grid lg:grid-cols-4 lg:gap-3 lg:overflow-visible lg:pb-0"
-        >
-          {displayedMetrics.map((m) => (
-            <div
-              key={m.key}
-              className={cn(
-                'relative flex h-22 shrink-0 snap-start flex-col justify-center gap-1 rounded-lg border border-border p-2.5 transition-colors hover:border-primary/50 lg:h-28 lg:min-w-0 lg:p-3.5',
-                m.key === 'workforce'
-                  ? 'w-58 bg-primary text-primary-foreground lg:w-auto'
-                  : 'w-45 bg-card lg:w-auto',
-              )}
+        {displayedMetrics.map((m) => (
+          <div
+            key={m.key}
+            className={cn(
+              'relative flex h-28 shrink-0 snap-start flex-col justify-center gap-1 rounded-lg border border-border p-2.5 lg:min-w-0 lg:p-3.5',
+              HOME_METRIC_INTERACTION,
+              m.key === 'workforce'
+                ? 'w-64 bg-primary text-primary-foreground lg:w-auto'
+                : 'w-52 bg-card lg:w-auto',
+            )}
+          >
+            <RouterLink
+              href={drill(m.href)}
+              className="flex items-center justify-between gap-2 text-caption font-medium lg:text-small after:absolute after:inset-0 after:rounded-lg"
+              aria-label={t(`portal.overview.${m.key}`)}
+              aria-description={m.key === 'workforce' ? workforceDetail : m.detail}
             >
-              <RouterLink
-                href={drill(m.href)}
-                className="flex items-center justify-between gap-2 text-caption font-medium lg:text-small after:absolute after:inset-0 after:rounded-lg"
-                aria-label={t(`portal.overview.${m.key}`)}
-                aria-description={m.key === 'workforce' ? workforceDetail : m.detail}
-              >
-                <span className="truncate">{t(`portal.overview.${m.key}`)}</span>
-                <m.icon className="hidden size-4 shrink-0 lg:block" aria-hidden="true" />
-                {m.key === 'workforce' ? (
-                  <span
-                    className="text-caption font-normal opacity-80 lg:hidden"
-                    title={workforceDetail}
-                  >
-                    {filled
-                      ? t('overviewChat.filledShort')
-                      : configured
-                        ? t('overviewChat.planned', { count: expected })
-                        : ''}
-                  </span>
-                ) : null}
-              </RouterLink>
-              <div className="flex min-w-0 items-center justify-between gap-2">
-                <span className="font-display text-2xl leading-none tabular-nums lg:text-3xl">
-                  {m.value}
-                </span>
-                {m.key === 'workforce' ? (
-                  <WorkforceAvatars members={members} palette={palette} desktop={desktop} />
-                ) : null}
-              </div>
+              <span className="truncate">{t(`portal.overview.${m.key}`)}</span>
+              <m.icon className="hidden size-4 shrink-0 lg:block" aria-hidden="true" />
               {m.key === 'workforce' ? (
-                <span className="hidden text-caption opacity-80 lg:block" title={workforceDetail}>
+                <span
+                  className="text-caption font-normal opacity-80 lg:hidden"
+                  title={workforceDetail}
+                >
                   {filled
                     ? t('overviewChat.filledShort')
                     : configured
                       ? t('overviewChat.planned', { count: expected })
-                      : t('overviewChat.planStaffing')}
+                      : ''}
                 </span>
-              ) : m.percent !== undefined && m.value > 0 ? (
-                <div title={m.detail} className="flex min-w-0 items-center gap-2 text-caption">
-                  <span className="truncate text-muted-foreground">
-                    {t('overviewChat.onTrack', { percent: m.percent })}
-                  </span>
-                  {m.dueCount ? (
-                    <span className="shrink-0 rounded-sm bg-warning/10 px-1 text-warning-text">
-                      {t('overviewChat.due', { count: m.dueCount })}
-                    </span>
-                  ) : null}
-                </div>
+              ) : null}
+            </RouterLink>
+            <div className="flex min-w-0 items-center justify-between gap-2">
+              <span className="font-display text-3xl leading-none tabular-nums">{m.value}</span>
+              {m.key === 'workforce' ? (
+                <WorkforceAvatars members={members} palette={palette} desktop={desktop} />
               ) : null}
             </div>
-          ))}
-        </div>
-        <div className="flex min-h-0 flex-col gap-2 lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-3">
-          <SegmentedControl
-            className="shrink-0 self-start lg:hidden"
-            value={panel}
-            onValueChange={setPanel}
-            label={`${t('portal.overview.staffing')} / ${t('portal.overview.deadlines')}`}
-            options={[
-              { value: 'staffing', label: t('portal.overview.staffingTab') },
-              { value: 'deadlines', label: t('portal.overview.deadlinesTab') },
-            ]}
-          />
-          <OverviewPanel
-            className={panel === 'staffing' ? '' : 'hidden lg:flex'}
-            title={t('portal.overview.staffing')}
-            href={drill('/structure')}
-            linkLabel={t('portal.overview.units')}
-            rows={staffing.map(({ unit, people }) => (
-              <RouterLink
-                key={unit.id}
-                href={drill(`/people?unit=${unit.id}`)}
-                className="flex h-11 items-center lg:h-10 gap-3 border-t border-border"
+            {m.key === 'workforce' ? (
+              <span className="hidden text-caption opacity-80 lg:block" title={workforceDetail}>
+                {filled
+                  ? t('overviewChat.filledShort')
+                  : configured
+                    ? t('overviewChat.planned', { count: expected })
+                    : t('overviewChat.planStaffing')}
+              </span>
+            ) : m.percent !== undefined && m.value > 0 ? (
+              <div title={m.detail} className="flex min-w-0 items-center gap-2 text-caption">
+                <span className="truncate text-muted-foreground">
+                  {t('overviewChat.onTrack', { percent: m.percent })}
+                </span>
+                {m.dueCount ? (
+                  <span className="shrink-0 rounded-sm bg-warning/10 px-1 text-warning-text">
+                    {t('overviewChat.due', { count: m.dueCount })}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <HomeWorkspace panel={panel} onPanelChange={setPanel}>
+        <OverviewPanel
+          title={t('portal.overview.staffing')}
+          href={drill('/structure')}
+          linkLabel={t('portal.overview.units')}
+          rows={staffing.map(({ unit, people }) => (
+            <RouterLink
+              key={unit.id}
+              href={drill(`/people?unit=${unit.id}`)}
+              className="flex min-h-11 items-center gap-3 rounded-sm border-t border-border px-1 py-1 transition-colors hover:bg-accent"
+            >
+              <span
+                className={cn('h-7 w-1 shrink-0 rounded-full', unitColorClass(palette, unit.id))}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-small font-medium" title={unit.name}>
+                  {unit.name}
+                </p>
+                {unit.expectedPeople ? (
+                  <Progress
+                    value={Math.min(100, (people.length / unit.expectedPeople) * 100)}
+                    label={unit.name}
+                    className="mt-1.5 h-1"
+                  />
+                ) : null}
+              </div>
+              <span
+                className="shrink-0 text-caption tabular-nums"
+                title={t('portal.overview.staffed', {
+                  actual: people.length,
+                  expected: unit.expectedPeople ?? '—',
+                })}
               >
-                <span
-                  className={cn('h-7 w-1 shrink-0 rounded-full', unitColorClass(palette, unit.id))}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-small font-medium" title={unit.name}>
-                    {unit.name}
-                  </p>
-                  {unit.expectedPeople ? (
-                    <Progress
-                      value={Math.min(100, (people.length / unit.expectedPeople) * 100)}
-                      label={unit.name}
-                      className="mt-1.5 h-1"
-                    />
-                  ) : null}
-                </div>
-                <span
-                  className="shrink-0 text-caption tabular-nums"
-                  title={t('portal.overview.staffed', {
+                <span className="sr-only">
+                  {t('portal.overview.staffed', {
                     actual: people.length,
                     expected: unit.expectedPeople ?? '—',
                   })}
-                >
-                  <span className="sr-only">
-                    {t('portal.overview.staffed', {
-                      actual: people.length,
-                      expected: unit.expectedPeople ?? '—',
-                    })}
-                  </span>
-                  <span aria-hidden="true">
-                    <strong className="text-small font-semibold">{people.length}</strong> /{' '}
-                    {unit.expectedPeople ?? '—'}
-                  </span>
                 </span>
-                <ArrowRight
-                  className="size-3.5 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-              </RouterLink>
-            ))}
-          />
-          <OverviewPanel
-            className={panel === 'deadlines' ? '' : 'hidden lg:flex'}
-            title={t('portal.overview.deadlines')}
-            href={drill('/work/calendar')}
-            linkLabel={t('portal.overview.calendar')}
-            rows={[
-              ...(events.isError
-                ? [
-                    <p
-                      key="error"
-                      className="flex h-11 items-center lg:h-10 text-small text-destructive"
-                    >
-                      {t('state.error.title')}
-                    </p>,
-                  ]
-                : []),
-              ...deadlines.map((d) => (
-                <RouterLink
-                  key={d.id}
-                  href={drill(`/work/calendar?month=${calendarMonth(d.date)}`)}
-                  className="flex h-11 items-center lg:h-10 gap-3 border-t border-border"
-                >
-                  <span
-                    className={cn(
-                      'shrink-0 rounded-md px-2 py-1.5 text-caption tabular-nums',
-                      d.event ? 'bg-info/10 text-info' : 'bg-accent',
-                    )}
+                <span aria-hidden="true">
+                  <strong className="text-small font-semibold">{people.length}</strong> /{' '}
+                  {unit.expectedPeople ?? '—'}
+                </span>
+              </span>
+              <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </RouterLink>
+          ))}
+        />
+        <OverviewPanel
+          title={t('portal.overview.deadlines')}
+          href={drill('/work/calendar')}
+          linkLabel={t('portal.overview.calendar')}
+          rows={[
+            ...(events.isError
+              ? [
+                  <p
+                    key="error"
+                    className="flex h-11 items-center lg:h-10 text-small text-destructive"
                   >
-                    {formatDate(new Date(d.date), locale)}
-                  </span>
-                  <span className="line-clamp-2 min-w-0 flex-1 text-small" title={d.title}>
-                    {d.title}
-                  </span>
-                  {d.event ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-info/10 px-1.5 py-0.5 text-caption text-info">
-                      <CalendarDays className="size-3.5" aria-hidden="true" />
-                      {t('homeMember.event')}
-                    </span>
-                  ) : (
-                    <CheckSquare className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                    {t('state.error.title')}
+                  </p>,
+                ]
+              : []),
+            ...deadlines.map((d) => (
+              <RouterLink
+                key={d.id}
+                href={drill(`/work/calendar?month=${calendarMonth(d.date)}`)}
+                className="flex min-h-11 items-center gap-3 rounded-sm border-t border-border px-1 py-1 transition-colors hover:bg-accent"
+              >
+                <span
+                  className={cn(
+                    'shrink-0 rounded-md px-2 py-1.5 text-caption tabular-nums',
+                    d.event ? 'bg-info/10 text-info' : 'bg-accent',
                   )}
-                </RouterLink>
-              )),
-              ...(!deadlines.length
-                ? [
-                    <p
-                      key="empty"
-                      className="flex h-11 items-center lg:h-10 text-small text-muted-foreground"
-                    >
-                      {t('portal.overview.noDeadlines')}
-                    </p>,
-                  ]
-                : []),
-            ]}
-          />
-        </div>
-      </motion.div>
-      <OverviewAssistant
-        expanded={expanded}
-        onExpandedChange={setExpanded}
-        allowConversationRoute={allowConversationRoute}
-        cardTitle={(id) => cards.find((card) => card.id === id)?.title ?? null}
-      />
+                >
+                  {formatDate(new Date(d.date), locale)}
+                </span>
+                <span className="line-clamp-2 min-w-0 flex-1 text-small" title={d.title}>
+                  {d.title}
+                </span>
+                {d.event ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-info/10 px-1.5 py-0.5 text-caption text-info">
+                    <CalendarDays className="size-3.5" aria-hidden="true" />
+                    {t('homeMember.event')}
+                  </span>
+                ) : (
+                  <CheckSquare className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                )}
+              </RouterLink>
+            )),
+            ...(!deadlines.length
+              ? [
+                  <p
+                    key="empty"
+                    className="flex h-11 items-center lg:h-10 text-small text-muted-foreground"
+                  >
+                    {t('portal.overview.noDeadlines')}
+                  </p>,
+                ]
+              : []),
+          ]}
+        />
+      </HomeWorkspace>
     </div>
   )
 }

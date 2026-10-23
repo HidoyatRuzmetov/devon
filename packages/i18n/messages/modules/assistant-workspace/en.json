@@ -1,0 +1,9 @@
+{
+  "assistantWorkspace.title": "Assistant",
+  "assistantWorkspace.welcome": "What can I help you with?",
+  "assistantWorkspace.search": "Search conversations",
+  "assistantWorkspace.noMatches": "No matching conversations.",
+  "assistantWorkspace.settings": "AI tools & settings",
+  "assistantWorkspace.private": "Your private workspace",
+  "assistantWorkspace.back": "← Back to assistant"
+}

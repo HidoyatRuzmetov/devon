@@ -1,20 +1,12 @@
+import { SettingsSection, SettingsPaneHeader } from '../accounts/settings-section.js'
 // `/account/telegram` (this module's task: "linking via /start <code> + QR in Settings" + "department
 // group connection"). Personal linking is every signed-in user's own card. Group connection follows
 // the active department's head-only/everyone policy; group edit/disconnect remains head-only.
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDateTime, formatTime } from '@devon/i18n'
-import {
-  Badge,
-  Button,
-  IconButton,
-  PageHeader,
-  Reveal,
-  SectionCard,
-  StateView,
-  toast,
-} from '@devon/ui'
-import { Check, Copy, ExternalLink, Send, Trash2, Unlink } from 'lucide-react'
+import { Badge, Button, IconButton, PageHeader, Reveal, StateView, toast } from '@devon/ui'
+import { Check, ChevronRight, Copy, ExternalLink, Send, Trash2, Unlink } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
@@ -86,7 +78,7 @@ function TelegramPhoneMock({
   )
 }
 
-function PersonalLinkCard() {
+function PersonalLinkCard({ compact = false }: { compact?: boolean }) {
   const t = useT()
   const locale = useLocale()
   const linkCode = useTelegramLinkCodeMutation()
@@ -116,18 +108,24 @@ function PersonalLinkCard() {
   const status = statusQuery.data
   if (!status.configured || !status.botUsername) {
     return (
-      <SectionCard title={t('telegram.personal.title')}>
+      <SettingsSection title={t('telegram.personal.title')}>
         <StateView
           kind="empty"
           titleKey="telegram.notConfigured.title"
           bodyKey="telegram.notConfigured.body"
+          compact={compact}
+          className={
+            compact
+              ? 'max-w-none border-0 px-0 py-2 text-left [&>div]:items-start [&>div]:gap-2 [&_h3]:text-body [&_h3]:font-sans [&_p]:max-w-none'
+              : ''
+          }
         />
-      </SectionCard>
+      </SettingsSection>
     )
   }
 
   return (
-    <SectionCard
+    <SettingsSection
       title={t('telegram.personal.title')}
       headerAside={
         <Badge tone={status.linked ? 'success' : 'neutral'}>
@@ -141,13 +139,15 @@ function PersonalLinkCard() {
       }
     >
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        <Reveal>
-          <TelegramPhoneMock
-            botUsername={status.botUsername}
-            connected={status.linked}
-            {...(linkCode.data ? { code: linkCode.data.code } : {})}
-          />
-        </Reveal>
+        {!compact ? (
+          <Reveal>
+            <TelegramPhoneMock
+              botUsername={status.botUsername}
+              connected={status.linked}
+              {...(linkCode.data ? { code: linkCode.data.code } : {})}
+            />
+          </Reveal>
+        ) : null}
 
         <div className="min-w-0 flex-1">
           {!status.available ? (
@@ -261,7 +261,7 @@ function PersonalLinkCard() {
           )}
         </div>
       </div>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -387,7 +387,7 @@ function GroupsCard({ departmentId, canManage }: { departmentId: string; canMana
   const disconnect = useDisconnectGroupMutation(departmentId)
 
   return (
-    <SectionCard title={t('telegram.group.title')} description={t('telegram.group.body')}>
+    <SettingsSection title={t('telegram.group.title')} description={t('telegram.group.body')}>
       {canManage ? (
         <GroupsList query={groupsQuery} disconnect={disconnect} putKinds={putKinds} />
       ) : null}
@@ -436,7 +436,7 @@ function GroupsCard({ departmentId, canManage }: { departmentId: string; canMana
           </p>
         ) : null}
       </div>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -448,35 +448,43 @@ function SetupGuide({ departmentId }: { departmentId: string | null }) {
     enabled: Boolean(departmentId),
   })
   return (
-    <SectionCard
-      title={t('integrationSetup.title')}
-      description={t('integrationSetup.description')}
+    <section
+      aria-label={t('integrationSetup.title')}
+      className="rounded-md border border-border bg-card px-4 py-3"
     >
-      <ol className="list-decimal space-y-2 pl-5 text-small text-muted-foreground">
-        <li>{t('integrationSetup.link')}</li>
-        <li>{t('integrationSetup.preferences')}</li>
-        <li>{t('integrationSetup.commands')}</li>
-      </ol>
-      {departmentId ? (
-        <p className="mt-4 text-small text-muted-foreground">{t('integrationSetup.group')}</p>
-      ) : null}
-      {setup.data ? (
-        <p className="mt-3 text-small">
-          {t('integrationSetup.progress', {
-            linked: setup.data.linkedMemberCount,
-            total: setup.data.memberCount,
-            groups: setup.data.groupCount,
-          })}
-        </p>
-      ) : null}
-      <Button
-        variant="secondary"
-        className="mt-4"
-        onClick={() => navigate('/account/notifications')}
-      >
-        {t('inbox.preferences.title')}
-      </Button>
-    </SectionCard>
+      <details className="group">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-sm text-body font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+          <ChevronRight
+            className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90"
+            aria-hidden="true"
+          />
+          {t('integrationSetup.title')}
+        </summary>
+        <div className="space-y-3 pb-3 pl-6 text-small text-muted-foreground">
+          <p>{t('integrationSetup.description')}</p>
+          <ol className="list-decimal space-y-2 pl-4">
+            <li>{t('integrationSetup.link')}</li>
+            <li>{t('integrationSetup.preferences')}</li>
+            <li>{t('integrationSetup.commands')}</li>
+          </ol>
+          {departmentId ? <p>{t('integrationSetup.group')}</p> : null}
+        </div>
+      </details>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+        {setup.data ? (
+          <p className="text-small text-muted-foreground">
+            {t('integrationSetup.progress', {
+              linked: setup.data.linkedMemberCount,
+              total: setup.data.memberCount,
+              groups: setup.data.groupCount,
+            })}
+          </p>
+        ) : null}
+        <Button size="sm" variant="secondary" onClick={() => navigate('/account/notifications')}>
+          {t('inbox.preferences.title')}
+        </Button>
+      </div>
+    </section>
   )
 }
 
@@ -520,20 +528,19 @@ export default function TelegramScreen({ embedded = false }: { embedded?: boolea
   const isHead = department?.role === 'head'
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-4">
       {!embedded ? (
         <PageHeader eyebrow={t('accounts.settings.title')} title={t('telegram.title')} />
       ) : (
-        <h2 className="font-display text-h2">{t('telegram.title')}</h2>
+        <SettingsPaneHeader title={t('telegram.title')} />
       )}
 
-      <SetupGuide departmentId={isHead ? departmentId : null} />
-
-      <PersonalLinkCard />
+      <PersonalLinkCard compact={embedded} />
 
       {departmentId && telegram.data?.configured && (isHead || telegram.data?.canConnectGroup) ? (
         <GroupsCard departmentId={departmentId} canManage={isHead} />
       ) : null}
+      <SetupGuide departmentId={isHead ? departmentId : null} />
     </div>
   )
 }

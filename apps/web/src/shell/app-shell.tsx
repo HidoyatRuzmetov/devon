@@ -17,6 +17,7 @@ import {
   DepartmentSwitcher,
   IconButton,
   InboxBell,
+  HubAmbientWash,
   LocaleMenu,
   OfflineBanner,
   PageContainer,
@@ -100,8 +101,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const overviewHref =
     returnConversation &&
     /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(returnConversation)
-      ? `/?conversation=${returnConversation}`
-      : '/'
+      ? `/assistant?conversation=${returnConversation}`
+      : search.get('from') === 'assistant'
+        ? '/assistant'
+        : '/'
   React.useLayoutEffect(() => {
     // A new screen must not inherit the previous screen's document offset.
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -329,7 +332,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             secondary={user.login}
             label={t('accounts.settings.title')}
             collapsed={isDesktop ? collapsed : false}
-            onSelect={() => navigate('/account')}
+            onSelect={() => {
+              setDrawerOpen(false)
+              navigate('/account')
+            }}
           />
         ) : null
       }
@@ -373,8 +379,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           count={inboxCount}
           label={t('shell.inbox.unreadAria', { count: inboxCount })}
           locale={locale}
-          active={route.startsWith('/inbox')}
-          onClick={() => navigate('/inbox')}
+          active={route === '/' && search.has('inbox')}
+          onClick={() => navigate('/?inbox=all')}
         />
       ) : null}
       <ThemeToggle
@@ -423,6 +429,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             title={t('shell.menu.open')}
             side="left"
             className="w-(--width-sidebar) p-0"
+            onClickCapture={(event) => {
+              // Selecting the current destination does not trigger a route change.
+              // Close for ordinary navigation even when its URL is already active.
+              if (
+                event.button === 0 &&
+                !event.metaKey &&
+                !event.ctrlKey &&
+                !event.shiftKey &&
+                !event.altKey &&
+                event.target instanceof Element &&
+                event.target.closest('a[href]')
+              ) {
+                setDrawerOpen(false)
+              }
+            }}
           >
             {sidebarNode}
           </SheetContent>
@@ -483,15 +504,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         ) : null}
 
-        <main id="main" className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 md:px-8 md:pb-10 md:pt-8">
+        <main
+          id="main"
+          className="relative isolate min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 md:px-8 md:pb-10 md:pt-8"
+        >
+          {route === '/' ? <HubAmbientWash className="-z-10 h-full" /> : null}
           <PaletteProvider onOpen={() => changePaletteOpen(true)}>
             <PageContainer>
-              {route !== '/' && search.get('from') === 'overview' ? (
+              {route !== '/' &&
+              route !== '/assistant' &&
+              ['overview', 'assistant'].includes(search.get('from') ?? '') ? (
                 <RouterLink
                   href={overviewHref}
                   className="mb-3 inline-flex text-small text-primary"
                 >
-                  {t('portal.overview.back')}
+                  {t(
+                    search.get('from') === 'assistant' || returnConversation
+                      ? 'assistantWorkspace.back'
+                      : 'portal.overview.back',
+                  )}
                 </RouterLink>
               ) : null}
               {/* UI-OVERHAUL.md §3 row 1: the route swap is a crossfade + 8 px slide -- View

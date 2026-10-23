@@ -1,3 +1,4 @@
+import { useScopeTransition } from '../lib/use-scope-transition.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // Shared chrome for every work-module route: the view-switcher tabs (Board/Table/Timeline/Calendar), the quick-add bar and the filter bar. One component so a filter typed on the board
 // is still there after clicking over to Table (TECH-SPEC "table, timeline, calendar and mine show the
@@ -5,6 +6,7 @@ import { avatarUrl } from '../../../lib/avatar.js'
 import * as React from 'react'
 import { CalendarDays, ChevronDown, Columns3, SlidersHorizontal, Table2, Timer } from 'lucide-react'
 import { useT } from '@devon/i18n'
+import { returnContextParams } from '../../../lib/return-context.js'
 import { navigate, RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
 import {
   Collapsible,
@@ -91,19 +93,10 @@ export function WorkShell({
   const search = useSearchParams()
   const board = useBoardQuery()
   const qs = search.get('q')
-  const viewParams = new URLSearchParams()
+  const viewParams = returnContextParams(search)
   if (qs) viewParams.set('q', qs)
-  if (search.get('from') === 'overview') {
-    viewParams.set('from', 'overview')
-    const conversation = search.get('conversation')
-    if (
-      conversation &&
-      /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(conversation)
-    ) {
-      viewParams.set('conversation', conversation)
-    }
-  }
   const searchSuffix = viewParams.size ? '?' + viewParams.toString() : ''
+  const contentRef = React.useRef<HTMLDivElement>(null)
   const meMode = (qs ?? '').split(/\s+/).includes(ME_CLAUSE)
   const activeTab = TABS.find((tab) => tab.path === path) ?? TABS[0]!
   const viewIcons = [Columns3, Table2, Timer, CalendarDays]
@@ -114,6 +107,8 @@ export function WorkShell({
     const combined = next === 'mine' ? `${rest} ${ME_CLAUSE}`.trim() : rest
     replaceSearchParam('q', combined === '' ? null : combined)
   }
+
+  const changeMeMode = useScopeTransition(meMode ? 'mine' : 'all', setMeMode, contentRef)
 
   // round2 SEV2: at 390 the chrome above the board (title, six tabs, quick-add, filter row,
   // "Kengaytirilgan") ate ~500px before any column started -- below 768 the quick-add bar and filter
@@ -233,7 +228,7 @@ export function WorkShell({
                 size="sm"
                 className="mb-1"
                 value={meMode ? 'mine' : 'all'}
-                onValueChange={setMeMode}
+                onValueChange={(next) => void changeMeMode(next)}
                 label={t('work.board.scopeLabel')}
                 options={[
                   { value: 'all', label: t('work.board.scopeAll') },
@@ -256,7 +251,9 @@ export function WorkShell({
           </div>
         </Collapsible>
       </div>
-      <div className={cn('mt-2 min-h-0', fillViewport && 'flex-1')}>{children}</div>
+      <div ref={contentRef} className={cn('mt-2 min-h-0', fillViewport && 'flex-1')}>
+        {children}
+      </div>
     </div>
   )
 }

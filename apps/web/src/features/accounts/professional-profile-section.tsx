@@ -1,3 +1,4 @@
+import { SettingsSection } from './settings-section.js'
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -16,7 +17,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { useT } from '@devon/i18n'
-import { Button, Input, SectionCard, StateView, Textarea, toast } from '@devon/ui'
+import { Button, Input, StateView, Textarea, toast } from '@devon/ui'
 import { apiClient } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import type { Me } from '../../lib/api-schemas.js'
@@ -36,7 +37,7 @@ export function ProfessionalProfileSection() {
     enabled: Boolean(ownerUserId),
   })
   return (
-    <SectionCard
+    <SettingsSection
       id="section-professional"
       title={t('portal.profile.title')}
       description={t('portal.profile.intro')}
@@ -58,7 +59,7 @@ export function ProfessionalProfileSection() {
           csrfToken={me?.csrfToken ?? ''}
         />
       ) : null}
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -172,7 +173,7 @@ function ProfileEditor({
     if (!save.isPending) save.mutate({ profile: parsed.data, version, ownerUserId, csrfToken })
   }
   return (
-    <form ref={formRef} noValidate className="flex min-w-0 flex-col gap-6" onSubmit={submit}>
+    <form ref={formRef} noValidate className="flex min-w-0 flex-col gap-5" onSubmit={submit}>
       <p className="text-caption text-muted-foreground">{t('settings.profile.requiredHint')}</p>
       <fieldset className="flex min-w-0 flex-col gap-4">
         <legend className="mb-3 flex items-center gap-2 text-lead font-medium">
@@ -210,7 +211,7 @@ function ProfileEditor({
         </label>
       </fieldset>
       {sections.map(({ key: section, icon: Icon, fields, required, limit }) => (
-        <fieldset key={section} className="flex min-w-0 flex-col gap-4 border-t border-border pt-5">
+        <fieldset key={section} className="flex min-w-0 flex-col gap-3 border-t border-border pt-4">
           <legend className="flex items-center gap-2 pr-3 text-lead font-medium">
             <Icon className="size-5 text-primary" aria-hidden="true" />
             {label(section)}
@@ -223,9 +224,9 @@ function ProfileEditor({
           {profile[section].map((item, index) => (
             <div
               key={index}
-              className="relative min-w-0 rounded-md border border-border bg-muted/20 p-4"
+              className="relative min-w-0 rounded-md border border-border bg-muted/20 p-3"
             >
-              <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
                 <p className="text-small font-medium">
                   {label(section)} <span className="text-muted-foreground">{index + 1}</span>
                 </p>
@@ -250,7 +251,7 @@ function ProfileEditor({
                   {label('remove')}
                 </Button>
               </div>
-              <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+              <div className="grid min-w-0 grid-cols-2 gap-3">
                 {fields.map((key) => {
                   const value = (item as unknown as Record<string, unknown>)[key]
                   const name = `${section}.${index}.${key}`
@@ -267,7 +268,7 @@ function ProfileEditor({
                     return (
                       <label
                         key={key}
-                        className="flex min-h-11 items-center gap-2 text-small sm:col-span-2"
+                        className="flex min-h-11 items-center gap-2 text-small col-span-2"
                       >
                         <input
                           type="checkbox"
@@ -281,7 +282,7 @@ function ProfileEditor({
                   return (
                     <label
                       key={key}
-                      className={`flex min-w-0 flex-col gap-1.5 text-small ${key === 'description' || key === 'url' ? 'sm:col-span-2' : ''}`}
+                      className={`flex min-w-0 flex-col gap-1.5 text-small ${year ? '' : key === 'description' || key === 'url' ? 'col-span-2' : 'col-span-2 sm:col-span-1'}`}
                     >
                       <span>
                         {fieldLabel}

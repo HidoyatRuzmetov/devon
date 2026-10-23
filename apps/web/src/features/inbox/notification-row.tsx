@@ -1,9 +1,10 @@
+import { notificationDestination } from './notification-destination.js'
 // One row in the inbox list (design.md components: a list row is a button, never a nested-clickable
 // mess -- the whole row opens the detail sheet; per-row actions are separate controls after it, not
 // inside the same hit target).
 import { AnimatePresence, motion } from 'motion/react'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
-import { Archive, Clock3 } from 'lucide-react'
+import { Archive, Clock3, MoreHorizontal, ArrowUpRight } from 'lucide-react'
 import {
   Chip,
   DropdownMenu,
@@ -34,7 +35,6 @@ export const SNOOZE_PRESETS = [
  * `deepLink`; the label is what tells the reader what pressing it *means* without opening the row
  * first (Gmail/Linear inbox convention). */
 function quickActionLabelKey(reason: NotificationDto['reason']): string {
-  if (reason === 'decision') return 'inbox.row.approve'
   if (reason === 'rsvp') return 'inbox.row.rsvp'
   return 'inbox.row.open'
 }
@@ -60,6 +60,7 @@ export function NotificationRow({
   onArchive: () => void
   onSnooze: (minutes: number) => void
 }) {
+  const destination = notificationDestination(notification)
   const t = useT()
   const locale = useLocale()
   const reduced = useReducedMotion()
@@ -74,7 +75,8 @@ export function NotificationRow({
     <div
       data-inbox-row={notification.id}
       className={cn(
-        'group relative flex items-start gap-3 border-b border-border px-4 py-3 last:border-b-0',
+        'group relative flex items-start border-b border-border py-3 last:border-b-0',
+        'gap-1 px-2',
         unread && 'bg-accent/40',
         selected && 'ring-1 ring-inset ring-primary',
       )}
@@ -140,7 +142,7 @@ export function NotificationRow({
             </span>
           </span>
           {notification.body ? (
-            <span className="mt-0.5 block truncate text-small text-muted-foreground">
+            <span className={cn('mt-0.5 block text-small text-muted-foreground', 'line-clamp-2')}>
               {pickLocalized(notification.body, locale)}
             </span>
           ) : null}
@@ -156,34 +158,31 @@ export function NotificationRow({
           </span>
         </span>
       </button>
-      <span className="flex shrink-0 items-center gap-1">
-        {notification.deepLink ? (
-          <button
-            type="button"
-            onClick={onQuickAction}
-            className="hidden whitespace-nowrap rounded-sm px-2 py-1 text-caption font-medium text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:inline-flex"
-          >
-            {t(quickActionLabelKey(notification.reason))}
-          </button>
-        ) : null}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <IconButton aria-label={t('inbox.row.snooze')}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconButton aria-label={t('homeRefinement.updateActions')}>
+            <MoreHorizontal className="size-4" aria-hidden="true" />
+          </IconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {destination ? (
+            <DropdownMenuItem onSelect={onQuickAction}>
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+              {t(quickActionLabelKey(notification.reason))}
+            </DropdownMenuItem>
+          ) : null}
+          {SNOOZE_PRESETS.map((preset) => (
+            <DropdownMenuItem key={preset.key} onSelect={() => onSnooze(preset.minutes)}>
               <Clock3 className="size-4" aria-hidden="true" />
-            </IconButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {SNOOZE_PRESETS.map((preset) => (
-              <DropdownMenuItem key={preset.key} onSelect={() => onSnooze(preset.minutes)}>
-                {t(`inbox.row.snoozeOptions.${preset.key}`)}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <IconButton aria-label={t('inbox.row.archive')} onClick={onArchive}>
-          <Archive className="size-4" aria-hidden="true" />
-        </IconButton>
-      </span>
+              {t(`inbox.row.snoozeOptions.${preset.key}`)}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuItem onSelect={onArchive}>
+            <Archive className="size-4" aria-hidden="true" />
+            {t('inbox.row.archive')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { SettingsSection } from '../../accounts/settings-section.js'
 // "Mening maʼlumotlarim" (v1.1 SPEC §5) -- the member half of custom fields, rendered as one section
 // of `/account` and reached by the deep link `/account#fields` that a fill request's inbox row and
 // its Telegram button both point at.
@@ -19,7 +20,6 @@ import {
   Button,
   Celebrate,
   Field,
-  SectionCard,
   Skeleton,
   Stagger,
   StaggerItem,
@@ -162,7 +162,11 @@ export function MyFieldsSection(): React.JSX.Element | null {
 
   if (query.isPending) {
     return (
-      <SectionCard id="fields" title={t('fields.my.title')} description={t('fields.my.subtitle')}>
+      <SettingsSection
+        id="fields"
+        title={t('fields.my.title')}
+        description={t('fields.my.subtitle')}
+      >
         <div className="flex flex-col gap-4" aria-hidden="true">
           {Array.from({ length: 2 }).map((_, index) => (
             <div key={index} className="flex flex-col gap-2">
@@ -171,26 +175,26 @@ export function MyFieldsSection(): React.JSX.Element | null {
             </div>
           ))}
         </div>
-      </SectionCard>
+      </SettingsSection>
     )
   }
 
   if (!online && query.isError) {
     return (
-      <SectionCard id="fields" title={t('fields.my.title')}>
+      <SettingsSection id="fields" title={t('fields.my.title')}>
         <StateView
           kind="offline"
           compact
           titleKey="state.offline.banner"
           bodyKey="state.offline.empty"
         />
-      </SectionCard>
+      </SettingsSection>
     )
   }
 
   if (query.isError) {
     return (
-      <SectionCard id="fields" title={t('fields.my.title')}>
+      <SettingsSection id="fields" title={t('fields.my.title')}>
         <StateView
           kind="error"
           compact
@@ -198,20 +202,25 @@ export function MyFieldsSection(): React.JSX.Element | null {
           bodyKey="state.error.body"
           action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
         />
-      </SectionCard>
+      </SettingsSection>
     )
   }
 
   if (fields.length === 0) {
     return (
-      <SectionCard id="fields" title={t('fields.my.title')} description={t('fields.my.subtitle')}>
+      <SettingsSection
+        id="fields"
+        title={t('fields.my.title')}
+        description={t('fields.my.subtitle')}
+      >
         <StateView
           kind="empty"
           compact
           titleKey="fields.my.empty.title"
           bodyKey="fields.my.empty.body"
+          className="max-w-none border-0 px-0 py-2 text-left [&>div]:items-start [&>div]:gap-2 [&_h3]:text-body [&_h3]:font-sans [&_p]:max-w-none"
         />
-      </SectionCard>
+      </SettingsSection>
     )
   }
 
@@ -221,7 +230,7 @@ export function MyFieldsSection(): React.JSX.Element | null {
   ).length
 
   return (
-    <SectionCard
+    <SettingsSection
       id="fields"
       title={t('fields.my.title')}
       description={t('fields.my.subtitle')}
@@ -310,7 +319,7 @@ export function MyFieldsSection(): React.JSX.Element | null {
           })}
         </Stagger>
       </form>
-    </SectionCard>
+    </SettingsSection>
   )
 }
 

@@ -11,7 +11,7 @@ export function chatSourceHref(href: string, conversationId?: string): string | 
   try {
     const url = new URL(href, 'https://workportal.invalid')
     if (url.origin !== 'https://workportal.invalid') return null
-    url.searchParams.set('from', 'overview')
+    url.searchParams.set('from', 'assistant')
     if (
       conversationId &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(

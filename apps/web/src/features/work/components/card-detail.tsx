@@ -1,19 +1,29 @@
 import { WORK_TITLE_MAX } from '@devon/contracts'
 import { avatarUrl } from '../../../lib/avatar.js'
-// The card detail content (TECH-SPEC §5, DESIGN.md §9.4). round2 SEV2: the original two-column
-// layout ran its left column at ~170px inside the 480px sheet -- title/status/description, then a
-// full-width label-above-value property list (assignee, priority, due, ...), then links/checklist/
-// comments, all in one column at the now-wider `--width-detail-panel`; activity stays a collapsible
-// timeline at the bottom. Shared, unstyled-of-container content component -- `card-peek-dialog.tsx`
-// wraps it in a `Dialog` for the side-peek, `card-page-screen.tsx` renders it directly as the full
-// page (TECH-SPEC
-// "card peek panel and full card page"). AI actions (subtasks, summarise thread, translate the
-// description) are the preview-then-accept pattern UI-OVERHAUL.md's AI helpers row requires: a
-// `SparkleButton` next to the field it enhances, an `AiResultPanel` with Accept/Edit/Discard, and no
-// path that writes a generated result into the card without that Accept.
+// Shared task document for the routed drawer and full page. Primary status actions stay in the
+// header; assignee/priority/deadline precede the actual work. Secondary metadata is disclosed on
+// demand, and AI output always remains a preview until accepted.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Check, ChevronDown, Link2, Pin, PinOff, Plus, Trash2, X } from 'lucide-react'
+import {
+  Archive,
+  Check,
+  ChevronDown,
+  Circle,
+  CircleDot,
+  Eye,
+  EyeOff,
+  FolderKanban,
+  Link2,
+  MoreHorizontal,
+  Pencil,
+  Pin,
+  PinOff,
+  Plus,
+  SlidersHorizontal,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
 import { useCardSignals, useSignalWhile } from '../../../lib/realtime/index.js'
 import {
@@ -24,6 +34,10 @@ import {
   Celebrate,
   Chip,
   Collapsible,
+  cn,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   DatePicker,
   FlashOnChange,
   IconButton,
@@ -97,13 +111,7 @@ import {
   useUnfurlMutation,
 } from '../hooks.js'
 import { resolveQuickAddAssignee } from '../lib/quick-add.js'
-import {
-  PRIORITY_BADGE_TONE,
-  PRIORITY_LABEL_KEY,
-  RISK_BADGE_TONE,
-  RISK_LABEL_KEY,
-  fullName,
-} from '../lib/format.js'
+import { PRIORITY_LABEL_KEY, RISK_BADGE_TONE, RISK_LABEL_KEY, fullName } from '../lib/format.js'
 import { useAddFocusMutation, useFocusListQuery, useRemoveFocusMutation } from '../hooks-plus.js'
 import { MemberPicker } from './member-picker.js'
 import { CardPlusSections } from './card-plus-sections.js'
@@ -140,7 +148,15 @@ function nameOf(members: readonly MemberSummary[], userId: string | null): strin
   return member ? fullName(member) : null
 }
 
-export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose?: () => void }) {
+export function CardDetailContent({
+  cardId,
+  onClose,
+  presentation = 'page',
+}: {
+  cardId: string
+  onClose?: () => void
+  presentation?: 'drawer' | 'page'
+}) {
   const t = useT()
   const locale = useLocale()
   const query = useCardQuery(cardId)
@@ -259,7 +275,16 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
 
   if (query.isPending) {
     return (
-      <div className="flex flex-col gap-4 p-2">
+      <div className="flex flex-col gap-4 p-4">
+        {onClose ? (
+          <IconButton
+            className="self-end"
+            aria-label={t('shell.shortcuts.close')}
+            onClick={onClose}
+          >
+            <X aria-hidden="true" />
+          </IconButton>
+        ) : null}
         <Skeleton className="h-8 w-3/4" />
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-40 w-full" />
@@ -268,12 +293,23 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   }
   if (query.isError || !card) {
     return (
-      <StateView
-        kind="error"
-        titleKey="state.error.title"
-        bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
-      />
+      <div className="flex flex-col gap-4 p-4">
+        {onClose ? (
+          <IconButton
+            className="self-end"
+            aria-label={t('shell.shortcuts.close')}
+            onClick={onClose}
+          >
+            <X aria-hidden="true" />
+          </IconButton>
+        ) : null}
+        <StateView
+          kind="error"
+          titleKey="state.error.title"
+          bodyKey="state.error.body"
+          action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+        />
+      </div>
     )
   }
 
@@ -565,35 +601,135 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
     })
   }
 
+  const project = projects.find((candidate) => candidate.id === card.projectId)
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* v1.1 SPEC §2.2 (D6a): the whole department's board is readable -- that transparency is the
-          product -- but a card belongs to the person who gave it, the person doing it and the person
-          who created it, plus the boshqarma boshlig'i. For everyone else this sheet is a reading
-          view, and it says so once, at the top, instead of letting a dozen controls fail one by one.
-          `canEdit` is computed on the server and carried on the DTO. */}
-      {!canEdit ? (
-        <p
-          className="rounded-md border border-border bg-muted/40 px-3 py-2 text-small text-muted-foreground"
-          role="status"
-        >
-          {t('work.card.readOnly')}
-        </p>
-      ) : null}
-      <header className="flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitleField
-            value={titleDraft}
-            onChange={(e) => editTitleDraft(e.target.value)}
-            onBlur={() => void saveTitle()}
-            readOnly={!canEdit}
-            aria-label={t('work.field.title')}
-            aria-invalid={titleError || undefined}
-            aria-describedby={titleError ? `card-title-error-${cardId}` : undefined}
-            maxLength={WORK_TITLE_MAX}
-            className="w-full resize-none overflow-hidden rounded-sm border border-transparent bg-transparent p-1 font-display text-h3 text-foreground outline-none hover:border-border focus-visible:border-border focus-visible:ring-2 focus-visible:ring-ring read-only:hover:border-transparent"
-          />
+    <div
+      data-card-detail
+      className={cn('flex min-h-0 min-w-0 flex-col', presentation === 'drawer' && 'h-full')}
+    >
+      <header
+        className={cn(
+          'flex shrink-0 flex-col gap-3 border-b border-border bg-surface-3 pb-4',
+          presentation === 'drawer' && 'px-4 pt-3 sm:px-5',
+        )}
+      >
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <span className="flex min-w-0 items-center gap-2 text-small font-medium text-muted-foreground">
+            {project ? (
+              <FolderKanban className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            ) : null}
+            <span className="truncate" title={project?.title}>
+              {project?.title ?? t('cardRefinement.task')}
+            </span>
+          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            {card.status === 'active' ? (
+              <IconButton
+                aria-label={pinned ? t('work.focus.unpin') : t('work.focus.pin')}
+                tooltip={pinned ? t('work.focus.unpin') : t('work.focus.pin')}
+                aria-pressed={pinned}
+                disabled={addFocus.isPending || removeFocus.isPending}
+                className={pinned ? 'bg-accent text-primary' : 'text-muted-foreground'}
+                onClick={() => togglePin()}
+              >
+                {pinned ? <PinOff aria-hidden="true" /> : <Pin aria-hidden="true" />}
+              </IconButton>
+            ) : null}
+            <IconButton
+              aria-label={isWatching ? t('work.card.watching') : t('work.card.watch')}
+              tooltip={isWatching ? t('work.card.watching') : t('work.card.watch')}
+              aria-pressed={isWatching}
+              disabled={toggleWatcher.isPending}
+              className={isWatching ? 'bg-accent text-primary' : 'text-muted-foreground'}
+              onClick={() => void toggleWatcher.mutateAsync(card.id)}
+            >
+              {isWatching ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+            </IconButton>
+            {canEdit ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <IconButton
+                    aria-label={t('cardRefinement.actions')}
+                    tooltip={t('cardRefinement.actions')}
+                  >
+                    <MoreHorizontal aria-hidden="true" />
+                  </IconButton>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  aria-label={t('cardRefinement.actions')}
+                  className="w-64 space-y-1 p-2"
+                >
+                  <p className="px-2 py-1 text-caption font-medium text-muted-foreground">
+                    {t('cardRefinement.actions')}
+                  </p>
+                  {card.status !== 'archived' ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full justify-start"
+                      disabled={patchCard.isPending}
+                      onClick={() => void archiveNow()}
+                    >
+                      <Archive className="size-4" aria-hidden="true" />
+                      {t('work.card.archive')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full justify-start"
+                      disabled={restoreCard.isPending}
+                      onClick={() => void restoreCard.mutateAsync(card.id)}
+                    >
+                      <Archive className="size-4" aria-hidden="true" />
+                      {t('work.card.restore')}
+                    </Button>
+                  )}
+                  {!card.projectId ? (
+                    <div className="[&>button]:w-full [&>button]:justify-start">
+                      <ConvertProjectDialog cardId={card.id} />
+                    </div>
+                  ) : null}
+                  <div className="border-t border-border pt-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full justify-start text-destructive"
+                      loading={deleteCard.isPending}
+                      onClick={() => void deleteNow()}
+                      title={t('work.deletion.hint')}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                      {t('work.action.delete')}
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            ) : null}
+            {onClose ? (
+              <IconButton
+                aria-label={t('shell.shortcuts.close')}
+                tooltip={t('shell.shortcuts.close')}
+                onClick={onClose}
+              >
+                <X aria-hidden="true" />
+              </IconButton>
+            ) : null}
+          </div>
         </div>
+        <CardTitleField
+          value={titleDraft}
+          onChange={(e) => editTitleDraft(e.target.value)}
+          onBlur={() => void saveTitle()}
+          readOnly={!canEdit}
+          aria-label={t('work.field.title')}
+          aria-invalid={titleError || undefined}
+          aria-describedby={titleError ? `card-title-error-${cardId}` : undefined}
+          maxLength={WORK_TITLE_MAX}
+          className="w-full resize-none overflow-hidden rounded-sm border border-transparent bg-transparent px-1 font-display text-h3 text-foreground outline-none hover:border-border focus-visible:border-border focus-visible:ring-2 focus-visible:ring-ring read-only:hover:border-transparent"
+        />
         {titleError ? (
           <p id={`card-title-error-${cardId}`} role="alert" className="text-small text-destructive">
             {t('work.card.titleRequired')}
@@ -603,7 +739,22 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           {card.status === 'archived' ? (
             <ArchivedCardBadge card={card} />
           ) : (
-            <Badge tone={card.workStage === 'in_progress' ? 'info' : 'neutral'}>
+            <Badge
+              tone={
+                card.status === 'done'
+                  ? 'success'
+                  : card.workStage === 'in_progress'
+                    ? 'info'
+                    : 'neutral'
+              }
+            >
+              {card.status === 'done' ? (
+                <Check className="size-3.5" aria-hidden="true" />
+              ) : card.workStage === 'in_progress' ? (
+                <CircleDot className="size-3.5" aria-hidden="true" />
+              ) : (
+                <Circle className="size-3.5" aria-hidden="true" />
+              )}
               {t(
                 card.status === 'active'
                   ? `portal.stage.${card.workStage ?? 'todo'}`
@@ -611,318 +762,167 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               )}
             </Badge>
           )}
-          {canEdit && card.status === 'active' ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={patchCard.isPending}
-              onClick={() =>
-                void patchCard.mutateAsync({
-                  id: card.id,
-                  patch: { workStage: card.workStage === 'in_progress' ? 'todo' : 'in_progress' },
-                })
-              }
-            >
-              {t(card.workStage === 'in_progress' ? 'portal.stage.reset' : 'portal.stage.start')}
-            </Button>
-          ) : null}
-          {card.priority !== 'none' ? (
-            <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
-              {t(PRIORITY_LABEL_KEY[card.priority])}
-            </Badge>
-          ) : null}
-          {card.risk !== 'none' ? (
-            <span className="flex items-center gap-1.5">
-              <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
-              {/* The one place this helper belongs: beside the badge it explains. v1.0 had it
-                  reachable only by typing card ids into a textarea on /ai (AI-AUDIT §0.4). */}
-              {riskEnabled ? (
-                <SparkleButton
-                  aria-label={t('work.ai.explainRisk')}
-                  size="sm"
-                  loading={riskAi.isPending}
-                  onClick={runRiskExplain}
-                />
-              ) : null}
-            </span>
-          ) : null}
           <div className="ml-auto flex flex-wrap items-center gap-2">
-            {/* A9: pin to my five. The server owns the ceiling and refuses a sixth; the button
-                stays enabled and the refusal becomes a sentence, because a silently disabled
-                control teaches nobody what the rule is. */}
-            {card.status === 'active' ? (
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-pressed={pinned}
-                loading={addFocus.isPending || removeFocus.isPending}
-                onClick={() => togglePin()}
-              >
-                {pinned ? (
-                  <PinOff className="size-4" aria-hidden="true" />
-                ) : (
-                  <Pin className="size-4" aria-hidden="true" />
-                )}
-                {pinned ? t('work.focus.unpin') : t('work.focus.pin')}
-              </Button>
-            ) : null}
             {canEdit && card.status === 'active' ? (
-              <span className="relative inline-flex">
-                <Button size="sm" onClick={() => void markDone()} loading={patchCard.isPending}>
-                  {t('work.card.markDone')}
-                </Button>
-                <Celebrate play={doneCelebrate.play} onDone={doneCelebrate.onDone} />
-              </span>
-            ) : null}
-            {canEdit &&
-              (card.status !== 'archived' ? (
-                <Button size="sm" variant="secondary" onClick={() => void archiveNow()}>
-                  {t('work.card.archive')}
-                </Button>
-              ) : (
+              <>
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => void restoreCard.mutateAsync(card.id)}
+                  disabled={patchCard.isPending}
+                  onClick={() =>
+                    void patchCard.mutateAsync({
+                      id: card.id,
+                      patch: {
+                        workStage: card.workStage === 'in_progress' ? 'todo' : 'in_progress',
+                      },
+                    })
+                  }
                 >
-                  {t('work.card.restore')}
+                  {t(
+                    card.workStage === 'in_progress' ? 'portal.stage.reset' : 'portal.stage.start',
+                  )}
                 </Button>
-              ))}
-            {canEdit ? (
-              <Button
-                size="sm"
-                variant="ghost"
-                loading={deleteCard.isPending}
-                onClick={() => void deleteNow()}
-                title={t('work.deletion.hint')}
-              >
-                <Trash2 className="size-4" aria-hidden="true" />
-                {t('work.action.delete')}
-              </Button>
+                <span className="relative inline-flex">
+                  <Button size="sm" onClick={() => void markDone()} loading={patchCard.isPending}>
+                    <Check className="size-4" aria-hidden="true" />
+                    {t('work.card.markDone')}
+                  </Button>
+                  <Celebrate play={doneCelebrate.play} onDone={doneCelebrate.onDone} />
+                </span>
+              </>
             ) : null}
-            {canEdit && !card.projectId ? <ConvertProjectDialog cardId={card.id} /> : null}
           </div>
         </div>
+        {!canEdit ? (
+          <p className="text-small text-muted-foreground" role="status">
+            {t('work.card.readOnly')}
+          </p>
+        ) : null}
       </header>
-
-      {riskAi.isPending || riskExplain || riskAi.isError ? (
-        <AiResultPanel
-          title={t('work.ai.explainRiskPreviewTitle')}
-          status={riskAi.isPending ? 'pending' : riskAi.isError ? 'error' : 'ready'}
-          errorMessage={t('work.quickAdd.aiError')}
-          {...(riskExplain ? { meta: riskExplain.meta } : {})}
-          // Read-only by design: this helper explains a verdict the server already reached. There is
-          // nothing to accept, and an Accept button over an explanation would read as a bug.
-          readOnly
-          onDiscard={() => {
-            setRiskExplain(null)
-            riskAi.reset()
-          }}
-          onRetry={runRiskExplain}
-        >
-          {riskExplain ? <RiskExplainPreview output={riskExplain.output} /> : null}
-        </AiResultPanel>
-      ) : null}
-
-      {/* round2 SEV2: the two-column split ran the left column at ~170px inside the 480px sheet --
-          a description textarea broke after four words, a three-word comment took four lines, and
-          two field labels ("Havola manzilini kiriting"/"Izoh yozing" placeholders, in practice) were
-          clipped by their own inputs. One column, full sheet width (now 560-600px, see
-          --width-detail-panel), reads as a document instead of a cramped two-up form. */}
-      <div className="flex min-w-0 flex-col gap-6">
-        <Field
-          label={t('work.field.description')}
-          grouped
-          action={
-            canEdit && translateEnabled && descDraft.trim() ? (
-              <span className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-                <TranslateTargetPicker
-                  id={`card-translate-target-${card.id}`}
-                  value={translateTarget}
-                  onChange={setTranslateTarget}
-                  disabled={translateAi.isPending}
-                />
-                <SparkleButton
-                  aria-label={t('work.ai.translate')}
-                  size="sm"
-                  loading={translateAi.isPending}
-                  onClick={runTranslate}
-                />
-              </span>
-            ) : undefined
-          }
-        >
-          <textarea
-            aria-label={t('work.field.description')}
-            readOnly={!canEdit}
-            value={descDraft}
-            onChange={(e) => editDescriptionDraft(e.target.value)}
-            onBlur={() => void saveDescription()}
-            rows={5}
-            placeholder={t('work.card.descriptionPlaceholder')}
-            className="w-full resize-y rounded-sm border border-border bg-card p-3 text-body text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          {translateAi.isPending || translatePreview || translateAi.isError ? (
-            <AiResultPanel
-              className="mt-2"
-              title={t('work.ai.translatePreviewTitle')}
-              status={translateAi.isPending ? 'pending' : translateAi.isError ? 'error' : 'ready'}
-              errorMessage={t('work.quickAdd.aiError')}
-              acceptLabel={t('work.ai.accept')}
-              editLabel={t('work.ai.edit')}
-              {...(translatePreview?.meta ? { meta: translatePreview.meta } : {})}
-              onAccept={() => void acceptTranslate()}
-              // Edit puts the translation in the textarea without saving it, so the person can adjust
-              // a term before it becomes the card's description. v1.0's Edit discarded the answer.
-              onEdit={() => {
-                if (translatePreview) editDescriptionDraft(translatePreview.output.translatedText)
-                setTranslatePreview(null)
-                translateAi.reset()
-              }}
-              onDiscard={() => {
-                setTranslatePreview(null)
-                translateAi.reset()
-              }}
-              onRetry={runTranslate}
-            >
-              {translatePreview ? <TranslatePreview output={translatePreview.output} /> : null}
-            </AiResultPanel>
-          ) : null}
-        </Field>
-
-        {/* Properties: a label-above-value row per field, full sheet width -- DESIGN.md §9.4,
-              round2 SEV2's "definition list" fix for the old cramped 240px right column. */}
-        <div className="flex flex-col gap-4 border-y border-border py-4">
-          {card.projectId ? (
-            <Field label={t('work.field.project')}>
-              {(() => {
-                const project = projects.find((p) => p.id === card.projectId)
-                return project ? (
-                  <Chip tone="outline">
-                    <span
-                      className="size-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: project.colour }}
-                      aria-hidden="true"
-                    />
-                    {project.title}
-                  </Chip>
-                ) : null
-              })()}
-            </Field>
-          ) : null}
-          {/* WALKTHROUGH-FINDINGS 1.2 / SPEC 12: reassigning somebody's work used to happen in
-              silence -- the card simply vanished from the board with no toast, no confirm and no way
-              back. Both of these now say what happened and offer the one click that undoes it
-              (DESIGN.md: undo over confirm). The previous value is captured before the mutation, so
-              the undo restores exactly what was there, including "nobody". */}
-          <Field
-            label={t('work.field.assignee')}
-            grouped
-            flashedAt={assigneeFlash.flashedAt}
-            rejectedAt={assigneeFlash.rejectedAt}
-          >
-            <MemberPicker
-              label={t('work.field.assignee')}
-              disabled={!canEdit}
-              members={members}
-              value={card.assigneeUserId}
-              onChange={(userId) => {
-                const previous = card.assigneeUserId
-                void patchCard
-                  .mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
-                  .then(() => {
-                    assigneeFlash.flash()
-                    toastWithUndo({
-                      message: t('work.card.reassigned', {
-                        name: nameOf(members, userId) ?? t('work.field.unassigned'),
-                      }),
-                      undoLabel: t('work.card.undo'),
-                      onUndo: () =>
-                        void patchCard.mutateAsync({
-                          id: card.id,
-                          patch: { assigneeUserId: previous },
-                        }),
-                    })
-                  })
-                  .catch(assigneeFlash.reject)
-              }}
-              placeholderKey="work.field.unassigned"
-            />
-            {assigneeAiEnabled ? (
+      <div
+        data-card-detail-scroll
+        className={cn(
+          'flex min-h-0 flex-col gap-5 pt-4',
+          presentation === 'drawer' &&
+            'flex-1 overflow-y-auto overscroll-contain px-4 pb-6 sm:px-5',
+        )}
+      >
+        {card.risk !== 'none' ? (
+          <div className="flex items-center gap-2">
+            <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
+            {riskEnabled ? (
               <SparkleButton
-                aria-label={t('work.ai.suggestAssignee')}
-                label={t('work.ai.suggestAssignee')}
+                aria-label={t('work.ai.explainRisk')}
                 size="sm"
-                className="mt-2"
-                loading={assigneeAi.isPending}
-                onClick={runSuggestAssignee}
+                loading={riskAi.isPending}
+                onClick={runRiskExplain}
               />
             ) : null}
-            {assigneeAi.isPending || assigneeSuggestions || assigneeAi.isError ? (
-              <AiResultPanel
-                className="mt-2"
-                title={t('work.ai.suggestAssigneePreviewTitle')}
-                status={assigneeAi.isPending ? 'pending' : assigneeAi.isError ? 'error' : 'ready'}
-                errorMessage={t('work.quickAdd.aiError')}
-                {...(assigneeSuggestions ? { meta: assigneeSuggestions.meta } : {})}
-                // No Accept: the head chooses a person from the list, one click per row. A single
-                // "Accept" over a ranked list of three people would mean "take the first", which is
-                // precisely the decision the guard rail says the head must make (AI-AUDIT N-3).
-                readOnly
-                onDiscard={() => {
-                  setAssigneeSuggestions(null)
-                  assigneeAi.reset()
-                }}
-                onRetry={runSuggestAssignee}
-              >
-                {assigneeSuggestions ? (
-                  <AssigneeSuggestionsPreview
-                    output={assigneeSuggestions.output}
-                    memberName={(id) => nameOf(members, id)}
-                    onChoose={(userId) => {
-                      void patchCard.mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
-                      setAssigneeSuggestions(null)
-                      assigneeAi.reset()
-                    }}
-                  />
-                ) : null}
-              </AiResultPanel>
-            ) : null}
-          </Field>
-          <Field
-            label={t('work.field.giver')}
-            grouped
-            flashedAt={giverFlash.flashedAt}
-            rejectedAt={giverFlash.rejectedAt}
+          </div>
+        ) : null}
+
+        {riskAi.isPending || riskExplain || riskAi.isError ? (
+          <AiResultPanel
+            title={t('work.ai.explainRiskPreviewTitle')}
+            status={riskAi.isPending ? 'pending' : riskAi.isError ? 'error' : 'ready'}
+            errorMessage={t('work.quickAdd.aiError')}
+            {...(riskExplain ? { meta: riskExplain.meta } : {})}
+            // Read-only by design: this helper explains a verdict the server already reached. There is
+            // nothing to accept, and an Accept button over an explanation would read as a bug.
+            readOnly
+            onDiscard={() => {
+              setRiskExplain(null)
+              riskAi.reset()
+            }}
+            onRetry={runRiskExplain}
           >
-            <MemberPicker
-              label={t('work.field.giver')}
-              disabled={!canEdit}
-              members={members}
-              value={card.giverUserId}
-              onChange={(userId) => {
-                const previous = card.giverUserId
-                void patchCard
-                  .mutateAsync({ id: card.id, patch: { giverUserId: userId } })
-                  .then(() => {
-                    giverFlash.flash()
-                    toastWithUndo({
-                      message: t('work.card.giverChanged', {
-                        name: nameOf(members, userId) ?? t('work.field.noGiver'),
-                      }),
-                      undoLabel: t('work.card.undo'),
-                      onUndo: () =>
+            {riskExplain ? <RiskExplainPreview output={riskExplain.output} /> : null}
+          </AiResultPanel>
+        ) : null}
+
+        <div
+          className="grid min-w-0 grid-cols-1 gap-3 rounded-md min-[360px]:grid-cols-2 border border-border bg-muted/20 p-3"
+          data-card-primary-properties
+        >
+          <div className="min-[360px]:col-span-2">
+            <Field
+              label={t('work.field.assignee')}
+              grouped
+              action={
+                canEdit && assigneeAiEnabled ? (
+                  <SparkleButton
+                    aria-label={t('work.ai.suggestAssignee')}
+                    size="sm"
+                    loading={assigneeAi.isPending}
+                    onClick={runSuggestAssignee}
+                  />
+                ) : undefined
+              }
+              flashedAt={assigneeFlash.flashedAt}
+              rejectedAt={assigneeFlash.rejectedAt}
+            >
+              <MemberPicker
+                label={t('work.field.assignee')}
+                disabled={!canEdit}
+                members={members}
+                value={card.assigneeUserId}
+                onChange={(userId) => {
+                  const previous = card.assigneeUserId
+                  void patchCard
+                    .mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
+                    .then(() => {
+                      assigneeFlash.flash()
+                      toastWithUndo({
+                        message: t('work.card.reassigned', {
+                          name: nameOf(members, userId) ?? t('work.field.unassigned'),
+                        }),
+                        undoLabel: t('work.card.undo'),
+                        onUndo: () =>
+                          void patchCard.mutateAsync({
+                            id: card.id,
+                            patch: { assigneeUserId: previous },
+                          }),
+                      })
+                    })
+                    .catch(assigneeFlash.reject)
+                }}
+                placeholderKey="work.field.unassigned"
+              />
+              {assigneeAi.isPending || assigneeSuggestions || assigneeAi.isError ? (
+                <AiResultPanel
+                  className="mt-2"
+                  title={t('work.ai.suggestAssigneePreviewTitle')}
+                  status={assigneeAi.isPending ? 'pending' : assigneeAi.isError ? 'error' : 'ready'}
+                  errorMessage={t('work.quickAdd.aiError')}
+                  {...(assigneeSuggestions ? { meta: assigneeSuggestions.meta } : {})}
+                  // No Accept: the head chooses a person from the list, one click per row. A single
+                  // "Accept" over a ranked list of three people would mean "take the first", which is
+                  // precisely the decision the guard rail says the head must make (AI-AUDIT N-3).
+                  readOnly
+                  onDiscard={() => {
+                    setAssigneeSuggestions(null)
+                    assigneeAi.reset()
+                  }}
+                  onRetry={runSuggestAssignee}
+                >
+                  {assigneeSuggestions ? (
+                    <AssigneeSuggestionsPreview
+                      output={assigneeSuggestions.output}
+                      memberName={(id) => nameOf(members, id)}
+                      onChoose={(userId) => {
                         void patchCard.mutateAsync({
                           id: card.id,
-                          patch: { giverUserId: previous },
-                        }),
-                    })
-                  })
-                  .catch(giverFlash.reject)
-              }}
-              placeholderKey="work.field.noGiver"
-            />
-          </Field>
+                          patch: { assigneeUserId: userId },
+                        })
+                        setAssigneeSuggestions(null)
+                        assigneeAi.reset()
+                      }}
+                    />
+                  ) : null}
+                </AiResultPanel>
+              ) : null}
+            </Field>
+          </div>
           <Field
             label={t('work.field.priority')}
             flashedAt={priorityFlash.flashedAt}
@@ -964,181 +964,288 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               triggerClassName="w-full justify-start"
             />
           </Field>
-          <Field
-            label={t('work.field.start')}
-            flashedAt={startFlash.flashedAt}
-            rejectedAt={startFlash.rejectedAt}
-          >
-            <DatePicker
-              disabledTrigger={!canEdit}
-              locale={locale}
-              label={t('work.field.start')}
-              placeholder={t('work.field.start')}
-              selected={toDateInputValue(card.startAt)}
-              onSelect={(date) =>
-                void patchCard
-                  .mutateAsync({ id: card.id, patch: { startAt: dateToIso(date) } })
-                  .then(startFlash.flash)
-                  .catch(startFlash.reject)
-              }
-              triggerClassName="w-full justify-start"
-            />
-          </Field>
-          <Field label={t('work.field.watchers')}>
-            <div className="flex flex-col gap-2">
-              {watcherPeople.length > 0 ? (
-                <AvatarStack people={watcherPeople} label={t('work.field.watchers')} max={6} />
-              ) : null}
-              <Button
-                size="sm"
-                variant={isWatching ? 'secondary' : 'ghost'}
-                onClick={() => void toggleWatcher.mutateAsync(card.id)}
-              >
-                {isWatching ? t('work.card.watching') : t('work.card.watch')}
-              </Button>
-            </div>
-          </Field>
-          <Field label={t('work.field.labels')} grouped>
-            <div className="flex flex-wrap gap-1.5">
-              {labels
-                .filter((label) => canEdit || card.labels.includes(label.id))
-                .map((label) => {
-                  const active = card.labels.includes(label.id)
-                  // A pastel label colour with hardcoded white text was illegible the moment
-                  // someone picked a light hue ("Hisobot"/"Tashqi" in the item handoff) --
-                  // labelChipColors derives a background/foreground pair from that one colour,
-                  // guaranteed >= 4.5:1 contrast, so any colour a member picks stays readable in
-                  // both themes.
-                  const { background, foreground } = labelChipColors(label.colour, isDark)
-                  if (!canEdit) {
-                    return (
-                      <Chip
-                        key={label.id}
-                        style={{ backgroundColor: background, color: foreground }}
-                      >
-                        {label.name}
-                      </Chip>
-                    )
-                  }
-                  return (
-                    <button
-                      key={label.id}
-                      type="button"
-                      onClick={() => toggleLabel(label.id)}
-                      disabled={patchCard.isPending}
-                      className="inline-flex min-h-6 items-center gap-1.5 rounded-sm px-2 py-1 text-caption font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-md:min-h-11"
-                      style={{
-                        backgroundColor: background,
-                        color: foreground,
-                      }}
-                      aria-pressed={active}
-                    >
-                      {active ? (
-                        <Check aria-hidden="true" className="size-3 shrink-0" />
-                      ) : (
-                        <Plus aria-hidden="true" className="size-3 shrink-0" />
-                      )}
-                      {label.name}
-                    </button>
-                  )
-                })}
-              {canEdit ? (
-                <form
-                  className="flex w-full items-center gap-2"
-                  onSubmit={(event) => {
-                    event.preventDefault()
-                    if (!newLabelName.trim() || createLabel.isPending) return
-                    createLabel.mutate(
-                      { name: newLabelName.trim() },
-                      {
-                        onSuccess: () => setNewLabelName(''),
-                        onError: () => toast.error(t('toast.saveError')),
-                      },
-                    )
-                  }}
-                >
-                  <Input
-                    value={newLabelName}
-                    onChange={(e) => setNewLabelName(e.target.value)}
-                    placeholder={t('work.card.newLabel')}
-                    aria-label={t('work.card.newLabel')}
-                    maxLength={60}
-                    disabled={createLabel.isPending}
-                    className="h-11 min-w-0 flex-1 px-2 text-caption md:h-7"
-                  />
-                  <IconButton
-                    type="submit"
-                    aria-label={t('work.card.newLabel')}
-                    tooltip={t('work.card.newLabel')}
-                    aria-busy={createLabel.isPending || undefined}
-                    disabled={!newLabelName.trim() || createLabel.isPending}
-                  >
-                    <Plus aria-hidden="true" className="size-4" />
-                  </IconButton>
-                </form>
-              ) : null}
-            </div>
-          </Field>
-
-          <CardCustomFields
-            cardId={card.id}
-            ownerUserIds={[card.giverUserId, card.assigneeUserId, card.createdByUserId].filter(
-              (id): id is string => Boolean(id),
-            )}
-          />
         </div>
-
-        <Field label={t('work.field.links')}>
-          <div className="flex flex-col gap-2">
-            {card.links.map((link) => (
-              <div
-                key={link.url}
-                className="flex items-center gap-2 rounded-sm border border-border p-2"
-              >
-                <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <CardLinkLabel url={link.url} title={link.title} />
-                {canEdit ? (
-                  <IconButton
-                    aria-label={t('work.card.removeLink', { title: link.title })}
-                    disabled={linkPending || patchCard.isPending}
-                    onClick={() => void removeLink(link.url)}
-                  >
-                    <X className="size-3.5" />
-                  </IconButton>
-                ) : null}
-              </div>
-            ))}
-            {canEdit ? (
-              <div className="flex gap-2">
-                <Input
-                  value={linkInput}
-                  aria-label={t('work.card.addLinkPlaceholder')}
-                  disabled={linkPending || patchCard.isPending}
-                  onChange={(e) => setLinkInput(e.target.value)}
-                  placeholder={t('work.card.addLinkPlaceholder')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void addLink()
-                  }}
+        <Field
+          label={t('work.field.description')}
+          grouped
+          action={
+            canEdit && translateEnabled && descDraft.trim() ? (
+              <span className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+                <TranslateTargetPicker
+                  id={`card-translate-target-${card.id}`}
+                  value={translateTarget}
+                  onChange={setTranslateTarget}
+                  disabled={translateAi.isPending}
                 />
-                <Button
+                <SparkleButton
+                  aria-label={t('work.ai.translate')}
                   size="sm"
-                  variant="secondary"
-                  aria-label={t('work.card.addLink')}
-                  disabled={!linkInput.trim() || linkPending || patchCard.isPending}
-                  onClick={() => void addLink()}
-                  loading={linkPending}
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </div>
-            ) : null}
-          </div>
+                  loading={translateAi.isPending}
+                  onClick={runTranslate}
+                />
+              </span>
+            ) : undefined
+          }
+        >
+          <textarea
+            aria-label={t('work.field.description')}
+            readOnly={!canEdit}
+            value={descDraft}
+            onChange={(e) => editDescriptionDraft(e.target.value)}
+            onBlur={() => void saveDescription()}
+            rows={3}
+            placeholder={t('work.card.descriptionPlaceholder')}
+            className="w-full resize-y rounded-sm border border-border bg-card p-3 text-body text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {translateAi.isPending || translatePreview || translateAi.isError ? (
+            <AiResultPanel
+              className="mt-2"
+              title={t('work.ai.translatePreviewTitle')}
+              status={translateAi.isPending ? 'pending' : translateAi.isError ? 'error' : 'ready'}
+              errorMessage={t('work.quickAdd.aiError')}
+              acceptLabel={t('work.ai.accept')}
+              editLabel={t('work.ai.edit')}
+              {...(translatePreview?.meta ? { meta: translatePreview.meta } : {})}
+              onAccept={() => void acceptTranslate()}
+              // Edit puts the translation in the textarea without saving it, so the person can adjust
+              // a term before it becomes the card's description. v1.0's Edit discarded the answer.
+              onEdit={() => {
+                if (translatePreview) editDescriptionDraft(translatePreview.output.translatedText)
+                setTranslatePreview(null)
+                translateAi.reset()
+              }}
+              onDiscard={() => {
+                setTranslatePreview(null)
+                translateAi.reset()
+              }}
+              onRetry={runTranslate}
+            >
+              {translatePreview ? <TranslatePreview output={translatePreview.output} /> : null}
+            </AiResultPanel>
+          ) : null}
         </Field>
 
-        <CardAttachments cardId={card.id} canEdit={canEdit} />
-
         <Checklist card={card} canEdit={canEdit} />
+        <Comments
+          cardId={card.id}
+          cardTitle={card.title}
+          comments={card.comments}
+          members={members}
+        />
 
+        <CardAttachments cardId={card.id} canEdit={canEdit} />
+        <DetailDisclosure title={t('cardRefinement.details')} icon={SlidersHorizontal}>
+          <div className="flex flex-col gap-4">
+            <Field
+              label={t('work.field.giver')}
+              grouped
+              flashedAt={giverFlash.flashedAt}
+              rejectedAt={giverFlash.rejectedAt}
+            >
+              <MemberPicker
+                label={t('work.field.giver')}
+                disabled={!canEdit}
+                members={members}
+                value={card.giverUserId}
+                onChange={(userId) => {
+                  const previous = card.giverUserId
+                  void patchCard
+                    .mutateAsync({ id: card.id, patch: { giverUserId: userId } })
+                    .then(() => {
+                      giverFlash.flash()
+                      toastWithUndo({
+                        message: t('work.card.giverChanged', {
+                          name: nameOf(members, userId) ?? t('work.field.noGiver'),
+                        }),
+                        undoLabel: t('work.card.undo'),
+                        onUndo: () =>
+                          void patchCard.mutateAsync({
+                            id: card.id,
+                            patch: { giverUserId: previous },
+                          }),
+                      })
+                    })
+                    .catch(giverFlash.reject)
+                }}
+                placeholderKey="work.field.noGiver"
+              />
+            </Field>
+            <Field
+              label={t('work.field.start')}
+              flashedAt={startFlash.flashedAt}
+              rejectedAt={startFlash.rejectedAt}
+            >
+              <DatePicker
+                disabledTrigger={!canEdit}
+                locale={locale}
+                label={t('work.field.start')}
+                placeholder={t('work.field.start')}
+                selected={toDateInputValue(card.startAt)}
+                onSelect={(date) =>
+                  void patchCard
+                    .mutateAsync({ id: card.id, patch: { startAt: dateToIso(date) } })
+                    .then(startFlash.flash)
+                    .catch(startFlash.reject)
+                }
+                triggerClassName="w-full justify-start"
+              />
+            </Field>
+            <Field label={t('work.field.watchers')}>
+              <div className="flex flex-col gap-2">
+                {watcherPeople.length > 0 ? (
+                  <AvatarStack people={watcherPeople} label={t('work.field.watchers')} max={6} />
+                ) : null}
+                <Button
+                  size="sm"
+                  variant={isWatching ? 'secondary' : 'ghost'}
+                  onClick={() => void toggleWatcher.mutateAsync(card.id)}
+                >
+                  {isWatching ? t('work.card.watching') : t('work.card.watch')}
+                </Button>
+              </div>
+            </Field>
+            <Field label={t('work.field.labels')} grouped>
+              <div className="flex flex-wrap gap-1.5">
+                {labels
+                  .filter((label) => canEdit || card.labels.includes(label.id))
+                  .map((label) => {
+                    const active = card.labels.includes(label.id)
+                    // A pastel label colour with hardcoded white text was illegible the moment
+                    // someone picked a light hue ("Hisobot"/"Tashqi" in the item handoff) --
+                    // labelChipColors derives a background/foreground pair from that one colour,
+                    // guaranteed >= 4.5:1 contrast, so any colour a member picks stays readable in
+                    // both themes.
+                    const { background, foreground } = labelChipColors(label.colour, isDark)
+                    if (!canEdit) {
+                      return (
+                        <Chip
+                          key={label.id}
+                          style={{ backgroundColor: background, color: foreground }}
+                        >
+                          {label.name}
+                        </Chip>
+                      )
+                    }
+                    return (
+                      <button
+                        key={label.id}
+                        type="button"
+                        onClick={() => toggleLabel(label.id)}
+                        disabled={patchCard.isPending}
+                        className="inline-flex min-h-6 items-center gap-1.5 rounded-sm px-2 py-1 text-caption font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-md:min-h-11"
+                        style={{
+                          backgroundColor: background,
+                          color: foreground,
+                        }}
+                        aria-pressed={active}
+                      >
+                        {active ? (
+                          <Check aria-hidden="true" className="size-3 shrink-0" />
+                        ) : (
+                          <Plus aria-hidden="true" className="size-3 shrink-0" />
+                        )}
+                        {label.name}
+                      </button>
+                    )
+                  })}
+                {canEdit ? (
+                  <form
+                    className="flex w-full items-center gap-2"
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      if (!newLabelName.trim() || createLabel.isPending) return
+                      createLabel.mutate(
+                        { name: newLabelName.trim() },
+                        {
+                          onSuccess: () => setNewLabelName(''),
+                          onError: () => toast.error(t('toast.saveError')),
+                        },
+                      )
+                    }}
+                  >
+                    <Input
+                      value={newLabelName}
+                      onChange={(e) => setNewLabelName(e.target.value)}
+                      placeholder={t('work.card.newLabel')}
+                      aria-label={t('work.card.newLabel')}
+                      maxLength={60}
+                      disabled={createLabel.isPending}
+                      className="h-11 min-w-0 flex-1 px-2 text-caption md:h-7"
+                    />
+                    <IconButton
+                      type="submit"
+                      aria-label={t('work.card.newLabel')}
+                      tooltip={t('work.card.newLabel')}
+                      aria-busy={createLabel.isPending || undefined}
+                      disabled={!newLabelName.trim() || createLabel.isPending}
+                    >
+                      <Plus aria-hidden="true" className="size-4" />
+                    </IconButton>
+                  </form>
+                ) : null}
+              </div>
+            </Field>
+
+            <CardCustomFields
+              cardId={card.id}
+              ownerUserIds={[card.giverUserId, card.assigneeUserId, card.createdByUserId].filter(
+                (id): id is string => Boolean(id),
+              )}
+            />
+          </div>
+        </DetailDisclosure>
+        <DetailDisclosure
+          title={`${t('work.field.links')} (${card.links.length})`}
+          icon={Link2}
+          defaultOpen={card.links.length > 0}
+        >
+          <Field label={t('work.field.links')}>
+            <div className="flex flex-col gap-2">
+              {card.links.map((link) => (
+                <div
+                  key={link.url}
+                  className="flex items-center gap-2 rounded-sm border border-border p-2"
+                >
+                  <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <CardLinkLabel url={link.url} title={link.title} />
+                  {canEdit ? (
+                    <IconButton
+                      aria-label={t('work.card.removeLink', { title: link.title })}
+                      disabled={linkPending || patchCard.isPending}
+                      onClick={() => void removeLink(link.url)}
+                    >
+                      <X className="size-3.5" />
+                    </IconButton>
+                  ) : null}
+                </div>
+              ))}
+              {canEdit ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={linkInput}
+                    aria-label={t('work.card.addLinkPlaceholder')}
+                    disabled={linkPending || patchCard.isPending}
+                    onChange={(e) => setLinkInput(e.target.value)}
+                    placeholder={t('work.card.addLinkPlaceholder')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') void addLink()
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    aria-label={t('work.card.addLink')}
+                    disabled={!linkInput.trim() || linkPending || patchCard.isPending}
+                    onClick={() => void addLink()}
+                    loading={linkPending}
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          </Field>
+        </DetailDisclosure>
         {/* v1.1 SPEC §7 -- estimate + time log, dependencies, repeat, reminders. */}
         <CardPlusSections
           card={card}
@@ -1163,41 +1270,73 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           }
         />
 
-        <Comments
-          cardId={card.id}
-          cardTitle={card.title}
-          comments={card.comments}
-          members={members}
-        />
+        {card.activity.length > 0 ? (
+          <div className="border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={() => setActivityOpen((v) => !v)}
+              aria-expanded={activityOpen}
+              aria-controls="card-activity-panel"
+              className="flex min-h-11 items-center gap-1.5 text-caption font-medium uppercase md:min-h-9 tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
+            >
+              <ChevronDown
+                className={
+                  activityOpen
+                    ? 'size-3.5 rotate-180 transition-transform'
+                    : 'size-3.5 transition-transform'
+                }
+                aria-hidden="true"
+              />
+              {t('work.field.activity')} ({card.activity.length})
+            </button>
+            <Collapsible open={activityOpen} id="card-activity-panel">
+              <div className="pt-3">
+                <ActivityTimeline activity={card.activity} members={members} locale={locale} />
+              </div>
+            </Collapsible>
+          </div>
+        ) : null}
       </div>
-
-      {card.activity.length > 0 ? (
-        <div className="border-t border-border pt-3">
-          <button
-            type="button"
-            onClick={() => setActivityOpen((v) => !v)}
-            aria-expanded={activityOpen}
-            aria-controls="card-activity-panel"
-            className="flex items-center gap-1.5 text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
-          >
-            <ChevronDown
-              className={
-                activityOpen
-                  ? 'size-3.5 rotate-180 transition-transform'
-                  : 'size-3.5 transition-transform'
-              }
-              aria-hidden="true"
-            />
-            {t('work.field.activity')} ({card.activity.length})
-          </button>
-          <Collapsible open={activityOpen} id="card-activity-panel">
-            <div className="pt-3">
-              <ActivityTimeline activity={card.activity} members={members} locale={locale} />
-            </div>
-          </Collapsible>
-        </div>
-      ) : null}
     </div>
+  )
+}
+
+function DetailDisclosure({
+  title,
+  icon: Icon,
+  defaultOpen = false,
+  children,
+}: {
+  title: string
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = React.useState(defaultOpen)
+  const id = React.useId()
+  return (
+    <section className="border-t border-border pt-2">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((value) => !value)}
+        className="flex min-h-11 w-full items-center gap-2 rounded-sm text-small font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9"
+      >
+        <Icon className="size-4" aria-hidden="true" />
+        <span>{title}</span>
+        <ChevronDown
+          className={cn(
+            'ml-auto size-4 transition-transform duration-(--dur-micro) motion-reduce:transition-none',
+            open && 'rotate-180',
+          )}
+          aria-hidden="true"
+        />
+      </button>
+      <Collapsible open={open} id={id}>
+        <div className="pt-2">{children}</div>
+      </Collapsible>
+    </section>
   )
 }
 
@@ -1258,7 +1397,7 @@ function Field({
   const Container = grouped ? 'section' : 'label'
   return (
     <Container
-      className="flex flex-col gap-1.5 text-small"
+      className="flex min-w-0 flex-col gap-1.5 text-small"
       {...(grouped ? { 'aria-label': label } : {})}
     >
       <span className="flex min-w-0 flex-wrap items-center gap-2">
@@ -1677,14 +1816,45 @@ function Comments({
                   initials={author ? initialsFromName(author.givenName, author.familyName) : '?'}
                   hueSeed={c.authorUserId}
                 />
-                <div className="flex-1 rounded-sm bg-muted p-2">
-                  <div className="flex items-baseline justify-between gap-2">
+                <div className="min-w-0 flex-1 rounded-md bg-muted/55 p-3">
+                  <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-small font-medium text-foreground">
                       {author ? fullName(author) : ''}
                     </span>
-                    <span className="text-caption text-muted-foreground">
+                    <span className="ml-auto shrink-0 text-caption text-muted-foreground">
                       {formatDate(new Date(c.createdAt), locale)}
                     </span>
+                    {c.editedAt ? (
+                      <span className="text-caption text-muted-foreground">
+                        {t('work.comments.edited')}
+                      </span>
+                    ) : null}
+                    {(c.authorUserId === user?.id || viewerRole === 'head') &&
+                    editing !== c.id &&
+                    deleting !== c.id ? (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <IconButton
+                          className="md:size-7"
+                          aria-label={t('work.comments.edit')}
+                          tooltip={t('work.comments.edit')}
+                          onClick={() => {
+                            setEditing(c.id)
+                            setEditedText(c.body.text)
+                            setEditedRevision(c.editedAt)
+                          }}
+                        >
+                          <Pencil className="size-3.5" aria-hidden="true" />
+                        </IconButton>
+                        <IconButton
+                          className="text-muted-foreground hover:text-destructive md:size-7"
+                          aria-label={t('work.action.delete')}
+                          tooltip={t('work.action.delete')}
+                          onClick={() => setDeleting(c.id)}
+                        >
+                          <Trash2 className="size-3.5" aria-hidden="true" />
+                        </IconButton>
+                      </div>
+                    ) : null}
                   </div>
                   {editing === c.id ? (
                     <form
@@ -1735,31 +1905,6 @@ function Comments({
                       {c.body.text}
                     </p>
                   )}
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    {c.editedAt ? (
-                      <span className="text-caption text-muted-foreground">
-                        {t('work.comments.edited')}
-                      </span>
-                    ) : null}
-                    {(c.authorUserId === user?.id || viewerRole === 'head') && editing !== c.id ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditing(c.id)
-                            setEditedText(c.body.text)
-                            setEditedRevision(c.editedAt)
-                          }}
-                        >
-                          {t('work.comments.edit')}
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setDeleting(c.id)}>
-                          {t('work.action.delete')}
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
                   {deleting === c.id ? (
                     <div className="mt-2 rounded-sm border border-border p-2">
                       <p className="text-small">{t('work.comments.deleteConfirm')}</p>

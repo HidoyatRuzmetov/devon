@@ -8,8 +8,12 @@ vi.mock('../../src/modules/notifications/repo.js', () => ({
   getPrefs: vi.fn(),
   unreadCountsByReason: vi.fn(),
 }))
-vi.mock('../../src/modules/notifications/notify.js', () => ({ notifyUser: vi.fn() }))
-vi.mock('../../src/modules/ai/service.js', () => ({ narrateDepartmentWeek: vi.fn() }))
+vi.mock('../../src/modules/notifications/notify.js', () => ({
+  notifyUser: vi.fn(),
+}))
+vi.mock('../../src/modules/ai/service.js', () => ({
+  narrateDepartmentWeek: vi.fn(),
+}))
 import {
   getPrefs,
   listAllDepartmentIds,
@@ -29,7 +33,18 @@ describe('personal digest schedule', () => {
   const log = { info: vi.fn() } as unknown as FastifyBaseLogger
   function preference(mode: 'daily' | 'weekly' | 'off') {
     vi.mocked(getPrefs).mockResolvedValue([
-      { reason: 'digest', channel: 'telegram', enabled: mode !== 'off', digestMode: mode },
+      {
+        reason: 'digest',
+        channel: 'inapp',
+        enabled: false,
+        digestMode: 'instant',
+      },
+      {
+        reason: 'digest',
+        channel: 'telegram',
+        enabled: mode !== 'off',
+        digestMode: mode,
+      },
     ])
   }
 
@@ -42,6 +57,27 @@ describe('personal digest schedule', () => {
         type: 'notifications.digest.daily',
         subjectId: 'daily-2026-10-08',
       }),
+    )
+  })
+  it('keeps in-app summaries enabled when Telegram summaries are off', async () => {
+    vi.mocked(getPrefs).mockResolvedValue([
+      {
+        reason: 'digest',
+        channel: 'inapp',
+        enabled: true,
+        digestMode: 'instant',
+      },
+      {
+        reason: 'digest',
+        channel: 'telegram',
+        enabled: false,
+        digestMode: 'off',
+      },
+    ])
+    await _internal.runDigestPersonal(log)
+    expect(notifyUser).toHaveBeenCalledWith(
+      log,
+      expect.objectContaining({ type: 'notifications.digest.daily' }),
     )
   })
   it('creates a weekly digest on Friday only', async () => {

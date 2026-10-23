@@ -141,6 +141,11 @@ test('@flow people controls: table reflow, task targets, keyboard scrolling and 
     await authedPatch(head, '/api/v1/me', { locale: 'en' })
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/people/table')
+    // The people/indicator queries can finish before the board query. Its task chips change
+    // the table's natural column widths, so measure the populated table (as in the viewport
+    // checks above), not a transient header width while those cells are still empty.
+    await expect(page.locator('main a[href^="/work?card="]')).toHaveCount(3)
+    await page.evaluate(() => document.fonts.ready)
     const slider = page.getByRole('slider').first()
     await expect(slider).toBeVisible()
     await expect(slider).toHaveAttribute('aria-orientation', 'horizontal')

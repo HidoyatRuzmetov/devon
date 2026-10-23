@@ -108,6 +108,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           createdAt: n.createdAt.toISOString(),
         })),
         unreadCount: result.unreadCount,
+        groupCounts: result.groupCounts,
         nextCursor: result.nextCursor,
       })
     },

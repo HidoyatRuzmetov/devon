@@ -145,6 +145,7 @@ test('@qa unrelated card readers see readable properties without edit controls',
     )
     await expect(page.getByRole('combobox', { name: 'Priority', exact: true })).toBeDisabled()
     await expect(page.getByRole('button', { name: 'Due', exact: true })).toBeDisabled()
+    await page.getByRole('button', { name: 'More details', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Start', exact: true })).toBeDisabled()
     await expect(page.getByRole('button', { name: /^Assignee: / })).toBeDisabled()
     await expect(page.getByRole('button', { name: /^Giver: / })).toBeDisabled()

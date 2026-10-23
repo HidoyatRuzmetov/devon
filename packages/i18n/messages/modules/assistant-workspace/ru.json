@@ -1,0 +1,9 @@
+{
+  "assistantWorkspace.title": "Ассистент",
+  "assistantWorkspace.welcome": "Чем я могу помочь?",
+  "assistantWorkspace.search": "Поиск по диалогам",
+  "assistantWorkspace.noMatches": "Подходящих диалогов нет.",
+  "assistantWorkspace.settings": "Инструменты и настройки ИИ",
+  "assistantWorkspace.private": "Ваше личное пространство",
+  "assistantWorkspace.back": "← Назад к ассистенту"
+}

@@ -1,10 +1,9 @@
-import * as React from 'react'
 import type { AiChatMessage } from '@devon/contracts'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { setLocale } from '@devon/i18n'
 import { TooltipProvider } from '@devon/ui'
-import { OverviewAssistant } from '../../src/features/home/overview-assistant.js'
+import { AssistantWorkspace } from '../../src/features/ai/assistant-screen.js'
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
@@ -58,15 +57,9 @@ vi.mock('../../src/features/ai/conversations.js', () => ({
 }))
 
 function Harness() {
-  const [expanded, setExpanded] = React.useState(false)
   return (
     <TooltipProvider>
-      <OverviewAssistant
-        expanded={expanded}
-        onExpandedChange={setExpanded}
-        cardTitle={() => null}
-        allowConversationRoute
-      />
+      <AssistantWorkspace />
     </TooltipProvider>
   )
 }
@@ -89,7 +82,7 @@ async function scrollHarness() {
     }
   }
   vi.stubGlobal('ResizeObserver', ControlledResizeObserver)
-  window.history.replaceState(null, '', `/?conversation=${existingId}`)
+  window.history.replaceState(null, '', `/assistant?conversation=${existingId}`)
   render(<Harness />)
   const log = await screen.findByRole('log')
   let contentHeight = 800,
@@ -121,11 +114,11 @@ async function scrollHarness() {
   }
 }
 
-describe('overview assistant lifecycle', () => {
+describe('assistant workspace lifecycle', () => {
   afterEach(() => vi.unstubAllGlobals())
   beforeEach(() => {
     setLocale('en')
-    window.history.replaceState(null, '', '/')
+    window.history.replaceState(null, '', '/assistant')
     mocks.create.mockReset()
     mocks.send.mockReset()
     mocks.messages = []
@@ -141,20 +134,26 @@ describe('overview assistant lifecycle', () => {
         }),
     )
     render(<Harness />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'First question' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Ask about your department' }), {
+      target: { value: 'First question' },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }))
     expect(mocks.create).toHaveBeenCalledOnce()
     fireEvent.click(screen.getByRole('button', { name: 'Saved conversations' }))
     fireEvent.click(await screen.findByRole('button', { name: /Earlier priorities/ }))
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Different draft' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Ask about your department' }), {
+      target: { value: 'Different draft' },
+    })
     await act(async () => finishCreate({ id: createdId }))
     expect(window.location.search).toContain(existingId)
-    expect(screen.getByRole('textbox')).toHaveValue('Different draft')
+    expect(screen.getByRole('textbox', { name: 'Ask about your department' })).toHaveValue(
+      'Different draft',
+    )
     expect(mocks.send).not.toHaveBeenCalled()
     expect(await screen.findByRole('log')).toHaveAttribute('tabindex', '0')
   })
 
-  it('does not send a question after its owning overview unmounts during creation', async () => {
+  it('does not send a question after its owning assistant unmounts during creation', async () => {
     let finishCreate!: (value: { id: string }) => void
     mocks.create.mockImplementation(
       () =>
@@ -163,7 +162,7 @@ describe('overview assistant lifecycle', () => {
         }),
     )
     const view = render(<Harness />)
-    fireEvent.change(screen.getByRole('textbox'), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Ask about your department' }), {
       target: { value: 'Question for the old department' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }))
@@ -193,7 +192,7 @@ describe('overview assistant lifecycle', () => {
         },
       },
     ]
-    window.history.replaceState(null, '', `/?conversation=${existingId}`)
+    window.history.replaceState(null, '', `/assistant?conversation=${existingId}`)
     render(<Harness />)
     await waitFor(() => expect(screen.getByText(/^Briefing · /)).toBeVisible())
     expect(screen.queryByText(/Based on 0 records/)).not.toBeInTheDocument()

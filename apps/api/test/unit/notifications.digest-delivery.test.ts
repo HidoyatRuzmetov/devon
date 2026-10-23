@@ -34,7 +34,18 @@ describe('scheduled personal digest delivery', () => {
     'sends the scheduled %s summary even though its preference is not instant',
     async (mode) => {
       vi.mocked(getPrefs).mockResolvedValue([
-        { reason: 'digest', channel: 'telegram', enabled: true, digestMode: mode },
+        {
+          reason: 'digest',
+          channel: 'inapp',
+          enabled: false,
+          digestMode: 'instant',
+        },
+        {
+          reason: 'digest',
+          channel: 'telegram',
+          enabled: true,
+          digestMode: mode,
+        },
       ])
       await deliverNotification(
         log,
@@ -55,9 +66,21 @@ describe('scheduled personal digest delivery', () => {
   )
 
   it.each([
-    { enabled: false, digestMode: 'daily' as const, type: 'notifications.digest.daily' },
-    { enabled: true, digestMode: 'off' as const, type: 'notifications.digest.daily' },
-    { enabled: true, digestMode: 'weekly' as const, type: 'notifications.digest.daily' },
+    {
+      enabled: false,
+      digestMode: 'daily' as const,
+      type: 'notifications.digest.daily',
+    },
+    {
+      enabled: true,
+      digestMode: 'off' as const,
+      type: 'notifications.digest.daily',
+    },
+    {
+      enabled: true,
+      digestMode: 'weekly' as const,
+      type: 'notifications.digest.daily',
+    },
     { enabled: true, digestMode: 'daily' as const, type: 'manual.digest' },
   ])(
     'respects disabled/off/frequency mismatches and avoids unrelated immediate summaries: %j',

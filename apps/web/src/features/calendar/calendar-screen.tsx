@@ -1,3 +1,4 @@
+import { SettingsPaneHeader } from '../accounts/settings-section.js'
 // `/calendar` (v1.1 SPEC §10, EPIC-019): the agenda, the secret subscription feeds, and the web-push
 // opt-in -- three things that are all "my calendar leaves WorkPortal and reaches me elsewhere".
 //
@@ -35,7 +36,7 @@ export default function CalendarScreen({
   const basePath = embedded ? '/account/calendar' : '/calendar'
   return (
     <PageTransition routeKey={basePath}>
-      <div className="flex flex-col gap-6">
+      <div className="flex min-w-0 flex-col gap-4">
         {!embedded ? (
           <PageHeader
             eyebrow={t('calendar.eyebrow')}
@@ -43,16 +44,17 @@ export default function CalendarScreen({
             description={t('calendar.description')}
           />
         ) : (
-          <h2 className="font-display text-h2">{t('calendar.title')}</h2>
+          <SettingsPaneHeader title={t('calendar.title')} />
         )}
 
         <Tabs
+          className="flex min-w-0 flex-col gap-4"
           value={tab}
           onValueChange={(next) =>
             navigate(next === 'agenda' ? basePath : `${basePath}?tab=${next}`)
           }
         >
-          <TabsList>
+          <TabsList className="flex h-auto min-h-11 flex-wrap">
             {TABS.map((id) => (
               <TabsTrigger key={id} value={id}>
                 {t(`calendar.tabs.${id}`)}

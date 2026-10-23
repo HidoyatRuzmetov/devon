@@ -1,0 +1,35 @@
+/* Animate the complete edge-docked panel; the document scrolls inside its stable header. */
+.card-detail-drawer[data-state='open'] {
+  animation: card-drawer-enter var(--dur-page) var(--ease-out);
+}
+.card-detail-drawer[data-state='closed'] {
+  animation: card-drawer-exit var(--dur-standard) var(--ease-in);
+}
+@keyframes card-drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes card-drawer-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-detail-drawer[data-state='open'] {
+    animation: devon-fade-in var(--dur-micro) var(--ease-out);
+  }
+  .card-detail-drawer[data-state='closed'] {
+    animation: devon-fade-out var(--dur-micro) var(--ease-in);
+  }
+}

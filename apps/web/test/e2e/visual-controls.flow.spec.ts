@@ -396,10 +396,12 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     await authedPatch(head, '/api/v1/me', { locale: 'en' })
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(`/work/card?id=${card.id}`)
+    await page.getByRole('button', { name: 'More actions', exact: true }).click()
     const groupAction = page
       .getByRole('button', { name: 'Create group', exact: true })
       .and(page.locator('[aria-haspopup="dialog"]'))
     await expect(groupAction).toBeVisible()
+    await page.keyboard.press('Escape')
     const cardTitleField = page.getByRole('textbox', { name: 'Title', exact: true })
     await expect(cardTitleField).toHaveValue(cardTitle)
     await expect
@@ -424,28 +426,27 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     await expect
       .poll(() => cardTitleField.evaluate((el) => el.scrollHeight - el.clientHeight))
       .toBeLessThanOrEqual(1)
+    await page.getByRole('button', { name: 'More actions', exact: true }).click()
+    const conversionDialog = page.getByRole('dialog', { name: 'Create group', exact: true })
     await groupAction.click()
-    await expect(page.getByRole('dialog')).toContainText('personal card in the new group project')
-    await page
-      .getByRole('dialog')
-      .getByRole('checkbox', { name: 'Test Member', exact: true })
-      .check()
-    await page.getByRole('dialog').press('Escape')
-    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(conversionDialog).toContainText('personal card in the new group project')
+    await conversionDialog.getByRole('checkbox', { name: 'Test Member', exact: true }).check()
+    await conversionDialog.press('Escape')
+    await expect(conversionDialog).toHaveCount(0)
     await expect(groupAction).toBeFocused()
     await groupAction.click()
     await expect(
-      page.getByRole('dialog').getByRole('checkbox', { name: 'Test Member', exact: true }),
+      conversionDialog.getByRole('checkbox', { name: 'Test Member', exact: true }),
     ).not.toBeChecked()
     await expect(
-      page.getByRole('dialog').getByRole('button', { name: 'Create group', exact: true }),
+      conversionDialog.getByRole('button', { name: 'Create group', exact: true }),
     ).toBeDisabled()
     const unchangedCard = await head.request.get(`/api/v1/cards/${card.id}`)
     expect((await unchangedCard.json()) as { projectId: string | null }).toMatchObject({
       projectId: null,
     })
-    await page.getByRole('dialog').press('Escape')
-    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await conversionDialog.press('Escape')
+    await expect(conversionDialog).toHaveCount(0)
     if (matrix || textOnly) {
       await authedPatch(head, '/api/v1/me', { locale: 'ru' })
       await page.goto('/account')

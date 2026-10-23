@@ -21,6 +21,7 @@ const inventory = JSON.parse(
   readFileSync(join(root, 'docs/qa/2026-10/inventory.json'), 'utf8'),
 ) as { routes: { path: string; auth: string }[] }
 const knownRedirects: Record<string, string> = {
+  '/inbox': '/',
   '/inbox/preferences': '/account/notifications',
   '/inbox/telegram': '/account/telegram',
 }

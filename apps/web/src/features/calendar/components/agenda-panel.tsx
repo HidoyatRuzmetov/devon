@@ -109,6 +109,8 @@ export function AgendaPanel(): React.JSX.Element {
       return (
         <StateView
           kind="empty"
+          compact
+          className="max-w-none py-5 [&_h3]:font-sans [&_h3]:text-body [&_h3]:font-semibold [&_p]:text-small"
           titleKey="calendar.agenda.empty.title"
           bodyKey="calendar.agenda.empty.body"
           action={{ labelKey: 'calendar.agenda.empty.action', onAction: () => navigate('/events') }}
@@ -190,11 +192,11 @@ export function AgendaPanel(): React.JSX.Element {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h2 className="text-h3 text-foreground">{t('calendar.agenda.title')}</h2>
-          <p className="text-body text-muted-foreground">{t('calendar.agenda.description')}</p>
+          <h3 className="text-body font-semibold text-foreground">{t('calendar.agenda.title')}</h3>
+          <p className="text-small text-muted-foreground">{t('calendar.agenda.description')}</p>
         </div>
         {rangeControl}
       </div>

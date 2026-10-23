@@ -532,6 +532,59 @@ describe('private persistent work conversations', () => {
       reason: 'invalid_cursor',
     })
   })
+  it('searches titles and messages with literal wildcards, scoped ownership and stable pagination', async () => {
+    const term = `search-${randomUUID()}`
+    const titleMatch = await create()
+    const bodyMatch = await create()
+    const privateMatch = await chat.createConversation(
+      { ...ctx, userId: other, departmentRole: 'member' },
+      {
+        id: randomUUID(),
+        locale: 'en',
+        seedBriefing: false,
+      },
+    )
+    await superuserQuery(db, 'update app.ai_conversations set title=$1 where id=any($2::uuid[])', [
+      `${term} 100%_literal`,
+      [titleMatch.id, privateMatch.id],
+    ])
+    await superuserQuery(db, 'update app.ai_conversations set messages=$1::jsonb where id=$2', [
+      JSON.stringify([
+        {
+          id: randomUUID(),
+          role: 'user',
+          content: `${term} body evidence`,
+          status: 'complete',
+          error: null,
+          createdAt: new Date().toISOString(),
+          sources: [],
+          context: null,
+        },
+      ]),
+      bodyMatch.id,
+    ])
+    const first = await chat.listConversations(ctx, undefined, 1, term)
+    const second = await chat.listConversations(ctx, first.nextCursor!, 1, term)
+    expect([...first.conversations, ...second.conversations].map((item) => item.id).sort()).toEqual(
+      [titleMatch.id, bodyMatch.id].sort(),
+    )
+    expect(second.nextCursor).toBeNull()
+    expect(
+      (await chat.listConversations(ctx, undefined, 30, '100%_literal')).conversations.map(
+        (item) => item.id,
+      ),
+    ).toEqual([titleMatch.id])
+    const url = `${server.baseUrl}/api/v1/ai/conversations`
+    const own = await fetch(`${url}?q=${encodeURIComponent(term)}`, {
+      headers: memberSession.headers,
+    })
+    expect(own.status).toBe(200)
+    const owned = (await own.json()) as { conversations: { id: string }[] }
+    expect(owned.conversations.map((item) => item.id)).toEqual([privateMatch.id])
+    expect(
+      (await fetch(`${url}?q=${'x'.repeat(161)}`, { headers: headSession.headers })).status,
+    ).toBe(422)
+  })
   it('seeds the cached briefing without a provider call, retaining its date and verified risk references', async () => {
     const model = provider()
     const output = {

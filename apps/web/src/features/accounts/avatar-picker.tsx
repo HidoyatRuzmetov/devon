@@ -22,6 +22,7 @@ export interface AvatarPickerProps {
   /** i18n key of the message to show under the picker, or `null`. */
   errorKey?: string | null
   disabled?: boolean
+  compact?: boolean
 }
 
 function useObjectUrl(file: File | null): string | null {
@@ -49,6 +50,7 @@ export function AvatarPicker({
   busy = null,
   errorKey = null,
   disabled = false,
+  compact = false,
 }: AvatarPickerProps) {
   const t = useT()
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -74,7 +76,7 @@ export function AvatarPicker({
         initials={initials}
         hueSeed={hueSeed}
         size="lg"
-        className="size-24 text-h3"
+        className={compact ? 'size-16 shrink-0 text-lead' : 'size-24 text-h3'}
       />
       <div className="flex min-w-0 flex-col gap-2">
         <input

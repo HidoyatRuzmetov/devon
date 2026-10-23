@@ -139,7 +139,13 @@ test('@flow native card drags remain stable across columns and personal focus ri
       targetCardId: memberCards[0]!.id,
       edge: 'before',
     })
+    const firstMoveSaved = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === `/api/v1/cards/${headCards[2]!.id}/move` &&
+        response.request().method() === 'POST',
+    )
     allowMove()
+    expect((await firstMoveSaved).status()).toBe(200)
     await expect
       .poll(async () => {
         const board = (await (await head.request.get('/api/v1/board')).json()) as Board
@@ -149,6 +155,11 @@ test('@flow native card drags remain stable across columns and personal focus ri
       })
       .toEqual([headCards[2]!.id, ...memberCards.map((card) => card.id)])
     await page.unroute('**/api/v1/cards/*/move')
+    const reorderSaved = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === `/api/v1/cards/${memberCards[2]!.id}/move` &&
+        response.request().method() === 'POST',
+    )
     await page
       .locator(`[data-dnd-card="${memberCards[2]!.id}"]`)
       .dragTo(page.locator(`[data-dnd-card="${memberCards[1]!.id}"]`), {
@@ -156,6 +167,17 @@ test('@flow native card drags remain stable across columns and personal focus ri
       })
     await expect
       .poll(() => positions(memberId))
+      .toEqual([headCards[2]!.id, memberCards[0]!.id, memberCards[2]!.id, memberCards[1]!.id])
+    // The DOM above is deliberately optimistic. Reload only after the real save receipt; otherwise
+    // navigation can abort the pending move and falsely turn this persistence check into a race.
+    expect((await reorderSaved).status()).toBe(200)
+    await expect
+      .poll(async () => {
+        const persisted = (await (await head.request.get('/api/v1/board')).json()) as Board
+        return persisted.columns
+          .find((item) => item.member.userId === memberId)!
+          .cards.map((card) => card.id)
+      })
       .toEqual([headCards[2]!.id, memberCards[0]!.id, memberCards[2]!.id, memberCards[1]!.id])
     await page.reload()
     await expect
@@ -239,6 +261,11 @@ test('@flow native card drags remain stable across columns and personal focus ri
       await head.request.get(`/api/v1/cards/${thirdCards[1]!.id}`)
     ).json()) as Card
     expect(retained.assigneeUserId).toBe(thirdId)
+    const reassignmentSaved = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === `/api/v1/cards/${thirdCards[0]!.id}/move` &&
+        response.request().method() === 'POST',
+    )
     await page
       .locator(`[data-dnd-card="${thirdCards[0]!.id}"]`)
       .dragTo(page.locator(`[data-dnd-card="${memberCards[0]!.id}"]`), {
@@ -246,12 +273,19 @@ test('@flow native card drags remain stable across columns and personal focus ri
       })
     await expect(reviewColumn.locator('[data-dnd-card]')).toHaveCount(1)
     await expect(column(memberId).locator(`[data-dnd-card="${thirdCards[0]!.id}"]`)).toBeVisible()
+    expect((await reassignmentSaved).status()).toBe(200)
+    const reviewMoveSaved = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === `/api/v1/cards/${headCards[0]!.id}/move` &&
+        response.request().method() === 'POST',
+    )
     await page
       .locator(`[data-dnd-card="${headCards[0]!.id}"]`)
       .dragTo(page.locator(`[data-dnd-card="${thirdCards[1]!.id}"]`), {
         targetPosition: { x: 40, y: 3 },
       })
     await expect.poll(() => positions('unassigned')).toEqual([headCards[0]!.id, thirdCards[1]!.id])
+    expect((await reviewMoveSaved).status()).toBe(200)
     await page.reload()
     await expect.poll(() => positions('unassigned')).toEqual([headCards[0]!.id, thirdCards[1]!.id])
     await expect(

@@ -52,19 +52,19 @@ describe('department conversation answers', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1)
     expect(screen.getByRole('link', { name: 'the milestone' })).toHaveAttribute(
       'href',
-      '/projects/view?id=123&from=overview',
+      '/projects/view?id=123&from=assistant',
     )
   })
 
   it('only links internal citation paths and preserves a route back to the overview', () => {
-    expect(chatSourceHref('/projects/view?id=123')).toBe('/projects/view?id=123&from=overview')
-    expect(chatSourceHref('/pages?page=123#detail')).toBe('/pages?page=123&from=overview#detail')
+    expect(chatSourceHref('/projects/view?id=123')).toBe('/projects/view?id=123&from=assistant')
+    expect(chatSourceHref('/pages?page=123#detail')).toBe('/pages?page=123&from=assistant#detail')
     const conversation = 'bfbf5d9b-1ae7-4a2c-9da8-415639821045'
     expect(chatSourceHref('/work/card?id=123', conversation)).toBe(
-      `/work/card?id=123&from=overview&conversation=${conversation}`,
+      `/work/card?id=123&from=assistant&conversation=${conversation}`,
     )
     expect(chatSourceHref('/work/card?id=123', '//evil.test')).toBe(
-      '/work/card?id=123&from=overview',
+      '/work/card?id=123&from=assistant',
     )
     for (const href of [
       '//evil.test',

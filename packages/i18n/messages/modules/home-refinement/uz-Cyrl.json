@@ -1,0 +1,23 @@
+{
+  "homeRefinement": {
+    "inboxActions": "Кириш қутиси созламалари",
+    "updateActions": "Билдиришнома амаллари",
+    "groupUpdates": "Билдиришномаларни гуруҳлаш",
+    "workOverview": "Ишлар шарҳи",
+    "myWork": "Менинг ишларим",
+    "deadlineFirst": "Муддат, сўнг устуворлик",
+    "workCategory": "Иш тоифаси",
+    "individual": "Шахсий вазифалар",
+    "projects": "Гуруҳ лойиҳалари",
+    "clearStatus": "{status} фильтрини тозалаш",
+    "noMatchingAssignments": "Бу ҳолатга мос топшириқ йўқ.",
+    "inboxGroups": {
+      "tasks": "Вазифалар",
+      "events": "Тадбирлар",
+      "summaries": "Хулосалар",
+      "system": "Тизим"
+    },
+    "loadMore": "Яна юклаш",
+    "allActive": "Барча фаол ишлар"
+  }
+}

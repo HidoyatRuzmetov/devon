@@ -11,6 +11,15 @@
       "roles": ["head", "member"]
     },
     {
+      "path": "/assistant",
+      "name": "assistant",
+      "slug": "assistant",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "assistantWorkspace.title",
+      "roles": ["head", "member"]
+    },
+    {
       "path": "/login",
       "name": "login",
       "slug": "login",
@@ -41,8 +50,9 @@
       "slug": "inbox",
       "auth": "session",
       "chrome": "app",
-      "heading": "inbox.title",
-      "roles": ["head", "member"]
+      "heading": "home.eyebrow",
+      "roles": ["head", "member"],
+      "redirect": "/"
     },
     {
       "path": "/work",

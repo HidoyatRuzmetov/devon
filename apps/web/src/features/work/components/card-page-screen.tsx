@@ -2,6 +2,7 @@
 // a permanent, bookmarkable/shareable URL for one card, rendering the exact same
 // `CardDetailContent` the peek dialog uses, just as the page itself rather than a docked overlay.
 import { useT } from '@devon/i18n'
+import { returnContextParams } from '../../../lib/return-context.js'
 import { StateView } from '@devon/ui'
 import { RouterLink, useSearchParams } from '../../../lib/router.js'
 import { useCardSignalSource, useRealtimeChannels } from '../../../lib/realtime/index.js'
@@ -12,16 +13,7 @@ export default function CardPageScreen() {
   const t = useT()
   const search = useSearchParams()
   const id = search.get('id')
-  const boardParams = new URLSearchParams()
-  if (search.get('from') === 'overview') {
-    boardParams.set('from', 'overview')
-    const conversation = search.get('conversation')
-    if (
-      conversation &&
-      /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(conversation)
-    )
-      boardParams.set('conversation', conversation)
-  }
+  const boardParams = returnContextParams(search)
   const boardHref = `/work${boardParams.size ? `?${boardParams}` : ''}`
 
   // v1.1 EPIC-018. Every other work view renders inside `WorkShell`, which mounts the board signal

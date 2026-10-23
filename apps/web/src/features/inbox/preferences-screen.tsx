@@ -1,3 +1,4 @@
+import { SettingsSection, SettingsPaneHeader } from '../accounts/settings-section.js'
 // `/account/notifications` ("preferences per type and channel ... quiet hours").
 // Every toggle in the matrix saves itself the moment it changes (no separate Save button for a grid
 // of checkboxes -- CLAUDE.md "undo over confirm" generalises to "no confirm step for a reversible
@@ -5,7 +6,7 @@
 // yet a valid preference to persist.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Chip, Input, PageHeader, SectionCard, StateView, Switch, toast } from '@devon/ui'
+import { Button, Chip, Input, PageHeader, StateView, Switch, toast } from '@devon/ui'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useDepartment } from '../../lib/session.js'
@@ -38,7 +39,7 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
 
   function toggle(row: PrefRow) {
     const digestMode =
-      row.reason === 'digest'
+      row.channel === 'telegram' && row.reason === 'digest'
         ? row.digestMode === 'off' || row.digestMode === 'instant'
           ? 'daily'
           : row.digestMode
@@ -58,9 +59,9 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
 
   return (
     <>
-      <SectionCard
+      <SettingsSection
         title={t('inbox.preferences.matrixTitle')}
-        description={`${t('inbox.channel.inapp')} · ${t('inbox.preferences.alwaysOn')}`}
+        description={t('settingsRefinement.notificationChannels')}
         className="overflow-hidden"
       >
         {/* Native overflow needs a named keyboard entry; the contained table keeps its semantics. */}
@@ -68,24 +69,29 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
           role="region"
           aria-label={t('inbox.preferences.matrixTitle')}
           tabIndex={0 /* eslint-disable-line jsx-a11y/no-noninteractive-tabindex */}
-          className="-mx-5 -my-4 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          className="-mx-4 -my-3 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           <table className="w-full table-fixed border-collapse text-body">
             <colgroup>
-              <col className="w-3/5" />
-              <col className="w-2/5" />
+              <col className="w-1/2" />
+              <col className="w-1/4" />
+              <col className="w-1/4" />
             </colgroup>
             <thead>
               <tr className="border-b border-border text-small text-muted-foreground">
                 <th className="px-3 py-3 text-left font-medium">
                   {t('inbox.preferences.reasonColumn')}
                 </th>
-                <th className="px-3 py-3 text-center font-medium">{t('inbox.channel.telegram')}</th>
+                <th scope="col" className="px-1 py-3 text-center font-medium">
+                  {t('inbox.channel.inapp')}
+                </th>
+                <th scope="col" className="px-1 py-3 text-center font-medium">
+                  {t('inbox.channel.telegram')}
+                </th>
               </tr>
             </thead>
             <tbody>
               {REASONS.map((reason) => {
-                const row = byKey.get(`${reason}:telegram`)
                 return (
                   <tr key={reason} className="border-b border-border last:border-b-0">
                     <td className="px-3 py-3">
@@ -97,30 +103,35 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
                         {t(`inbox.reason.${reason}`)}
                       </Chip>
                     </td>
-                    <td className="px-3 py-3 text-center">
-                      {row ? (
-                        <Switch
-                          checked={row.enabled}
-                          disabled={putPrefs.isPending}
-                          onCheckedChange={() => toggle(row)}
-                          aria-label={t('inbox.preferences.toggleAria', {
-                            reason: t(`inbox.reason.${reason}`),
-                            channel: t('inbox.channel.telegram'),
-                          })}
-                          className="mx-auto"
-                        />
-                      ) : null}
-                    </td>
+                    {(['inapp', 'telegram'] as const).map((channel) => {
+                      const row = byKey.get(`${reason}:${channel}`)
+                      return (
+                        <td key={channel} className="px-1 py-2 text-center">
+                          {row ? (
+                            <Switch
+                              checked={row.enabled}
+                              disabled={putPrefs.isPending}
+                              onCheckedChange={() => toggle(row)}
+                              aria-label={t('inbox.preferences.toggleAria', {
+                                reason: t(`inbox.reason.${reason}`),
+                                channel: t(`inbox.channel.${channel}`),
+                              })}
+                              className="mx-auto"
+                            />
+                          ) : null}
+                        </td>
+                      )
+                    })}
                   </tr>
                 )
               })}
             </tbody>
           </table>
         </div>
-      </SectionCard>
+      </SettingsSection>
 
       {digestRowTelegram ? (
-        <SectionCard title={t('inbox.preferences.digestFrequency')}>
+        <SettingsSection title={t('inbox.preferences.digestFrequency')}>
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
             {digestRowTelegram ? (
               <label className="flex flex-1 flex-col gap-1">
@@ -150,7 +161,7 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
               </label>
             ) : null}
           </div>
-        </SectionCard>
+        </SettingsSection>
       ) : null}
     </>
   )
@@ -184,7 +195,10 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => quietHoursQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => quietHoursQuery.refetch(),
+        }}
       />
     )
   }
@@ -213,7 +227,11 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
     setTooLoud(false)
     const submittedRevision = draftRevision.current
     try {
-      await putQuietHours.mutateAsync({ startMinute: null, endMinute: null, includeWeekends: null })
+      await putQuietHours.mutateAsync({
+        startMinute: null,
+        endMinute: null,
+        includeWeekends: null,
+      })
       if (draftRevision.current === submittedRevision) setTouched(false)
       toast(t('inbox.preferences.saved'))
     } catch (err) {
@@ -223,13 +241,15 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
   }
 
   return (
-    <SectionCard
+    <SettingsSection
       title={t('inbox.preferences.quietHours.title')}
       description={t(
         data.effective.source === 'department_default'
           ? 'inbox.preferences.quietHours.usingDepartmentDefault'
           : 'inbox.preferences.quietHours.usingPersonal',
-        { range: formatMinuteRange(data.effective.startMinute, data.effective.endMinute) },
+        {
+          range: formatMinuteRange(data.effective.startMinute, data.effective.endMinute),
+        },
       )}
       actions={
         <>
@@ -304,7 +324,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
           {t('inbox.preferences.quietHours.tooLoud')}
         </p>
       ) : null}
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -336,7 +356,7 @@ function CalendarFeedCard() {
   }
 
   return (
-    <SectionCard
+    <SettingsSection
       title={t('inbox.preferences.calendar.title')}
       description={t('inbox.preferences.calendar.body')}
     >
@@ -354,7 +374,7 @@ function CalendarFeedCard() {
           {t('inbox.preferences.calendar.reveal')}
         </Button>
       )}
-    </SectionCard>
+    </SettingsSection>
   )
 }
 
@@ -368,7 +388,10 @@ function PrefsMatrixBody({ query }: { query: ReturnType<typeof usePrefsQuery> })
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => query.refetch(),
+        }}
       />
     )
   }
@@ -404,13 +427,16 @@ export default function PreferencesScreen({ embedded = false }: { embedded?: boo
         kind="offline"
         titleKey="state.offline.banner"
         bodyKey="state.offline.empty"
-        action={{ labelKey: 'state.error.action', onAction: () => prefsQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => prefsQuery.refetch(),
+        }}
       />
     )
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-4">
       {!embedded ? (
         <PageHeader
           eyebrow={t('accounts.settings.title')}
@@ -418,7 +444,7 @@ export default function PreferencesScreen({ embedded = false }: { embedded?: boo
           description={t('inbox.preferences.body')}
         />
       ) : (
-        <h2 className="font-display text-h2">{t('inbox.preferences.title')}</h2>
+        <SettingsPaneHeader title={t('inbox.preferences.title')} />
       )}
       <PrefsMatrixBody query={prefsQuery} />
 

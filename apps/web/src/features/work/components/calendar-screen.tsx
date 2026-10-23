@@ -2,6 +2,7 @@
 // keeping the feature dependency-free): a plain month grid, one cell per day, cards shown on their
 // due date. Month navigation via `?month=YYYY-MM` so a linked month is shareable like every other view.
 import * as React from 'react'
+import { returnContextParams } from '../../../lib/return-context.js'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronLeft, ChevronRight, CalendarDays, Flag } from 'lucide-react'
 import { useT, useLocale, formatMonthYear } from '@devon/i18n'
@@ -85,6 +86,8 @@ function DayCell({
   const t = useT()
   const reduced = useReducedMotion()
   const [expanded, setExpanded] = React.useState(false)
+  const returnParams = returnContextParams(useSearchParams())
+  const origin = returnParams.size ? `&${returnParams}` : ''
   const entries = [
     ...events.map((e) => ({ kind: 'event' as const, value: e })),
     ...cards.map((c) => ({ kind: 'card' as const, value: c })),
@@ -145,15 +148,7 @@ function DayCell({
               key={entry.value.id}
               type="button"
               title={entry.value.title}
-              onClick={() =>
-                navigate(
-                  '/projects/view?id=' +
-                    entry.value.projectId +
-                    (new URLSearchParams(window.location.search).get('from') === 'overview'
-                      ? '&from=overview'
-                      : ''),
-                )
-              }
+              onClick={() => navigate('/projects/view?id=' + entry.value.projectId + origin)}
               className="flex w-full shrink-0 items-center gap-1 rounded-sm border border-warning/30 bg-warning/10 px-1 py-0.5 text-left text-caption text-warning"
             >
               <Flag className="size-3 shrink-0" aria-hidden="true" />
@@ -164,11 +159,7 @@ function DayCell({
               key={entry.value.id}
               type="button"
               title={entry.value.title}
-              onClick={() =>
-                navigate(
-                  `/events?event=${entry.value.id}${new URLSearchParams(window.location.search).get('from') === 'overview' ? '&from=overview' : ''}`,
-                )
-              }
+              onClick={() => navigate(`/events?event=${entry.value.id}${origin}`)}
               className="flex w-full shrink-0 items-center gap-1 rounded-sm border border-info/30 bg-info/10 px-1 py-0.5 text-left text-caption text-info"
             >
               <CalendarDays className="size-3 shrink-0" aria-hidden="true" />

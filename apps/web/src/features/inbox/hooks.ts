@@ -6,8 +6,8 @@ import * as React from 'react'
 import {
   useMutation,
   useQuery,
+  useInfiniteQuery,
   useQueryClient,
-  type QueryClient,
   type UseQueryResult,
   type MutateOptions,
 } from '@tanstack/react-query'
@@ -64,15 +64,35 @@ export function useNotificationsQuery(status: InboxStatus, active = true) {
   })
 }
 
-/** H5.2 "prefetch on hover/focus" -- `nav.ts` calls this on the inbox sidebar entry's hover/focus,
- * for `inbox-screen.tsx`'s own default tab (`'inbox'`), matching its `useNotificationsQuery` key. */
-export function prefetchNotifications(qc: QueryClient): Promise<unknown> {
-  const status: InboxStatus = 'inbox'
-  return qc.prefetchQuery({
-    queryKey: ['inbox', 'notifications', status],
-    queryFn: () => fetchNotifications(status),
+/** Cursor-backed Home feed. Personal realtime publications invalidate the same notifications prefix. */
+export function useNotificationFeed(status: InboxStatus, active = true) {
+  const query = useInfiniteQuery({
+    queryKey: ['inbox', 'notifications', status, 'feed'],
+    queryFn: ({ pageParam }) => fetchNotifications(status, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    enabled: active,
     staleTime: 15_000,
+    // Realtime refresh is primary; keep the established fallback for an interrupted connection.
+    refetchInterval: active ? 60_000 : false,
   })
+  const data = React.useMemo(
+    () =>
+      query.data
+        ? {
+            items: [
+              ...new Map(
+                query.data.pages.flatMap((page) => page.items).map((item) => [item.id, item]),
+              ).values(),
+            ],
+            unreadCount: query.data.pages[0]?.unreadCount ?? 0,
+            groupCounts: query.data.pages[0]?.groupCounts,
+            nextCursor: query.data.pages.at(-1)?.nextCursor ?? null,
+          }
+        : undefined,
+    [query.data],
+  )
+  return { ...query, data }
 }
 
 function useInvalidateInbox() {

@@ -8,7 +8,7 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // (`registry.ts`'s `import.meta.glob` sort): accounts, ai, analytics, departments, events, inbox,
   // pages, personal, projects, structure, work. Every one of those sidebar entries is visible to
   // every signed-in role except `department-requests` (the super-admin approval queue) and the core
-  // `admin` entry, which stay `super_admin`-only -- 'personal' (EPIC-009), 'inbox' (EPIC-010), 'ai'
+  // `admin` entry, which stay `super_admin`-only -- 'personal' (EPIC-009), 'inbox' (EPIC-010), 'assistant'
   // (EPIC-012), 'analytics' and 'pages' (EPIC-010/011) included: a personal workspace, a notification
   // inbox, the AI assistant/settings screen, department-wide analytics and department pages all
   // belong to whoever is signed in, never gated by role (a head-only action inside the `ai` screen,
@@ -31,12 +31,11 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // command from memory. Each declares a head-only action, which is why they appear here (no `can`
   // in this context = no action gating) and are asserted absent for a xodim further down.
   const featureEntryIds = [
-    'ai',
+    'assistant',
     'analytics',
     'automations',
     'events',
     'fields',
-    'inbox',
     'pages',
     'people-table',
     'personal',
@@ -63,13 +62,12 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
     expect(visible.map((e) => e.id)).toEqual([
       'home',
       'admin',
-      'ai',
+      'assistant',
       'analytics',
       'automations',
       'department-requests',
       'events',
       'fields',
-      'inbox',
       'pages',
       'people-table',
       'personal',
@@ -127,7 +125,6 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
     const ids = resolveNavEntries(NAV_ENTRIES, ctxFor('member')).map((e) => e.id)
     for (const id of [
       'home',
-      'inbox',
       'work',
       'projects',
       'personal',
@@ -136,7 +133,7 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
       'structure',
       'pages',
       'analytics',
-      'ai',
+      'assistant',
     ]) {
       expect(ids).toContain(id)
     }

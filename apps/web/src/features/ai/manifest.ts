@@ -3,19 +3,23 @@ import { MessageSquareText, Search, Sparkles } from 'lucide-react'
 import type { FeatureManifest } from '../types.js'
 
 const AiSettingsScreenLazy = React.lazy(() => import('./ai-settings-screen.js'))
+const AssistantScreen = React.lazy(() => import('./assistant-screen.js'))
 
 const manifest: FeatureManifest = {
   name: 'ai',
-  routes: [{ path: '/ai', component: AiSettingsScreenLazy, titleKey: 'ai.title' }],
+  routes: [
+    { path: '/assistant', component: AssistantScreen, titleKey: 'assistantWorkspace.title' },
+    { path: '/ai', component: AiSettingsScreenLazy, titleKey: 'ai.title' },
+  ],
   // SPEC §3.1: `/ai` is the helper catalogue for a member and the budget/flags/spend console for the
   // head -- one route, two products, gated field by field on the server (D2). The entry itself stays
   // visible to everyone: you must know which helpers you may use.
   sidebar: [
     {
-      id: 'ai',
-      labelKey: 'ai.title',
+      id: 'assistant',
+      labelKey: 'assistantWorkspace.title',
       icon: Sparkles,
-      route: '/ai',
+      route: '/assistant',
       action: 'ai.features.read',
     },
   ],
@@ -25,7 +29,7 @@ const manifest: FeatureManifest = {
   // own, deep-linking to the tab rather than dropping the person on the screen's first tab to hunt.
   commands: [
     { id: 'ai.open', labelKey: 'ai.title', path: '/ai', icon: Sparkles },
-    { id: 'ai.ask', labelKey: 'ai.command.ask', path: '/ai?tab=ask', icon: MessageSquareText },
+    { id: 'ai.ask', labelKey: 'ai.command.ask', path: '/assistant', icon: MessageSquareText },
     { id: 'ai.search', labelKey: 'ai.command.search', path: '/ai?tab=ask', icon: Search },
   ],
 }

@@ -85,6 +85,9 @@ export type NotificationDto = z.infer<typeof notificationSchema>
 const notificationListSchema = z.object({
   items: z.array(notificationSchema),
   unreadCount: z.number(),
+  groupCounts: z
+    .object({ tasks: z.number(), events: z.number(), summaries: z.number(), system: z.number() })
+    .optional(),
   nextCursor: z.string().nullable(),
 })
 export type NotificationListDto = z.infer<typeof notificationListSchema>

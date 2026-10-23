@@ -91,11 +91,13 @@ const routes: FastifyPluginAsyncZod = async (app) => {
         querystring: z.object({
           before: z.string().min(1).max(300).optional(),
           limit: z.coerce.number().int().min(1).max(50).default(30),
+          q: z.string().trim().max(160).optional(),
         }),
         response: { 200: aiConversationsSchema },
       },
     },
-    (req) => conversations.listConversations(context(req), req.query.before, req.query.limit),
+    (req) =>
+      conversations.listConversations(context(req), req.query.before, req.query.limit, req.query.q),
   )
   app.post(
     '/conversations',
