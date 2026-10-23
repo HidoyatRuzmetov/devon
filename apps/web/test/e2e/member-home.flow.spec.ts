@@ -140,6 +140,23 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
       doneCount: 1,
       archivedCount: 1,
     })
+    // Notification creation runs through the real outbox. Start the UI journey only after
+    // its assignment exists, rather than depending on machine speed or the fallback poll.
+    await expect
+      .poll(
+        async () => {
+          const response = await member.request.get('/api/v1/notifications?status=unread')
+          expect(response.status()).toBe(200)
+          const feed = (await response.json()) as {
+            items: { reason: string; subjectId: string | null }[]
+          }
+          return feed.items.some(
+            (item) => item.reason === 'assigned' && item.subjectId === projectCard,
+          )
+        },
+        { timeout: 30_000 },
+      )
+      .toBe(true)
     const page = await member.newPage()
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.setViewportSize({ width: 1440, height: 1000 })
@@ -207,11 +224,11 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     await expect(home.getByRole('checkbox')).toHaveCount(0)
     // A real assignment notification opens and stays readable even after it leaves the unread list.
     const inbox = home.getByTestId('home-inbox')
-    await expect(inbox.getByRole('heading', { name: /^Inbox/ })).toBeVisible()
+    await expect(inbox.getByRole('heading', { name: 'Inbox', exact: true })).toBeVisible()
     await inbox.getByRole('tab', { name: 'Unread', exact: true }).click()
     const notification = inbox
       .locator('[role="tabpanel"][data-state="active"] [data-inbox-opener]')
-      .first()
+      .filter({ hasText: 'Prepare the evidence pack' })
     await expect(notification).toBeVisible()
     const markedRead = page.waitForResponse(
       (response) =>

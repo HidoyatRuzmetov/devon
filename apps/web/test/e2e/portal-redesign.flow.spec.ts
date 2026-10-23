@@ -681,7 +681,7 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   await page.goto('/')
   await expect(page.getByText('Total workforce', { exact: true })).toBeVisible()
   await expect(page.getByTestId('home-inbox')).toBeVisible()
-  await expect(page.getByRole('heading', { name: /^Inbox/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Inbox', exact: true })).toBeVisible()
   await expect(page.getByTestId('head-overview').getByRole('textbox')).toHaveCount(0)
   const workforceAvatars = page.getByTestId('overview-workforce-avatars')
   await expect(workforceAvatars.getByRole('link')).toHaveCount(5)
