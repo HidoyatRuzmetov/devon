@@ -11,8 +11,7 @@
       "table": "Jadval",
       "timeline": "Muddatlar",
       "calendar": "Taqvim",
-      "mine": "Mening vazifalarim",
-      "archive": "Arxiv"
+      "mine": "Mening vazifalarim"
     },
     "board": {
       "department": "Boshqarma",
@@ -175,11 +174,6 @@
       "emptyTitle": "Karta topilmadi",
       "emptyBody": "Filtrni oʻzgartiring yoki yangi karta qoʻshing.",
       "selectAll": "Barchasini tanlash",
-      "density": {
-        "label": "Zichlik",
-        "compact": "Ixcham",
-        "comfortable": "Keng"
-      },
       "sort": {
         "label": "Saralash",
         "none": "Saralanmagan"
@@ -243,9 +237,7 @@
     },
     "archive": {
       "completedHint": "Arxivlangan · Bajarilgan",
-      "unfinishedHint": "Arxivlangan · Bajarilmagan",
-      "emptyTitle": "Arxiv boʻsh",
-      "emptyBody": "Bajarilgan va arxivga olingan kartalar shu yerda koʻrinadi."
+      "unfinishedHint": "Arxivlangan · Bajarilmagan"
     },
     "action": {
       "save": "Saqlash",

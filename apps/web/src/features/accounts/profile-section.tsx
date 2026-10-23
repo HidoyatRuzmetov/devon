@@ -120,7 +120,14 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
       <div className="grid gap-4 sm:grid-cols-2">
         {PROFILE_FIELDS.map((field) => (
           <label key={field} className="flex flex-col gap-1.5 text-small">
-            {t(`profileEdit.${field}`)}
+            <span>
+              {t(`profileEdit.${field}`)}
+              {['givenName', 'familyName', 'login'].includes(field) ? (
+                <span className="ml-1 text-destructive" aria-hidden="true">
+                  *
+                </span>
+              ) : null}
+            </span>
             <Input
               value={values[field] ?? ''}
               type={field === 'email' ? 'email' : 'text'}

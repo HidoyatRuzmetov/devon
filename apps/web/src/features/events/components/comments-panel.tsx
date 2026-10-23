@@ -26,12 +26,17 @@ import {
   Textarea,
   toast,
 } from '@devon/ui'
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import { ThreadDigestPreview } from '../../ai/components/previews.js'
 import { parseFeatureOutput, type SummarizeThreadOutput } from '../../ai/outputs.js'
-import { useAddCommentMutation, useCommentsQuery, useDeleteCommentMutation } from '../hooks.js'
+import {
+  useAddCommentMutation,
+  useCommentsQuery,
+  useDeleteCommentMutation,
+  useEditCommentMutation,
+} from '../hooks.js'
 import { useSession } from '../../../lib/session.js'
 
 function ThreadSummary({
@@ -150,6 +155,10 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
   const commentsQuery = useCommentsQuery(eventId, true)
   const addMutation = useAddCommentMutation(eventId)
   const deleteMutation = useDeleteCommentMutation(eventId)
+  const editMutation = useEditCommentMutation(eventId)
+  const [editing, setEditing] = React.useState<string | null>(null)
+  const [editedBody, setEditedBody] = React.useState('')
+  const [editedRevision, setEditedRevision] = React.useState<string | null>(null)
   const [body, setBody] = React.useState('')
   const draftRevision = React.useRef(0)
 
@@ -206,17 +215,78 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
                   {comment.author.givenName} {comment.author.familyName}
                 </span>
                 {comment.canDelete ? (
-                  <IconButton
-                    aria-label={t('events.comments.delete')}
-                    onClick={() => handleDelete(comment.id)}
-                  >
-                    <Trash2 aria-hidden="true" />
-                  </IconButton>
+                  <div className="flex items-center">
+                    <IconButton
+                      aria-label={t('events.comments.edit')}
+                      onClick={() => {
+                        setEditing(comment.id)
+                        setEditedBody(comment.body)
+                        setEditedRevision(comment.editedAt ?? null)
+                      }}
+                    >
+                      <Pencil aria-hidden="true" />
+                    </IconButton>
+                    <IconButton
+                      aria-label={t('events.comments.delete')}
+                      onClick={() => handleDelete(comment.id)}
+                    >
+                      <Trash2 aria-hidden="true" />
+                    </IconButton>
+                  </div>
                 ) : null}
               </div>
-              <p className="whitespace-pre-wrap wrap-anywhere text-body text-foreground">
-                {comment.body}
-              </p>
+              {editing === comment.id ? (
+                <form
+                  className="flex flex-col gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    void editMutation
+                      .mutateAsync({
+                        id: comment.id,
+                        body: editedBody.trim(),
+                        editedAt: editedRevision,
+                      })
+                      .then(() => setEditing(null))
+                      .catch(() => toast.error(t('events.error.title')))
+                  }}
+                >
+                  <Textarea
+                    aria-label={t('events.comments.edit')}
+                    value={editedBody}
+                    onChange={(event) => setEditedBody(event.target.value)}
+                    rows={3}
+                    maxLength={2000}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      loading={editMutation.isPending}
+                      disabled={!editedBody.trim()}
+                    >
+                      {t('common.save')}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={editMutation.isPending}
+                      onClick={() => setEditing(null)}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <p className="whitespace-pre-wrap wrap-anywhere text-body text-foreground">
+                  {comment.body}
+                </p>
+              )}
+              {comment.editedAt ? (
+                <span className="text-caption text-muted-foreground">
+                  {t('events.comments.edited')}
+                </span>
+              ) : null}
             </div>
           </li>
         ))}

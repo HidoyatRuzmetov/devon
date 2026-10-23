@@ -31,13 +31,9 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // command from memory. Each declares a head-only action, which is why they appear here (no `can`
   // in this context = no action gating) and are asserted absent for a xodim further down.
   const featureEntryIds = [
-    'account-settings',
     'ai',
     'analytics',
     'automations',
-    'calendar',
-    'departments',
-    'department-settings',
     'events',
     'fields',
     'inbox',
@@ -67,14 +63,10 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
     expect(visible.map((e) => e.id)).toEqual([
       'home',
       'admin',
-      'account-settings',
       'ai',
       'analytics',
       'automations',
-      'calendar',
-      'departments',
       'department-requests',
-      'department-settings',
       'events',
       'fields',
       'inbox',
@@ -145,7 +137,6 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
       'pages',
       'analytics',
       'ai',
-      'calendar',
     ]) {
       expect(ids).toContain(id)
     }
@@ -154,7 +145,7 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
   it('a boshqarma boshligʻi sees both management destinations', () => {
     const ids = resolveNavEntries(NAV_ENTRIES, ctxFor('head')).map((e) => e.id)
     expect(ids).toContain('people-table')
-    expect(ids).toContain('department-settings')
+    expect(ids).not.toContain('department-settings')
     expect(ids).toContain('fields')
     expect(ids).toContain('workload')
     expect(ids).toContain('goals')

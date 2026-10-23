@@ -17,6 +17,7 @@
 // genuine infrastructure failure (Postgres down) still throws from `resolveEvent` and is retried.
 import type { FastifyBaseLogger } from 'fastify'
 import { subscribe, type EventHandler, type OutboxEventRecord } from '@devon/db'
+import { reconcileCommentNotifications } from './repo.js'
 import { notifyUser } from './notify.js'
 import { NOTIFICATION_REGISTRY, specFor, type NotificationSpec } from './registry.js'
 import { resolveEvent, type ResolvedEvent } from './sources.js'
@@ -37,6 +38,18 @@ export function recipientsFor(spec: NotificationSpec, resolved: ResolvedEvent): 
 }
 
 async function handle(log: FastifyBaseLogger, event: OutboxEventRecord): Promise<void> {
+  if (event.type === 'work.comment.updated' || event.type === 'work.comment.deleted') {
+    if (!event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) return
+    const payload = event.payload as Record<string, unknown>
+    await reconcileCommentNotifications(event.departmentId, payload)
+    if (event.type === 'work.comment.deleted') return
+    // Existing recipients already saw the original; only newly added mentions deserve a new ping.
+    return handle(log, {
+      ...event,
+      type: 'work.card.commented',
+      payload: { ...payload, revisionOnly: true },
+    })
+  }
   const entry = NOTIFICATION_REGISTRY[event.type]
   if (!entry) {
     // Not an error at runtime -- a new module may ship an event before this table knows it. It *is*

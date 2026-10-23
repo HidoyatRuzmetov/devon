@@ -243,6 +243,8 @@ export {
 export {
   professionalProfileSchema,
   professionalProfileRecordSchema,
+  professionalProfileWriteSchema,
+  professionalProfileWriteRecordSchema,
   type ProfessionalProfile,
 } from './professional-profile.js'
 export * from './ai-chat.js'

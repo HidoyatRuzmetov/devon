@@ -40,12 +40,12 @@ for (const role of ['head', 'member'] as const) {
         await page.getByRole('link', { name: 'Individual tasks', exact: true }).click()
         await expect(page).toHaveURL((url) => url.pathname === '/work')
         await expect(page.getByRole('region', { name: 'People board', exact: true })).toBeVisible()
-        await page.getByRole('button', { name: 'Create new', exact: true }).click()
-        await page.getByRole('menuitem', { name: 'New card', exact: true }).click()
       } else {
-        await expect(page.getByRole('button', { name: 'Mine', exact: true }).first()).toBeVisible()
-        await page.getByRole('button', { name: 'New card', exact: true }).click()
+        await expect(page.getByTestId('member-overview')).toBeVisible()
       }
+      // Home is the member's own overview; creation remains in the shared application menu.
+      await page.getByRole('button', { name: 'Create new', exact: true }).click()
+      await page.getByRole('menuitem', { name: 'New card', exact: true }).click()
       const title = `Review: punctuation remains ${Date.now()}`
       await page.getByRole('textbox', { name: 'Title', exact: true }).fill(title)
       // The visible head option includes its role; use the authenticated actor's stable ID.

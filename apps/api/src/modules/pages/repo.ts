@@ -215,8 +215,6 @@ export async function restorePage(
       where id = ${id} and department_id = ${departmentId} for update
     `)
     if (!target.length) return 'conflict'
-    if (target[0]!.created_by_user_id !== ctx.userId && membership[0]!.role !== 'head')
-      return 'forbidden'
     const rows = await tx.raw<{ id: string }>(sql`
       update app.pages set deleted_at = null, updated_at = now(), version = version + 1
       where id = ${id} and department_id = ${departmentId}

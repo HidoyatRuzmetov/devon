@@ -160,11 +160,15 @@ export type RsvpDto = z.infer<typeof rsvpDto>
 export const rsvpListResponseSchema = z.object({ items: z.array(rsvpDto) })
 
 export const commentBodySchema = z.object({ body: z.string().trim().min(1).max(2000) }).strict()
+export const editCommentBodySchema = commentBodySchema.extend({
+  editedAt: z.iso.datetime().nullable(),
+})
 export const commentDto = z.object({
   id: z.string().uuid(),
   author: summaryUser,
   body: z.string(),
   createdAt: z.string(),
+  editedAt: z.string().nullable().optional(),
   canDelete: z.boolean(),
 })
 export type CommentDto = z.infer<typeof commentDto>

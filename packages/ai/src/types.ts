@@ -106,6 +106,7 @@ export type AiFeature =
   | 'nl_analytics'
   | 'translate'
   | 'draft_reply'
+  | 'draft_page'
   | 'board_risk_digest'
   | 'suggest_assignee'
   | 'duplicate_check'
@@ -122,6 +123,7 @@ export const AI_FEATURES: readonly AiFeature[] = [
   'nl_analytics',
   'translate',
   'draft_reply',
+  'draft_page',
   'board_risk_digest',
   'suggest_assignee',
   'duplicate_check',

@@ -3,13 +3,16 @@
 // changes; the title is a plain input above the editor, not part of the Tiptap document itself.
 import * as React from 'react'
 import { useEditor, useEditorState, EditorContent, type JSONContent } from '@tiptap/react'
+import { Markdown } from '@tiptap/markdown'
+import { TextSize } from './text-size-extension.js'
+import { richTextDocSchema } from '@devon/contracts'
 import StarterKit from '@tiptap/starter-kit'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mention from '@tiptap/extension-mention'
 import { useT, useLocale, type Locale } from '@devon/i18n'
-import { IconButton, Input, SparkleButton, cn, toast } from '@devon/ui'
+import { Button, IconButton, Input, SparkleButton, cn, toast } from '@devon/ui'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { TranslateTargetPicker, defaultTranslateTarget } from '../ai/components/translate-target.js'
 import {
@@ -27,7 +30,7 @@ import {
 import { Callout } from './callout-extension.js'
 import { createMentionSuggestion, type MentionCandidate } from './mention-suggestion.js'
 import { createSlashCommandExtension, type SlashCommandItem } from './slash-command-extension.js'
-import { useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { useAiSettingsQuery, useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { ApiError } from '../../lib/api-client.js'
 import type { TiptapNode } from './types.js'
 
@@ -86,6 +89,8 @@ export function PageEditor({
   titleErrorId?: string | undefined
 }) {
   const t = useT()
+  const [markdownOpen, setMarkdownOpen] = React.useState(false)
+  const [markdown, setMarkdown] = React.useState('')
   const candidatesRef = React.useRef(mentionCandidates)
   candidatesRef.current = mentionCandidates
   const tRef = React.useRef(t)
@@ -154,6 +159,8 @@ export function PageEditor({
     editable,
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2] } }),
+      Markdown,
+      TextSize,
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder: t('pages.editor.contentPlaceholder') }),
@@ -178,8 +185,8 @@ export function PageEditor({
     ],
     editorProps: {
       attributes: {
-        role: 'textbox',
-        'aria-multiline': 'true',
+        role: editable ? 'textbox' : 'document',
+        ...(editable ? { 'aria-multiline': 'true' } : {}),
         'aria-label': t('pages.editor.contentLabel'),
       },
     },
@@ -202,6 +209,7 @@ export function PageEditor({
     selector: ({ editor: current }) =>
       current
         ? {
+            textSize: String(current.getAttributes('textSize')['size'] ?? 'normal'),
             bold: current.isActive('bold'),
             italic: current.isActive('italic'),
             heading1: current.isActive('heading', { level: 1 }),
@@ -224,13 +232,13 @@ export function PageEditor({
     editor?.setOptions({
       editorProps: {
         attributes: {
-          role: 'textbox',
-          'aria-multiline': 'true',
+          role: editable ? 'textbox' : 'document',
+          ...(editable ? { 'aria-multiline': 'true' } : {}),
           'aria-label': t('pages.editor.contentLabel'),
         },
       },
     })
-  }, [editor, t])
+  }, [editor, t, editable])
 
   React.useEffect(() => {
     if (editor && JSON.stringify(editor.getJSON()) !== JSON.stringify(content))
@@ -246,6 +254,30 @@ export function PageEditor({
   // an Uzbek paragraph asked GLM for Uzbek and got their own text back. The target is a picker now,
   // and uz-Latn to uz-Cyrl never reaches a model at all (D-2: `packages/i18n` does it exactly).
   const locale = useLocale()
+  const draftMutation = useRunAiFeatureMutation('draft_page')
+  const aiSettings = useAiSettingsQuery()
+  const canDraft =
+    aiSettings.data?.flags['draft_page'] === true && aiSettings.data?.budgetStatus !== 'hard_stop'
+  const [draftOpen, setDraftOpen] = React.useState(false)
+  const [draftText, setDraftText] = React.useState('')
+  const [draftInstructions, setDraftInstructions] = React.useState('')
+  function runDraft() {
+    if (!title.trim() || !editor) return
+    draftMutation.mutate(
+      {
+        locale,
+        title,
+        existingText: editor.getText().slice(0, 20000),
+        instructions: draftInstructions,
+      },
+      {
+        onSuccess: (result) => {
+          const value = result.data['markdown']
+          if (typeof value === 'string') setDraftText(value)
+        },
+      },
+    )
+  }
   const translateMutation = useRunAiFeatureMutation('translate')
   const [translateTarget, setTranslateTarget] = React.useState<Locale>(() =>
     defaultTranslateTarget(locale),
@@ -297,18 +329,22 @@ export function PageEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <Input
-        value={title}
-        onChange={(e) => onTitleChange(e.target.value)}
-        placeholder={t('pages.editor.titlePlaceholder')}
-        aria-label={t('pages.editor.titlePlaceholder')}
-        maxLength={300}
-        aria-invalid={Boolean(titleErrorId) || undefined}
-        aria-describedby={titleErrorId}
-        onBlur={onBlur}
-        disabled={!editable}
-        className="h-auto border-none bg-transparent px-0 font-display text-h1"
-      />
+      {editable ? (
+        <Input
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder={t('pages.editor.titlePlaceholder')}
+          aria-label={t('pages.editor.titlePlaceholder')}
+          maxLength={300}
+          aria-invalid={Boolean(titleErrorId) || undefined}
+          aria-describedby={titleErrorId}
+          onBlur={onBlur}
+          disabled={!editable}
+          className="h-auto border-none bg-transparent px-0 font-display text-h1"
+        />
+      ) : (
+        <h1 className="break-words font-display text-h1 text-foreground">{title}</h1>
+      )}
 
       {editable ? (
         <div
@@ -316,6 +352,23 @@ export function PageEditor({
           aria-label={t('pages.editor.suggestions.formatting')}
           className="flex flex-wrap items-center gap-0.5 border-b border-border pb-2"
         >
+          <select
+            aria-label={t('pages.editor.fontSize')}
+            className="mr-2 h-9 rounded-sm border border-border bg-card px-2 text-small"
+            onChange={(event) =>
+              editor.chain().focus().setMark('textSize', { size: event.target.value }).run()
+            }
+            value={activeFormats?.textSize ?? 'normal'}
+          >
+            {['small', 'normal', 'large', 'xlarge'].map((size) => (
+              <option key={size} value={size}>
+                {t(`pages.editor.fontSizes.${size}`)}
+              </option>
+            ))}
+          </select>
+          <Button size="sm" variant="ghost" onClick={() => setMarkdownOpen(!markdownOpen)}>
+            {t('pages.editor.markdown.write')}
+          </Button>
           <ToolbarButton
             labelKey="pages.editor.toolbar.bold"
             active={activeFormats?.bold ?? false}
@@ -386,21 +439,143 @@ export function PageEditor({
           >
             <Megaphone className="size-4" aria-hidden="true" />
           </ToolbarButton>
-          <span className="ml-auto flex flex-wrap items-center gap-2">
-            <TranslateTargetPicker
-              id="page-translate-target"
-              value={translateTarget}
-              onChange={setTranslateTarget}
-              disabled={translateMutation.isPending}
-            />
+          {canDraft ? (
             <SparkleButton
-              aria-label={t('pages.editor.toolbar.translate')}
+              label={t('pages.editor.draft.title')}
+              aria-label={t('pages.editor.draft.title')}
               size="sm"
-              loading={translateMutation.isPending}
-              onClick={startTranslate}
+              disabled={!title.trim()}
+              onClick={() => setDraftOpen(!draftOpen)}
             />
-          </span>
+          ) : null}
+          <details className="ml-auto text-small">
+            <summary className="cursor-pointer px-2 py-2">
+              {t('pages.editor.toolbar.translate')}
+            </summary>
+            <div className="flex flex-wrap items-center gap-2 py-2">
+              <TranslateTargetPicker
+                id="page-translate-target"
+                value={translateTarget}
+                onChange={setTranslateTarget}
+                disabled={translateMutation.isPending}
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                loading={translateMutation.isPending}
+                onClick={startTranslate}
+              >
+                {t('pages.editor.toolbar.translate')}
+              </Button>
+            </div>
+          </details>
         </div>
+      ) : null}
+
+      {editable && draftOpen ? (
+        <section className="flex flex-col gap-3 rounded-md border border-primary/20 bg-accent/40 p-4">
+          <p className="text-small text-muted-foreground">{t('pages.editor.draft.hint')}</p>
+          <Input
+            aria-label={t('pages.editor.draft.instructions')}
+            placeholder={t('pages.editor.draft.instructions')}
+            maxLength={2000}
+            value={draftInstructions}
+            onChange={(event) => setDraftInstructions(event.target.value)}
+          />
+          <Button
+            size="sm"
+            className="self-start"
+            loading={draftMutation.isPending}
+            onClick={runDraft}
+          >
+            {t('pages.editor.draft.generate')}
+          </Button>
+          {draftMutation.isError ? (
+            <p role="alert" className="text-small text-destructive">
+              {t('pages.editor.draft.failed')}
+            </p>
+          ) : null}
+          {draftText ? (
+            <>
+              <textarea
+                value={draftText}
+                maxLength={20000}
+                onChange={(event) => setDraftText(event.target.value)}
+                rows={8}
+                aria-label={t('pages.editor.draft.preview')}
+                className="w-full rounded-sm border border-border bg-card p-3 text-body"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const parsed = editor.markdown?.parse(draftText)
+                    if (!parsed || !richTextDocSchema.safeParse(parsed).success) {
+                      toast.error(t('pages.editor.markdown.invalid'))
+                      return
+                    }
+                    editor.commands.setContent(parsed)
+                    setDraftOpen(false)
+                    setDraftText('')
+                    draftMutation.reset()
+                  }}
+                >
+                  {t('pages.editor.draft.apply')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setDraftOpen(false)
+                    setDraftText('')
+                    draftMutation.reset()
+                  }}
+                >
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            </>
+          ) : null}
+        </section>
+      ) : null}
+
+      {editable && markdownOpen ? (
+        <section className="flex flex-col gap-2 rounded-md border border-border bg-muted p-3">
+          <p className="text-small text-muted-foreground">{t('pages.editor.markdown.hint')}</p>
+          <textarea
+            aria-label={t('pages.editor.markdown.write')}
+            value={markdown}
+            onChange={(event) => setMarkdown(event.target.value)}
+            maxLength={20000}
+            rows={8}
+            className="w-full rounded-sm border border-border bg-card p-3 font-mono text-small"
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              disabled={!markdown.trim()}
+              onClick={() => {
+                const parsed = editor.markdown?.parse(markdown)
+                if (!parsed || !richTextDocSchema.safeParse(parsed).success) {
+                  toast.error(t('pages.editor.markdown.invalid'))
+                  return
+                }
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent(parsed.content ?? [])
+                  .run()
+                setMarkdown('')
+                setMarkdownOpen(false)
+              }}
+            >
+              {t('pages.editor.markdown.insert')}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setMarkdownOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+          </div>
+        </section>
       ) : null}
 
       {translateOpen ? (
@@ -418,7 +593,11 @@ export function PageEditor({
           onRetry={startTranslate}
           onAccept={() => {
             if (editedTranslation && translateRange) {
-              editor.chain().focus().insertContentAt(translateRange, editedTranslation).run()
+              editor
+                .chain()
+                .focus()
+                .insertContentAt(translateRange, { type: 'text', text: editedTranslation })
+                .run()
             }
             closeTranslate()
           }}
@@ -444,7 +623,8 @@ export function PageEditor({
         editor={editor}
         onBlur={onBlur}
         className={cn(
-          'prose-devon min-h-40 text-body text-foreground focus:outline-none',
+          'prose-devon text-body text-foreground focus:outline-none [&_.tiptap>*+*]:mt-3',
+          editable ? 'min-h-40' : 'min-h-0',
           '[&_.is-editor-empty:first-child::before]:pointer-events-none [&_.is-editor-empty:first-child::before]:float-left [&_.is-editor-empty:first-child::before]:h-0 [&_.is-editor-empty:first-child::before]:text-muted-foreground [&_.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
           '[&_h1]:font-display [&_h1]:text-h1 [&_h2]:font-display [&_h2]:text-h2',
           '[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6',

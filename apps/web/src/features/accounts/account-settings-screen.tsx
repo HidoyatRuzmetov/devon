@@ -1,20 +1,9 @@
-// `/account` -- EPIC-001: profile photo, sessions/devices, 2FA, password change, account deletion.
-// One screen with a few sections rather than several thin routes (this module's own
-// screens/components only, per MODULE-GUIDE.md "Web features").
+// Account settings share one shell. Each URL selects a focused pane, with related forms grouped
+// continuously inside it. Legacy entry points redirect here without losing their query state.
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import {
-  ClipboardList,
-  Palette,
-  Image as ImageIcon,
-  KeyRound,
-  Monitor,
-  ShieldAlert,
-  Smartphone,
-  Tablet,
-  Trash2,
-} from 'lucide-react'
+import { LogOut, Monitor, Smartphone, Tablet } from 'lucide-react'
 import { useT, useLocale, formatDate, formatRelativeTime } from '@devon/i18n'
 import {
   Badge,
@@ -34,7 +23,7 @@ import {
 } from '@devon/ui'
 import { avatarUrl } from '../../lib/avatar.js'
 import { ApiError } from '../../lib/api-client.js'
-import { useMeQuery } from '../../lib/session.js'
+import { useLogoutMutation, useMeQuery } from '../../lib/session.js'
 import {
   avatarErrorKey,
   cancelAccountDeletion,
@@ -60,6 +49,14 @@ import { ProfessionalProfileSection } from './professional-profile-section.js'
 import { ProfileSection } from './profile-section.js'
 import { AppearanceSection } from './appearance-section.js'
 import { SettingsNavigation } from './settings-navigation.js'
+import { navigate, useRoutePath } from '../../lib/router.js'
+
+const PreferencesScreen = React.lazy(() => import('../inbox/preferences-screen.js'))
+const TelegramScreen = React.lazy(() => import('../inbox/telegram-screen.js'))
+const CalendarScreen = React.lazy(() => import('../calendar/calendar-screen.js'))
+const DepartmentDetailScreen = React.lazy(
+  () => import('../departments/department-detail-screen.js'),
+)
 
 /** Every user eventually opens this list (item handoff), and a real department can rack up dozens
  * of stale sessions -- five is enough to answer "is this me right now?" without turning the account
@@ -783,125 +780,99 @@ function DeleteAccountSection() {
   )
 }
 
-interface SubNavItem {
-  id: string
-  labelKey: string
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+/** Legacy section anchors remain valid for saved bookmarks and field requests. */
+export function settingsPathForHash(hash: string): string | null {
+  if (hash === '#section-professional') return '/account/professional'
+  if (['#section-sessions', '#section-2fa', '#section-password'].includes(hash))
+    return '/account/security'
+  if (hash === '#section-delete') return '/account/delete'
+  return null
 }
-
-/** Three groups, not five flat rows -- `accounts.settings.{profile,security,dangerZone}` already
- * existed in the catalogue (a settings recipe this screen never finished wiring up) and are exactly
- * the grouping DESIGN.md's own settings recipe implies: what you look like, how you sign in, and the
- * one card that ends the account. */
-const SUB_NAV_GROUPS: ReadonlyArray<{ headingKey: string; items: readonly SubNavItem[] }> = [
-  {
-    headingKey: 'accounts.settings.profile',
-    items: [
-      { id: 'section-professional', labelKey: 'portal.profile.title', icon: ClipboardList },
-      { id: 'section-profile', labelKey: 'profileEdit.heading', icon: ClipboardList },
-      { id: 'section-photo', labelKey: 'accounts.photo.title', icon: ImageIcon },
-      { id: 'section-appearance', labelKey: 'accounts.settings.appearance', icon: Palette },
-      // v1.1 SPEC §5: the boshqarma's own columns about this person. `id: 'fields'` is deliberate --
-      // it is the anchor `/account#fields` that a fill request's inbox row and its Telegram
-      // "Toʻldirish" button both open.
-      { id: 'fields', labelKey: 'fields.my.title', icon: ClipboardList },
-    ],
-  },
-  {
-    headingKey: 'accounts.settings.security',
-    items: [
-      { id: 'section-sessions', labelKey: 'accounts.sessions.title', icon: Monitor },
-      { id: 'section-2fa', labelKey: 'accounts.twoFactor.title', icon: ShieldAlert },
-      { id: 'section-password', labelKey: 'accounts.password.title', icon: KeyRound },
-    ],
-  },
-  {
-    headingKey: 'accounts.settings.dangerZone',
-    items: [{ id: 'section-delete', labelKey: 'accounts.delete.title', icon: Trash2 }],
-  },
-]
-
-/** DESIGN.md §9.5 puts two columns on this screen from the 1024px breakpoint up: a left sub-nav
- * and a stack of section cards. A plain anchor list rather than routed tabs -- every section stays
- * mounted (no section's own `useQuery` should refire on a tab switch that never unmounted it), and
- * `scroll-mt` on each card gives the jumped-to section room under the sticky app top bar. Below that
- * breakpoint the same list becomes the horizontal, scrollable strip DESIGN.md offers as the
- * alternative -- flattened there (a two-level scrolling strip of group headings would be its own new
- * pattern for one screen). */
-function SettingsSubNav({ className, flat = false }: { className?: string; flat?: boolean }) {
-  const t = useT()
-  const items = flat ? SUB_NAV_GROUPS.flatMap((g) => g.items) : null
-  return (
-    <nav aria-label={t('accounts.settings.subnavAria')} className={className}>
-      {flat && items ? (
-        <ul className="flex gap-1 overflow-x-auto">
-          {items.map((item) => (
-            <li key={item.id} className="shrink-0">
-              <a href={`#${item.id}`} className={SUB_NAV_LINK_CLASS}>
-                <item.icon className="size-4 shrink-0" aria-hidden="true" />
-                {t(item.labelKey)}
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {SUB_NAV_GROUPS.map((group) => (
-            <div key={group.headingKey} className="flex flex-col gap-1">
-              <p className="px-3 text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                {t(group.headingKey)}
-              </p>
-              <ul className="flex flex-col gap-0.5">
-                {group.items.map((item) => (
-                  <li key={item.id}>
-                    <a href={`#${item.id}`} className={SUB_NAV_LINK_CLASS}>
-                      <item.icon className="size-4 shrink-0" aria-hidden="true" />
-                      {t(item.labelKey)}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-    </nav>
-  )
-}
-
-const SUB_NAV_LINK_CLASS =
-  'flex items-center gap-2 whitespace-nowrap rounded-sm px-3 py-2 text-small text-muted-foreground transition-colors duration-(--dur-micro) hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 export default function AccountSettingsScreen() {
   const t = useT()
-  // round2 SEV2: this screen's own `mx-auto` re-centred a narrower box *inside* the shell's already-
-  // centred `PageContainer` (app-shell.tsx wraps every route at the shared 1280px width) -- two nested
-  // centering contexts of different widths is exactly what shifted this screen's heading 110px right
-  // of where every other screen's starts, and dropped the eyebrow line other `PageHeader` call sites
-  // all carry. Capping the width without re-centering keeps the left edge pinned to the same shared
-  // gutter `PageContainer` already gives every other screen.
-  return (
-    <div className="flex max-w-4xl flex-col gap-6">
-      <PageHeader
-        eyebrow={t('accounts.settings.eyebrow')}
-        title={t('accounts.settings.title')}
-        description={t('accounts.settings.subtitle')}
-      />
-      <SettingsNavigation />
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
-        <SettingsSubNav className="sticky top-4 hidden shrink-0 basis-48 lg:block" />
-        <SettingsSubNav className="lg:hidden" flat />
-        <div className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20">
-          <ProfileSection />
-          <ProfessionalProfileSection />
-          <PhotoSection />
-          <AppearanceSection />
-          <MyFieldsSection />
+  const path = useRoutePath()
+  const logout = useLogoutMutation()
+  React.useEffect(() => {
+    const target = settingsPathForHash(window.location.hash)
+    if (path === '/account' && target) {
+      navigate(`${target}${window.location.hash}`, { replace: true })
+      return
+    }
+    if (window.location.hash) {
+      const id = window.location.hash.slice(1)
+      requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }))
+    }
+  }, [path])
+  let pane: React.ReactNode
+  switch (path) {
+    case '/account/professional':
+      pane = <ProfessionalProfileSection />
+      break
+    case '/account/notifications':
+      pane = <PreferencesScreen embedded />
+      break
+    case '/account/telegram':
+      pane = <TelegramScreen embedded />
+      break
+    case '/account/calendar':
+      pane = <CalendarScreen embedded />
+      break
+    case '/account/department':
+      pane = <DepartmentDetailScreen embedded />
+      break
+    case '/account/security':
+      pane = (
+        <>
           <SessionsSection />
           <TwoFactorSection />
           <PasswordSection />
-          <DeleteAccountSection />
-        </div>
+        </>
+      )
+      break
+    case '/account/delete':
+      pane = <DeleteAccountSection />
+      break
+    default:
+      pane = (
+        <>
+          <ProfileSection />
+          <PhotoSection />
+          <AppearanceSection />
+          <MyFieldsSection />
+        </>
+      )
+  }
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <PageHeader
+        eyebrow={t('accounts.settings.eyebrow')}
+        title={t('accounts.settings.title')}
+        description={t('settings.description')}
+        actions={
+          <Button
+            variant="secondary"
+            loading={logout.isPending}
+            onClick={() =>
+              logout.mutate(undefined, { onSettled: () => navigate('/login?signedOut=1') })
+            }
+          >
+            <LogOut className="size-4" aria-hidden="true" />
+            {t('shell.account.signout')}
+          </Button>
+        }
+      />
+      <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+        <SettingsNavigation path={path} />
+        <section
+          key={path}
+          aria-label={t('settings.content')}
+          className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20"
+        >
+          <React.Suspense fallback={<StateView kind="loading" titleKey="state.loading" />}>
+            {pane}
+          </React.Suspense>
+        </section>
       </div>
     </div>
   )

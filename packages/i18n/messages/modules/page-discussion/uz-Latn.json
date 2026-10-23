@@ -1,0 +1,60 @@
+{
+  "pages": {
+    "view": {
+      "edit": "Sahifani tahrirlash",
+      "done": "Tahrirni tugatish",
+      "history": "Versiyalar tarixi"
+    },
+    "editor": {
+      "fontSize": "Matn oʻlchami",
+      "fontSizes": {
+        "small": "Kichik",
+        "normal": "Oddiy",
+        "large": "Katta",
+        "xlarge": "Juda katta"
+      },
+      "markdown": {
+        "write": "Markdown yozish",
+        "hint": "Markdown matnini yozing yoki joylang, soʻng kursor turgan joyga kiriting. Mavjud matn saqlanadi.",
+        "insert": "Matnni kiritish",
+        "invalid": "Qoʻllanmaydigan format yoki xavfsiz boʻlmagan havola mavjud."
+      },
+      "draft": {
+        "title": "AI bilan matn yozish",
+        "hint": "Sarlavha asosida sahifa matnini tayyorlang. Kerak boʻlsa koʻrsatma qoʻshing, natijani tekshiring va qoʻllang. Sahifa matni almashtiriladi.",
+        "instructions": "Qoʻshimcha koʻrsatma, auditoriya yoki asosiy maʼlumotlar",
+        "generate": "Matn tayyorlash",
+        "preview": "Matnni tekshirish va tahrirlash",
+        "apply": "Sahifaga qoʻllash",
+        "failed": "Matnni tayyorlab boʻlmadi. Qayta urinib koʻring."
+      }
+    }
+  },
+  "events": {
+    "comments": {
+      "edit": "Izohni tahrirlash",
+      "edited": "Tahrirlangan"
+    },
+    "finished": {
+      "readOnly": "Tadbir tugagan yoki yopilgan. Band qilish, buyumlar va soʻrovnomalarni oʻzgartirib boʻlmaydi. Izohlar, rasmlar va fikr-mulohazalar ochiq."
+    }
+  },
+  "work": {
+    "comments": {
+      "edit": "Izohni tahrirlash",
+      "edited": "Tahrirlangan",
+      "deleteConfirm": "Izoh oʻchirilsinmi? Unga tegishli bildirishnomalar kiruvchi xabarlardan olib tashlanadi.",
+      "saveError": "Izoh saqlanmadi. Sahifani yangilang, boshqa tahrirlarni tekshiring va qayta urining."
+    }
+  },
+  "ai": {
+    "features": {
+      "draftPage": {
+        "label": "Sahifa matnini yozish",
+        "description": "Sarlavha va koʻrsatmalaringiz asosida tahrirlash mumkin boʻlgan matn tayyorlang. Qoʻllashdan oldin tekshiring.",
+        "where": "Sahifalar → Sahifani tahrirlash → AI bilan matn yozish",
+        "example": "“Markaz telefon maʼlumotnomasi” → tekshirish uchun qisqa kirish matni va koʻrsatmalar."
+      }
+    }
+  }
+}

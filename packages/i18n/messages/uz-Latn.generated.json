@@ -101,7 +101,8 @@
     },
     "loading": {
       "route": "Sahifa yuklanmoqda"
-    }
+    },
+    "brandSubtitle": "Raqamli texnologiyalar"
   },
   "cmd": {
     "placeholder": "Qidiring yoki amalni tanlang",
@@ -1437,6 +1438,12 @@
         "description": "Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
         "where": "Endi alohida ekrani yoʻq.",
         "example": "Eski foydalanish yozuvlarida koʻrinadi."
+      },
+      "draftPage": {
+        "label": "Sahifa matnini yozish",
+        "description": "Sarlavha va koʻrsatmalaringiz asosida tahrirlash mumkin boʻlgan matn tayyorlang. Qoʻllashdan oldin tekshiring.",
+        "where": "Sahifalar → Sahifani tahrirlash → AI bilan matn yozish",
+        "example": "“Markaz telefon maʼlumotnomasi” → tekshirish uchun qisqa kirish matni va koʻrsatmalar."
       }
     },
     "catalogue": {
@@ -1800,6 +1807,12 @@
       "failed": "Amal bajarilmadi. Kartochkani yangilab, qayta urining; bekor qilish 30 soniya davomida mumkin.",
       "hint": "Jamoa koʻrinishlaridan olib tashlanadi; superadmin uchun yozuv saqlanadi."
     },
+    "comments": {
+      "edit": "Izohni tahrirlash",
+      "edited": "Tahrirlangan",
+      "deleteConfirm": "Izoh oʻchirilsinmi? Unga tegishli bildirishnomalar kiruvchi xabarlardan olib tashlanadi.",
+      "saveError": "Izoh saqlanmadi. Sahifani yangilang, boshqa tahrirlarni tekshiring va qayta urining."
+    },
     "eyebrow": "ISH",
     "title": "Vazifalar",
     "description": "Xodimlar doskasi: har bir xodimga bitta ustun.",
@@ -1811,8 +1824,7 @@
       "table": "Jadval",
       "timeline": "Muddatlar",
       "calendar": "Taqvim",
-      "mine": "Mening vazifalarim",
-      "archive": "Arxiv"
+      "mine": "Mening vazifalarim"
     },
     "quickAdd": {
       "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma»",
@@ -1951,11 +1963,6 @@
       "emptyTitle": "Karta topilmadi",
       "emptyBody": "Filtrni oʻzgartiring yoki yangi karta qoʻshing.",
       "selectAll": "Barchasini tanlash",
-      "density": {
-        "label": "Zichlik",
-        "compact": "Ixcham",
-        "comfortable": "Keng"
-      },
       "sort": {
         "label": "Saralash",
         "none": "Saralanmagan"
@@ -2019,9 +2026,7 @@
     },
     "archive": {
       "completedHint": "Arxivlangan · Bajarilgan",
-      "unfinishedHint": "Arxivlangan · Bajarilmagan",
-      "emptyTitle": "Arxiv boʻsh",
-      "emptyBody": "Bajarilgan va arxivga olingan kartalar shu yerda koʻrinadi."
+      "unfinishedHint": "Arxivlangan · Bajarilmagan"
     },
     "action": {
       "save": "Saqlash",
@@ -3360,7 +3365,9 @@
       "summaryAccept": "Izohga qoʻshish",
       "summaryEdit": "Qoʻshib, tahrirlash",
       "summaryDiscard": "Kerak emas",
-      "viewerFallback": "Siz"
+      "viewerFallback": "Siz",
+      "edit": "Izohni tahrirlash",
+      "edited": "Tahrirlangan"
     },
     "carpool": {
       "title": "Birga borish",
@@ -3474,6 +3481,9 @@
     "filters": {
       "from": "Qaysi sanadan",
       "to": "Qaysi sanagacha"
+    },
+    "finished": {
+      "readOnly": "Tadbir tugagan yoki yopilgan. Band qilish, buyumlar va soʻrovnomalarni oʻzgartirib boʻlmaydi. Izohlar, rasmlar va fikr-mulohazalar ochiq."
     }
   },
   "eventsControls": {
@@ -3733,6 +3743,219 @@
       }
     }
   },
+  "homeMember": {
+    "myUnit": "Mening boʻlimim",
+    "noUnit": "Boʻlimingizni tanlang",
+    "metrics": "Ishlarim haqida",
+    "active": "Faol vazifalar",
+    "completed": "Bajarilgan va arxivda",
+    "toDo": "Bajarish kerak",
+    "inProgress": "Jarayonda",
+    "done": "Bajarilgan",
+    "archived": "Arxivda",
+    "panels": "Mening ishlarim",
+    "myTasks": "Vazifalarim",
+    "myProjects": "Loyihalarim",
+    "upcoming": "Yaqinlashmoqda",
+    "event": "Tadbir",
+    "deadline": "Muddat",
+    "noUpcoming": "Yaqinlashayotgan muddat va tadbirlar yoʻq.",
+    "eventsRetry": "Tadbirlarni yangilash",
+    "projectsCount": "{count} ta loyiha",
+    "allProjects": "Barcha loyihalar",
+    "noProjects": "Siz qatnashayotgan loyihalar shu yerda koʻrinadi.",
+    "noProjectTasks": "Bu loyihada sizga biriktirilgan faol vazifa yoʻq.",
+    "openProject": "Loyihani ochish",
+    "noTasks": "Bu koʻrinishda faol vazifa yoʻq.",
+    "noCompleted": "Bu koʻrinishda hozircha vazifa yoʻq.",
+    "taskStatus": "Vazifa holati",
+    "showAll": "Barchasini koʻrsatish",
+    "toggleTask": "“{title}” vazifasini bajarilgan deb belgilash",
+    "checklistProgress": "{total} ta banddan {done} tasi bajarilgan",
+    "projectProgress": "{title} loyihasi bosqichlarining bajarilishi",
+    "assistant": "Ish yordamchingiz",
+    "assistantInput": "Ishingiz haqida savol bering",
+    "assistantPlaceholder": "Ishingiz haqida soʻrang yoki biror amalni topshiring…",
+    "assistantHint": "Keyingi qadamni belgilang, loyihani tushuning yoki oʻzgarish tayyorlang. Amallar bajarilishidan oldin ularni tasdiqlaysiz.",
+    "thinking": "Ishlaringiz va mavjud maʼlumotlarni koʻrib chiqyapman…",
+    "starters": {
+      "priorities": "Nimaga eʼtibor berish kerak?",
+      "projectUpdate": "Loyihalar haqida",
+      "draftPage": "Sahifa qoralamasi"
+    },
+    "prompts": {
+      "priorities": "Keyin nimaga eʼtibor qaratishim kerak? Menga biriktirilgan vazifalar va muddatlarni hisobga olib, tegishli yozuvlarga havola ber.",
+      "projectUpdate": "Joriy guruh loyihalarim va menga biriktirilgan keyingi qadamlarni qisqacha tushuntir.",
+      "draftPage": "Umumiy sahifa yaratishga yordam ber. Nimalarni qamrab olishini aniqlashtir, soʻng tekshirishim uchun qoralama tayyorla."
+    },
+    "reopenTask": "“{title}” vazifasini qayta ochish"
+  },
+  "assistantActions": {
+    "clearValue": "Qiymatni tozalash",
+    "emptyValue": "Boʻsh",
+    "emptyList": "Yoʻq",
+    "yes": "Ha",
+    "no": "Yoʻq",
+    "execute": "Tasdiqlash va qoʻllash",
+    "confirmDelete": "Oʻchirishni tasdiqlash",
+    "edit": "Soʻrovni tahrirlash",
+    "discard": "Bekor qilish",
+    "confirmHint": "Yuqoridagi aniq oʻzgarishlarni tekshiring. Tasdiqlamaguningizcha hech narsa oʻzgarmaydi.",
+    "deleteWarning": "Koʻrsatilgan yozuv oʻchiriladi. Tasdiqlashdan oldin uni tekshiring.",
+    "conflict": "Yozuv oʻzgargan yoki taklif eskirgan. Yangi taklif soʻrang.",
+    "forbidden": "Bu oʻzgarishni amalga oshirishga endi ruxsatingiz yoʻq.",
+    "failed": "Amal tasdiqlanmadi. Qayta urinishdan oldin uning saqlangan holati yangilanadi.",
+    "filePartial": "Yozuv yaratildi, lekin barcha fayllar biriktirilmadi. Uni quyidan ochib, qolgan fayllarni qoʻshing; yozuvni qayta yaratmang.",
+    "persistedFailure": "Amal yakunlanmadi. Havola mavjud boʻlsa, yangi taklif soʻrashdan oldin yozuvni tekshiring.",
+    "revisePrompt": "“{title}” taklifini qayta tayyorla: ",
+    "addFiles": "Fayllar biriktirish",
+    "queuedFiles": "Xabarga biriktiriladigan fayllar",
+    "fileReady": "Fayl tekshirildi va tayyor",
+    "fileApproval": "Superadmin tasdigʻi soʻraldi. Tasdiqlangandan keyin qayta urining.",
+    "fileLimit": "Bitta xabarga 10 tagacha fayl biriktirish mumkin.",
+    "status": {
+      "pending": "Tekshirishingiz kutilmoqda",
+      "executing": "Tasdiqlangan oʻzgarish qoʻllanmoqda…",
+      "executed": "Qoʻllandi",
+      "discarded": "Bekor qilindi",
+      "failed": "Amalni tekshirish kerak",
+      "expired": "Taklif eskirgan"
+    },
+    "values": {
+      "active": "Faol",
+      "done": "Bajarilgan",
+      "archived": "Arxivda",
+      "planning": "Rejalashtirilmoqda",
+      "on_hold": "Toʻxtatilgan",
+      "todo": "Bajarish kerak",
+      "in_progress": "Jarayonda",
+      "none": "Yoʻq",
+      "low": "Past",
+      "medium": "Oʻrta",
+      "high": "Yuqori",
+      "urgent": "Shoshilinch",
+      "objective": "Loyiha vazifasi",
+      "subjective": "Shaxsiy loyiha vazifasi",
+      "card": "Vazifa",
+      "page": "Sahifa",
+      "completed": "Yakunlangan"
+    },
+    "fields": {
+      "id": "Yozuv",
+      "title": "Sarlavha",
+      "description": "Tavsif",
+      "body": "Mazmun",
+      "blocks": "Sahifa mazmuni",
+      "text": "Matn",
+      "assigneeUserId": "Ijrochi",
+      "giverUserId": "Topshiriq beruvchi",
+      "ownerUserId": "Masʼul",
+      "members": "Aʼzolar",
+      "projectId": "Loyiha",
+      "projectScope": "Vazifa turi",
+      "status": "Holat",
+      "workStage": "Ish bosqichi",
+      "priority": "Ustuvorlik",
+      "startAt": "Boshlanish",
+      "dueAt": "Muddat",
+      "startOn": "Boshlanish sanasi",
+      "targetOn": "Rejadagi sana",
+      "dueOn": "Muddat",
+      "done": "Bajarilgan",
+      "version": "Joriy versiya",
+      "attachmentIds": "Fayllar",
+      "targetType": "Manzil turi",
+      "targetId": "Manzil",
+      "itemId": "Roʻyxat bandi",
+      "milestoneId": "Bosqich",
+      "milestones": "Bosqichlar",
+      "kind": "Tur",
+      "notes": "Qaydlar",
+      "sprintId": "Rejalashtirish davri",
+      "parentId": "Asosiy yozuv",
+      "parentItemId": "Asosiy band",
+      "estimateMin": "Taxminiy daqiqa",
+      "linkedCardId": "Bogʻlangan vazifa",
+      "sort": "Tartib",
+      "orderKey": "Joylashuv",
+      "afterTaskId": "Keyin qoʻshish",
+      "startsAt": "Boshlanish",
+      "endsAt": "Tugash",
+      "goal": "Maqsad",
+      "pinned": "Mahkamlangan",
+      "labels": "Yorliqlar",
+      "watchers": "Kuzatuvchilar",
+      "links": "Havolalar",
+      "url": "Manzil",
+      "name": "Nom",
+      "colour": "Rang",
+      "coverKey": "Muqova",
+      "mentions": "Eslatmalar"
+    },
+    "timezone": "(UTC+5)",
+    "emptyResponse": "AI javob qaytarmadi. Xabaringiz saqlandi; qayta urinib ko‘ring.",
+    "interruptedAction": "Tasdiqlash uzildi. Yangi amal so‘rashdan oldin tegishli elementni tekshiring: o‘zgarish allaqachon saqlangan bo‘lishi mumkin.",
+    "kinds": {
+      "card": {
+        "create": "Vazifa yaratish",
+        "update": "Vazifani tahrirlash",
+        "delete": "Vazifani o‘chirish",
+        "restore": "Vazifani tiklash"
+      },
+      "page": {
+        "create": "Sahifa yaratish",
+        "update": "Sahifani tahrirlash",
+        "delete": "Sahifani o‘chirish"
+      },
+      "project": {
+        "create": "Loyiha yaratish",
+        "update": "Loyihani tahrirlash",
+        "delete": "Loyihani o‘chirish"
+      },
+      "checklist": {
+        "add": "Ro‘yxat bandini qo‘shish",
+        "update": "Ro‘yxat bandini tahrirlash",
+        "delete": "Ro‘yxat bandini o‘chirish"
+      },
+      "comment": {
+        "create": "Izoh yozish"
+      },
+      "milestone": {
+        "add": "Bosqich qo‘shish",
+        "update": "Bosqichni tahrirlash"
+      },
+      "personal": {
+        "note": {
+          "create": "Shaxsiy qayd yaratish",
+          "update": "Shaxsiy qaydni tahrirlash"
+        }
+      },
+      "attachment": {
+        "attach": "Fayllarni biriktirish"
+      },
+      "personalTaskCreate": "Shaxsiy vazifa yaratish",
+      "personalTaskUpdate": "Shaxsiy vazifani tahrirlash",
+      "personalPeriodCreate": "Rejalashtirish davrini yaratish",
+      "personalPeriodUpdate": "Rejalashtirish davrini tahrirlash"
+    }
+  },
+  "assistantQuickAdd": {
+    "label": "Vazifani tasvirlang",
+    "placeholder": "Oylik hisobotni juma kunigacha tayyorlash",
+    "hint": "Zarur bo‘lsa, xodim, sana yoki muhimlikni kiriting. Ctrl/⌘ + Enter kartani ko‘rsatadi.",
+    "description": "Nima qilish kerakligini yozing. Yaratishdan oldin kartani tekshiring.",
+    "preview": "Kartani ko‘rish",
+    "create": "Karta yaratish"
+  },
+  "assistantHelpers": {
+    "refineTask": "Vazifani AI bilan aniqlashtirish",
+    "taskPreview": "Shaxsiy vazifani ko‘rish",
+    "requestedDate": "So‘ralgan sana",
+    "requestedPriority": "So‘ralgan muhimlik",
+    "originalRequest": "Asl so‘rov",
+    "savedNotes": "Qaydlarda saqlanadi",
+    "privateTaskHint": "Shaxsiy vazifalarda sana va muhimlik qaydlarda saqlanadi. Muddatli topshiriqlar uchun Kartalardan foydalaning."
+  },
   "inbox": {
     "title": "Bildirishnomalar",
     "eyebrow": "BILDIRISHNOMALAR",
@@ -3886,6 +4109,28 @@
         "empty": "Mos variantlar topilmadi",
         "formatting": "Matnni formatlash"
       },
+      "fontSize": "Matn oʻlchami",
+      "fontSizes": {
+        "small": "Kichik",
+        "normal": "Oddiy",
+        "large": "Katta",
+        "xlarge": "Juda katta"
+      },
+      "markdown": {
+        "write": "Markdown yozish",
+        "hint": "Markdown matnini yozing yoki joylang, soʻng kursor turgan joyga kiriting. Mavjud matn saqlanadi.",
+        "insert": "Matnni kiritish",
+        "invalid": "Qoʻllanmaydigan format yoki xavfsiz boʻlmagan havola mavjud."
+      },
+      "draft": {
+        "title": "AI bilan matn yozish",
+        "hint": "Sarlavha asosida sahifa matnini tayyorlang. Kerak boʻlsa koʻrsatma qoʻshing, natijani tekshiring va qoʻllang. Sahifa matni almashtiriladi.",
+        "instructions": "Qoʻshimcha koʻrsatma, auditoriya yoki asosiy maʼlumotlar",
+        "generate": "Matn tayyorlash",
+        "preview": "Matnni tekshirish va tahrirlash",
+        "apply": "Sahifaga qoʻllash",
+        "failed": "Matnni tayyorlab boʻlmadi. Qayta urinib koʻring."
+      },
       "titlePlaceholder": "Sarlavha",
       "save": "Saqlash",
       "saved": "Saqlandi",
@@ -3919,6 +4164,11 @@
           "failed": "AI bu safar tarjima qila olmadi"
         }
       }
+    },
+    "view": {
+      "edit": "Sahifani tahrirlash",
+      "done": "Tahrirni tugatish",
+      "history": "Versiyalar tarixi"
     },
     "title": "Sahifalar",
     "eyebrow": "BILIM",
@@ -4783,7 +5033,8 @@
       "expected": "Kutilmoqda",
       "present": "Hozirgacha",
       "contact": "Aloqa",
-      "intro": "Hamkasblar bilan ixtiyoriy ulashiladigan maʼlumotlar. Maxfiy maʼlumotlarni bu ish profiliga kiritmang."
+      "intro": "Hamkasblar bilan ixtiyoriy ulashiladigan maʼlumotlar. Maxfiy maʼlumotlarni bu ish profiliga kiritmang.",
+      "hobbies": "Qiziqishlar va sevimli mashgʻulotlar"
     },
     "overview": {
       "workforce": "Jami xodimlar",
@@ -4864,7 +5115,7 @@
     "delete": "Loyihani oʻchirish",
     "deleted": "Loyiha va uning vazifalari oʻchirildi. Hozir bekor qilishingiz mumkin.",
     "deleteHint": "Loyihaning vazifalari ham jamoa ish joyidan olib tashlanadi. Tarix superadminda saqlanadi.",
-    "progressHint": "Natija vazifalar va ularning bajarilgan bandlaridan hisoblanadi. Vazifa bo‘lmasa, bajarilgan bosqichlar hisobga olinadi.",
+    "progressHint": "Loyiha natijasi bajarilgan bosqichlar asosida hisoblanadi. Shaxsiy vazifalar har bir ishtirokchining hissasini alohida ko‘rsatadi.",
     "milestonesProgress": "{done}/{total} bosqich"
   },
   "projects": {
@@ -5030,6 +5281,30 @@
         "title": "Bu oq taxta sizga ochiq emas",
         "body": "Uni faqat ulashilgan loyiha yoki tadbir ishtirokchilari koʻradi."
       }
+    }
+  },
+  "settings": {
+    "accountProfile": "Hisob profili",
+    "workspace": "Ulanishlar va ish muhiti",
+    "department": "Boshqarma",
+    "signInSecurity": "Kirish va xavfsizlik",
+    "description": "Profilingiz, ulangan xizmatlar va hisob xavfsizligi.",
+    "content": "Sozlamalar mazmuni",
+    "profile": {
+      "required": "Majburiy maydon",
+      "invalid": "Qiymatni tekshiring. Yil 1900–2200 oraligʻida boʻlishi kerak.",
+      "requiredHint": "Yozuv qoʻshilganda * bilan belgilangan maydonlar majburiy. Qolganlari ixtiyoriy.",
+      "introduction": "Oʻzingiz haqingizda",
+      "addHint": "Tayyor boʻlganingizda {section} maʼlumotlarini qoʻshing.",
+      "removeEntry": "{section} boʻlimidagi {number}-yozuvni oʻchirish",
+      "expectedYear": "Kutilayotgan bitirish yili",
+      "invalidPeriod": "Tugash yili boshlanish yilidan oldin boʻlmasligi kerak.",
+      "addSection": "{section} qoʻshish",
+      "capabilitiesInterests": "Koʻnikmalar va qiziqishlar",
+      "validationError": "Belgilangan maydonlarni tekshiring.",
+      "itemLimit": "Har bir band {max} belgidan oshmasligi kerak.",
+      "listLimit": "Koʻpi bilan {max} ta band kiriting.",
+      "invalidValue": "Qiymatni tekshiring."
     }
   },
   "structure": {

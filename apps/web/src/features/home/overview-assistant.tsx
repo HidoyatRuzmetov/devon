@@ -1,6 +1,11 @@
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { AI_CHAT_MESSAGE_MAX, type AiChatMessage } from '@devon/contracts'
+import {
+  AI_CHAT_MESSAGE_MAX,
+  type AiChatAttachment,
+  type AiChatMessage,
+  type AiChatProposal,
+} from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Button,
@@ -29,6 +34,8 @@ import {
   LoaderCircle,
   MessageSquare,
   Plus,
+  Paperclip,
+  File,
   RefreshCw,
   Sparkles,
   Square,
@@ -50,6 +57,8 @@ import { chatFailure } from '../ai/chat-failure.js'
 import { CatchUpPreview } from '../ai/components/previews.js'
 import { parseFeatureOutput, type CatchUpOutput } from '../ai/outputs.js'
 import { useBriefingQuery, useRefreshBriefingMutation } from '../ai/use-ai.js'
+import { ChatProposal } from '../ai/components/chat-proposal.js'
+import { ChatFileQueue, useChatFiles } from '../ai/components/chat-files.js'
 
 const drill = (path: string) => `${path}${path.includes('?') ? '&' : '?'}from=overview`
 const conversationId = (value: string | null) =>
@@ -67,12 +76,18 @@ function Message({
   busy,
   onNew,
   conversationId,
+  audience,
+  onEditProposal,
+  attachments,
 }: {
   message: AiChatMessage
   retry: () => void
   busy: boolean
   onNew: () => void
   conversationId: string
+  audience: 'head' | 'member'
+  onEditProposal: (proposal: AiChatProposal) => void
+  attachments: AiChatAttachment[]
 }) {
   const t = useT()
   const locale = useLocale()
@@ -84,7 +99,13 @@ function Message({
       initial={{ opacity: 0, y: reduced ? 0 : 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={reduced ? { duration: 0 } : tweenPage}
-      aria-label={t(message.role === 'user' ? 'overviewChat.you' : 'overviewChat.assistant')}
+      aria-label={t(
+        message.role === 'user'
+          ? 'overviewChat.you'
+          : audience === 'member'
+            ? 'homeMember.assistant'
+            : 'overviewChat.assistant',
+      )}
       className={cn(
         'min-w-0',
         message.role === 'user'
@@ -95,7 +116,7 @@ function Message({
       {message.role === 'assistant' ? (
         <div className="mb-2 flex items-center gap-2 text-caption font-medium text-primary">
           <Sparkles className="size-3.5" aria-hidden="true" />
-          {t('overviewChat.assistant')}
+          {t(audience === 'member' ? 'homeMember.assistant' : 'overviewChat.assistant')}
         </div>
       ) : null}
       {message.role === 'assistant' ? (
@@ -107,6 +128,35 @@ function Message({
       ) : (
         <p className="whitespace-pre-wrap text-small [overflow-wrap:anywhere]">{message.content}</p>
       )}
+      {message.attachments?.length ? (
+        <div className="mt-2 flex flex-wrap gap-2" aria-label={t('attachments.title')}>
+          {message.attachments.map((file) => (
+            <a
+              key={file.id}
+              href={
+                (file.downloadPath?.startsWith('/api/v1/') ? file.downloadPath : undefined) ??
+                `/api/v1/ai/conversations/${encodeURIComponent(conversationId)}/attachments/${encodeURIComponent(file.id)}/download`
+              }
+              download={file.name}
+              className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1.5 text-caption text-primary"
+            >
+              <File className="size-3.5 shrink-0" aria-hidden="true" />
+              <span className="truncate">{file.name}</span>
+            </a>
+          ))}
+        </div>
+      ) : null}
+      {message.proposals?.map((proposal) => (
+        <ChatProposal
+          key={proposal.id}
+          proposal={proposal}
+          conversationId={conversationId}
+          sources={message.sources}
+          attachments={attachments}
+          onEdit={onEditProposal}
+          disabled={busy}
+        />
+      ))}
       {message.sources.length ? (
         <div
           className="mt-3 flex flex-wrap items-center gap-1.5"
@@ -176,11 +226,13 @@ export function OverviewAssistant({
   onExpandedChange,
   cardTitle,
   allowConversationRoute,
+  audience = 'head',
 }: {
   expanded: boolean
   onExpandedChange: (value: boolean) => void
   cardTitle: (id: string) => string | null
   allowConversationRoute: boolean
+  audience?: 'head' | 'member'
 }) {
   const t = useT(),
     locale = useLocale(),
@@ -197,10 +249,13 @@ export function OverviewAssistant({
     conversationId: string
     id: string
     content: string
+    attachmentIds?: string[]
+    attachments?: AiChatAttachment[]
   } | null>(null)
   const createId = React.useRef(crypto.randomUUID())
   const selectionGeneration = React.useRef(0)
   const composer = React.useRef<HTMLTextAreaElement>(null)
+  const fileInput = React.useRef<HTMLInputElement>(null)
   const scroller = React.useRef<HTMLDivElement>(null)
   const touchY = React.useRef<number | null>(null)
   const pointerScrollTop = React.useRef<number | null>(null)
@@ -238,20 +293,22 @@ export function OverviewAssistant({
   const previousRoute = React.useRef(routeId)
   const selectedRef = React.useRef(selectedId)
   selectedRef.current = selectedId
-  const briefingQuery = useBriefingQuery(true),
+  const briefingQuery = useBriefingQuery(audience === 'head'),
     refresh = useRefreshBriefingMutation()
   const history = useConversationsQuery(historyOpen)
   const conversation = useConversationQuery(selectedId)
   const create = useCreateConversationMutation(),
     send = useSendConversationMessageMutation(),
     cancel = useCancelConversationMessageMutation()
-  const brief = briefingQuery.data?.briefing
+  const brief = audience === 'head' ? briefingQuery.data?.briefing : undefined
   const output = brief?.data ? parseFeatureOutput<CatchUpOutput>('catch_up', brief.data) : null
   const current = conversation.data
   const pending = current?.messages.find((message) => message.status === 'pending')
   const savedChats = history.data?.pages.flatMap((page) => page.conversations) ?? []
   const busy = create.isPending || send.isPending || current?.status === 'running'
   const briefingPending = brief?.status === 'queued' || brief?.status === 'running'
+  const briefingError = audience === 'head' && (briefingQuery.isError || refresh.isError)
+  const files = useChatFiles(selectedId, ensureConversation)
 
   React.useEffect(() => {
     if (routeId) {
@@ -270,9 +327,14 @@ export function OverviewAssistant({
     [],
   )
 
-  React.useEffect(() => {
-    if (!draft && composer.current) composer.current.style.height = 'auto'
-  }, [draft])
+  React.useLayoutEffect(() => {
+    const node = composer.current
+    if (!node) return
+    // Starter prompts and restored drafts change without an input event. Re-measure them too,
+    // and return to a single-line preview when the mobile conversation closes.
+    node.style.height = 'auto'
+    node.style.height = `${Math.max(40, Math.min(node.scrollHeight, expanded || desktop ? 96 : 40))}px`
+  }, [draft, expanded, desktop])
 
   const scrollToLatest = React.useCallback(() => {
     if (scroller.current)
@@ -329,7 +391,13 @@ export function OverviewAssistant({
         ?.focus({ preventScroll: true }),
     )
   }
-  async function request(input: { conversationId: string; id: string; content: string }) {
+  async function request(input: {
+    conversationId: string
+    id: string
+    content: string
+    attachmentIds?: string[]
+    attachments?: AiChatAttachment[]
+  }) {
     setRetryAttempt(null)
     nearBottom.current = true
     try {
@@ -338,11 +406,7 @@ export function OverviewAssistant({
       if (selectedRef.current === input.conversationId) setRetryAttempt(input)
     }
   }
-  async function submit(event: React.FormEvent) {
-    event.preventDefault()
-    const content = draft.trim()
-    if (!content || content.length > AI_CHAT_MESSAGE_MAX || busy || !online) return
-    onExpandedChange(true)
+  async function ensureConversation(): Promise<string | null> {
     const generation = selectionGeneration.current
     let id = selectedId
     if (!id) {
@@ -350,23 +414,46 @@ export function OverviewAssistant({
         const result = await create.mutateAsync({
           id: createId.current,
           locale,
-          seedBriefing: true,
+          seedBriefing: audience === 'head',
         })
-        if (generation !== selectionGeneration.current) return
+        if (generation !== selectionGeneration.current) return null
         id = result.id
         choose(id)
       } catch {
-        return
+        return null
       }
-    } else choose(id)
+    }
+    return id
+  }
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    const content = draft.trim()
+    if (!content || content.length > AI_CHAT_MESSAGE_MAX || busy || !online || files.blocked) return
+    onExpandedChange(true)
+    const attached = files.ready
+    const id = await ensureConversation()
+    if (!id) return
+    choose(id)
     setDraft('')
+    files.consumed(attached.map((file) => file.id))
     composer.current?.focus({ preventScroll: true })
-    await request({ conversationId: id, id: crypto.randomUUID(), content })
+    await request({
+      conversationId: id,
+      id: crypto.randomUUID(),
+      content,
+      ...(attached.length
+        ? { attachmentIds: attached.map((file) => file.id), attachments: attached }
+        : {}),
+    })
+  }
+  function editProposal(proposal: AiChatProposal) {
+    setDraft(t('assistantActions.revisePrompt', { title: proposal.title }))
+    composer.current?.focus({ preventScroll: true })
   }
   return (
     <section
       data-testid="overview-briefing"
-      aria-label={t('home.head.catchUp.title')}
+      aria-label={t(audience === 'member' ? 'homeMember.assistant' : 'home.head.catchUp.title')}
       className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-primary/20 bg-card shadow-1"
     >
       <div
@@ -393,7 +480,10 @@ export function OverviewAssistant({
               aria-level={expanded ? 1 : 2}
               className="truncate font-display text-base lg:text-h3"
             >
-              {expanded ? current?.title || t('overviewChat.title') : t('home.head.catchUp.title')}
+              {expanded
+                ? current?.title ||
+                  t(audience === 'member' ? 'homeMember.assistant' : 'overviewChat.title')
+                : t(audience === 'member' ? 'homeMember.assistant' : 'home.head.catchUp.title')}
             </h2>
             {!expanded && brief?.generatedAt ? (
               <p className="hidden text-caption text-muted-foreground sm:block">
@@ -514,7 +604,7 @@ export function OverviewAssistant({
                   </DialogContent>
                 </Dialog>
               ) : null}
-              {briefingQuery.data?.canRefresh ? (
+              {audience === 'head' && briefingQuery.data?.canRefresh ? (
                 <IconButton
                   aria-label={t('home.head.catchUp.refresh')}
                   tooltip={t('home.head.catchUp.refresh')}
@@ -624,12 +714,21 @@ export function OverviewAssistant({
                         busy={Boolean(busy) || !online}
                         onNew={startNew}
                         conversationId={current.id}
+                        audience={audience}
+                        onEditProposal={editProposal}
+                        attachments={current.messages.flatMap((item) => item.attachments ?? [])}
                         retry={() => {
                           if (selectedId)
                             void request({
                               conversationId: selectedId,
                               id: message.id,
                               content: message.content,
+                              ...(message.attachments?.length
+                                ? {
+                                    attachmentIds: message.attachments.map((file) => file.id),
+                                    attachments: message.attachments,
+                                  }
+                                : {}),
                             })
                         }}
                       />
@@ -638,7 +737,11 @@ export function OverviewAssistant({
                     <div className="flex flex-col gap-3 py-5">
                       <h3 className="font-display text-h2">{t('overviewChat.welcome')}</h3>
                       <p className="max-w-120 text-small text-muted-foreground">
-                        {t('overviewChat.welcomeHint')}
+                        {t(
+                          audience === 'member'
+                            ? 'homeMember.assistantHint'
+                            : 'overviewChat.welcomeHint',
+                        )}
                       </p>
                       {output ? <p className="text-small">{output.headline}</p> : null}
                     </div>
@@ -652,7 +755,7 @@ export function OverviewAssistant({
                         className="size-4 motion-safe:animate-spin"
                         aria-hidden="true"
                       />
-                      {t('overviewChat.thinking')}
+                      {t(audience === 'member' ? 'homeMember.thinking' : 'overviewChat.thinking')}
                     </div>
                   ) : null}
                 </div>
@@ -679,7 +782,29 @@ export function OverviewAssistant({
               transition={reduced ? { duration: 0 } : tweenMicro}
               className="absolute inset-0 overflow-hidden px-3 lg:px-5"
             >
-              {output ? (
+              {audience === 'member' ? (
+                <div className="flex h-full min-h-0 flex-col justify-center gap-2">
+                  <p className="hidden text-small text-muted-foreground lg:block">
+                    {t('homeMember.assistantHint')}
+                  </p>
+                  <div className="flex gap-1.5 overflow-x-auto py-0.5 lg:flex-wrap lg:overflow-visible">
+                    {['priorities', 'projectUpdate', 'draftPage'].map((key) => (
+                      <button
+                        type="button"
+                        key={key}
+                        onClick={() => {
+                          setDraft(t(`homeMember.prompts.${key}`))
+                          onExpandedChange(true)
+                          composer.current?.focus({ preventScroll: true })
+                        }}
+                        className="min-h-8 shrink-0 rounded-full border border-primary/15 bg-primary/5 px-3 text-caption text-primary hover:bg-accent"
+                      >
+                        {t(`homeMember.starters.${key}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : output ? (
                 <div className="grid h-full min-h-0 content-start gap-1 lg:grid-cols-[1.1fr_1fr_1fr] lg:gap-5">
                   <div className="min-h-0 overflow-hidden">
                     <p className="line-clamp-2 text-small font-medium leading-snug lg:line-clamp-4 lg:leading-relaxed">
@@ -772,17 +897,19 @@ export function OverviewAssistant({
         data-testid="ai-composer"
         className="relative shrink-0 px-3 pb-3 pt-2 lg:px-5 lg:pb-4"
       >
-        {create.isError ||
-        retryAttempt ||
-        cancel.isError ||
-        briefingQuery.isError ||
-        refresh.isError ? (
+        <ChatFileQueue
+          files={files.files}
+          remove={files.remove}
+          retry={files.retry}
+          limitError={files.limitError}
+        />
+        {create.isError || retryAttempt || cancel.isError || briefingError ? (
           <div role="alert" className="mb-2 flex items-center gap-2 text-caption text-destructive">
             <span>
               {t(
                 create.isError
                   ? 'overviewChat.createFailed'
-                  : briefingQuery.isError || refresh.isError
+                  : briefingError
                     ? 'home.head.catchUp.failed'
                     : 'overviewChat.requestFailed',
               )}
@@ -795,15 +922,42 @@ export function OverviewAssistant({
           </div>
         ) : null}
         <div className="flex items-end gap-2 rounded-lg border border-primary/20 bg-background p-1.5 transition-colors focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10">
+          <input
+            ref={fileInput}
+            type="file"
+            multiple
+            className="hidden"
+            aria-label={t('assistantActions.addFiles')}
+            onChange={(event) => {
+              const selected = Array.from(event.currentTarget.files ?? [])
+              event.currentTarget.value = ''
+              if (selected.length) {
+                onExpandedChange(true)
+                void files.add(selected)
+              }
+            }}
+          />
+          <IconButton
+            aria-label={t('assistantActions.addFiles')}
+            tooltip={t('assistantActions.addFiles')}
+            disabled={!online || create.isPending || files.uploading || files.files.length >= 10}
+            onClick={() => fileInput.current?.click()}
+          >
+            <Paperclip className="size-4" />
+          </IconButton>
           <Textarea
             ref={composer}
-            aria-label={t('overviewChat.input')}
+            aria-label={t(
+              audience === 'member' ? 'homeMember.assistantInput' : 'overviewChat.input',
+            )}
             placeholder={t(
               !desktop
                 ? 'overviewChat.placeholderShort'
                 : selectedId
                   ? 'overviewChat.followUp'
-                  : 'overviewChat.placeholder',
+                  : audience === 'member'
+                    ? 'homeMember.assistantPlaceholder'
+                    : 'overviewChat.placeholder',
             )}
             value={draft}
             onFocus={() => {
@@ -811,11 +965,10 @@ export function OverviewAssistant({
             }}
             maxLength={AI_CHAT_MESSAGE_MAX}
             rows={1}
+            wrap={!expanded && !desktop ? 'off' : 'soft'}
             disabled={create.isPending}
             onChange={(event) => {
               setDraft(event.target.value)
-              event.target.style.height = 'auto'
-              event.target.style.height = `${Math.min(event.target.scrollHeight, 96)}px`
             }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -823,7 +976,10 @@ export function OverviewAssistant({
                 event.currentTarget.form?.requestSubmit()
               }
             }}
-            className="min-h-10 max-h-24 resize-none border-0 bg-transparent py-2.5 text-small shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            className={cn(
+              'min-h-10 max-h-24 resize-none border-0 bg-transparent py-2.5 text-small shadow-none focus-visible:ring-0 focus-visible:ring-offset-0',
+              !expanded && !desktop ? 'overflow-hidden whitespace-nowrap' : 'overflow-y-auto',
+            )}
           />
           {pending && selectedId ? (
             <IconButton
@@ -840,7 +996,7 @@ export function OverviewAssistant({
               type="submit"
               aria-label={t('overviewChat.send')}
               tooltip={t('overviewChat.send')}
-              disabled={!draft.trim() || Boolean(busy) || !online}
+              disabled={!draft.trim() || Boolean(busy) || !online || files.blocked}
             >
               <ArrowUp className="size-4" />
             </IconButton>

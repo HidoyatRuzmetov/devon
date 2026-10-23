@@ -17,7 +17,7 @@ import {
   cn,
   toast,
 } from '@devon/ui'
-import { useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { useAiFeatureEnabled, useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { TranslatePreview } from '../ai/components/previews.js'
 import { TranslateTargetPicker, defaultTranslateTarget } from '../ai/components/translate-target.js'
@@ -54,6 +54,7 @@ function NoteCard({
   const locale = useLocale()
   const patchNote = usePatchNoteMutation()
   const translate = useRunAiFeatureMutation('translate')
+  const translateEnabled = useAiFeatureEnabled('translate')
   const [title, setTitle] = React.useState(note.title)
   const [text, setText] = React.useState(note.body.text)
   const titleDraft = React.useRef(note.title)
@@ -140,7 +141,7 @@ function NoteCard({
   }
 
   function runTranslate() {
-    if (!text.trim()) return
+    if (!text.trim() || !translateEnabled) return
     setTranslateAi({ status: 'pending' })
     translate.mutate(
       {
@@ -228,23 +229,27 @@ function NoteCard({
         className="min-h-24 w-full resize-y rounded-sm border border-transparent bg-transparent px-1 py-1 text-body text-foreground placeholder:text-muted-foreground focus-visible:border-border focus-visible:outline-none"
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-          <TranslateTargetPicker
-            id={`note-translate-target-${note.id}`}
-            value={targetLocale}
-            onChange={setTargetLocale}
-            disabled={translateAi?.status === 'pending'}
-          />
-          <SparkleButton
-            aria-label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
-            label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
-            size="sm"
-            loading={translateAi?.status === 'pending'}
-            disabled={!text.trim()}
-            onClick={runTranslate}
-            className="h-auto min-h-9 max-w-full whitespace-normal py-2 [&>span]:whitespace-normal [&>span]:text-left"
-          />
-        </div>
+        {translateEnabled ? (
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+            <TranslateTargetPicker
+              id={`note-translate-target-${note.id}`}
+              value={targetLocale}
+              onChange={setTargetLocale}
+              disabled={translateAi?.status === 'pending'}
+            />
+            <SparkleButton
+              aria-label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
+              label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
+              size="sm"
+              loading={translateAi?.status === 'pending'}
+              disabled={!text.trim()}
+              onClick={runTranslate}
+              className="h-auto min-h-9 max-w-full whitespace-normal py-2 [&>span]:whitespace-normal [&>span]:text-left"
+            />
+          </div>
+        ) : (
+          <span />
+        )}
         <span
           aria-live="polite"
           className="flex items-center gap-1 text-caption text-muted-foreground transition-opacity duration-(--dur-standard)"

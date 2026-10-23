@@ -7,8 +7,6 @@ import type { FeatureManifest } from '../types.js'
 import { prefetchNotifications, useNotificationsQuery } from './hooks.js'
 
 const InboxScreen = React.lazy(() => import('./inbox-screen.js'))
-const PreferencesScreen = React.lazy(() => import('./preferences-screen.js'))
-const TelegramScreen = React.lazy(() => import('./telegram-screen.js'))
 const LegacySettingsScreen = React.lazy(() => import('./legacy-settings-screen.js'))
 
 const manifest: FeatureManifest = {
@@ -21,12 +19,6 @@ const manifest: FeatureManifest = {
       titleKey: 'inbox.preferences.title',
     },
     { path: '/inbox/telegram', component: LegacySettingsScreen, titleKey: 'telegram.title' },
-    {
-      path: '/account/notifications',
-      component: PreferencesScreen,
-      titleKey: 'inbox.preferences.title',
-    },
-    { path: '/account/telegram', component: TelegramScreen, titleKey: 'telegram.title' },
   ],
   // H5.2 "prefetch on hover/focus": warms the inbox tab's default query before the click.
   sidebar: [

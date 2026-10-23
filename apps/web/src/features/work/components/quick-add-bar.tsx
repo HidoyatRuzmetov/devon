@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
   IconButton,
   Input,
+  Textarea,
   SparkleButton,
   toast,
 } from '@devon/ui'
@@ -89,6 +90,9 @@ export function QuickAddBar({
   const t = useT()
   const locale = useLocale()
   const [value, setValue] = React.useState(initialValue)
+  const composerRef = React.useRef<HTMLTextAreaElement>(null)
+  const requestGeneration = React.useRef(0)
+  const composerHintId = React.useId()
   const [aiOpen, setAiOpen] = React.useState(false)
   const aiTriggerRef = React.useRef<HTMLButtonElement>(null)
   const aiDescriptionId = React.useId()
@@ -161,6 +165,7 @@ export function QuickAddBar({
     if (!value.trim() || !aiEnabled || parseAi.isPending) return
     setAiResult(null)
     setDuplicates(null)
+    const generation = ++requestGeneration.current
     parseAi.mutate(
       {
         locale,
@@ -181,22 +186,24 @@ export function QuickAddBar({
       },
       {
         onSuccess: (res) => {
+          if (requestGeneration.current !== generation) return
           const output = parseFeatureOutput<QuickAddOutput>('quick_add_parse', res.data)
           if (!output) return
-          setAiResult(output)
+          setAiResult({ ...output, assigneeUserId: output.assigneeUserId ?? defaultAssigneeUserId })
           setAiMeta(res.meta)
-          if (duplicateEnabled) runDuplicateCheck(output.title)
+          if (duplicateEnabled) runDuplicateCheck(output.title, generation)
         },
       },
     )
   }
 
-  function runDuplicateCheck(title: string) {
+  function runDuplicateCheck(title: string, generation: number) {
     // The server retrieves a fresh shortlist of independent tasks; loaded board pages are not a cache to maintain.
     duplicateAi.mutate(
       { locale, candidateTitle: title, candidateDescription: null },
       {
         onSuccess: (res) => {
+          if (requestGeneration.current !== generation) return
           const output = parseFeatureOutput<DuplicateCheckOutput>('duplicate_check', res.data)
           setDuplicates(output)
         },
@@ -205,7 +212,7 @@ export function QuickAddBar({
   }
 
   async function acceptAi() {
-    if (!aiResult) return
+    if (!aiResult || createCard.isPending) return
     if (aiResult.title.length > WORK_TITLE_MAX) {
       toast(t('portal.cards.titleLimit', { count: WORK_TITLE_MAX }))
       return
@@ -236,30 +243,72 @@ export function QuickAddBar({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
+      <div className={aiComposer ? 'flex flex-col gap-2' : 'flex items-center gap-2'}>
         {compact || aiComposer ? null : (
           <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         )}
-        <Input
-          value={value}
-          maxLength={512}
-          title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
-          onChange={(e) => {
-            setValue(e.target.value)
-            setAiResult(null)
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-              e.preventDefault()
-              if (aiComposer) runAiParse()
-              else void submit()
-            }
-          }}
-          placeholder={compact ? t('work.board.addCard') : t('work.quickAdd.placeholder')}
-          aria-label={compact ? t('work.board.addCard') : t('work.quickAdd.placeholder')}
-          disabled={createCard.isPending}
-          className={compact ? 'h-11 min-w-0 text-small md:h-9' : undefined}
-        />
+        {aiComposer ? (
+          <>
+            <label className="text-small font-medium" htmlFor={composerHintId}>
+              {t('assistantQuickAdd.label')}
+            </label>
+            <Textarea
+              ref={composerRef}
+              id={composerHintId}
+              rows={3}
+              value={value}
+              maxLength={500}
+              aria-describedby={`${composerHintId}-hint`}
+              placeholder={t('assistantQuickAdd.placeholder')}
+              className="min-h-28 resize-y text-body"
+              disabled={createCard.isPending}
+              onChange={(event) => {
+                ++requestGeneration.current
+                setValue(event.target.value)
+                setAiResult(null)
+                setDuplicates(null)
+                parseAi.reset()
+              }}
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' &&
+                  (event.ctrlKey || event.metaKey) &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault()
+                  runAiParse()
+                }
+              }}
+            />
+            <p id={`${composerHintId}-hint`} className="text-caption text-muted-foreground">
+              {t('assistantQuickAdd.hint')}
+            </p>
+          </>
+        ) : (
+          <Input
+            value={value}
+            maxLength={500}
+            title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
+            onChange={(e) => {
+              ++requestGeneration.current
+              setValue(e.target.value)
+              setAiResult(null)
+              setDuplicates(null)
+              parseAi.reset()
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                e.preventDefault()
+                if (aiComposer) runAiParse()
+                else void submit()
+              }
+            }}
+            placeholder={compact ? t('work.board.addCard') : t('work.quickAdd.placeholder')}
+            aria-label={compact ? t('work.board.addCard') : t('work.quickAdd.placeholder')}
+            disabled={createCard.isPending}
+            className={compact ? 'h-11 min-w-0 text-small md:h-9' : undefined}
+          />
+        )}
         {!compact && !aiComposer ? (
           <Button
             size="sm"
@@ -316,13 +365,19 @@ export function QuickAddBar({
         ) : null}
         {aiEnabled || compact || aiComposer ? (
           <span
-            className="shrink-0"
+            className={aiComposer ? 'self-end' : 'shrink-0'}
             title={t(aiEnabled ? 'boardRefinement.ai.add' : 'boardRefinement.ai.unavailable')}
           >
             <SparkleButton
               ref={aiTriggerRef}
-              aria-label={t(compact ? 'boardRefinement.ai.add' : 'work.quickAdd.aiParse')}
-              {...(aiComposer ? { label: t('work.quickAdd.aiParse') } : {})}
+              aria-label={t(
+                aiComposer
+                  ? 'assistantQuickAdd.preview'
+                  : compact
+                    ? 'boardRefinement.ai.add'
+                    : 'work.quickAdd.aiParse',
+              )}
+              {...(aiComposer ? { label: t('assistantQuickAdd.preview') } : {})}
               className={compact ? 'size-11 md:size-9' : undefined}
               size={compact ? 'sm' : 'md'}
               loading={parseAi.isPending}
@@ -333,12 +388,16 @@ export function QuickAddBar({
         ) : null}
       </div>
 
-      {(parsed?.title.length ?? 0) > WORK_TITLE_MAX ? (
+      {!aiComposer && (parsed?.title.length ?? 0) > WORK_TITLE_MAX ? (
         <p role="alert" className="text-caption text-destructive">
           {t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
         </p>
       ) : null}
-      {!aiResult && !parseAi.isPending && parsed && (parsed.assigneeToken || parsed.dueAt) ? (
+      {!aiComposer &&
+      !aiResult &&
+      !parseAi.isPending &&
+      parsed &&
+      (parsed.assigneeToken || parsed.dueAt) ? (
         <div className="flex flex-wrap items-center gap-3 pl-6 text-caption text-muted-foreground">
           {parsed.assigneeToken ? (
             <span className="flex items-center gap-1">
@@ -363,19 +422,19 @@ export function QuickAddBar({
           status={parseAi.isPending ? 'pending' : parseAi.isError ? 'error' : 'ready'}
           meta={aiMeta ?? undefined}
           errorMessage={t('work.quickAdd.aiError')}
-          acceptLabel={t('work.ai.accept')}
+          acceptLabel={t('assistantQuickAdd.create')}
           editLabel={t('work.ai.edit')}
           onAccept={() => void acceptAi()}
-          // Edit puts the person back in the input with the model's title, which is the thing they
-          // most often want to adjust before creating. v1.0's Edit simply discarded the answer,
-          // making it indistinguishable from Discard (AI-AUDIT §5 fix 11, the same defect).
+          // Retain the full original request so editing cannot silently drop a date or assignee.
           onEdit={() => {
-            if (aiResult) setValue(aiResult.title)
+            ++requestGeneration.current
             setAiResult(null)
             setDuplicates(null)
             parseAi.reset()
+            composerRef.current?.focus()
           }}
           onDiscard={() => {
+            ++requestGeneration.current
             setAiResult(null)
             setDuplicates(null)
             parseAi.reset()
@@ -434,7 +493,7 @@ export function QuickAddBar({
                   : t('work.board.unassigned')}
               </p>
               <p id={aiDescriptionId} className="mb-3 text-small text-muted-foreground">
-                {t('work.quickAdd.dialogHint')}
+                {t('assistantQuickAdd.description')}
               </p>
               <QuickAddBar
                 members={members}

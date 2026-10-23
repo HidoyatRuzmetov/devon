@@ -87,12 +87,7 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   // managerial as asking for a new one, so both ends carry the same gate.
   'GET /api/v1/ai/briefing',
   'POST /api/v1/ai/briefing/refresh',
-  // Saved AI history is additionally scoped to its owner; head permissions never share chats.
-  'GET /api/v1/ai/conversations',
-  'POST /api/v1/ai/conversations',
-  'GET /api/v1/ai/conversations/:id',
-  'POST /api/v1/ai/conversations/:id/messages',
-  'POST /api/v1/ai/conversations/:id/cancel',
+  // Members and heads each have private chats; owner isolation is exercised in ai-conversations.
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud

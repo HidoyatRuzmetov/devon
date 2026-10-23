@@ -84,6 +84,10 @@ export type PollTurnout = z.infer<typeof pollTurnoutSchema>
 
 export const personalOverviewSchema = z.object({
   openCount: z.number(),
+  toDoCount: z.number().int().optional(),
+  inProgressCount: z.number().int().optional(),
+  doneCount: z.number().int().optional(),
+  archivedCount: z.number().int().optional(),
   overdueCount: z.number(),
   doneThisWeek: z.number(),
   onTimeRate: z.number().nullable(),

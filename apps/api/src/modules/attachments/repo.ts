@@ -1,7 +1,14 @@
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
 
-export type Attachment = { id: string; name: string; mime: string; size: number; createdAt: string }
+export type Attachment = {
+  id: string
+  name: string
+  mime: string
+  size: number
+  createdAt: string
+}
+export type AttachmentSubject = 'card' | 'page' | 'ai_conversation'
 type Row = {
   id: string
   name: string
@@ -24,7 +31,7 @@ export async function createPending(
   ctx: RequestContext,
   cardId: string,
   input: { id: string; name: string; mime: string; size: number; key: string },
-  subjectType: 'card' | 'page' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
 ) {
   return withContext(ctx, async (tx) => {
     await tx.raw(sql`insert into app.attachments (id, department_id, subject_type, subject_id, key, name, mime, size, uploaded_by_user_id)
@@ -42,7 +49,7 @@ export async function createPending(
 export async function list(
   ctx: RequestContext,
   cardId: string,
-  subjectType: 'card' | 'page' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
 ) {
   return withContext(ctx, async (tx) =>
     (
@@ -57,7 +64,7 @@ export async function get(
   ctx: RequestContext,
   cardId: string,
   id: string,
-  subjectType: 'card' | 'page' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
 ) {
   return withContext(
     ctx,
@@ -74,17 +81,24 @@ export async function finalize(
   cardId: string,
   id: string,
   key: string,
-  subjectType: 'card' | 'page' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
 ): Promise<Attachment | null> {
   return withContext(ctx, async (tx) => {
     // Lock the upload as well as the card: expiry sweep and concurrent finalisations cannot race.
-    const uploads = await tx.raw<{ id: string }>(sql`select id from app.uploads where id = ${id}
+    const uploads = await tx.raw<{
+      id: string
+    }>(sql`select id from app.uploads where id = ${id}
       and user_id = ${ctx.userId} and purpose = 'card_attachment' and status = 'pending' and expires_at > now() for update`)
     if (!uploads[0]) return null
     const cards = await tx.raw<{
       id: string
-    }>(sql`select id from ${subjectType === 'card' ? sql`app.cards` : sql`app.pages`} where id = ${cardId}
-      and department_id = ${ctx.departmentId} and deleted_at is null for update`)
+    }>(
+      subjectType === 'ai_conversation'
+        ? sql`select id from app.ai_conversations where id=${cardId}
+      and department_id=${ctx.departmentId} and owner_user_id=${ctx.userId} for update`
+        : sql`select id from ${subjectType === 'card' ? sql`app.cards` : sql`app.pages`} where id = ${cardId}
+      and department_id = ${ctx.departmentId} and deleted_at is null for update`,
+    )
     if (!cards[0]) return null
     const rows =
       await tx.raw<Row>(sql`update app.attachments set key = ${key}, scan_status = 'clean'
@@ -111,7 +125,11 @@ export async function finalize(
       tx.emit({
         type: 'pages.page.updated',
         departmentId: ctx.departmentId,
-        payload: { pageId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+        payload: {
+          pageId: cardId,
+          actorUserId: ctx.userId,
+          changes: ['attachments'],
+        },
       })
     return dto(rows[0])
   })
@@ -121,7 +139,7 @@ export async function remove(
   ctx: RequestContext,
   cardId: string,
   id: string,
-  subjectType: 'card' | 'page' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
@@ -147,7 +165,11 @@ export async function remove(
       tx.emit({
         type: 'pages.page.updated',
         departmentId: ctx.departmentId,
-        payload: { pageId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+        payload: {
+          pageId: cardId,
+          actorUserId: ctx.userId,
+          changes: ['attachments'],
+        },
       })
     return true
   })
@@ -157,7 +179,7 @@ export async function undoRemove(
   ctx: RequestContext,
   cardId: string,
   id: string,
-  subjectType: 'card' | 'page' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
@@ -184,7 +206,11 @@ export async function undoRemove(
       tx.emit({
         type: 'pages.page.updated',
         departmentId: ctx.departmentId,
-        payload: { pageId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+        payload: {
+          pageId: cardId,
+          actorUserId: ctx.userId,
+          changes: ['attachments'],
+        },
       })
     return true
   })

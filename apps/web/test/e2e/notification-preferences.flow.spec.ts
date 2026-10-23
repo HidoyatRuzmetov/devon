@@ -40,7 +40,11 @@ test('@flow notification preferences expose working channels and save consistent
     await expect(
       page.getByRole('heading', { name: 'Profil sozlamalari', exact: true }),
     ).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Telegram', exact: true })).toBeVisible()
+    const desktopSettings = page.getByRole('navigation', {
+      name: 'Sozlamalar boʻlimlari',
+      exact: true,
+    })
+    await expect(desktopSettings.getByRole('link', { name: 'Telegram', exact: true })).toBeVisible()
     const theme = page.getByRole('combobox', { name: 'Koʻrinish', exact: true })
     await theme.selectOption('dark')
     await page.reload()
@@ -58,12 +62,19 @@ test('@flow notification preferences expose working channels and save consistent
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     ).toBe(true)
     await page.screenshot({ path: info.outputPath(`${role}-profile-settings.png`), fullPage: true })
-    await page.getByRole('link', { name: 'Telegram', exact: true }).click()
+    // The focused settings pane uses a native picker on phones and links on desktop.
+    // Keep this as real navigation rather than jumping straight to the final URL.
+    const settingsPane = page.getByRole('combobox', { name: 'Sozlamalar boʻlimlari', exact: true })
+    await settingsPane.selectOption('/account/telegram')
     await expect(page).toHaveURL(/\/account\/telegram$/)
     await expect(page.getByRole('heading', { name: 'Telegram', exact: true })).toBeVisible()
-    await page.getByRole('link', { name: 'Bildirishnoma sozlamalari', exact: true }).click()
+    await page.getByRole('button', { name: 'Bildirishnoma sozlamalari', exact: true }).click()
     await expect(page).toHaveURL(/\/account\/notifications$/)
-    await expect(page.getByRole('link', { name: 'Profil sozlamalari', exact: true })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Profil sozlamalari', exact: true }),
+    ).toBeVisible()
+    await expect(settingsPane).toHaveValue('/account/notifications')
+    await expect(page.getByRole('heading', { name: 'Telegram', exact: true })).toHaveCount(0)
     // Old inbox bookmarks stay usable and resolve to the same settings surface.
     await page.goto('/inbox/telegram')
     await expect(page).toHaveURL(/\/account\/telegram$/)
@@ -77,6 +88,14 @@ test('@flow notification preferences expose working channels and save consistent
         .getByRole('region', { name: 'Turi va kanali boʻyicha', exact: true })
         .getByRole('switch'),
     ).toHaveCount(10)
+    async function telegramPreference(reason: string) {
+      const response = await context.request.get('/api/v1/notifications/prefs')
+      expect(response.status()).toBe(200)
+      const payload = (await response.json()) as {
+        items: { reason: string; channel: string; enabled: boolean; digestMode: string }[]
+      }
+      return payload.items.find((item) => item.reason === reason && item.channel === 'telegram')
+    }
     const currentPreferences = await context.request.get('/api/v1/notifications/prefs')
     expect(currentPreferences.status()).toBe(200)
     const inApp = (await currentPreferences.json()).items.filter(
@@ -94,20 +113,32 @@ test('@flow notification preferences expose working channels and save consistent
     await expect(assigned).not.toBeChecked()
     await assigned.click()
     await expect(assigned).toBeChecked()
+    await expect
+      .poll(() => telegramPreference('assigned'))
+      .toMatchObject({ enabled: true, digestMode: 'instant' })
     await page.reload()
     await expect(assigned).toBeChecked()
     const digest = page.getByRole('combobox', { name: 'Telegram', exact: true })
     await digest.selectOption('weekly')
     await expect(digest).toHaveValue('weekly')
+    await expect
+      .poll(() => telegramPreference('digest'))
+      .toMatchObject({ enabled: true, digestMode: 'weekly' })
     await page.reload()
     await expect(digest).toHaveValue('weekly')
     await digest.selectOption('off')
     await expect(digest).toHaveValue('off')
+    await expect
+      .poll(() => telegramPreference('digest'))
+      .toMatchObject({ enabled: false, digestMode: 'off' })
     const summarySwitch = page.getByRole('switch', { name: /Xulosa.*Telegram/ })
     await expect(summarySwitch).not.toBeChecked()
     await summarySwitch.click()
     await expect(summarySwitch).toBeChecked()
     await expect(digest).toHaveValue('daily')
+    await expect
+      .poll(() => telegramPreference('digest'))
+      .toMatchObject({ enabled: true, digestMode: 'daily' })
     const result = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()

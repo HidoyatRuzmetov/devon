@@ -16,6 +16,10 @@
 **/coverage
 **/playwright-report
 **/test-results
+**/test
+**/tests
+**/*.test.*
+**/*.spec.*
 **/.data
 **/.tmp
 **/.scratch

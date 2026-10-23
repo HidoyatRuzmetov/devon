@@ -3,7 +3,10 @@
 // this module adds (registered in `plugins/authorize.ts`'s `PUBLIC_ROUTES`, MODULE-GUIDE.md's one
 // sanctioned public-route edit); everything else is `own_account` (or, for the admin reset,
 // `instance`).
-import { professionalProfileRecordSchema } from '@devon/contracts'
+import {
+  professionalProfileRecordSchema,
+  professionalProfileWriteRecordSchema,
+} from '@devon/contracts'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { sendProblem } from '../../lib/problem-reply.js'
@@ -519,7 +522,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
       },
       schema: {
-        body: professionalProfileRecordSchema,
+        body: professionalProfileWriteRecordSchema,
         response: { 200: professionalProfileRecordSchema },
       },
     },

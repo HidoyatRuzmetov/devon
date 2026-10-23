@@ -5,6 +5,7 @@ export function chatFailure(code: string | null) {
     feature_disabled: 'overviewChat.errors.disabled',
     provider_unavailable: 'overviewChat.errors.unavailable',
     provider_failed: 'overviewChat.errors.unavailable',
+    empty_response: 'assistantActions.emptyResponse',
     timeout: 'overviewChat.errors.timeout',
     interrupted: 'overviewChat.errors.interrupted',
   }

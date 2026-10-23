@@ -30,7 +30,7 @@ export class AiRunFailedError extends Error {
      * declares (`@devon/ai`'s `DEFAULT_FEATURE_TIMEOUT_MS`), which the client turns into "it took
      * too long, try again" plus a retry button -- a different sentence, and a different remedy, from
      * a provider that refused. */
-    public readonly kind: 'failed' | 'timeout' = 'failed',
+    public readonly kind: 'failed' | 'timeout' | 'empty' = 'failed',
   ) {
     super(message)
     this.name = 'AiRunFailedError'

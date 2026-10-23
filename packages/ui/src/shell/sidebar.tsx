@@ -124,12 +124,18 @@ export function Sidebar({
           collapsed ? 'justify-center px-2' : 'px-4',
         )}
       >
-        <span
-          data-shell-label
-          className={cn('min-w-0 font-display text-h3', collapsed && 'sr-only')}
-        >
-          {wordmark}
-        </span>
+        <div className={cn('flex min-w-0 flex-col py-3', collapsed && 'sr-only')}>
+          <span data-shell-label className="font-display text-h3">
+            {wordmark}
+          </span>
+          <span
+            data-shell-label
+            className="whitespace-nowrap text-small text-sidebar-muted"
+            title={creditText}
+          >
+            {creditText}
+          </span>
+        </div>
       </div>
 
       {header ? <div className={cn(collapsed ? 'px-2' : 'px-3', 'pb-2')}>{header}</div> : null}
@@ -211,12 +217,6 @@ export function Sidebar({
         )}
       >
         {footer}
-        <p
-          data-shell-label
-          className={cn('px-1 text-caption text-sidebar-muted', collapsed && 'sr-only')}
-        >
-          {creditText}
-        </p>
       </div>
     </nav>
   )

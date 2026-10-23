@@ -159,11 +159,7 @@ export {
   type DepartmentOption,
   type DepartmentSwitcherProps,
 } from './shell/department-switcher.js'
-export {
-  SidebarUserBlock,
-  type UserBlockAction,
-  type SidebarUserBlockProps,
-} from './shell/sidebar-user-block.js'
+export { SidebarUserBlock, type SidebarUserBlockProps } from './shell/sidebar-user-block.js'
 export { ThemeToggle, type ThemeToggleValue, type ThemeToggleProps } from './shell/theme-toggle.js'
 export { InboxBell, type InboxBellProps } from './shell/inbox-bell.js'
 export { QuickAdd, type QuickAddAction, type QuickAddProps } from './shell/quick-add.js'

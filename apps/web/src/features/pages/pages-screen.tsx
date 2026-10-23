@@ -2,7 +2,7 @@
 // (URL-as-state, MODULE-GUIDE.md's "no path params yet" tradeoff), one page's editor + version
 // history. `?tab=onboarding` switches the list view to the onboarding checklist template editor.
 import * as React from 'react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useT, formatDate, useLocale } from '@devon/i18n'
 import {
   AnimatedCheck,
@@ -35,6 +35,8 @@ import {
   MoreHorizontal,
   Notebook,
   Plus,
+  Pencil,
+  Check,
   StickyNote,
 } from 'lucide-react'
 import {
@@ -54,15 +56,6 @@ import type { Page, PageKind, PatchPageInput, TiptapNode } from './types.js'
 import type { MentionCandidate } from './mention-suggestion.js'
 
 const PAGE_KINDS: PageKind[] = ['how_we_work', 'brief', 'note', 'onboarding']
-
-/** Shared between a row in `PageList` and `PageDetail`'s own outer panel -- UI-OVERHAUL.md §3
- * "pages open with a shared-layout transition": the row's own box morphs into the detail panel
- * instead of the list simply being replaced by it. `PagesScreen` swaps one for the other in the
- * same commit (a `?page=` search-param change, not a route change), which is exactly the case
- * `layoutId` is for -- matched by id even though the two elements are otherwise unrelated. */
-function pageLayoutId(id: string): string {
-  return `page-panel-${id}`
-}
 
 const KIND_ICON: Record<PageKind, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   how_we_work: BookOpen,
@@ -212,7 +205,6 @@ function PageList({
   const t = useT()
   const pagesQuery = usePagesQuery()
   const locale = useLocale()
-  const reduced = useReducedMotion()
 
   if (pagesQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (pagesQuery.isError) {
@@ -267,7 +259,6 @@ function PageList({
                   <HoverLift>
                     <motion.button
                       type="button"
-                      {...(reduced ? {} : { layoutId: pageLayoutId(page.id) })}
                       onClick={() => onOpen(page.id)}
                       className="flex w-full items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left shadow-1 hover:bg-accent"
                     >
@@ -333,9 +324,17 @@ function DrawnCheck() {
   return <AnimatedCheck checked={checked} className="shrink-0 text-success" />
 }
 
-function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
+function PageDetail({
+  id,
+  onBack,
+  initiallyEditing = false,
+}: {
+  id: string
+  onBack: () => void
+  initiallyEditing?: boolean
+}) {
   const t = useT()
-  const reduced = useReducedMotion()
+  const [editing, setEditing] = React.useState(initiallyEditing)
   const pageQuery = usePageQuery(id)
   const patchPage = usePatchPageMutation(id)
   const deletePage = useDeletePageMutation()
@@ -381,6 +380,7 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
     timer.current = null
     if (!pageQuery.data) return Promise.resolve(false)
     const fields = { ...draft.current }
+    if (!Object.keys(fields).length && !queuedSave.isPending) return Promise.resolve(true)
     if (fields.title !== undefined) {
       if (!fields.title.trim()) {
         if (mounted.current) setTitleError(true)
@@ -429,7 +429,8 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
 
   return (
     <motion.div
-      {...(reduced ? {} : { layoutId: pageLayoutId(id) })}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={tweenPage}
       className="flex flex-col gap-6 rounded-md"
     >
@@ -442,7 +443,28 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
           ← {t('pages.backToList')}
         </button>
         <div className="flex flex-wrap items-center gap-2">
-          {!titleError && queuedSave.state !== 'error' && queuedSave.state !== 'conflict' ? (
+          {editing ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-busy={queuedSave.isPending}
+              onClick={async () => {
+                if (await flush()) setEditing(false)
+              }}
+            >
+              <Check className="mr-1.5 size-4" aria-hidden="true" />
+              {t('pages.view.done')}
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => setEditing(true)}>
+              <Pencil className="mr-1.5 size-4" aria-hidden="true" />
+              {t('pages.view.edit')}
+            </Button>
+          )}
+          {editing &&
+          !titleError &&
+          queuedSave.state !== 'error' &&
+          queuedSave.state !== 'conflict' ? (
             <AutosaveIndicator saving={queuedSave.isPending || hasDraft} />
           ) : null}
           {/* WALKTHROUGH-FINDINGS 6: "Sahifani oʻchirish" was the largest, reddest control on the
@@ -503,9 +525,9 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
       <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 rounded-md border border-border bg-card p-4 shadow-1 sm:p-6">
           <PageEditor
-            title={localTitle}
+            title={editing ? localTitle : page.title}
             content={localBlocks ?? page.blocks}
-            editable
+            editable={editing}
             titleErrorId={titleError ? `page-title-error-${id}` : undefined}
             onBlur={() => void flush()}
             mentionCandidates={mentionCandidates}
@@ -521,14 +543,24 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
           />
         </div>
         <div className="flex flex-col gap-5">
-          <CardAttachments cardId={page.id} canEdit subjectType="page" />
-          <VersionHistory
-            page={page}
-            canRestore={canRestoreVersion}
-            restoreDisabled={hasDraft || queuedSave.isPending}
-            onRestored={() => pageQuery.refetch()}
-            authorName={(userId) => mentionCandidates.find((c) => c.id === userId)?.label}
-          />
+          <div className="rounded-md border border-border bg-card p-4 shadow-1">
+            <CardAttachments cardId={page.id} canEdit={editing} subjectType="page" />
+          </div>
+          <details
+            className="rounded-md border border-border bg-card p-4"
+            open={editing || undefined}
+          >
+            <summary className="cursor-pointer text-small font-medium">
+              {t('pages.view.history')}
+            </summary>
+            <VersionHistory
+              page={page}
+              canRestore={canRestoreVersion}
+              restoreDisabled={hasDraft || queuedSave.isPending}
+              onRestored={() => pageQuery.refetch()}
+              authorName={(userId) => mentionCandidates.find((c) => c.id === userId)?.label}
+            />
+          </details>
         </div>
       </div>
     </motion.div>
@@ -543,11 +575,14 @@ export default function PagesScreen() {
   const pageId = search.get('page')
   const tab = search.get('tab')
   const createPage = useCreatePageMutation()
+  const reduced = useReducedMotion()
   const canManageOnboarding = useCan('pages.onboarding.template.manage').allowed
 
-  function openPage(id: string) {
+  function openPage(id: string, editing = false) {
     const url = new URL(window.location.href)
     url.searchParams.set('page', id)
+    if (editing) url.searchParams.set('edit', 'true')
+    else url.searchParams.delete('edit')
     navigate(`${url.pathname}${url.search}`)
   }
 
@@ -556,7 +591,10 @@ export default function PagesScreen() {
   function createBlankPage() {
     createPage.mutate(
       { kind: 'note', title: t('pages.untitled') },
-      { onSuccess: (page) => openPage(page.id), onError: () => toast.error(t('toast.saveError')) },
+      {
+        onSuccess: (page) => openPage(page.id, true),
+        onError: () => toast.error(t('toast.saveError')),
+      },
     )
   }
 
@@ -578,62 +616,81 @@ export default function PagesScreen() {
     )
   }
 
-  if (pageId) {
-    return (
-      <PageDetail
-        key={pageId}
-        id={pageId}
-        onBack={() => {
-          const url = new URL(window.location.href)
-          url.searchParams.delete('page')
-          navigate(`${url.pathname}${url.search}`)
-        }}
-      />
-    )
-  }
-
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        eyebrow={t('pages.eyebrow')}
-        title={t('pages.title')}
-        actions={
-          <>
-            {/* v1.1 SPEC §2.2 (D4c): the onboarding checklist is how the head introduces a
+    <AnimatePresence mode="wait" initial={false}>
+      {pageId ? (
+        <motion.div
+          key={pageId}
+          initial={{ opacity: 0, y: reduced ? 0 : 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={reduced ? { duration: 0.12 } : tweenPage}
+        >
+          <PageDetail
+            key={pageId}
+            id={pageId}
+            initiallyEditing={search.get('edit') === 'true'}
+            onBack={() => {
+              const url = new URL(window.location.href)
+              url.searchParams.delete('page')
+              url.searchParams.delete('edit')
+              navigate(`${url.pathname}${url.search}`)
+            }}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="pages-list"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={reduced ? { duration: 0.12 } : tweenPage}
+          className="flex flex-col gap-6"
+        >
+          <PageHeader
+            eyebrow={t('pages.eyebrow')}
+            title={t('pages.title')}
+            actions={
+              <>
+                {/* v1.1 SPEC §2.2 (D4c): the onboarding checklist is how the head introduces a
                 newcomer to the department, not a shared wiki page -- every member could create, edit
                 and delete the templates, and this button offered it to them. The four routes behind
                 it are `{kind:'department_managed'}` now. */}
-            <Can action="pages.onboarding.template.manage">
-              <Button
-                variant={tab === 'onboarding' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => {
-                  const url = new URL(window.location.href)
-                  if (tab === 'onboarding') url.searchParams.delete('tab')
-                  else url.searchParams.set('tab', 'onboarding')
-                  navigate(`${url.pathname}${url.search}`)
-                }}
-              >
-                {t('pages.onboarding.title')}
-              </Button>
-            </Can>
-            {tab !== 'onboarding' ? <CreatePageForm onCreated={openPage} /> : null}
-          </>
-        }
-      />
+                <Can action="pages.onboarding.template.manage">
+                  <Button
+                    variant={tab === 'onboarding' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => {
+                      const url = new URL(window.location.href)
+                      if (tab === 'onboarding') url.searchParams.delete('tab')
+                      else url.searchParams.set('tab', 'onboarding')
+                      navigate(`${url.pathname}${url.search}`)
+                    }}
+                  >
+                    {t('pages.onboarding.title')}
+                  </Button>
+                </Can>
+                {tab !== 'onboarding' ? (
+                  <CreatePageForm onCreated={(id) => openPage(id, true)} />
+                ) : null}
+              </>
+            }
+          />
 
-      <RouterLink
-        href="/help"
-        className="flex flex-col gap-1 rounded-md border border-primary/20 bg-primary/5 p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        <span className="font-medium text-primary">{t('help.title')}</span>
-        <span className="text-small text-muted-foreground">{t('help.description')}</span>
-      </RouterLink>
-      {tab === 'onboarding' && canManageOnboarding ? (
-        <OnboardingTemplatesPanel />
-      ) : (
-        <PageList onOpen={openPage} onCreateEmpty={createBlankPage} />
+          <RouterLink
+            href="/help"
+            className="flex flex-col gap-1 rounded-md border border-primary/20 bg-primary/5 p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            <span className="font-medium text-primary">{t('help.title')}</span>
+            <span className="text-small text-muted-foreground">{t('help.description')}</span>
+          </RouterLink>
+          {tab === 'onboarding' && canManageOnboarding ? (
+            <OnboardingTemplatesPanel />
+          ) : (
+            <PageList onOpen={openPage} onCreateEmpty={createBlankPage} />
+          )}
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   )
 }

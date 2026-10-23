@@ -150,16 +150,20 @@ async function loadCard(
   const changes = pickStringArray(payload, 'changes')
   if (changes.length > 0) extra['changes'] = changes.join(',')
 
+  let mentions = pickStringArray(payload, 'mentions')
   if (commentToo) {
     const commentId = pickString(payload, 'commentId')
-    if (commentId) {
-      const c = await tx.raw<{ body: unknown }>(
-        sql`select body from app.card_comments where id = ${commentId} and deleted_at is null`,
-      )
-      const excerpt = commentExcerpt(c[0]?.body)
-      if (excerpt) extra['excerpt'] = excerpt
-    }
+    if (!commentId) return null
+    const c = await tx.raw<{ body: unknown; mentions: string[] }>(
+      sql`select body,mentions from app.card_comments where id = ${commentId} and card_id=${cardId} and deleted_at is null`,
+    )
+    if (!c[0]) return null // A queued notification must never revive a deleted comment.
+    extra['commentId'] = commentId
+    const excerpt = commentExcerpt(c[0].body)
+    if (excerpt) extra['excerpt'] = excerpt
+    mentions = mentions.filter((id) => c[0]!.mentions.includes(id))
   }
+  const revisionOnly = payload['revisionOnly'] === true
 
   return {
     subjectId: card.id,
@@ -167,11 +171,11 @@ async function loadCard(
     at: toDate(card.due_at),
     extra,
     byRule: {
-      assignee: card.assignee_user_id ? [card.assignee_user_id] : [],
-      giver: card.giver_user_id ? [card.giver_user_id] : [],
+      assignee: !revisionOnly && card.assignee_user_id ? [card.assignee_user_id] : [],
+      giver: !revisionOnly && card.giver_user_id ? [card.giver_user_id] : [],
       creator: [card.created_by_user_id],
-      watchers: Array.isArray(card.watchers) ? card.watchers : [],
-      mentioned: pickStringArray(payload, 'mentions'),
+      watchers: !revisionOnly && Array.isArray(card.watchers) ? card.watchers : [],
+      mentioned: mentions,
     },
   }
 }

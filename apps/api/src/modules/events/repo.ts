@@ -404,11 +404,12 @@ export type CommentRow = {
   avatar_key?: string | null
   body: string
   created_at: Date
+  edited_at: Date | null
 }
 
 export async function listComments(tx: Tx, eventId: string): Promise<CommentRow[]> {
   return tx.raw<CommentRow>(sql`
-    select c.id, c.author_user_id, u.given_name, u.family_name, u.avatar_key, c.body, c.created_at
+    select c.id, c.author_user_id, u.given_name, u.family_name, u.avatar_key, c.body, c.created_at, c.edited_at
     from app.event_comments c join app.users u on u.id = c.author_user_id
     where c.event_id = ${eventId} and c.deleted_at is null
     order by c.created_at asc
@@ -986,4 +987,17 @@ export async function cancelReminderJobs(tx: Tx, eventId: string): Promise<void>
   await tx.raw(
     sql`delete from app.event_reminder_jobs where event_id = ${eventId} and fired_at is null`,
   )
+}
+
+export async function updateComment(
+  tx: Tx,
+  eventId: string,
+  commentId: string,
+  body: string,
+  editedAt: string | null,
+): Promise<boolean> {
+  const updated = await tx.raw(sql`update app.event_comments set body = ${body}, edited_at = now()
+    where id = ${commentId} and event_id = ${eventId} and deleted_at is null
+      and date_trunc('milliseconds',edited_at) is not distinct from ${editedAt}::timestamptz returning id`)
+  return updated.length > 0
 }

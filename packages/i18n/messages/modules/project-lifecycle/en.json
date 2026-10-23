@@ -9,7 +9,7 @@
     "delete": "Delete project",
     "deleted": "Project and its tasks deleted. You can undo this now.",
     "deleteHint": "Also removes this project's tasks from the team’s workspace. History remains available to the superadmin.",
-    "progressHint": "Progress comes from tasks and checklist steps, or completed milestones when there are no tasks.",
+    "progressHint": "Project progress is based on completed milestones. Personal tasks track each person’s contribution separately.",
     "milestonesProgress": "{done}/{total} milestones"
   }
 }

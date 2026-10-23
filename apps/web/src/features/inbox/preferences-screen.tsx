@@ -11,7 +11,6 @@ import { useMeQuery } from '../../lib/session.js'
 import { useDepartment } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
-import { SettingsNavigation } from '../accounts/settings-navigation.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { isQuietHoursTooLoud, PERSONAL_DIGEST_MODES, REASONS, type PrefRow } from './api.js'
 import {
@@ -376,7 +375,7 @@ function PrefsMatrixBody({ query }: { query: ReturnType<typeof usePrefsQuery> })
   return <PrefsMatrix items={query.data.items} />
 }
 
-export default function PreferencesScreen() {
+export default function PreferencesScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useT()
   const forced = useForcedState()
   const online = useOnline()
@@ -411,13 +410,16 @@ export default function PreferencesScreen() {
   }
 
   return (
-    <div className="mx-auto flex max-w-200 flex-col gap-6">
-      <PageHeader
-        eyebrow={t('accounts.settings.title')}
-        title={t('inbox.preferences.title')}
-        description={t('inbox.preferences.body')}
-      />
-      <SettingsNavigation />
+    <div className="flex min-w-0 flex-col gap-6">
+      {!embedded ? (
+        <PageHeader
+          eyebrow={t('accounts.settings.title')}
+          title={t('inbox.preferences.title')}
+          description={t('inbox.preferences.body')}
+        />
+      ) : (
+        <h2 className="font-display text-h2">{t('inbox.preferences.title')}</h2>
+      )}
       <PrefsMatrixBody query={prefsQuery} />
 
       <QuietHoursCard departmentId={departmentId} />

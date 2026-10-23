@@ -34,6 +34,12 @@ export function useAiSettingsQuery() {
   })
 }
 
+/** Availability uses the same scoped settings everywhere; handlers still recheck server permissions. */
+export function useAiFeatureEnabled(feature: AiFeatureId): boolean {
+  const { data } = useAiSettingsQuery()
+  return data?.flags[feature] === true && data.budgetStatus !== 'hard_stop'
+}
+
 export function usePatchAiSettingsMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()

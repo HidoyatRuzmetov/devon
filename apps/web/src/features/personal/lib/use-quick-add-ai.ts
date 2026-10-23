@@ -9,7 +9,7 @@
 // in Asia/Tashkent, and the parsed due date is kept alongside the title.
 import * as React from 'react'
 import type { useT, Locale } from '@devon/i18n'
-import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { useAiFeatureEnabled, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { parseFeatureOutput, type QuickAddOutput } from '../../ai/outputs.js'
 import type { RunMeta } from '../../ai/types.js'
 import { aiErrorMessageKey } from './ai-helpers.js'
@@ -32,12 +32,15 @@ export function todayInTashkent(): string {
 
 export function useQuickAddAi(t: ReturnType<typeof useT>, locale: Locale) {
   const runMutation = useRunAiFeatureMutation('quick_add_parse')
+  const enabled = useAiFeatureEnabled('quick_add_parse')
   const [state, setState] = React.useState<QuickAddAiState | null>(null)
+  const generation = React.useRef(0)
 
   const run = React.useCallback(
     (text: string) => {
       const trimmed = text.trim()
-      if (!trimmed) return
+      if (!trimmed || !enabled) return
+      const request = ++generation.current
       setState({ status: 'pending' })
       runMutation.mutate(
         {
@@ -52,6 +55,7 @@ export function useQuickAddAi(t: ReturnType<typeof useT>, locale: Locale) {
         },
         {
           onSuccess: (res) => {
+            if (request !== generation.current) return
             const output = parseFeatureOutput<QuickAddOutput>('quick_add_parse', res.data)
             if (!output) {
               setState({ status: 'error', message: t('ai.errors.runFailed') })
@@ -59,14 +63,20 @@ export function useQuickAddAi(t: ReturnType<typeof useT>, locale: Locale) {
             }
             setState({ status: 'ready', output, meta: res.meta })
           },
-          onError: (err) => setState({ status: 'error', message: t(aiErrorMessageKey(err)) }),
+          onError: (err) => {
+            if (request === generation.current)
+              setState({ status: 'error', message: t(aiErrorMessageKey(err)) })
+          },
         },
       )
     },
-    [runMutation, locale, t],
+    [runMutation, locale, t, enabled],
   )
 
-  const discard = React.useCallback(() => setState(null), [])
+  const discard = React.useCallback(() => {
+    generation.current++
+    setState(null)
+  }, [])
 
-  return { state, run, discard }
+  return { state, run, discard, enabled }
 }

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import type * as UI from '@devon/ui'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { professionalProfileSchema } from '@devon/contracts'
@@ -50,6 +50,54 @@ beforeEach(() => {
 })
 
 describe('professional profile ownership and form submission', () => {
+  it('requires a named education entry and never changes years when scrolling or pressing arrows', async () => {
+    mocks.put.mockImplementation(async (_path, body) => ({ ...body, version: body.version + 1 }))
+    const { client } = setup()
+    const user = userEvent.setup()
+    await screen.findByDisplayValue('A profile')
+    await user.click(screen.getByRole('button', { name: 'Add education' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(mocks.put).not.toHaveBeenCalled()
+    const institution = screen.getByRole('textbox', { name: /University|Institution/ })
+    expect(institution).toHaveAttribute('aria-invalid', 'true')
+    expect(institution).toHaveAttribute('required')
+    await user.type(institution, 'Example University')
+    const year = screen.getByRole('textbox', { name: 'Start year' })
+    await user.type(year, '2020')
+    expect(year).toHaveAttribute('inputmode', 'numeric')
+    fireEvent.wheel(year, { deltaY: 500 })
+    await user.keyboard('{ArrowDown}{ArrowUp}')
+    expect(year).toHaveValue('2020')
+    await user.type(screen.getByRole('textbox', { name: /^Hobbies/ }), 'Hiking, Chess')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce())
+    expect(mocks.put.mock.calls[0]?.[1].profile).toMatchObject({
+      education: [{ institution: 'Example University', startYear: 2020 }],
+      hobbies: ['Hiking', 'Chess'],
+    })
+    client.clear()
+  })
+
+  it('identifies and focuses overlong skill and hobby entries instead of only showing a generic error', async () => {
+    const { client } = setup()
+    const user = userEvent.setup()
+    await screen.findByDisplayValue('A profile')
+    const skill = screen.getByRole('textbox', { name: /^Skills/ })
+    fireEvent.change(skill, { target: { value: 'A'.repeat(101) } })
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(skill).toHaveFocus()
+    expect(skill).toHaveAttribute('aria-invalid', 'true')
+    expect(skill).toHaveAccessibleDescription('Each item must be 100 characters or fewer.')
+    expect(mocks.put).not.toHaveBeenCalled()
+    await user.clear(skill)
+    const hobbies = screen.getByRole('textbox', { name: /^Hobbies/ })
+    fireEvent.change(hobbies, { target: { value: 'B'.repeat(101) } })
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(hobbies).toHaveFocus()
+    expect(hobbies).toHaveAccessibleDescription('Each item must be 100 characters or fewer.')
+    client.clear()
+  })
+
   it('saves comma-separated skills and languages when Enter submits the focused input', async () => {
     mocks.put.mockImplementation(async (_path, body) => ({ ...body, version: body.version + 1 }))
     const { client } = setup()

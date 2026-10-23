@@ -205,6 +205,16 @@ export function useAddCommentMutation(eventId: string) {
   })
 }
 
+export function useEditCommentMutation(eventId: string) {
+  const queryClient = useQueryClient()
+  const csrfToken = useCsrfToken()
+  return useMutation({
+    mutationFn: (input: { id: string; body: string; editedAt: string | null }) =>
+      api.editComment(eventId, input.id, input.body, input.editedAt, csrfToken),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: keys.comments(eventId) }),
+  })
+}
+
 export function useDeleteCommentMutation(eventId: string) {
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()

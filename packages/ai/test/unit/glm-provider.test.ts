@@ -29,6 +29,23 @@ function successfulResponse() {
 }
 
 describe('GlmProvider', () => {
+  it.each(['glm-5.2', 'glm-5.3', 'glm-4.6'])(
+    'reserves response capacity for %s without unsupported thinking flags',
+    async (model) => {
+      const fetchImpl = vi.fn().mockResolvedValue(successfulResponse())
+      const provider = new GlmProvider({
+        baseUrl: 'https://example.test/v1',
+        apiKey: 'fixture',
+        requestTimeoutMs: 5000,
+        fetchImpl,
+      })
+      await provider.complete({ ...REQUEST, model })
+      const sent = JSON.parse(fetchImpl.mock.calls[0]![1].body as string)
+      expect(sent.reasoning_effort).toBe(model.startsWith('glm-5') ? 'low' : undefined)
+      expect(sent.thinking).toBeUndefined()
+      expect(sent.max_tokens).toBe(REQUEST.maxTokens)
+    },
+  )
   it('aborts an active conversation request without transport retries', async () => {
     const controller = new AbortController()
     const fetchImpl = vi.fn(

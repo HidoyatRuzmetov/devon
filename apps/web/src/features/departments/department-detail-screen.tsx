@@ -1260,7 +1260,7 @@ function DangerTab({ id, departmentName }: { id: string; departmentName: string 
   )
 }
 
-export default function DepartmentDetailScreen() {
+export default function DepartmentDetailScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useT()
   const meQuery = useMeQuery()
   const params = useSearchParams()
@@ -1337,7 +1337,8 @@ export default function DepartmentDetailScreen() {
       className="flex flex-col gap-6"
     >
       <PageHeader
-        eyebrow={t('departments.title')}
+        {...(embedded ? {} : { eyebrow: t('departments.title') })}
+        compact={embedded}
         title={`${dept.emoji ? `${dept.emoji} ` : ''}${dept.name}`}
         tabs={
           <TabsList>

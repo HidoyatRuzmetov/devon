@@ -157,7 +157,9 @@ export default function MineScreen() {
   const search = useSearchParams()
   const q = search.get('q') ?? ''
   const combinedQuery = q ? `${q} assignee:@me` : 'assignee:@me'
-  const [collapsedGroups, setCollapsedGroups] = React.useState<ReadonlySet<string>>(new Set())
+  const [collapsedGroups, setCollapsedGroups] = React.useState<ReadonlySet<string>>(
+    () => new Set(search.get('completed') === '1' ? ['completed'] : []),
+  )
   function toggleGroupCollapsed(key: string) {
     setCollapsedGroups((prev) => {
       const next = new Set(prev)

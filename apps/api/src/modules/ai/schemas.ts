@@ -17,6 +17,7 @@ export const AI_FEATURE_IDS = [
   'nl_analytics',
   'translate',
   'draft_reply',
+  'draft_page',
   'board_risk_digest',
   'suggest_assignee',
   'duplicate_check',

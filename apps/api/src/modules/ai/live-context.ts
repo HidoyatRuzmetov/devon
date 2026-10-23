@@ -285,18 +285,23 @@ export async function prepareLiveContext(
   if (feature === 'plan_sprint' && input['scope'] === 'project' && input['projectId'])
     return withContext(ctx, async (tx) => {
       const projectId = recordId(input['projectId'])
-      const projects = await tx.raw<{ title: string }>(
-        sql`select title from app.projects where id=${projectId} and department_id=${departmentId} and deleted_at is null`,
+      const projects = await tx.raw<{ title: string; milestones: unknown[] }>(
+        sql`select title,milestones from app.projects where id=${projectId} and department_id=${departmentId} and deleted_at is null`,
       )
       if (!projects[0]) throw new AiInputValidationError('The referenced project is unavailable')
       const items =
         await tx.raw(sql`select c.id,c.title,c.estimate_min as "estimateMin",c.due_at as "dueAt",c.priority,
       nullif(concat_ws(' ',u.given_name,u.family_name),'') as "assigneeName",
       coalesce((select array_agg(b.id order by b.id) from app.card_dependencies d join app.cards b on b.id=d.blocked_by_card_id and b.deleted_at is null and b.status='active' where d.card_id=c.id),'{}') as "blockedByIds"
-      from app.cards c left join app.users u on u.id=c.assignee_user_id where c.project_id=${projectId} and c.department_id=${departmentId} and c.deleted_at is null and c.status='active' and c.project_scope<>'subjective' order by c.order_key,c.id limit 100`)
+      from app.cards c left join app.users u on u.id=c.assignee_user_id where c.project_id=${projectId} and c.department_id=${departmentId} and c.deleted_at is null and c.status='active' order by c.order_key,c.id limit 101`)
+      if (items.length > 100)
+        throw new AiInputValidationError(
+          'The project has too many active assignments to plan in one request',
+        )
       return {
         ...input,
         goal: projects[0].title,
+        projectMilestones: projects[0].milestones ?? [],
         capacityMin: null,
         now: new Date().toISOString(),
         items,

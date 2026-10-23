@@ -16,9 +16,11 @@ import { contextDepartmentRole } from '../../lib/actor.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import * as conversations from './conversations.js'
 import { enqueueConversation, startConversationJobs } from './conversation-jobs.js'
+import { resolveProposal } from './conversation-actions.js'
+import { configureConversationFiles } from './conversation-files.js'
 
 const subject = (req: FastifyRequest): Subject => ({
-  kind: 'department_managed',
+  kind: 'department_child',
   departmentId: req.actor?.departmentId ?? '',
 })
 const params = z.object({ id: z.uuid() })
@@ -36,11 +38,40 @@ function context(req: FastifyRequest): RequestContext {
   }
 }
 const routes: FastifyPluginAsyncZod = async (app) => {
+  for (const resolution of ['execute', 'discard'] as const) {
+    app.post(
+      `/conversations/:id/proposals/:proposalId/${resolution}`,
+      {
+        config: {
+          permission: { action: 'update', subject },
+          rateLimit: { max: 30, timeWindow: '1 minute' },
+        },
+        schema: {
+          params: z.object({ id: z.uuid(), proposalId: z.uuid() }),
+          response: { 200: aiConversationSchema },
+        },
+      },
+      async (req, reply) => {
+        if (!checkCsrf(req, reply)) return
+        return resolveProposal(
+          app,
+          req,
+          req.params.id,
+          req.params.proposalId,
+          resolution === 'execute',
+        )
+      },
+    )
+  }
   // The transactional outbox closes the save-before-enqueue crash window. A duplicate direct
   // enqueue is harmless: the saved turn and its worker token make processing idempotent.
   const unsubscribe = subscribe('ai.conversation.requested', async (event) => {
     const payload = z
-      .object({ conversationId: z.uuid(), userId: z.uuid(), messageId: z.uuid() })
+      .object({
+        conversationId: z.uuid(),
+        userId: z.uuid(),
+        messageId: z.uuid(),
+      })
       .parse(event.payload)
     if (!event.departmentId) return
     await enqueueConversation({ ...payload, departmentId: event.departmentId })
@@ -73,7 +104,10 @@ const routes: FastifyPluginAsyncZod = async (app) => {
         permission: { action: 'create', subject },
         rateLimit: { max: 20, timeWindow: '1 minute' },
       },
-      schema: { body: createAiConversationSchema, response: { 200: aiConversationSchema } },
+      schema: {
+        body: createAiConversationSchema,
+        response: { 200: aiConversationSchema },
+      },
     },
     (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -121,7 +155,11 @@ const routes: FastifyPluginAsyncZod = async (app) => {
     '/conversations/:id/cancel',
     {
       config: { permission: { action: 'update', subject } },
-      schema: { params, body: cancelAiChatMessageSchema, response: { 200: aiConversationSchema } },
+      schema: {
+        params,
+        body: cancelAiChatMessageSchema,
+        response: { 200: aiConversationSchema },
+      },
     },
     (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -134,6 +172,7 @@ const routes: FastifyPluginAsyncZod = async (app) => {
   )
   let jobs: Awaited<ReturnType<typeof startConversationJobs>> = null
   app.addHook('onReady', async () => {
+    configureConversationFiles(app.storage.store)
     if (app.devonConfig.NODE_ENV !== 'test')
       jobs = await startConversationJobs(app.devonConfig.DATABASE_URL, app.log)
   })

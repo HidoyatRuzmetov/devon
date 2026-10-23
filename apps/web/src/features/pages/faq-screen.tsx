@@ -15,7 +15,7 @@ const NEXT_STEPS = {
   admin: { href: '/admin', label: 'admin.console.title' },
   find: { href: '/work', label: 'work.title' },
   projects: { href: '/projects', label: 'projects.title' },
-  delete: { href: '/work/archive', label: 'work.view.archive' },
+  delete: { href: '/work/mine?completed=1', label: 'work.mine.completedAndArchived' },
   files: { href: '/work', label: 'work.title' },
   profile: { href: '/account', label: 'accounts.settings.title' },
   telegram: { href: '/account/telegram', label: 'telegram.title' },

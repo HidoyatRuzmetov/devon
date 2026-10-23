@@ -41,6 +41,18 @@ export const planSprintInputSchema = z.object({
   /** Working minutes actually left in the period. */
   capacityMin: z.number().int().min(0).max(100_000).nullable(),
   goal: z.string().max(500).nullable().default(null),
+  /** Outcomes guide a project plan; only assignment IDs may appear in orderedIds. */
+  projectMilestones: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(100),
+        title: z.string().min(1).max(500),
+        dueOn: z.string().nullable(),
+        doneAt: z.string().nullable(),
+      }),
+    )
+    .max(500)
+    .default([]),
   items: z.array(planItemSchema).min(1).max(100),
 })
 export type PlanSprintInput = z.infer<typeof planSprintInputSchema>
@@ -73,6 +85,7 @@ function systemPrompt(input: PlanSprintInput): string {
     instructions: [
       'Order EVERY item, by id, into `orderedIds`. Never drop one, never merge two, never rename, never invent. The set of ids you return must equal the set of ids you were given, exactly.',
       'Respect blockedByIds: a blocker always comes before the item it blocks.',
+      'For project scope, items are personal assignments to project members. projectMilestones are shared outcomes: prioritize work that explicitly supports upcoming unfinished milestones, but never invent an assignment-to-milestone link. Completed milestones are historical context. Order only items[].id; never insert milestone IDs into orderedIds. Project progress is measured by milestones, not task counts.',
       'Everything overdue, then everything due before periodEndsAt, comes before anything with no deadline.',
       'Within the same urgency, a short item may come first when finishing it unblocks momentum — but never let a short item push a due item past its deadline.',
       'Only assess capacity when capacityMin and EVERY estimateMin are known. Sum estimates down your order: every item beyond capacityMin goes into wontFitIds, and overCommittedByMin is max(0,total-capacityMin). When capacity or any estimate is null, return wontFitIds [] and overCommittedByMin 0; explicitly say capacity cannot yet be assessed. Never treat a missing estimate as zero or a missing capacity as zero.',

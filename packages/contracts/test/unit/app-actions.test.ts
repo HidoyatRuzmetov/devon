@@ -242,17 +242,23 @@ describe('canAction() -- owned actions with a real owner set', () => {
 
   it('an empty owner set denies every member but the head', () => {
     expect(
-      canAction(member(), 'pages.delete', {
+      canAction(member(), 'work.card.edit', {
         departmentId: DEPT,
         ownerUserIds: [],
       }),
     ).toEqual({ allowed: false, reason: 'not_owner' })
     expect(
-      allowsAction(head(), 'pages.delete', {
+      allowsAction(head(), 'work.card.edit', {
         departmentId: DEPT,
         ownerUserIds: [],
       }),
     ).toBe(true)
+  })
+
+  it('Pages are a shared department wiki, including editing and deleting another author’s page', () => {
+    for (const action of ['pages.edit', 'pages.delete'] as const) {
+      expect(allowsAction(member(), action, { departmentId: DEPT, ownerUserIds: [] })).toBe(true)
+    }
   })
 })
 

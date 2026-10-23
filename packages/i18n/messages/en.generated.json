@@ -101,7 +101,8 @@
     },
     "loading": {
       "route": "Loading page"
-    }
+    },
+    "brandSubtitle": "Digital Technologies Ministry"
   },
   "cmd": {
     "placeholder": "Search or choose an action",
@@ -1437,6 +1438,12 @@
         "description": "Now part of the “What did I miss” helper. Older records kept this name.",
         "where": "No screen of its own any more.",
         "example": "Appears in older usage records."
+      },
+      "draftPage": {
+        "label": "Draft a page",
+        "description": "Turn a page title and your instructions into an editable body. Review before applying.",
+        "where": "Pages → Edit page → Draft with AI",
+        "example": "“Center-wide phonebook” → a short introduction with instructions, ready for review."
       }
     },
     "catalogue": {
@@ -1800,6 +1807,12 @@
       "failed": "Could not complete the action. Refresh the card and try again; undo is available for 30 seconds.",
       "hint": "Remove from the team’s views; retain its record for the superadmin."
     },
+    "comments": {
+      "edit": "Edit comment",
+      "edited": "Edited",
+      "deleteConfirm": "Delete this comment? Related inbox notifications will be removed.",
+      "saveError": "The comment could not be saved. Refresh and check for another edit, then try again."
+    },
     "eyebrow": "WORK",
     "title": "Cards",
     "description": "The People board: one column per department member.",
@@ -1811,8 +1824,7 @@
       "table": "Table",
       "timeline": "Timeline",
       "calendar": "Calendar",
-      "mine": "Mine",
-      "archive": "Archive"
+      "mine": "Mine"
     },
     "quickAdd": {
       "placeholder": "Quick add: \"Nodira: prepare the monthly report, friday\"",
@@ -1951,11 +1963,6 @@
       "emptyTitle": "No cards found",
       "emptyBody": "Adjust the filter or add a new card.",
       "selectAll": "Select all",
-      "density": {
-        "label": "Density",
-        "compact": "Compact",
-        "comfortable": "Comfortable"
-      },
       "sort": {
         "label": "Sort",
         "none": "Unsorted"
@@ -2019,9 +2026,7 @@
     },
     "archive": {
       "completedHint": "Archived · Completed",
-      "unfinishedHint": "Archived · Not completed",
-      "emptyTitle": "Archive is empty",
-      "emptyBody": "Done and archived cards will show up here."
+      "unfinishedHint": "Archived · Not completed"
     },
     "action": {
       "save": "Save",
@@ -3360,7 +3365,9 @@
       "summaryAccept": "Insert into comment",
       "summaryEdit": "Insert to edit",
       "summaryDiscard": "Discard",
-      "viewerFallback": "You"
+      "viewerFallback": "You",
+      "edit": "Edit comment",
+      "edited": "Edited"
     },
     "carpool": {
       "title": "Carpooling",
@@ -3474,6 +3481,9 @@
     "filters": {
       "from": "From",
       "to": "To"
+    },
+    "finished": {
+      "readOnly": "This event has ended or closed. Reservations, items and polls are read-only; discussion, photos and feedback remain available."
     }
   },
   "eventsControls": {
@@ -3733,6 +3743,219 @@
       }
     }
   },
+  "homeMember": {
+    "myUnit": "My unit",
+    "noUnit": "Choose your unit",
+    "metrics": "My work overview",
+    "active": "Active tasks",
+    "completed": "Completed & archived",
+    "toDo": "To do",
+    "inProgress": "In progress",
+    "done": "Done",
+    "archived": "Archived",
+    "panels": "My workspace",
+    "myTasks": "My tasks",
+    "myProjects": "My projects",
+    "upcoming": "Coming up",
+    "event": "Event",
+    "deadline": "Deadline",
+    "noUpcoming": "No upcoming deadlines or events.",
+    "eventsRetry": "Reload events",
+    "projectsCount": "{count} projects",
+    "allProjects": "All projects",
+    "noProjects": "Projects you join will appear here.",
+    "noProjectTasks": "No active tasks assigned to you in this project.",
+    "openProject": "Open project",
+    "noTasks": "No active tasks in this view.",
+    "noCompleted": "No tasks in this view yet.",
+    "taskStatus": "Card status",
+    "showAll": "Show all",
+    "toggleTask": "Mark “{title}” complete",
+    "checklistProgress": "{done} of {total} checklist items completed",
+    "projectProgress": "Milestone progress for {title}",
+    "assistant": "Your work assistant",
+    "assistantInput": "Ask about your work",
+    "assistantPlaceholder": "Ask about your work, or ask me to do something…",
+    "assistantHint": "Plan your next step, understand a project, or prepare a change. You review actions before they happen.",
+    "thinking": "Reviewing your work and available information…",
+    "starters": {
+      "priorities": "What needs attention?",
+      "projectUpdate": "Project update",
+      "draftPage": "Draft a page"
+    },
+    "prompts": {
+      "priorities": "What should I focus on next? Use my assigned tasks and deadlines, and link to the relevant items.",
+      "projectUpdate": "Summarize my current group projects and the next steps assigned to me.",
+      "draftPage": "Help me create a shared page. Ask what it should cover, then prepare a draft for my review."
+    },
+    "reopenTask": "Reopen “{title}”"
+  },
+  "assistantActions": {
+    "clearValue": "Clear this value",
+    "emptyValue": "Empty",
+    "emptyList": "None",
+    "yes": "Yes",
+    "no": "No",
+    "execute": "Confirm and apply",
+    "confirmDelete": "Confirm deletion",
+    "edit": "Edit request",
+    "discard": "Discard",
+    "confirmHint": "Review the exact changes above. Nothing is applied until you confirm.",
+    "deleteWarning": "This removes the specified item. Review the destination before confirming.",
+    "conflict": "This item changed or the proposal is no longer current. Ask for a fresh proposal.",
+    "forbidden": "You no longer have permission to make this change.",
+    "failed": "The action could not be confirmed. Its saved status will refresh before you try again.",
+    "filePartial": "The item was created, but not all files were attached. Open it below and attach the remaining files; do not create it again.",
+    "persistedFailure": "The action did not finish. Check the linked item, if present, before asking for another proposal.",
+    "revisePrompt": "Please revise the proposal “{title}”: ",
+    "addFiles": "Attach files",
+    "queuedFiles": "Files for this message",
+    "fileReady": "File checked and ready",
+    "fileApproval": "Superadmin approval requested. Retry after approval.",
+    "fileLimit": "Attach up to 10 files per message.",
+    "status": {
+      "pending": "Ready for your review",
+      "executing": "Applying your confirmed change…",
+      "executed": "Applied",
+      "discarded": "Discarded",
+      "failed": "Action needs attention",
+      "expired": "Proposal expired"
+    },
+    "values": {
+      "active": "Active",
+      "done": "Done",
+      "archived": "Archived",
+      "planning": "Planning",
+      "on_hold": "On hold",
+      "todo": "To do",
+      "in_progress": "In progress",
+      "none": "None",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent",
+      "objective": "Project assignment",
+      "subjective": "Personal project assignment",
+      "card": "Card",
+      "page": "Page",
+      "completed": "Completed"
+    },
+    "fields": {
+      "id": "Item",
+      "title": "Title",
+      "description": "Description",
+      "body": "Content",
+      "blocks": "Page content",
+      "text": "Text",
+      "assigneeUserId": "Assignee",
+      "giverUserId": "Assigned by",
+      "ownerUserId": "Owner",
+      "members": "Members",
+      "projectId": "Project",
+      "projectScope": "Card type",
+      "status": "Status",
+      "workStage": "Work stage",
+      "priority": "Priority",
+      "startAt": "Starts",
+      "dueAt": "Deadline",
+      "startOn": "Start date",
+      "targetOn": "Target date",
+      "dueOn": "Due date",
+      "done": "Complete",
+      "version": "Current version",
+      "attachmentIds": "Files",
+      "targetType": "Destination type",
+      "targetId": "Destination",
+      "itemId": "Checklist item",
+      "milestoneId": "Milestone",
+      "milestones": "Milestones",
+      "kind": "Type",
+      "notes": "Notes",
+      "sprintId": "Planning period",
+      "parentId": "Parent item",
+      "parentItemId": "Parent checklist item",
+      "estimateMin": "Estimated minutes",
+      "linkedCardId": "Linked card",
+      "sort": "Order",
+      "orderKey": "Position",
+      "afterTaskId": "Insert after",
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "goal": "Goal",
+      "pinned": "Pinned",
+      "labels": "Labels",
+      "watchers": "Followers",
+      "links": "Links",
+      "url": "URL",
+      "name": "Name",
+      "colour": "Colour",
+      "coverKey": "Cover",
+      "mentions": "Mentions"
+    },
+    "timezone": "(UTC+5)",
+    "emptyResponse": "The AI returned no answer. Your message is saved; try again.",
+    "interruptedAction": "Confirmation was interrupted. Check the target item before requesting a new action; it may already have been changed.",
+    "kinds": {
+      "card": {
+        "create": "Create card",
+        "update": "Update card",
+        "delete": "Delete card",
+        "restore": "Restore card"
+      },
+      "page": {
+        "create": "Create page",
+        "update": "Update page",
+        "delete": "Delete page"
+      },
+      "project": {
+        "create": "Create project",
+        "update": "Update project",
+        "delete": "Delete project"
+      },
+      "checklist": {
+        "add": "Add checklist item",
+        "update": "Update checklist item",
+        "delete": "Delete checklist item"
+      },
+      "comment": {
+        "create": "Post comment"
+      },
+      "milestone": {
+        "add": "Add milestone",
+        "update": "Update milestone"
+      },
+      "personal": {
+        "note": {
+          "create": "Create private note",
+          "update": "Update private note"
+        }
+      },
+      "attachment": {
+        "attach": "Attach files"
+      },
+      "personalTaskCreate": "Create private to-do",
+      "personalTaskUpdate": "Update private to-do",
+      "personalPeriodCreate": "Create planning period",
+      "personalPeriodUpdate": "Update planning period"
+    }
+  },
+  "assistantQuickAdd": {
+    "label": "Describe the card",
+    "placeholder": "Prepare the monthly report by Friday",
+    "hint": "Include a person, date or priority if needed. Ctrl/⌘ + Enter previews the card.",
+    "description": "Describe what needs doing. Review the card before creating it.",
+    "preview": "Preview card",
+    "create": "Create card"
+  },
+  "assistantHelpers": {
+    "refineTask": "Refine to-do with AI",
+    "taskPreview": "Private to-do preview",
+    "requestedDate": "Requested date",
+    "requestedPriority": "Requested priority",
+    "originalRequest": "Original request",
+    "savedNotes": "Saved in notes",
+    "privateTaskHint": "Private tasks keep dates and priority in notes. Use Cards for scheduled assignments."
+  },
   "inbox": {
     "title": "Inbox",
     "eyebrow": "NOTIFICATIONS",
@@ -3886,6 +4109,28 @@
         "empty": "No matching options",
         "formatting": "Text formatting"
       },
+      "fontSize": "Text size",
+      "fontSizes": {
+        "small": "Small",
+        "normal": "Normal",
+        "large": "Large",
+        "xlarge": "Extra large"
+      },
+      "markdown": {
+        "write": "Write Markdown",
+        "hint": "Write or paste Markdown, then insert it at the cursor. Existing content is kept.",
+        "insert": "Insert formatted text",
+        "invalid": "This content contains unsupported formatting or an unsafe link."
+      },
+      "draft": {
+        "title": "Draft with AI",
+        "hint": "Draft the page body from its title. Add instructions if needed, review the result, then apply it. Applying replaces the body.",
+        "instructions": "Optional instructions, audience or key facts",
+        "generate": "Generate draft",
+        "preview": "Review and edit the draft",
+        "apply": "Apply to page",
+        "failed": "The draft could not be generated. Please try again."
+      },
       "titlePlaceholder": "Title",
       "save": "Save",
       "saved": "Saved",
@@ -3919,6 +4164,11 @@
           "failed": "The AI could not translate this time"
         }
       }
+    },
+    "view": {
+      "edit": "Edit page",
+      "done": "Done editing",
+      "history": "Version history"
     },
     "title": "Pages",
     "eyebrow": "Knowledge",
@@ -4783,7 +5033,8 @@
       "expected": "Expected",
       "present": "Present",
       "contact": "Contact",
-      "intro": "Optional details you choose to share with colleagues. Keep private information out of this public work profile."
+      "intro": "Optional details you choose to share with colleagues. Keep private information out of this public work profile.",
+      "hobbies": "Hobbies & interests"
     },
     "overview": {
       "workforce": "Total workforce",
@@ -4864,7 +5115,7 @@
     "delete": "Delete project",
     "deleted": "Project and its tasks deleted. You can undo this now.",
     "deleteHint": "Also removes this project's tasks from the team’s workspace. History remains available to the superadmin.",
-    "progressHint": "Progress comes from tasks and checklist steps, or completed milestones when there are no tasks.",
+    "progressHint": "Project progress is based on completed milestones. Personal tasks track each person’s contribution separately.",
     "milestonesProgress": "{done}/{total} milestones"
   },
   "projects": {
@@ -5030,6 +5281,30 @@
         "title": "This canvas isn't open to you",
         "body": "Only the people in the project or event it was shared to can see it."
       }
+    }
+  },
+  "settings": {
+    "accountProfile": "Account profile",
+    "workspace": "Connections & workspace",
+    "department": "Department",
+    "signInSecurity": "Sign-in & security",
+    "description": "Your profile, connected services and account security.",
+    "content": "Settings content",
+    "profile": {
+      "required": "Required",
+      "invalid": "Check this value. Years must be between 1900 and 2200.",
+      "requiredHint": "Fields marked * are required when you add an entry. Everything else is optional.",
+      "introduction": "Introduction",
+      "addHint": "Add your {section} when you are ready.",
+      "removeEntry": "Remove {section} entry {number}",
+      "expectedYear": "Expected graduation year",
+      "invalidPeriod": "End year must be the same as or later than the start year.",
+      "addSection": "Add {section}",
+      "capabilitiesInterests": "Skills & interests",
+      "validationError": "Please check the highlighted fields.",
+      "itemLimit": "Each item must be {max} characters or fewer.",
+      "listLimit": "Add no more than {max} items.",
+      "invalidValue": "Check this value."
     }
   },
   "structure": {

@@ -105,7 +105,7 @@ async function conflict(response: Response, reason: string) {
   expect(response.status).toBe(409)
   expect(await response.json()).toMatchObject({
     code: 'conflict',
-    errors: [{ path: 'carpool', code: reason }],
+    errors: [{ path: reason === 'event_finished' ? 'event' : 'carpool', code: reason }],
   })
 }
 
@@ -420,7 +420,7 @@ describe('safe driver edits, queues and deletion', () => {
   })
 
   it.each(['cancelled', 'done', 'past'])(
-    'blocks new participation for %s events but still permits releases and empty deletion',
+    'preserves the reservation record and blocks all operational changes for %s events',
     async (state) => {
       const f = await fixture()
       const car = await f.offer(f.driver.session, 1)
@@ -441,27 +441,35 @@ describe('safe driver edits, queues and deletion', () => {
       } else {
         await superuserQuery(db, 'update app.events set status=$1 where id=$2', [state, f.event.id])
       }
-      await conflict(await request('POST', f.path, f.head.session, { seats: 2 }), 'event_not_open')
+      await conflict(await request('POST', f.path, f.head.session, { seats: 2 }), 'event_finished')
       await conflict(
         await request('POST', `${f.path}/${car.id}/claim`, f.newcomer.session, { seats: 1 }),
-        'event_not_open',
+        'event_finished',
       )
       await conflict(
         await request('PATCH', `${f.path}/${car.id}`, f.driver.session, { seats: 2 }),
-        'event_not_open',
+        'event_finished',
       )
-      expect(
-        (await request('DELETE', `${f.path}/${car.id}/claim`, f.passenger.session)).status,
-      ).toBe(204)
-      expect((await f.list())[0]?.passengers[0]?.status).toBe('waitlist')
+      await conflict(
+        await request('DELETE', `${f.path}/${car.id}/claim`, f.passenger.session),
+        'event_finished',
+      )
+      expect((await f.list())[0]?.passengers.map((person) => person.status).sort()).toEqual([
+        'confirmed',
+        'waitlist',
+      ])
       await conflict(
         await request('DELETE', `${f.path}/${car.id}`, f.driver.session),
-        'carpool_has_passengers',
+        'event_finished',
       )
-      expect((await request('DELETE', `${f.path}/${car.id}/claim`, f.waiting.session)).status).toBe(
-        204,
+      await conflict(
+        await request('DELETE', `${f.path}/${car.id}/claim`, f.waiting.session),
+        'event_finished',
       )
-      expect((await request('DELETE', `${f.path}/${car.id}`, f.driver.session)).status).toBe(204)
+      await conflict(
+        await request('DELETE', `${f.path}/${car.id}`, f.driver.session),
+        'event_finished',
+      )
     },
   )
 })

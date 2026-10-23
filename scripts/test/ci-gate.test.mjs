@@ -140,7 +140,7 @@ test('production scanning, immutable image tags and exact-main CI deployment gat
   assert.match(deployment, /Deploy with backup, migration, readiness gate, and image rollback/)
 })
 
-test('compiled avatar interactions are mandatory alongside all existing workflow regressions', () => {
+test('compiled avatar and assistant interactions are mandatory alongside existing workflow regressions', () => {
   const section = workflow.match(/^  workflow-regressions:\n([\s\S]*?)(?=^  [\w-]+:)/m)?.[1]
   assert.ok(section, 'the dedicated regression job must remain required by the aggregate')
   const step = section.match(
@@ -157,6 +157,7 @@ test('compiled avatar interactions are mandatory alongside all existing workflow
     'platform-qa.config.ts platform-department-decision.qa.spec.ts',
     'scanner-qa.config.ts',
     'avatar-interactions-qa.config.ts',
+    'playwright.ai-actions.config.ts',
   ]
   const commands = step
     .split('\n')
@@ -166,8 +167,12 @@ test('compiled avatar interactions are mandatory alongside all existing workflow
     assert.ok(commands[index].includes(`--config test/e2e/${config} --project chromium`))
   })
   assert.equal(
-    commands.at(-1).trim(),
+    commands.at(-2).trim(),
     'FLOW_DB_NAME=devon_flow_e2e_avatar FLOW_API_PORT=48941 FLOW_WEB_PORT=48942 FLOW_CENTRIFUGO_PORT=48943 FLOW_REALTIME=1 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 pnpm --filter @devon/web exec playwright test --config test/e2e/avatar-interactions-qa.config.ts --project chromium',
+  )
+  assert.equal(
+    commands.at(-1).trim(),
+    'FLOW_DB_NAME=devon_flow_e2e_ai_actions FLOW_API_PORT=49061 FLOW_WEB_PORT=49062 FLOW_CENTRIFUGO_PORT=49063 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.ai-actions.config.ts --project chromium',
   )
   assert.ok(
     step.indexOf('docker pull centrifugo/centrifugo:') < step.indexOf('devon_flow_e2e_avatar'),

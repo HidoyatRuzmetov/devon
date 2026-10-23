@@ -2,7 +2,12 @@ import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
 
 export const APPROVAL_THRESHOLD = 100 * 1024 * 1024
-type Request = { subjectType: 'card' | 'page'; subjectId: string; name: string; size: number }
+type Request = {
+  subjectType: 'card' | 'page' | 'ai_conversation'
+  subjectId: string
+  name: string
+  size: number
+}
 export async function requestApproval(ctx: RequestContext, input: Request): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     // Serialize requests from the same uploader, including double-clicks and retried network calls.
@@ -70,7 +75,7 @@ export async function listApprovals(ctx: RequestContext) {
 }
 export async function ownApprovals(
   ctx: RequestContext,
-  subjectType: 'card' | 'page',
+  subjectType: 'card' | 'page' | 'ai_conversation',
   subjectId: string,
 ) {
   return withContext(ctx, (tx) =>

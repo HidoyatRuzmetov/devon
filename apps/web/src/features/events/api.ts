@@ -285,3 +285,18 @@ export function fetchEventIcs(eventId: string) {
 export function fetchMyIcs() {
   return apiClient.get(`${BASE}/ics/me`, icsResultSchema)
 }
+
+export function editComment(
+  eventId: string,
+  commentId: string,
+  body: string,
+  editedAt: string | null,
+  csrfToken: string,
+) {
+  return apiClient.patch(
+    `${BASE}/${eventId}/comments/${commentId}`,
+    { body, editedAt },
+    voidSchema,
+    csrfToken,
+  )
+}

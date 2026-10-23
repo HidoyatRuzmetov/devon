@@ -212,3 +212,5 @@ export function createProvider(config: AiConfig): AiProvider {
   }
   return new MockProvider({ respond: buildOfflineRespond() })
 }
+
+export { draftPageInputSchema, draftPageOutputSchema, draftPageSpec } from './prompts/draft-page.js'

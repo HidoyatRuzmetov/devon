@@ -10,16 +10,29 @@ const manifest: FeatureManifest = {
   routes: [
     { path: '/register', component: RegisterScreen, titleKey: 'accounts.register.title' },
     { path: '/account', component: AccountSettingsScreen, titleKey: 'accounts.settings.title' },
+    ...[
+      'professional',
+      'notifications',
+      'telegram',
+      'calendar',
+      'department',
+      'security',
+      'delete',
+    ].map((section) => ({
+      path: `/account/${section}`,
+      component: AccountSettingsScreen,
+      titleKey: 'accounts.settings.title',
+    })),
   ],
-  sidebar: [
+  sidebar: [],
+  commands: [
     {
       id: 'account-settings',
       labelKey: 'accounts.settings.title',
       icon: UserCog,
-      route: '/account',
+      path: '/account',
     },
   ],
-  commands: [],
 }
 
 export default manifest

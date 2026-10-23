@@ -11,8 +11,7 @@
       "table": "Table",
       "timeline": "Timeline",
       "calendar": "Calendar",
-      "mine": "Mine",
-      "archive": "Archive"
+      "mine": "Mine"
     },
     "board": {
       "department": "Department",
@@ -175,11 +174,6 @@
       "emptyTitle": "No cards found",
       "emptyBody": "Adjust the filter or add a new card.",
       "selectAll": "Select all",
-      "density": {
-        "label": "Density",
-        "compact": "Compact",
-        "comfortable": "Comfortable"
-      },
       "sort": {
         "label": "Sort",
         "none": "Unsorted"
@@ -243,9 +237,7 @@
     },
     "archive": {
       "completedHint": "Archived · Completed",
-      "unfinishedHint": "Archived · Not completed",
-      "emptyTitle": "Archive is empty",
-      "emptyBody": "Done and archived cards will show up here."
+      "unfinishedHint": "Archived · Not completed"
     },
     "action": {
       "save": "Save",

@@ -1,0 +1,60 @@
+{
+  "pages": {
+    "view": {
+      "edit": "Edit page",
+      "done": "Done editing",
+      "history": "Version history"
+    },
+    "editor": {
+      "fontSize": "Text size",
+      "fontSizes": {
+        "small": "Small",
+        "normal": "Normal",
+        "large": "Large",
+        "xlarge": "Extra large"
+      },
+      "markdown": {
+        "write": "Write Markdown",
+        "hint": "Write or paste Markdown, then insert it at the cursor. Existing content is kept.",
+        "insert": "Insert formatted text",
+        "invalid": "This content contains unsupported formatting or an unsafe link."
+      },
+      "draft": {
+        "title": "Draft with AI",
+        "hint": "Draft the page body from its title. Add instructions if needed, review the result, then apply it. Applying replaces the body.",
+        "instructions": "Optional instructions, audience or key facts",
+        "generate": "Generate draft",
+        "preview": "Review and edit the draft",
+        "apply": "Apply to page",
+        "failed": "The draft could not be generated. Please try again."
+      }
+    }
+  },
+  "events": {
+    "comments": {
+      "edit": "Edit comment",
+      "edited": "Edited"
+    },
+    "finished": {
+      "readOnly": "This event has ended or closed. Reservations, items and polls are read-only; discussion, photos and feedback remain available."
+    }
+  },
+  "work": {
+    "comments": {
+      "edit": "Edit comment",
+      "edited": "Edited",
+      "deleteConfirm": "Delete this comment? Related inbox notifications will be removed.",
+      "saveError": "The comment could not be saved. Refresh and check for another edit, then try again."
+    }
+  },
+  "ai": {
+    "features": {
+      "draftPage": {
+        "label": "Draft a page",
+        "description": "Turn a page title and your instructions into an editable body. Review before applying.",
+        "where": "Pages → Edit page → Draft with AI",
+        "example": "“Center-wide phonebook” → a short introduction with instructions, ready for review."
+      }
+    }
+  }
+}

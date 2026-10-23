@@ -1,6 +1,6 @@
 // `/people` -- TECH-SPEC EPIC-003: "the People page listing members grouped by unit." Rebuilt to
 // UI-OVERHAUL.md's Jakob row "People directory" (Slack members, Google Contacts): search first,
-// cards grid with avatar/title/unit chip, a hover card, filters by unit, distinct empty/no-results.
+// cards with unit identity and professional profile drawers, unit filters and distinct empty/no-results.
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
@@ -18,12 +18,13 @@ import {
   initialsFromName,
   normalizeForSearch,
 } from '@devon/ui'
-import { Search } from 'lucide-react'
+import { Building2, Search } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
 import { ApiError } from '../../lib/api-client.js'
+import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
 import { avatarUrl } from '../../lib/avatar.js'
 import { useCan } from '../../lib/can.js'
 import { useSession } from '../../lib/session.js'
@@ -33,7 +34,6 @@ import { fetchMembers, fetchUnitsOverview, type Member, type Unit } from './api.
 import { useMyDepartments } from './use-my-departments.js'
 import { DepartmentHeader } from './department-header.js'
 import { MemberCard, formalName, fullName } from './member-card.js'
-import { fetchPeopleContacts } from '../people/api.js'
 import { useCsrfToken } from '../people/hooks.js'
 import {
   QuickAssignSheet,
@@ -131,37 +131,10 @@ export default function PeopleScreen() {
     },
     [canSeeAnyPerson.allowed, session.user?.id],
   )
-  /**
-   * v1.1 critique SEV2 #15 -- "a member still cannot do anything with a colleague".
-   *
-   * SPEC §4.1 asks the directory for four actions on every card: a hover card, a Telegram deep link
-   * where the head's setting allows one, "open board column", and "assign a task ... for anyone,
-   * since any member may create a card for a colleague". The first and third existed. These are the
-   * other two.
-   *
-   * `QuickAssignSheet` is the people module's own composer, already used by the table's row action
-   * -- the same sheet, the same one-card-per-person rule, reached from the screen a xodim actually
-   * has. Telegram handles stay head-only (`GET /people/contacts`, PERMISSIONS-AUDIT §4.13): the
-   * query is gated on the same capability, so for a member it is never issued and the button simply
-   * is not there.
-   */
+  // Colleague cards retain the department-authorized quick task assignment flow.
   const csrf = useCsrfToken()
   const queryClient = useQueryClient()
-  const canSeeContacts = useCan('people.table.read')
   const [assignTarget, setAssignTarget] = React.useState<Member | null>(null)
-
-  const contactsQuery = useQuery({
-    queryKey: ['people', 'contacts', departmentId],
-    queryFn: fetchPeopleContacts,
-    enabled: departmentId !== null && canSeeContacts.allowed,
-  })
-  const telegramByUser = React.useMemo(() => {
-    const out = new Map<string, string>()
-    for (const contact of contactsQuery.data ?? []) {
-      if (contact.telegramDeepLink) out.set(contact.userId, contact.telegramDeepLink)
-    }
-    return out
-  }, [contactsQuery.data])
 
   const assignMutation = useMutation({
     mutationFn: (input: QuickAssignSubmit) =>
@@ -294,6 +267,7 @@ export default function PeopleScreen() {
   const allMembers = membersQuery.data
   const units = orderedUnits(unitsQuery.data.units)
   const unitsById = new Map(units.map((u) => [u.id, u]))
+  const unitPalette = createUnitPalette(units)
   const isFiltering = query.trim().length > 0 || unitFilter !== null
 
   const filtered = allMembers
@@ -363,7 +337,15 @@ export default function PeopleScreen() {
                   className="border-b border-border last:border-0 hover:bg-accent/50"
                 >
                   <th scope="row" className="px-3 py-2 font-normal">
-                    <DirectoryName member={m} href={href} />
+                    <DirectoryName
+                      member={m}
+                      href={href}
+                      unitColour={unitColorClass(
+                        unitPalette,
+                        m.unitId,
+                        m.membershipRole === 'head',
+                      )}
+                    />
                   </th>
                   <td className="px-3 py-2">
                     {unitName ??
@@ -406,8 +388,6 @@ export default function PeopleScreen() {
       >
         {filtered.map((m) => (
           <StaggerItem key={m.userId} className="h-full">
-            {/* Already filtered to exactly this unit (the filter chip bar above names it) -- no
-                `onFilterByUnit` here, since re-applying the same filter would be a no-op action. */}
             <div
               data-member-id={m.userId}
               className={cn(
@@ -418,10 +398,10 @@ export default function PeopleScreen() {
             >
               <MemberCard
                 member={m}
+                unitColour={unitColorClass(unitPalette, m.unitId, m.membershipRole === 'head')}
                 unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
                 profileHref={profileHrefFor(m.userId)}
                 onAssign={m.userId === session.user?.id ? undefined : () => setAssignTarget(m)}
-                telegramDeepLink={telegramByUser.get(m.userId)}
               />
             </div>
           </StaggerItem>
@@ -432,8 +412,24 @@ export default function PeopleScreen() {
     body = (
       <div className="flex flex-col gap-8">
         {groups.map((group) => (
-          <section key={group.unit?.id ?? group.scope} className="flex flex-col gap-3">
-            <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+          <section
+            key={group.unit?.id ?? group.scope}
+            data-unit-color={unitColorClass(
+              unitPalette,
+              group.unit?.id,
+              group.scope === 'department',
+            )}
+            style={
+              {
+                '--directory-unit': `var(${unitColorClass(unitPalette, group.unit?.id, group.scope === 'department').replace('bg-', '--color-')})`,
+              } as React.CSSProperties
+            }
+            className="flex min-w-0 flex-col gap-4 rounded-lg border border-border bg-[color-mix(in_oklab,var(--directory-unit)_5%,var(--color-background))] p-3 sm:p-4"
+          >
+            <h2 className="flex items-center gap-3 text-lead font-semibold sm:text-h3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_oklab,var(--directory-unit)_15%,var(--color-card))] text-foreground">
+                <Building2 className="size-5" aria-hidden="true" />
+              </span>
               {group.unit
                 ? group.label
                 : t(
@@ -461,13 +457,16 @@ export default function PeopleScreen() {
                   >
                     <MemberCard
                       member={m}
+                      unitColour={unitColorClass(
+                        unitPalette,
+                        m.unitId,
+                        m.membershipRole === 'head',
+                      )}
                       unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
-                      onFilterByUnit={m.unitId ? setUnitFilter : undefined}
                       profileHref={profileHrefFor(m.userId)}
                       onAssign={
                         m.userId === session.user?.id ? undefined : () => setAssignTarget(m)
                       }
-                      telegramDeepLink={telegramByUser.get(m.userId)}
                     />
                   </div>
                 </StaggerItem>
@@ -574,16 +573,18 @@ export default function PeopleScreen() {
 function DirectoryName({
   member,
   href,
+  unitColour,
 }: {
   member: Member
   href: string | undefined
+  unitColour: string
 }): React.JSX.Element {
   const content = (
     <span className="flex items-center gap-2.5">
       <Avatar
         size="sm"
         alt={fullName(member)}
-        hueSeed={member.unitId ?? member.userId}
+        className={unitColour}
         initials={initialsFromName(member.givenName, member.familyName)}
         src={avatarUrl(member.avatarKey, 64)}
       />

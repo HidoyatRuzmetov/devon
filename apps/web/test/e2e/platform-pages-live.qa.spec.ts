@@ -71,7 +71,7 @@ test('@qa two open knowledge views receive committed create edit restore delete 
     await expect
       .poll(async () => (await (await owner.request.get(path)).json()).title)
       .toBe(updated)
-    await expect(observer.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(updated)
+    await expect(observer.getByRole('heading', { name: updated, exact: true })).toBeVisible()
     await expect.poll(() => wire.types).toContain('pages.page.updated')
     const history = editor
       .getByRole('heading', { name: 'Version history', exact: true })
@@ -86,7 +86,7 @@ test('@qa two open knowledge views receive committed create edit restore delete 
     await history.getByRole('button', { name: 'Restore this version', exact: true }).click()
     expect((await restoredReply).status()).toBe(200)
     expect((await (await colleague.request.get(path)).json()).title).toBe(initial)
-    await expect(observer.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(initial)
+    await expect(observer.getByRole('heading', { name: initial, exact: true })).toBeVisible()
     await expect.poll(() => wire.types).toContain('pages.page.version_restored')
     await observer.getByRole('button', { name: /Back to pages/ }).click()
     await expect(observer.getByText(initial, { exact: true })).toBeVisible()

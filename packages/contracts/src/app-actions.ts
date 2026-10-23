@@ -533,11 +533,11 @@ export const APP_ACTIONS = {
     action: 'update',
     subject: 'department_child',
   },
-  'pages.delete': { area: 'pages', action: 'delete', subject: 'owned' },
+  'pages.delete': { area: 'pages', action: 'delete', subject: 'department_child' },
   'pages.version.restore': {
     area: 'pages',
     action: 'update',
-    subject: 'owned',
+    subject: 'department_child',
   },
   'pages.onboarding.template.manage': {
     area: 'pages',

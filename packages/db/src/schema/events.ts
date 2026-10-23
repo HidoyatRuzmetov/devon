@@ -95,6 +95,7 @@ export const eventComments = appSchema.table('event_comments', {
   authorUserId: uuid('author_user_id').notNull(),
   body: text('body').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  editedAt: timestamp('edited_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 })
 

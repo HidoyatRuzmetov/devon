@@ -77,6 +77,50 @@ afterAll(async () => {
 })
 
 describe('live helper context and isolation', () => {
+  it('plans active personal project assignments against real milestone outcomes', async () => {
+    const planningDepartment = (
+      await seedDepartment(db, {
+        name: 'Project planning regression',
+        slug: `planning-${randomUUID()}`,
+      })
+    ).id
+    const planner = (await seedMember(db, planningDepartment, { role: 'head' })).id
+    const project = randomUUID(),
+      active = randomUUID(),
+      done = randomUUID(),
+      archived = randomUUID()
+    const milestones = [
+      { id: randomUUID(), title: 'Publish audited evidence', dueOn: '2026-12-01', doneAt: null },
+    ]
+    await superuserQuery(
+      db,
+      `insert into app.projects(id,department_id,title,owner_user_id,members,status,milestones) values($1,$2,'Assignment planning',$3,array[$3]::uuid[],'active',$4::jsonb)`,
+      [project, planningDepartment, planner, JSON.stringify(milestones)],
+    )
+    await superuserQuery(
+      db,
+      `insert into app.cards(id,department_id,title,assignee_user_id,giver_user_id,created_by_user_id,project_id,project_scope,kind,status) values($1,$2,'Personal evidence assignment',$3,$3,$3,$4,'subjective','project_task','active'),($5,$2,'Finished assignment',$3,$3,$3,$4,'subjective','project_task','done'),($6,$2,'Archived assignment',$3,$3,$3,$4,'subjective','project_task','archived')`,
+      [active, planningDepartment, planner, project, done, archived],
+    )
+    const input = await prepareFeatureInput(
+      { ...ctx, userId: planner, departmentId: planningDepartment },
+      planningDepartment,
+      'plan_sprint',
+      {
+        locale: 'en',
+        scope: 'project',
+        projectId: project,
+        items: [],
+        projectMilestones: [{ id: 'fake', title: 'Forged outcome' }],
+      },
+    )
+    expect(input['items']).toMatchObject([
+      { id: active, title: 'Personal evidence assignment', assigneeName: 'Test User' },
+    ])
+    expect(input['items']).toHaveLength(1)
+    expect(input['projectMilestones']).toEqual(milestones)
+    expect(input['goal']).toBe('Assignment planning')
+  })
   it('uses real project recap totals and a compact at-risk board with true blockers', async () => {
     const recap = await prepareFeatureInput(ctx, departmentId, 'catch_up', {
       locale: 'en',

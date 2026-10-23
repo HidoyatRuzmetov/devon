@@ -44,7 +44,6 @@ const CARDS_KEY = ['work', 'cards'] as const
 const CARD_KEY = (id: string) => ['work', 'card', id] as const
 const LABELS_KEY = ['work', 'labels'] as const
 const VIEWS_KEY = ['work', 'views'] as const
-const ARCHIVE_KEY = (userId: string) => ['work', 'archive', userId] as const
 
 // The four-second poll that stood in for real-time push until v1.1 (EPIC-018 built the transport:
 // `lib/realtime` + Centrifugo). It is still here, and deliberately so -- Centrifugo is an optional
@@ -115,14 +114,6 @@ export function useLabelsQuery(): UseQueryResult<Label[], Error> {
 
 export function useSavedViewsQuery(): UseQueryResult<SavedView[], Error> {
   return useQuery({ queryKey: VIEWS_KEY, queryFn: api.fetchSavedViews })
-}
-
-export function useArchiveQuery(userId: string | null) {
-  return useQuery({
-    queryKey: ARCHIVE_KEY(userId ?? ''),
-    queryFn: () => api.fetchArchive(userId!),
-    enabled: userId !== null,
-  })
 }
 
 // --- shared cache-patching helpers --------------------------------------------------------------
@@ -362,7 +353,7 @@ const latestMoves = new WeakMap<QueryClient, Map<string, symbol>>()
 
 /** A card belonging to a project keeps `status: 'done'` (progress math on the project page counts
  * `status = 'done'` rows -- `apps/api/src/modules/projects/repo.ts`'s `getProgress`); a standalone
- * card goes straight to `'archived'` (People board and archive page both key off that exact status --
+ * card goes straight to `'archived'` (People board and completed lists both key off that exact status --
  * TECH-SPEC's "done cards leave the board into the person's archive"). Either way the card leaves the
  * active People board (`GET /board` only ever returns `status = 'active'` rows). */
 export function nextDoneStatus(card: Pick<Card, 'projectScope'>): CardStatus {
@@ -535,4 +526,26 @@ export function useUnfurlMutation() {
 export function useMembers(): api.MemberSummary[] {
   const board = useBoardQuery().data
   return React.useMemo(() => board?.members ?? [], [board])
+}
+
+export function useEditCommentMutation(cardId: string) {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (input: {
+      id: string
+      text: string
+      mentions: string[]
+      editedAt: string | null
+    }) => api.editComment(cardId, input.id, input, csrf),
+    onSuccess: () => invalidateCard(qc, cardId),
+  })
+}
+export function useDeleteCommentMutation(cardId: string) {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (id: string) => api.deleteComment(cardId, id, csrf),
+    onSuccess: () => invalidateCard(qc, cardId),
+  })
 }

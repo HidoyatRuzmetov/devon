@@ -30,7 +30,6 @@ import { UnsafeUrlError, unfurlLink } from './link-unfurl.js'
 import { registerWorkPlusRoutes } from './plus-routes.js'
 import * as repo from './repo.js'
 import {
-  archiveListSchema,
   boardSchema,
   cardChecklistParamsSchema,
   cardDetailSchema,
@@ -40,6 +39,7 @@ import {
   createCardBodySchema,
   createChecklistItemBodySchema,
   createCommentBodySchema,
+  patchCommentBodySchema,
   createLabelBodySchema,
   createSavedViewBodySchema,
   idParamsSchema,
@@ -629,6 +629,60 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
+  app.patch(
+    '/cards/:id/comments/:commentId',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: z.object({ id: z.string().uuid(), commentId: z.string().uuid() }),
+        body: patchCommentBodySchema,
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.changeComment(
+        contextFromRequest(req),
+        req.actor,
+        requireDepartmentId(req)!,
+        req.params.id,
+        req.params.commentId,
+        { text: req.body.text, mentions: req.body.mentions ?? [], editedAt: req.body.editedAt },
+      )
+      if (result !== 'ok') return sendProblem(reply, result)
+      return reply.code(204).send()
+    },
+  )
+  app.delete(
+    '/cards/:id/comments/:commentId',
+    {
+      config: {
+        permission: {
+          action: 'delete',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: z.object({ id: z.string().uuid(), commentId: z.string().uuid() }) },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.changeComment(
+        contextFromRequest(req),
+        req.actor,
+        requireDepartmentId(req)!,
+        req.params.id,
+        req.params.commentId,
+        null,
+      )
+      if (result !== 'ok') return sendProblem(reply, result)
+      return reply.code(204).send()
+    },
+  )
+
   app.get(
     '/cards/:id/activity',
     {
@@ -767,33 +821,6 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (!ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()
-    },
-  )
-
-  app.get(
-    '/archive',
-    {
-      config: {
-        permission: {
-          action: 'read',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        querystring: z.object({ userId: z.string().uuid() }),
-        response: { 200: archiveListSchema },
-      },
-    },
-    async (req, reply) => {
-      const departmentId = requireDepartmentId(req)!
-      const ctx = contextFromRequest(req)
-      const [members, items] = await Promise.all([
-        repo.getMembers(ctx, departmentId),
-        repo.listArchiveForMember(ctx, departmentId, req.query.userId),
-      ])
-      const member = members.find((m) => m.userId === req.query.userId)
-      if (!member) return sendProblem(reply, 'not_found')
-      return reply.send({ member, items })
     },
   )
 

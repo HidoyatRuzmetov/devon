@@ -65,7 +65,11 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       `[flow global-setup] starting apps/api on ${FLOW_API_BASE_URL} (log: ${FLOW_API_LOG_FILE})`,
     )
     // Test servers must not restart halfway through requests when another local edit is saved.
-    apiProcess = spawnManaged('pnpm', ['--filter', '@devon/api', 'exec', 'tsx', 'src/server.ts'], {
+    const apiEntry =
+      process.env['FLOW_AI_ACTION_FIXTURE'] === '1'
+        ? 'test/checks/flow-ai-actions-server.ts'
+        : 'src/server.ts'
+    apiProcess = spawnManaged('pnpm', ['--filter', '@devon/api', 'exec', 'tsx', apiEntry], {
       cwd: REPO_ROOT,
       logFile: FLOW_API_LOG_FILE,
       env: {

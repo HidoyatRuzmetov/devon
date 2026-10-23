@@ -9,7 +9,8 @@
 // this file branches on which one ran except to say so in the UI.
 //
 // Every statement here is set-based. There is no "for each card, run a query" anywhere in this file
-// (I-9) -- the indexer is four `insert ... select ... on conflict do update` statements, and the
+// (I-9) -- the indexer batches journaled changes in `insert ... select ... on conflict do update`
+// statements, and the
 // embedding sidecar reads a whole batch, embeds it in one provider call, and writes it back with one
 // `update ... from (values ...)`.
 import { sql, type SQL } from 'drizzle-orm'
@@ -41,22 +42,30 @@ function docText(column: SQL): SQL {
 
 /** Bound on how much text one row contributes: a 40-page meeting note is not a better search result
  * for having all of it in the index, and `tsvector` has a 1 MB limit per value. */
-const BODY_CHARS = 4000
+const BODY_CHARS = 200000
 
 /**
- * Rebuilds this department's slice of the index from the live tables. Idempotent and cheap to repeat:
- * `on conflict ... do update` only touches rows whose text actually changed, so a no-op refresh
- * writes nothing and the embedding sidecar's staleness test stays meaningful.
+ * Applies this department's durable change journal to its index. Unchanged records are not read;
+ * a no-op refresh writes nothing. Changed text invalidates embeddings, while deleted sources are
+ * removed. Journal rows are locked and only the captured keys are consumed.
  *
  * Returns how many rows were inserted or updated.
  */
 export async function refreshIndex(tx: Tx, departmentId: string): Promise<number> {
+  const dirty = await tx.raw<{
+    subject_type: string
+    subject_id: string
+  }>(sql`select subject_type,subject_id from app.ai_index_dirty
+    where department_id=${departmentId} order by subject_type,subject_id for update`)
+  if (!dirty.length) return 0
+  const ids = (kind: string) =>
+    dirty.filter((row) => row.subject_type === kind).map((row) => row.subject_id)
   const statements: SQL[] = [
     sql`
       insert into app.ai_search_documents (department_id, subject_type, subject_id, title, body)
       select c.department_id, 'card', c.id, c.title, left(${docText(sql`c.description`)}, ${BODY_CHARS})
       from app.cards c
-      where c.department_id = ${departmentId} and c.deleted_at is null
+      where c.department_id = ${departmentId} and c.deleted_at is null and c.id=any(${sql.param(ids('card'))}::uuid[])
       on conflict (department_id, subject_type, subject_id) do update
         set title = excluded.title, body = excluded.body, updated_at = now()
         where app.ai_search_documents.title is distinct from excluded.title
@@ -68,7 +77,7 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
              left(${docText(sql`cm.body`)}, ${BODY_CHARS})
       from app.card_comments cm
       join app.cards c on c.id = cm.card_id and c.deleted_at is null
-      where cm.department_id = ${departmentId} and cm.deleted_at is null
+      where cm.department_id = ${departmentId} and cm.deleted_at is null and cm.id=any(${sql.param(ids('comment'))}::uuid[])
       on conflict (department_id, subject_type, subject_id) do update
         set title = excluded.title, body = excluded.body, updated_at = now()
         where app.ai_search_documents.title is distinct from excluded.title
@@ -78,7 +87,7 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
       insert into app.ai_search_documents (department_id, subject_type, subject_id, title, body)
       select p.department_id, 'page', p.id, p.title, left(${docText(sql`p.blocks`)}, ${BODY_CHARS})
       from app.pages p
-      where p.department_id = ${departmentId} and p.deleted_at is null
+      where p.department_id = ${departmentId} and p.deleted_at is null and p.id=any(${sql.param(ids('page'))}::uuid[])
       on conflict (department_id, subject_type, subject_id) do update
         set title = excluded.title, body = excluded.body, updated_at = now()
         where app.ai_search_documents.title is distinct from excluded.title
@@ -89,7 +98,7 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
       select e.department_id, 'event', e.id, e.title,
              left(concat_ws(' ', coalesce(e.description, ''), coalesce(e.place, '')), ${BODY_CHARS})
       from app.events e
-      where e.department_id = ${departmentId} and e.deleted_at is null
+      where e.department_id = ${departmentId} and e.deleted_at is null and e.id=any(${sql.param(ids('event'))}::uuid[])
       on conflict (department_id, subject_type, subject_id) do update
         set title = excluded.title, body = excluded.body, updated_at = now()
         where app.ai_search_documents.title is distinct from excluded.title
@@ -98,6 +107,13 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
   ]
 
   let touched = 0
+  statements.push(sql`
+    insert into app.ai_search_documents(department_id,subject_type,subject_id,title,body)
+    select p.department_id,'project',p.id,p.title,left(concat_ws(' ',${docText(sql`p.description`)},p.milestones::text),${BODY_CHARS})
+    from app.projects p where p.department_id=${departmentId} and p.deleted_at is null and p.id=any(${sql.param(ids('project'))}::uuid[])
+    on conflict(department_id,subject_type,subject_id) do update set title=excluded.title,body=excluded.body,updated_at=now()
+    where app.ai_search_documents.title is distinct from excluded.title or app.ai_search_documents.body is distinct from excluded.body
+  `)
   for (const statement of statements) {
     // nosemgrep: query-in-loop -- Four bulk INSERT SELECT statements share one transaction connection; never per-row queries.
     const rows = await tx.raw<{ id: string }>(sql`${statement} returning id`)
@@ -119,9 +135,16 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
           and not exists (select 1 from app.pages p where p.id = d.subject_id and p.deleted_at is null))
         or (d.subject_type = 'event'
           and not exists (select 1 from app.events e where e.id = d.subject_id and e.deleted_at is null))
+        or (d.subject_type = 'project'
+          and not exists (select 1 from app.projects p where p.id = d.subject_id and p.deleted_at is null))
       )
   `)
 
+  await tx.raw(sql`delete from app.ai_index_dirty where department_id=${departmentId}
+    and (subject_type,subject_id) in (${sql.join(
+      dirty.map((row) => sql`(${row.subject_type},${row.subject_id}::uuid)`),
+      sql`,`,
+    )})`)
   return touched
 }
 

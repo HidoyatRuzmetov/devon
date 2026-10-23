@@ -4,9 +4,8 @@
 // department's pages/onboarding templates -- TECH-SPEC §2.3: "member ... create/edit/archive ...
 // pages"); every mutation checks CSRF exactly like `PATCH /api/v1/me`.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { can } from '@devon/contracts'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
@@ -109,32 +108,8 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     departmentId: activeDepartmentId(r),
   })
 
-  /**
-   * v1.1 SPEC §2.2 (D4a/D4b). A wiki works because *editing* is open and version history is the
-   * safety net -- deleting a page and rolling back somebody's work are not editing. Author or head.
-   */
-  const requirePageOwnership = async (
-    req: FastifyRequest,
-    reply: FastifyReply,
-    pageId: string,
-  ): Promise<boolean> => {
-    const page = await repo.getPage(activeDepartmentId(req), pageId, ctxFrom(req))
-    if (!page) {
-      sendProblem(reply, 'not_found')
-      return false
-    }
-    const decision = can(req.actor, 'delete', {
-      kind: 'owned',
-      departmentId: activeDepartmentId(req),
-      ownerUserIds: [page.created_by_user_id],
-    })
-    if (!decision.allowed) {
-      sendProblem(reply, 'forbidden')
-      return false
-    }
-    return true
-  }
-
+  // Pages are a shared department wiki. Active members may edit, delete and restore; version
+  // history and the audit log preserve attribution and recovery for every change.
   // -- Pages ------------------------------------------------------------------------------------------
 
   app.get(
@@ -235,14 +210,13 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      if (!(await requirePageOwnership(req, reply, req.params.id))) return
       const ok = await repo.deletePage(activeDepartmentId(req), req.params.id, ctxFrom(req))
       if (!ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()
     },
   )
 
-  // SPEC 12: the undo behind the delete toast. Same ownership gate as the delete itself -- whoever
+  // SPEC 12: the undo behind the delete toast. Same department gate as the delete itself -- whoever
   // was allowed to remove it is allowed to put it back, and nobody else.
   app.post(
     '/:id/restore',
@@ -329,7 +303,6 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      if (!(await requirePageOwnership(req, reply, req.params.id))) return
       const outcome = await repo.restoreVersion(
         activeDepartmentId(req),
         req.actor!.userId,

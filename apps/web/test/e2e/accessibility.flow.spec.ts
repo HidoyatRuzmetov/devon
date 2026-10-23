@@ -20,7 +20,7 @@ import {
 // scanning login redirects or missing-ID error screens and reporting those as successful coverage.
 const inventory = JSON.parse(
   readFileSync(new URL('../../../../e2e/routes.json', import.meta.url), 'utf8'),
-) as { routes: { path: string; auth: string; heading: string }[] }
+) as { routes: { path: string; auth: string; heading: string; redirect?: string }[] }
 
 async function inspect(page: Page, path: string, info: TestInfo, publicHeadingKey?: string) {
   await page.goto(path)
@@ -58,9 +58,12 @@ async function inspect(page: Page, path: string, info: TestInfo, publicHeadingKe
       `${path}: data must load`,
     )
     .toHaveCount(0)
+  const expectedPath =
+    inventory.routes.find((route) => route.path === path.split('?')[0])?.redirect ??
+    path.split('?')[0]
   expect
-    .soft(new URL(page.url()).pathname, `route ${path} must render, not redirect`)
-    .toBe(path.split('?')[0])
+    .soft(new URL(page.url()).pathname, `route ${path} must reach its documented destination`)
+    .toBe(expectedPath)
   const result = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze()

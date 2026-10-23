@@ -34,7 +34,7 @@ COPY packages/ui/package.json packages/ui/package.json
 # `--frozen-lockfile`: a production image must never silently resolve a different dependency tree than
 # the one CI's gates tested (H18.1 reproducible builds). Every workspace package's manifest is copied
 # above so pnpm's workspace linker sees the whole graph even though only apps/api's code follows.
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --network-concurrency=8 --fetch-timeout=120000
 
 # --- runtime: only what `tsx src/server.ts` needs at process-start, nothing from apps/web/e2e/docs. --
 FROM ${NODE_IMAGE} AS runtime

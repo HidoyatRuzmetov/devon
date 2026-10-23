@@ -66,7 +66,7 @@ async function state(id: string) {
     )
   )[0]
 }
-describe('knowledge-page restore has an actual owner or current head', () => {
+describe('knowledge-page restore requires a current department membership', () => {
   it.each(['owner', 'head'] as const)(
     'restores for the %s with an atomic version, audit and outbox receipt',
     async (role) => {
@@ -94,12 +94,15 @@ describe('knowledge-page restore has an actual owner or current head', () => {
       expect(receipts[0]).toEqual({ audits: 1, events: 1 })
     },
   )
-  it('rejects an editing colleague without changing the deleted row', async () => {
+  it('lets an active colleague restore a shared page under the shared wiki policy', async () => {
     const page = await deletedPage()
     const before = await state(page.id)
-    expect((await request(colleagueSession, `/${page.id}/restore`, 'POST', {})).status).toBe(403)
-    expect(await state(page.id)).toEqual(before)
-    expect((await request(colleagueSession, `/${page.id}`)).status).toBe(404)
+    expect((await request(colleagueSession, `/${page.id}/restore`, 'POST', {})).status).toBe(204)
+    expect(await state(page.id)).toEqual({
+      deleted: false,
+      version: Number(before?.['version']) + 1,
+    })
+    expect((await request(colleagueSession, `/${page.id}`)).status).toBe(200)
   })
   it('bounds the undo window and unknown identifiers with a conflict', async () => {
     const page = await deletedPage()

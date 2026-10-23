@@ -256,7 +256,9 @@ async function main(): Promise<void> {
     })
     assertEqual(staleRes.status, 409, 'stale version conflict status')
 
-    step('archive: PATCH status=archived, GET /archive shows it, POST /restore brings it back')
+    step(
+      'archive: PATCH status=archived, filtered GET /cards shows it, POST /restore brings it back',
+    )
     const archiveRes = await fetch(`${server.baseUrl}/api/v1/cards/${card.id}`, {
       method: 'PATCH',
       headers,
@@ -264,11 +266,14 @@ async function main(): Promise<void> {
     })
     assertEqual(archiveRes.status, 200, 'archive status')
     const archiveList = (await (
-      await fetch(`${server.baseUrl}/api/v1/archive?userId=${user.id}`, { headers: { cookie } })
+      await fetch(
+        `${server.baseUrl}/api/v1/cards?q=${encodeURIComponent('status:archived assignee:@me')}`,
+        { headers: { cookie } },
+      )
     ).json()) as { items: { id: string }[] }
     assertTrue(
       archiveList.items.some((c) => c.id === card.id),
-      'archived card appears in /archive',
+      'archived card appears in the filtered card list',
     )
     // Body `{}` mirrors the web client (`apiClient.post(..., {}, ...)` in `features/work/api.ts`):
     // Fastify rejects a body-less request that still carries `content-type: application/json`.

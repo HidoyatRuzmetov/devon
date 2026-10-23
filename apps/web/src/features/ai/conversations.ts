@@ -1,5 +1,12 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { aiConversationSchema, aiConversationsSchema, type AiConversation } from '@devon/contracts'
+import {
+  aiChatAttachmentSchema,
+  aiConversationSchema,
+  aiConversationsSchema,
+  type AiChatAttachment,
+  type AiConversation,
+} from '@devon/contracts'
+import { z } from 'zod'
 import type { Locale } from '@devon/i18n'
 import { apiClient } from '../../lib/api-client.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
@@ -38,7 +45,13 @@ export function useConversationQuery(id: string | null) {
     queryKey: [...scope.key, id],
     queryFn: () => apiClient.get(`${BASE}/${id}`, aiConversationSchema),
     enabled: scope.enabled && Boolean(id),
-    refetchInterval: (query) => (query.state.data?.status === 'running' ? 3_000 : false),
+    refetchInterval: (query) =>
+      query.state.data?.status === 'running' ||
+      query.state.data?.messages.some((message) =>
+        message.proposals?.some((proposal) => proposal.status === 'executing'),
+      )
+        ? 3_000
+        : false,
   })
 }
 
@@ -59,12 +72,19 @@ export function useSendConversationMessageMutation() {
   const scope = useConversationScope()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (input: { conversationId: string; id: string; content: string }) =>
+    mutationFn: (input: {
+      conversationId: string
+      id: string
+      content: string
+      attachmentIds?: string[]
+      attachments?: AiChatAttachment[]
+    }) =>
       apiClient.post(
         `${BASE}/${input.conversationId}/messages`,
         {
           id: input.id,
           content: input.content,
+          attachmentIds: input.attachmentIds ?? [],
         },
         aiConversationSchema,
         scope.csrf,
@@ -88,6 +108,7 @@ export function useSendConversationMessageMutation() {
                   error: null,
                   sources: [],
                   context: null,
+                  attachments: input.attachments ?? [],
                 },
               ],
             }
@@ -100,6 +121,105 @@ export function useSendConversationMessageMutation() {
       void qc.invalidateQueries({ queryKey: [...scope.key, input.conversationId] })
       void qc.invalidateQueries({ queryKey: [...scope.key, 'list'] })
       void qc.invalidateQueries({ queryKey: ['ai', 'settings'] })
+    },
+  })
+}
+
+/** A proposal is a saved, server-authorized operation. The browser never executes model-supplied
+ * URLs or JavaScript; it can only confirm or discard the opaque proposal ID. */
+export function useConversationProposalMutation(action: 'execute' | 'discard') {
+  const scope = useConversationScope()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { conversationId: string; proposalId: string }) =>
+      apiClient.post(
+        `${BASE}/${encodeURIComponent(input.conversationId)}/proposals/${encodeURIComponent(input.proposalId)}/${action}`,
+        {},
+        aiConversationSchema,
+        scope.csrf,
+      ),
+    onSuccess: (conversation) => {
+      qc.setQueryData([...scope.key, conversation.id], conversation)
+      void qc.invalidateQueries({ queryKey: [...scope.key, 'list'] })
+      if (action === 'execute') {
+        for (const key of [
+          'work',
+          'projects',
+          'pages',
+          'events',
+          'analytics',
+          'personal',
+          'structure',
+          'inbox',
+        ])
+          void qc.invalidateQueries({ queryKey: [key] })
+      }
+    },
+    onSettled: (_data, _error, input) => {
+      // A lost acknowledgement must be reconciled before another click; the server owns the
+      // idempotency guard and only the persisted executed state is shown as success.
+      void qc.invalidateQueries({ queryKey: [...scope.key, input.conversationId] })
+    },
+  })
+}
+
+const chatUploadSchema = z.object({
+  uploadId: z.string(),
+  url: z.string(),
+  method: z.literal('PUT'),
+  headers: z.record(z.string(), z.string()),
+})
+export type ChatUploadTransfer = { file: File; signed: z.infer<typeof chatUploadSchema> }
+export function useConversationUploadMutation() {
+  const scope = useConversationScope()
+  return useMutation({
+    mutationFn: async (input: {
+      conversationId: string
+      file: File
+      signal: AbortSignal
+      transfer?: ChatUploadTransfer
+      finalizeId?: string
+      onTransfer: (transfer: ChatUploadTransfer) => void
+      onScanning: (id: string) => void
+    }): Promise<AiChatAttachment | 'approval'> => {
+      const base = `${BASE}/${encodeURIComponent(input.conversationId)}/attachments`
+      input.signal.throwIfAborted()
+      if (input.finalizeId) {
+        input.onScanning(input.finalizeId)
+        return apiClient.post(
+          `${base}/${encodeURIComponent(input.finalizeId)}/finalize`,
+          {},
+          aiChatAttachmentSchema,
+          scope.csrf,
+        )
+      }
+      let transfer = input.transfer
+      if (!transfer) {
+        const signed = await apiClient.post(
+          `${base}/upload-url`,
+          { name: input.file.name, size: input.file.size },
+          z.union([chatUploadSchema, z.object({ approvalRequired: z.literal(true) })]),
+          scope.csrf,
+        )
+        if ('approvalRequired' in signed) return 'approval'
+        transfer = { file: input.file, signed }
+        input.onTransfer(transfer)
+      }
+      input.signal.throwIfAborted()
+      await apiClient.uploadFile(transfer.signed.url, {
+        method: transfer.signed.method,
+        headers: transfer.signed.headers,
+        body: transfer.file,
+        signal: input.signal,
+      })
+      input.signal.throwIfAborted()
+      input.onScanning(transfer.signed.uploadId)
+      return apiClient.post(
+        `${base}/${encodeURIComponent(transfer.signed.uploadId)}/finalize`,
+        {},
+        aiChatAttachmentSchema,
+        scope.csrf,
+      )
     },
   })
 }

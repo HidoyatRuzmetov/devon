@@ -1,7 +1,7 @@
 // Table view (TECH-SPEC §5): every card the current `?q=` filter matches, one row each, row-
 // virtualised (TanStack Virtual -- exact pinned version, `apps/web/package.json`) behind a sticky
 // header, with column sort, row checkboxes and a bulk action bar (assign/label/archive, archive
-// undoable), a density toggle, and inline edit on title/assignee/due -- the same `usePatchCardMutation`
+// undoable), and inline edit on title/assignee/due -- the same `usePatchCardMutation`
 // the card peek uses, so an edit here and an edit there are optimistic the same way. Built on CSS grid
 // plain `div`s rather than a real HTML table: a virtualised row needs `position: absolute` for its
 // transform-based offset, which browsers do not reliably honour on a genuine table-row element.
@@ -41,7 +41,6 @@ const PRIORITY_ORDER: Record<CardPriority, number> = {
 }
 type SortField = 'title' | 'assignee' | 'priority' | 'due' | 'status'
 type SortState = { field: SortField; dir: 'asc' | 'desc' }
-type Density = 'compact' | 'comfortable'
 
 // The 5th (due date) column has to hold the `DatePicker` trigger *and*, when a card is at risk, a
 // `Badge` reading e.g. "Muddati oʻtgan" (RISK_LABEL_KEY) side by side -- at the old 170px both never
@@ -61,26 +60,6 @@ type Density = 'compact' | 'comfortable'
 // assignee/priority/due/status columns need less width than a permanently-bordered control did --
 // that freed width, plus the unused strip, goes to the title column's `minmax` floor.
 const GRID_COLUMNS = '40px minmax(300px,1fr) 180px 120px 260px 140px'
-
-function useLocalStorageDensity(): [Density, (d: Density) => void] {
-  const key = 'devon.work.table.density'
-  const [density, setDensityState] = React.useState<Density>(() => {
-    try {
-      return window.localStorage.getItem(key) === 'compact' ? 'compact' : 'comfortable'
-    } catch {
-      return 'comfortable'
-    }
-  })
-  const setDensity = React.useCallback((next: Density) => {
-    setDensityState(next)
-    try {
-      window.localStorage.setItem(key, next)
-    } catch {
-      // Best-effort only -- the toggle still works for this render.
-    }
-  }, [])
-  return [density, setDensity]
-}
 
 function toDateInputValue(iso: string | null): Date | undefined {
   return iso ? new Date(iso) : undefined
@@ -144,7 +123,6 @@ export default function TableScreen() {
   const cardsQuery = useCardsQuery({ q: q || undefined, limit: 100 })
   const members = useMembers()
   const labels = useLabelsQuery().data ?? []
-  const [density, setDensity] = useLocalStorageDensity()
   const [sort, setSort] = React.useState<SortState | null>(null)
   const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(280)
   // Motion verdict F6: the scroll element is *state*, not a ref, so `VirtualRows` below re-renders
@@ -154,7 +132,7 @@ export default function TableScreen() {
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const cards = React.useMemo(() => cardsQuery.data ?? [], [cardsQuery.data])
-  const rowHeight = isDesktop ? (density === 'compact' ? 40 : 56) : MOBILE_ROW_HEIGHT
+  const rowHeight = isDesktop ? 48 : MOBILE_ROW_HEIGHT
   const setScrollerEl = React.useCallback(
     (el: HTMLDivElement | null) => {
       setScrollEl(el)
@@ -354,7 +332,7 @@ export default function TableScreen() {
     <>
       <WorkShell filterLayout="table">
         <div className="flex h-full flex-col gap-2">
-          <div className="relative flex min-h-9 items-center gap-2">
+          <div className="relative flex items-center gap-2">
             {/* round2 SEV2: the bulk bar used to simply appear the instant a row was checked --
                 sliding up from the header's bottom edge (springSettle, the same spring the app's
                 sheets settle with) reads as "this appeared because you selected something" instead
@@ -367,33 +345,6 @@ export default function TableScreen() {
                 onClear={clear}
               />
             </MultitaskToolbarSlot>
-            {selected.size === 0 ? (
-              <div
-                role="group"
-                aria-label={t('work.table.density.label')}
-                // round2 critique #30: at 390 the table already collapses every column into one
-                // and the toggle "means nothing" there -- hide it below the `md` breakpoint the rest
-                // of the shell uses for its own mobile cutover.
-                className="ml-auto hidden rounded-md border border-border p-0.5 md:flex"
-              >
-                {(['comfortable', 'compact'] as const).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    aria-pressed={density === d}
-                    onClick={() => setDensity(d)}
-                    className={cn(
-                      'rounded-sm px-2.5 py-1 text-caption font-medium transition-colors duration-(--dur-micro)',
-                      density === d
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {t(`work.table.density.${d}`)}
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
           <div className="min-h-0 flex-1">{body}</div>
         </div>
@@ -543,7 +494,7 @@ const TableRow = React.memo(function TableRow({
       // nothing to drop and it removes ~25 projection nodes from every scroll tick.
       //
       // The re-sort tell survives as pure CSS. `top` (from `vRow.start`) only ever changes for an
-      // already-mounted row when the *sort order* (or the density row height) moves that card to a
+      // already-mounted row when the *sort order* (or the responsive row height) moves that card to a
       // different index -- never on plain scrolling, since the virtualiser keeps each mounted row's
       // start fixed and only mounts and unmounts rows at the scroll edges. So a transform transition
       // fires exactly on a re-sort (the row travels to its new place, Linear's own tell) and never

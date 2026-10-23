@@ -1,19 +1,9 @@
 import { avatarUrl } from '../../../lib/avatar.js'
-// Shared chrome for every work-module route: the view-switcher tabs (Board/Table/Timeline/Calendar/
-// Mine/Archive), the quick-add bar and the filter bar. One component so a filter typed on the board
+// Shared chrome for every work-module route: the view-switcher tabs (Board/Table/Timeline/Calendar), the quick-add bar and the filter bar. One component so a filter typed on the board
 // is still there after clicking over to Table (TECH-SPEC "table, timeline, calendar and mine show the
 // same cards") -- the current `?q=` search string rides along on every tab link.
 import * as React from 'react'
-import {
-  CalendarDays,
-  ChevronDown,
-  Columns3,
-  ListTodo,
-  SlidersHorizontal,
-  Table2,
-  Timer,
-  Archive,
-} from 'lucide-react'
+import { CalendarDays, ChevronDown, Columns3, SlidersHorizontal, Table2, Timer } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { navigate, RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
 import {
@@ -43,18 +33,15 @@ import { FilterBar } from './filter-bar.js'
 import { QuickAddBar } from './quick-add-bar.js'
 import type { SavedViewLayout } from '../api.js'
 
-const TABS: ReadonlyArray<{ path: string; labelKey: string; layout: SavedViewLayout | 'archive' }> =
-  [
-    { path: '/work', labelKey: 'work.view.board', layout: 'people_board' },
-    { path: '/work/table', labelKey: 'work.view.table', layout: 'table' },
-    { path: '/work/timeline', labelKey: 'work.view.timeline', layout: 'timeline' },
-    { path: '/work/calendar', labelKey: 'work.view.calendar', layout: 'calendar' },
-    { path: '/work/mine', labelKey: 'work.view.mine', layout: 'mine' },
-    { path: '/work/archive', labelKey: 'work.view.archive', layout: 'archive' },
-  ]
+const TABS: ReadonlyArray<{ path: string; labelKey: string; layout: SavedViewLayout }> = [
+  { path: '/work', labelKey: 'work.view.board', layout: 'people_board' },
+  { path: '/work/table', labelKey: 'work.view.table', layout: 'table' },
+  { path: '/work/timeline', labelKey: 'work.view.timeline', layout: 'timeline' },
+  { path: '/work/calendar', labelKey: 'work.view.calendar', layout: 'calendar' },
+]
 
 export interface WorkShellProps {
-  /** Omit to hide the filter bar (the archive view has its own member switcher instead). */
+  /** Omit to hide the filter bar (standalone card details have no collection filters). */
   filterLayout?: SavedViewLayout
   /**
    * v1.1 critique SEV2 #18: "two identical 'Hammasi | Mening' segmented controls sit on one screen".
@@ -65,7 +52,7 @@ export interface WorkShellProps {
    * the only one it has.
    */
   hideMeControl?: boolean
-  /** Omit to hide the quick-add bar (archive, and the full card page, have nothing to quick-add). */
+  /** Omit to hide the quick-add bar (the full card page has its own actions). */
   showQuickAdd?: boolean
   /** View-specific controls share the view-switcher row on wide screens. */
   toolbar?: React.ReactNode
@@ -117,12 +104,9 @@ export function WorkShell({
     }
   }
   const searchSuffix = viewParams.size ? '?' + viewParams.toString() : ''
-  const archiveParams = new URLSearchParams(viewParams)
-  archiveParams.delete('q')
-  const archiveSuffix = archiveParams.size ? '?' + archiveParams.toString() : ''
   const meMode = (qs ?? '').split(/\s+/).includes(ME_CLAUSE)
   const activeTab = TABS.find((tab) => tab.path === path) ?? TABS[0]!
-  const viewIcons = [Columns3, Table2, Timer, CalendarDays, ListTodo, Archive]
+  const viewIcons = [Columns3, Table2, Timer, CalendarDays]
   const ActiveViewIcon = viewIcons[TABS.indexOf(activeTab)] ?? Columns3
 
   function setMeMode(next: 'all' | 'mine'): void {
@@ -204,9 +188,7 @@ export function WorkShell({
                 <DropdownMenuContent align="start">
                   <DropdownMenuRadioGroup
                     value={activeTab.path}
-                    onValueChange={(next) =>
-                      navigate(`${next}${next === '/work/archive' ? archiveSuffix : searchSuffix}`)
-                    }
+                    onValueChange={(next) => navigate(`${next}${searchSuffix}`)}
                   >
                     {TABS.map((tab, index) => {
                       const ViewIcon = viewIcons[index] ?? Columns3
@@ -229,7 +211,7 @@ export function WorkShell({
               {TABS.map((tab) => (
                 <RouterLink
                   key={tab.path}
-                  href={`${tab.path}${tab.layout === 'archive' ? archiveSuffix : searchSuffix}`}
+                  href={`${tab.path}${searchSuffix}`}
                   className={cn(
                     'relative -mb-px inline-flex min-h-11 items-center whitespace-nowrap px-2 text-small font-medium transition-colors duration-(--dur-micro)',
                     path === tab.path

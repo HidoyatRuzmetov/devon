@@ -25,6 +25,9 @@ overrides:
   'brace-expansion@5': 5.0.11
   '@grpc/grpc-js@1.14.4': 1.14.5
   'source-map-js@1.2.1': 1.2.2
+  # Reviewed upstream security patches, 2026-10-23 (GHSA-587h-7wmj-h5pm).
+  'launch-editor@2': 2.14.2
+  'vite@8.2.2': 8.2.4
 
 # Fail loudly on a Node/pnpm mismatch instead of installing anyway (I-18: no surprise later). Verified
 # against pnpm 11.15.0: as of pnpm 10+, install-behaviour settings like this one live here, not in
@@ -47,6 +50,8 @@ allowBuilds:
   esbuild: true
   protobufjs: true
   ssh2: true
+  # Document extraction disables OCR; no language-data downloads or OCR install scripts.
+  tesseract.js: false
 
 minimumReleaseAgeExclude:
   # Reviewed security fix for indexed-source-map denial of service, published 2026-09-30.

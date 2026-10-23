@@ -119,6 +119,9 @@ export class GlmProvider implements AiProvider {
       model: request.model,
       messages: request.messages.map(toWireMessage),
       max_tokens: request.maxTokens,
+      // Verified on the configured GLM-5 service: bounded reasoning leaves room for a final
+      // structured answer instead of consuming the entire completion allowance silently.
+      ...(/^glm-5/i.test(request.model) ? { reasoning_effort: 'low' } : {}),
       ...(request.temperature !== undefined ? { temperature: request.temperature } : {}),
       ...(request.tools && request.tools.length > 0
         ? {

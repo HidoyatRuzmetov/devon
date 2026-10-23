@@ -7,7 +7,16 @@
 // line to `schema/index.ts`") -- consumed directly by `packages/db/src/seed/modules/ai.ts`
 // (`import * as schema from '../../schema/ai.js'`); `apps/api/src/modules/ai` talks to these tables
 // through `Tx.raw()`, exactly like every other module's own repo.
-import { boolean, integer, jsonb, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import {
+  bigint,
+  boolean,
+  integer,
+  jsonb,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core'
 import { appSchema } from './app.js'
 
 export const aiTraceStatusEnum = appSchema.enum('ai_trace_status', [
@@ -114,4 +123,28 @@ export const aiBriefings = appSchema.table('ai_briefings', {
   requestedByUserId: uuid('requested_by_user_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+/** Derived caches. The migrations enforce owner-sensitive attachment visibility and journal RLS. */
+export const aiIndexDirty = appSchema.table(
+  'ai_index_dirty',
+  {
+    departmentId: uuid('department_id').notNull(),
+    subjectType: text('subject_type').notNull(),
+    subjectId: uuid('subject_id').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.departmentId, table.subjectType, table.subjectId] })],
+)
+export const aiContextRevisions = appSchema.table('ai_context_revisions', {
+  departmentId: uuid('department_id').primaryKey(),
+  revision: bigint('revision', { mode: 'bigint' }).notNull().default(1n),
+})
+export const aiFileText = appSchema.table('ai_file_text', {
+  attachmentId: uuid('attachment_id').primaryKey(),
+  departmentId: uuid('department_id').notNull(),
+  objectKey: text('object_key').notNull(),
+  parserVersion: integer('parser_version').notNull().default(1),
+  status: text('status').notNull(),
+  body: text('body').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })

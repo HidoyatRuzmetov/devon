@@ -41,7 +41,7 @@ test('@qa a long accepted page history stays readable and responds to keyboard s
     expect((await (await context.request.get(path)).json()).blocks).toEqual(doc('bravo'))
     const page = await context.newPage()
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto(`/pages?page=${created.id}`)
+    await page.goto(`/pages?page=${created.id}&edit=true`)
     const history = page
       .getByRole('heading', { name: 'Version history', exact: true })
       .locator('..')

@@ -18,6 +18,7 @@ import {
 } from '@devon/ai'
 import type { AiProvider, ChatMessage, Locale } from '@devon/ai'
 import { z } from 'zod'
+import { parseAction, proposedActionSchema } from './action-catalog.js'
 import * as search from './search-service.js'
 import * as repo from './repo.js'
 import { prepareFeatureInput } from './request-context.js'
@@ -65,6 +66,7 @@ export function __setProviderForTests(provider: AiProvider | null): void {
 const chatAnswerSchema = z.object({
   content: z.string().trim().min(1).max(12_000),
   citations: z.array(z.string()).max(20),
+  actions: z.array(proposedActionSchema).max(5).default([]),
 })
 
 /** Conversation answers share the same flags, configured GLM, metering and outage breaker as Ask.
@@ -90,8 +92,8 @@ export async function runDepartmentChatForActor(
     (n, message) => n + Buffer.byteLength(message.content ?? '', 'utf8') + 16,
     0,
   )
-  if (promptBytes > 120_000) throw new Error('context_limit')
-  const worstCaseTokens = (promptBytes + 8192) * 3
+  if (promptBytes > 700_000) throw new Error('context_limit')
+  const worstCaseTokens = (promptBytes + 16384) * 3
   if (
     !canAffordCall(
       spent,
@@ -112,7 +114,7 @@ export async function runDepartmentChatForActor(
     feature: 'semantic_ask',
     messages: input.messages,
     signal: input.signal,
-    maxTokens: 4096,
+    maxTokens: 8192,
     temperature: 0.1,
     overallTimeoutMs: 180_000,
     tool: {
@@ -126,18 +128,54 @@ export async function runDepartmentChatForActor(
         properties: {
           content: { type: 'string', maxLength: 12000 },
           citations: { type: 'array', maxItems: 20, items: { type: 'string' } },
+          actions: {
+            type: 'array',
+            maxItems: 5,
+            items: {
+              type: 'object',
+              properties: {
+                kind: { type: 'string' },
+                title: { type: 'string' },
+                summary: { type: 'string' },
+                arguments: { type: 'object' },
+              },
+              required: ['kind', 'title', 'summary', 'arguments'],
+              additionalProperties: false,
+            },
+          },
         },
         required: ['content', 'citations'],
         additionalProperties: false,
       },
     },
-    validate: (output) =>
-      output.citations.every((ref) => input.allowedRefs.has(ref))
-        ? { ok: true, output }
-        : {
-            ok: false,
-            error: 'Use only source refs from the fresh authorized context. Do not invent a ref.',
+    validate: (output) => {
+      if (!output.citations.every((ref) => input.allowedRefs.has(ref)))
+        return {
+          ok: false,
+          error: 'Use only source refs from the fresh authorized context. Do not invent a ref.',
+        }
+      try {
+        return {
+          ok: true,
+          output: {
+            ...output,
+            actions: output.actions.map((action) => ({
+              ...action,
+              arguments: parseAction(action.kind, action.arguments),
+            })),
           },
+        }
+      } catch (error) {
+        const detail = error instanceof Error ? error.message.slice(0, 1800) : 'Invalid arguments'
+        return {
+          ok: false,
+          error:
+            'An action did not match its registered schema: ' +
+            detail +
+            '. Correct the arguments exactly. attachmentIds belongs beside body, never inside body. If required information is missing, ask a question without an action.',
+        }
+      }
+    },
   })
   recordAiRunMetrics('semantic_ask', result.meta)
   if (result.meta.status === 'provider_error')
@@ -175,7 +213,11 @@ export async function runDepartmentChatForActor(
   if (!result.ok)
     throw new AiRunFailedError(
       'The answer could not be validated',
-      result.meta.status === 'timeout' ? 'timeout' : 'failed',
+      result.meta.status === 'timeout'
+        ? 'timeout'
+        : result.meta.status === 'empty_after_retry'
+          ? 'empty'
+          : 'failed',
     )
   return result.data
 }

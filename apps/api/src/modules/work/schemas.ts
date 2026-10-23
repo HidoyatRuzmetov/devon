@@ -240,9 +240,15 @@ export const patchChecklistItemBodySchema = z
   .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' })
 
 export const createCommentBodySchema = z.object({
-  text: z.string().min(1).max(10000),
-  mentions: z.array(z.string().uuid()).optional(),
+  text: z.string().trim().min(1).max(10000),
+  mentions: z.array(z.string().uuid()).max(100).optional(),
 })
+
+export const patchCommentBodySchema = createCommentBodySchema
+  .extend({
+    editedAt: z.iso.datetime().nullable(),
+  })
+  .strict()
 
 export const labelSchema = z.object({
   id: z.string().uuid(),
@@ -283,11 +289,6 @@ export const createSavedViewBodySchema = z.object({
   shared: z.boolean().optional(),
 })
 export const patchSavedViewBodySchema = createSavedViewBodySchema.partial()
-
-export const archiveListSchema = z.object({
-  member: memberSummarySchema,
-  items: z.array(cardSchema),
-})
 
 export const unfurlBodySchema = z.object({ url: z.string().url() })
 export const unfurlResultSchema = z.object({

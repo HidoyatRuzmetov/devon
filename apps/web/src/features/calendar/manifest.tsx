@@ -13,33 +13,18 @@
 // something in the next thirty days, so the number would never be absent and would therefore never
 // mean anything (DESIGN.md: a count is a fact about your work, never decoration).
 import * as React from 'react'
-import { CalendarClock } from 'lucide-react'
-import { queryClient } from '../../lib/query-client.js'
 import { useRealtimeBridge } from '../../lib/realtime/index.js'
 import type { FeatureManifest } from '../types.js'
 
-const CalendarScreen = React.lazy(() => import('./calendar-screen.js'))
+const CalendarScreen = React.lazy(() => import('../accounts/legacy-settings-screen.js'))
 
 const manifest: FeatureManifest = {
   name: 'calendar',
   routes: [{ path: '/calendar', component: CalendarScreen, titleKey: 'calendar.title' }],
-  sidebar: [
-    {
-      id: 'calendar',
-      labelKey: 'calendar.title',
-      icon: CalendarClock,
-      route: '/calendar',
-      // H5.2 "prefetch on hover/focus": warms the default 30-day agenda before the click.
-      onPrefetch: () => {
-        void import('./hooks.js')
-          .then(({ prefetchAgenda }) => prefetchAgenda(queryClient))
-          .catch(() => {})
-      },
-    },
-  ],
+  sidebar: [],
   commands: [
-    { id: 'calendar.feeds', labelKey: 'calendar.feeds.title', path: '/calendar?tab=feeds' },
-    { id: 'calendar.push', labelKey: 'calendar.push.title', path: '/calendar?tab=push' },
+    { id: 'calendar.feeds', labelKey: 'calendar.feeds.title', path: '/account/calendar?tab=feeds' },
+    { id: 'calendar.push', labelKey: 'calendar.push.title', path: '/account/calendar?tab=push' },
   ],
   useSidebarCounts: () => {
     useRealtimeBridge()

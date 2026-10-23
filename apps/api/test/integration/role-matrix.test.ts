@@ -279,7 +279,7 @@ describe('projects and pages: owner or head (D4, D5)', () => {
     expect(milestone.status).toBe(403)
   })
 
-  it("a member cannot delete the head's page, but may still edit it (D4a)", async () => {
+  it('a member can edit, delete and restore a shared page created by the head', async () => {
     const created = await fetch(`${baseUrl}/api/v1/pages`, {
       method: 'POST',
       headers: head.headers,
@@ -303,7 +303,16 @@ describe('projects and pages: owner or head (D4, D5)', () => {
       headers: member.headers,
       body: '{}',
     })
-    expect(del.status).toBe(403)
+    expect(del.status).toBe(204)
+    const restore = await fetch(`${baseUrl}/api/v1/pages/${page.id}/restore`, {
+      method: 'POST',
+      headers: member.headers,
+      body: '{}',
+    })
+    expect(restore.status).toBe(204)
+    const restored = await fetch(`${baseUrl}/api/v1/pages/${page.id}`, { headers: member.headers })
+    expect(restored.status).toBe(200)
+    expect(((await restored.json()) as { title: string }).title).toBe('a wiki is collaborative')
   })
 })
 

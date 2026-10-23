@@ -17,6 +17,7 @@ import { boardRiskDigestSpec } from './prompts/board-risk-digest.js'
 import { catchUpSpec } from './prompts/catch-up.js'
 import { deadlineRiskSpec } from './prompts/deadline-risk.js'
 import { draftEventSpec } from './prompts/draft-event.js'
+import { draftPageSpec } from './prompts/draft-page.js'
 import { draftReplySpec } from './prompts/draft-reply.js'
 import { duplicateCheckSpec } from './prompts/duplicate-check.js'
 import { nlAnalyticsSpec } from './prompts/nl-analytics.js'
@@ -58,6 +59,7 @@ const REGISTRY: Record<AiFeature, AnyFeatureSpec> = {
   nl_analytics: nlAnalyticsSpec,
   translate: translateSpec,
   draft_reply: draftReplySpec,
+  draft_page: draftPageSpec,
   board_risk_digest: boardRiskDigestSpec,
   suggest_assignee: suggestAssigneeSpec,
   duplicate_check: duplicateCheckSpec,
@@ -145,6 +147,7 @@ export const DEFAULT_FEATURE_TIMEOUT_MS: Record<AiFeature, number> = {
   subtask_breakdown: 45_000,
   deadline_risk: 45_000,
   draft_reply: 45_000,
+  draft_page: 60_000,
   suggest_assignee: 45_000,
   summarize_thread: 45_000,
   nl_analytics: 45_000,

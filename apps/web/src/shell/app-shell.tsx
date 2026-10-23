@@ -5,7 +5,7 @@
 // avatar menu; a bottom tab bar instead of the sidebar at 390 px. `/login`, `/register`, `/setup`
 // and `/join` use the lighter `AuthShell` instead.
 import * as React from 'react'
-import { Menu, PanelLeftClose, PanelLeftOpen, Settings, UserCog } from 'lucide-react'
+import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useT, useLocale, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { avatarUrl } from '../lib/avatar.js'
 import { usePageHead } from '../lib/page-meta.js'
@@ -296,7 +296,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       activeRoute={route}
       linkAs={RouterLink}
       wordmark={WORDMARK}
-      creditText={t('shell.credit')}
+      creditText={t('shell.brandSubtitle')}
       collapsed={isDesktop ? collapsed : false}
       collapsedGroupIds={effectiveCollapsedGroups}
       onToggleGroup={toggleNavGroup}
@@ -327,28 +327,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             avatar={userAvatar}
             name={`${user.givenName} ${user.familyName}`}
             secondary={user.login}
-            label={t('shell.account.aria')}
+            label={t('accounts.settings.title')}
             collapsed={isDesktop ? collapsed : false}
-            actions={[
-              {
-                id: 'account',
-                label: t('shell.account.settings'),
-                icon: UserCog,
-                onSelect: () => navigate('/account'),
-              },
-              {
-                id: 'shortcuts',
-                label: t('shell.shortcuts.title'),
-                icon: Settings,
-                onSelect: () => setShortcutsOpen(true),
-              },
-              {
-                id: 'signout',
-                label: t('shell.account.signout'),
-                onSelect: handleSignOut,
-                danger: true,
-              },
-            ]}
+            onSelect={() => navigate('/account')}
           />
         ) : null
       }

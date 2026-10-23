@@ -22,9 +22,10 @@ import {
   Textarea,
   toast,
 } from '@devon/ui'
-import { useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { useAiFeatureEnabled, useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
-import { QuickAddPreview, SubtasksPreview } from '../ai/components/previews.js'
+import { SubtasksPreview } from '../ai/components/previews.js'
+import { PersonalQuickAddPreview, personalQuickAddNotes } from './lib/personal-quick-add-preview.js'
 import {
   parseFeatureOutput,
   type QuickAddOutput,
@@ -72,6 +73,8 @@ export function TasksView() {
   const reorderTasks = useReorderTasksMutation()
   const quickAddParse = useRunAiFeatureMutation('quick_add_parse')
   const subtaskBreakdown = useRunAiFeatureMutation('subtask_breakdown')
+  const quickAddEnabled = useAiFeatureEnabled('quick_add_parse')
+  const subtaskEnabled = useAiFeatureEnabled('subtask_breakdown')
 
   const [dragId, setDragId] = React.useState<string | null>(null)
   const [overId, setOverId] = React.useState<string | null>(null)
@@ -81,6 +84,7 @@ export function TasksView() {
   )
   const [quickAdd, setQuickAdd] = React.useState<Record<string, string>>({})
   const [quickAddAi, setQuickAddAi] = React.useState<QuickAddAiState | null>(null)
+  const quickAddGeneration = React.useRef(0)
   const [subtaskAi, setSubtaskAi] = React.useState<SubtaskAiState | null>(null)
   const [subtaskDraft, setSubtaskDraft] = React.useState('')
 
@@ -216,7 +220,8 @@ export function TasksView() {
 
   function runQuickAddAi(sectionKey: string) {
     const text = (quickAdd[sectionKey] ?? '').trim()
-    if (!text) return
+    if (!text || !quickAddEnabled) return
+    const generation = ++quickAddGeneration.current
     setQuickAddAi({ sectionKey, status: 'pending' })
     quickAddParse.mutate(
       {
@@ -233,6 +238,7 @@ export function TasksView() {
       },
       {
         onSuccess: (res) => {
+          if (generation !== quickAddGeneration.current) return
           const output = parseFeatureOutput<QuickAddOutput>('quick_add_parse', res.data)
           if (!output) {
             setQuickAddAi({ sectionKey, status: 'error', message: t('ai.errors.runFailed') })
@@ -240,17 +246,29 @@ export function TasksView() {
           }
           setQuickAddAi({ sectionKey, status: 'ready', output, meta: res.meta })
         },
-        onError: (err) =>
-          setQuickAddAi({ sectionKey, status: 'error', message: t(aiErrorMessageKey(err)) }),
+        onError: (err) => {
+          if (generation === quickAddGeneration.current)
+            setQuickAddAi({ sectionKey, status: 'error', message: t(aiErrorMessageKey(err)) })
+        },
       },
     )
   }
 
   function acceptQuickAddAi(sectionKey: string, sprintId: string | null) {
-    if (quickAddAi?.sectionKey !== sectionKey || quickAddAi.status !== 'ready') return
+    if (
+      createTask.isPending ||
+      quickAddAi?.sectionKey !== sectionKey ||
+      quickAddAi.status !== 'ready'
+    )
+      return
     const siblingCount = tasksInBucket(sprintId, null).length
     createTask.mutate(
-      { title: quickAddAi.output.title, sprintId, sort: siblingCount },
+      {
+        title: quickAddAi.output.title,
+        sprintId,
+        sort: siblingCount,
+        notes: personalQuickAddNotes(quickAddAi.output, quickAdd[sectionKey] ?? '', t, locale),
+      },
       {
         onSuccess: () => {
           setQuickAdd((prev) => ({ ...prev, [sectionKey]: '' }))
@@ -263,12 +281,13 @@ export function TasksView() {
 
   function editQuickAddAi(sectionKey: string) {
     if (quickAddAi?.sectionKey !== sectionKey || quickAddAi.status !== 'ready') return
-    setQuickAdd((prev) => ({ ...prev, [sectionKey]: quickAddAi.output.title }))
+    quickAddGeneration.current++
     setQuickAddAi(null)
     focusInput(`quickadd-${sectionKey}`)
   }
 
   function runSubtaskAi(node: TaskNode) {
+    if (!subtaskEnabled) return
     setSubtaskAi({ taskId: node.id, status: 'pending' })
     subtaskBreakdown.mutate(
       {
@@ -410,7 +429,7 @@ export function TasksView() {
                           const nextNode = direction === 'up' ? flat[idx - 1] : flat[idx + 1]
                           if (nextNode) focusInput(nextNode.id)
                         }}
-                        onAiSubtasks={runSubtaskAi}
+                        {...(subtaskEnabled ? { onAiSubtasks: runSubtaskAi } : {})}
                         aiSubtasksPending={
                           subtaskAi?.taskId === node.id && subtaskAi.status === 'pending'
                         }
@@ -466,25 +485,30 @@ export function TasksView() {
                     else inputRefs.current.delete(`quickadd-${sectionKey}`)
                   }}
                   value={quickAdd[sectionKey] ?? ''}
-                  onChange={(e) =>
+                  maxLength={500}
+                  onChange={(e) => {
+                    quickAddGeneration.current++
                     setQuickAdd((prev) => ({ ...prev, [sectionKey]: e.target.value }))
-                  }
+                    setQuickAddAi(null)
+                  }}
                   placeholder={t('personal.tasks.addPlaceholder')}
                   className="h-8 border-none bg-transparent px-1 shadow-none focus-visible:ring-0"
                 />
-                <SparkleButton
-                  aria-label={t('personal.ai.quickAdd.action')}
-                  size="sm"
-                  loading={quickAddAiForSection?.status === 'pending'}
-                  disabled={!(quickAdd[sectionKey] ?? '').trim()}
-                  onClick={() => runQuickAddAi(sectionKey)}
-                />
+                {quickAddEnabled ? (
+                  <SparkleButton
+                    aria-label={t('assistantHelpers.refineTask')}
+                    size="sm"
+                    loading={quickAddAiForSection?.status === 'pending'}
+                    disabled={!(quickAdd[sectionKey] ?? '').trim()}
+                    onClick={() => runQuickAddAi(sectionKey)}
+                  />
+                ) : null}
               </form>
 
               {quickAddAiForSection ? (
                 <Reveal className="px-1 pb-1">
                   <AiResultPanel
-                    title={t('personal.ai.quickAdd.title')}
+                    title={t('assistantHelpers.taskPreview')}
                     status={quickAddAiForSection.status}
                     acceptLabel={t('personal.ai.accept')}
                     editLabel={t('personal.ai.edit')}
@@ -495,15 +519,16 @@ export function TasksView() {
                       ? { meta: quickAddAiForSection.meta }
                       : {})}
                     onAccept={() => acceptQuickAddAi(sectionKey, section.sprintId)}
-                    onDiscard={() => setQuickAddAi(null)}
+                    onDiscard={() => {
+                      quickAddGeneration.current++
+                      setQuickAddAi(null)
+                    }}
                     onEdit={() => editQuickAddAi(sectionKey)}
                   >
                     {quickAddAiForSection.status === 'ready' ? (
-                      <QuickAddPreview
+                      <PersonalQuickAddPreview
                         output={quickAddAiForSection.output}
-                        memberName={() => null}
-                        labelName={() => null}
-                        projectName={() => null}
+                        request={quickAdd[sectionKey] ?? ''}
                       />
                     ) : null}
                   </AiResultPanel>

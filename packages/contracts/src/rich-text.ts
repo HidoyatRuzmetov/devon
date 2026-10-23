@@ -54,6 +54,7 @@ export const RICH_TEXT_MARK_TYPES = Object.freeze([
   'underline',
   'code',
   'link',
+  'textSize',
 ] as const)
 
 /**
@@ -128,10 +129,18 @@ const attrsSchema = z.record(z.string().max(64), z.unknown()).refine(attrsAreSaf
   message: 'Attribute is not allowed (unsafe URL scheme, event handler, or oversized value)',
 })
 
-const markSchema = z.object({
-  type: z.string().refine((t) => markTypes.has(t), { message: 'Mark type is not allowed' }),
-  attrs: attrsSchema.optional(),
-})
+const markSchema = z
+  .object({
+    type: z.string().refine((t) => markTypes.has(t), { message: 'Mark type is not allowed' }),
+    attrs: attrsSchema.optional(),
+  })
+  .refine(
+    (mark) =>
+      mark.type !== 'textSize' ||
+      (Object.keys(mark.attrs ?? {}).every((key) => key === 'size') &&
+        ['small', 'normal', 'large', 'xlarge'].includes(String(mark.attrs?.['size']))),
+    { message: 'Text size must use an approved preset' },
+  )
 
 /** One node of a stored rich-text document, recursive, allow-listed. */
 export const richTextNodeSchema: z.ZodType<RichTextNode> = z.lazy(() =>

@@ -63,6 +63,21 @@ function emittedEventNames(): { names: Set<string>; sites: Map<string, string[]>
 
 const LOCALES = ['uz-Latn', 'uz-Cyrl', 'ru', 'en'] as const
 
+it('returns upload approval decisions to their card, page or assistant conversation', () => {
+  const spec = specFor('attachments.approval.reviewed')!
+  const facts = blankFacts('attachments.approval.reviewed')
+  const id = '11111111-1111-4111-8111-111111111111'
+  expect(
+    spec.deepLink({ ...facts, extra: { subjectType: 'ai_conversation', subjectId: id } }),
+  ).toBe(`/?conversation=${id}`)
+  expect(spec.deepLink({ ...facts, extra: { subjectType: 'page', subjectId: id } })).toBe(
+    `/pages?page=${id}`,
+  )
+  expect(spec.deepLink({ ...facts, extra: { subjectType: 'card', subjectId: id } })).toBe(
+    `/work/card?id=${id}`,
+  )
+})
+
 const VALID_RULES: readonly RecipientRule[] = [
   'assignee',
   'giver',

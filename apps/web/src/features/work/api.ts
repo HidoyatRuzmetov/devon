@@ -182,11 +182,6 @@ export const savedViewSchema = z.object({
 export type SavedView = z.infer<typeof savedViewSchema>
 export const savedViewListSchema = z.array(savedViewSchema)
 
-export const archiveListSchema = z.object({
-  member: memberSummarySchema,
-  items: z.array(cardSchema),
-})
-
 export const unfurlResultSchema = z.object({
   url: z.string(),
   title: z.string(),
@@ -421,10 +416,23 @@ export async function deleteSavedView(id: string, csrfToken: string): Promise<vo
   await apiClient.delete(`/api/v1/views/${encodeURIComponent(id)}`, csrfToken)
 }
 
-export function fetchArchive(userId: string): Promise<z.infer<typeof archiveListSchema>> {
-  return apiClient.get(`/api/v1/archive?userId=${encodeURIComponent(userId)}`, archiveListSchema)
-}
-
 export function unfurlLink(url: string, csrfToken: string): Promise<UnfurlResult> {
   return apiClient.post('/api/v1/links/unfurl', { url }, unfurlResultSchema, csrfToken)
+}
+
+export function editComment(
+  cardId: string,
+  commentId: string,
+  input: { text: string; mentions: string[]; editedAt: string | null },
+  csrf: string,
+) {
+  return apiClient.patch(
+    `/api/v1/cards/${cardId}/comments/${commentId}`,
+    { text: input.text, mentions: input.mentions, editedAt: input.editedAt },
+    z.void(),
+    csrf,
+  )
+}
+export function deleteComment(cardId: string, commentId: string, csrf: string) {
+  return apiClient.delete(`/api/v1/cards/${cardId}/comments/${commentId}`, csrf)
 }

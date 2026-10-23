@@ -186,7 +186,29 @@ describe('allow-lists mirror the registered editor extensions', () => {
 
   it('names no mark that can carry executable content beyond the one URL-bearing mark', () => {
     expect([...RICH_TEXT_MARK_TYPES].sort()).toEqual(
-      ['bold', 'code', 'italic', 'link', 'strike', 'underline'].sort(),
+      ['bold', 'code', 'italic', 'link', 'strike', 'underline', 'textSize'].sort(),
     )
+  })
+})
+
+describe('bounded text sizes', () => {
+  it('accepts only the four size presets without arbitrary CSS', () => {
+    const value = (attrs: Record<string, unknown>) => ({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Example', marks: [{ type: 'textSize', attrs }] }],
+        },
+      ],
+    })
+    for (const size of ['small', 'normal', 'large', 'xlarge'])
+      expect(richTextDocSchema.safeParse(value({ size })).success).toBe(true)
+    for (const attrs of [
+      { size: '200px' },
+      { size: 'large', style: 'background:url(javascript:alert(1))' },
+      { size: 'var(--unknown)' },
+    ])
+      expect(richTextDocSchema.safeParse(value(attrs)).success).toBe(false)
   })
 })

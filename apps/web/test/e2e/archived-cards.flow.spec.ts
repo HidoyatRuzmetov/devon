@@ -48,6 +48,21 @@ test('archives retain visible completion and require explicit restoration @flow'
     for (const response of archived) expect(response.status()).toBe(200)
     const page = await context.newPage()
     await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/work/table')
+    await expect(page.getByRole('heading', { name: 'Cards', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^(Compact|Comfortable)$/ })).toHaveCount(0)
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Cards', exact: true })
+        .getByRole('link', { name: /^(Archive|Mine)$/ }),
+    ).toHaveCount(0)
+    await page.goto('/work')
+    await page.getByRole('button', { name: 'Board guide and display', exact: true }).click()
+    const densityButton = page.getByRole('button', { name: /^(Roomy|Compact)$/ })
+    await expect(densityButton).toBeVisible()
+    const previousDensityLabel = await densityButton.innerText()
+    await densityButton.click()
+    await expect(densityButton).not.toHaveText(previousDensityLabel)
     await page.goto('/work/mine')
     await page.getByRole('button', { name: 'Completed & archived (2)' }).click()
     for (const title of ['Unfinished archive', 'Completed archive'])
@@ -81,6 +96,12 @@ test('archives retain visible completion and require explicit restoration @flow'
       [],
     )
     await page.goto('/work/archive')
+    await expect(page).toHaveURL(/\/work\/mine\?q=status%3Aarchived&completed=1$/)
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Cards', exact: true })
+        .getByRole('link', { name: 'Archive', exact: true }),
+    ).toHaveCount(0)
     await expect(page.getByRole('img', { name: 'Archived · Not completed' })).toBeVisible()
     expect(
       (await page.getByText('Unfinished archive', { exact: true }).boundingBox())!.width,

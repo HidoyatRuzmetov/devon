@@ -16,6 +16,14 @@ export type AiSettingsRow = {
   flags: Record<string, boolean>
 }
 
+/** Existing page-AI permission enables the new draft helper unless the head overrides it. */
+function withPageDraftFlag(row: AiSettingsRow): AiSettingsRow {
+  return {
+    ...row,
+    flags: { ...row.flags, draft_page: row.flags['draft_page'] ?? row.flags['translate'] === true },
+  }
+}
+
 /**
  * Lazily creates the department's settings row on first read (same "singleton row, upserted on first
  * touch" shape `apps/api/src/modules/personal/repo.ts`'s `getPomodoroSettings` already uses) -- a
@@ -36,7 +44,7 @@ export async function getSettings(
     select department_id, budget_uzs_per_month, soft_cap_pct, flags
     from app.ai_department_settings where department_id = ${departmentId}
   `)
-  if (existing[0]) return existing[0]
+  if (existing[0]) return withPageDraftFlag(existing[0])
   if (!mayInitialise) {
     return {
       department_id: departmentId,
@@ -51,14 +59,14 @@ export async function getSettings(
     on conflict (department_id) do nothing
     returning department_id, budget_uzs_per_month, soft_cap_pct, flags
   `)
-  if (inserted[0]) return inserted[0]
+  if (inserted[0]) return withPageDraftFlag(inserted[0])
 
   // Lost the insert race to a concurrent request: the row exists now, read it back.
   const retry = await tx.raw<AiSettingsRow>(sql`
     select department_id, budget_uzs_per_month, soft_cap_pct, flags
     from app.ai_department_settings where department_id = ${departmentId}
   `)
-  return retry[0]!
+  return withPageDraftFlag(retry[0]!)
 }
 
 export type PatchSettingsInput = {

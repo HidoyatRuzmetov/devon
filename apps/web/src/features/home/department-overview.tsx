@@ -198,7 +198,7 @@ export function DepartmentOverview({
         })),
     ),
     ...(events.data?.items ?? [])
-      .filter((e) => e.status !== 'cancelled')
+      .filter((e) => !['cancelled', 'done', 'draft'].includes(e.status))
       .map((e) => ({
         id: e.id,
         title: e.title,
@@ -443,14 +443,22 @@ export function DepartmentOverview({
                   href={drill(`/work/calendar?month=${calendarMonth(d.date)}`)}
                   className="flex h-11 items-center lg:h-10 gap-3 border-t border-border"
                 >
-                  <span className="shrink-0 rounded-md bg-accent px-2 py-1.5 text-caption tabular-nums">
+                  <span
+                    className={cn(
+                      'shrink-0 rounded-md px-2 py-1.5 text-caption tabular-nums',
+                      d.event ? 'bg-info/10 text-info' : 'bg-accent',
+                    )}
+                  >
                     {formatDate(new Date(d.date), locale)}
                   </span>
                   <span className="line-clamp-2 min-w-0 flex-1 text-small" title={d.title}>
                     {d.title}
                   </span>
                   {d.event ? (
-                    <CalendarDays className="size-4 shrink-0 text-info" aria-hidden="true" />
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-info/10 px-1.5 py-0.5 text-caption text-info">
+                      <CalendarDays className="size-3.5" aria-hidden="true" />
+                      {t('homeMember.event')}
+                    </span>
                   ) : (
                     <CheckSquare className="size-4 shrink-0 text-primary" aria-hidden="true" />
                   )}

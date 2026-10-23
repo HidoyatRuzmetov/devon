@@ -98,6 +98,7 @@ export const commentDto = z.object({
   author: summaryUser,
   body: z.string(),
   createdAt: z.string(),
+  editedAt: z.string().nullable().optional(),
   canDelete: z.boolean(),
 })
 export type CommentDto = z.infer<typeof commentDto>

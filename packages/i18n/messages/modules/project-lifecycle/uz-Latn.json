@@ -9,7 +9,7 @@
     "delete": "Loyihani oʻchirish",
     "deleted": "Loyiha va uning vazifalari oʻchirildi. Hozir bekor qilishingiz mumkin.",
     "deleteHint": "Loyihaning vazifalari ham jamoa ish joyidan olib tashlanadi. Tarix superadminda saqlanadi.",
-    "progressHint": "Natija vazifalar va ularning bajarilgan bandlaridan hisoblanadi. Vazifa bo‘lmasa, bajarilgan bosqichlar hisobga olinadi.",
+    "progressHint": "Loyiha natijasi bajarilgan bosqichlar asosida hisoblanadi. Shaxsiy vazifalar har bir ishtirokchining hissasini alohida ko‘rsatadi.",
     "milestonesProgress": "{done}/{total} bosqich"
   }
 }

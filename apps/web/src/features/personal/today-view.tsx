@@ -27,7 +27,7 @@ import {
   useReducedMotion,
 } from '@devon/ui'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
-import { QuickAddPreview } from '../ai/components/previews.js'
+import { PersonalQuickAddPreview, personalQuickAddNotes } from './lib/personal-quick-add-preview.js'
 import { useQuickAddAi } from './lib/use-quick-add-ai.js'
 import {
   SPRINT_KIND_LABEL_KEYS,
@@ -263,14 +263,14 @@ export function TodayView({
     .sort((a, b) => a.sort - b.sort)
   const targetSprintId = ongoingSprints[0]?.id ?? null
 
-  function submitQuickAdd(title: string) {
+  function submitQuickAdd(title: string, notes: string | null = null) {
     const trimmed = title.trim()
-    if (!trimmed) return
+    if (!trimmed || createTask.isPending) return
     const siblingCount = allTasks.filter(
       (tk) => tk.sprintId === targetSprintId && tk.parentId === null,
     ).length
     createTask.mutate(
-      { title: trimmed, sprintId: targetSprintId, sort: siblingCount },
+      { title: trimmed, sprintId: targetSprintId, sort: siblingCount, notes },
       {
         onSuccess: () => {
           setQuickAddText('')
@@ -416,23 +416,29 @@ export function TodayView({
           <Input
             ref={quickAddInputRef}
             value={quickAddText}
-            onChange={(e) => setQuickAddText(e.target.value)}
+            maxLength={500}
+            onChange={(e) => {
+              setQuickAddText(e.target.value)
+              quickAddAi.discard()
+            }}
             placeholder={t('personal.today.addPlaceholder')}
             className="h-8 border-none bg-transparent px-1 shadow-none focus-visible:ring-0"
           />
-          <SparkleButton
-            aria-label={t('personal.ai.quickAdd.action')}
-            size="sm"
-            loading={quickAddAi.state?.status === 'pending'}
-            disabled={!quickAddText.trim()}
-            onClick={() => quickAddAi.run(quickAddText)}
-          />
+          {quickAddAi.enabled ? (
+            <SparkleButton
+              aria-label={t('assistantHelpers.refineTask')}
+              size="sm"
+              loading={quickAddAi.state?.status === 'pending'}
+              disabled={!quickAddText.trim()}
+              onClick={() => quickAddAi.run(quickAddText)}
+            />
+          ) : null}
         </form>
 
         {quickAddAi.state ? (
           <Reveal>
             <AiResultPanel
-              title={t('personal.ai.quickAdd.title')}
+              title={t('assistantHelpers.taskPreview')}
               status={quickAddAi.state.status}
               acceptLabel={t('personal.ai.accept')}
               editLabel={t('personal.ai.edit')}
@@ -442,25 +448,20 @@ export function TodayView({
               {...(quickAddAi.state.status === 'ready' ? { meta: quickAddAi.state.meta } : {})}
               onAccept={() => {
                 if (quickAddAi.state?.status === 'ready') {
-                  submitQuickAdd(quickAddAi.state.output.title)
+                  submitQuickAdd(
+                    quickAddAi.state.output.title,
+                    personalQuickAddNotes(quickAddAi.state.output, quickAddText, t, locale),
+                  )
                 }
               }}
               onDiscard={quickAddAi.discard}
               onEdit={() => {
-                if (quickAddAi.state?.status === 'ready') {
-                  setQuickAddText(quickAddAi.state.output.title)
-                }
                 quickAddAi.discard()
                 requestAnimationFrame(() => quickAddInputRef.current?.focus())
               }}
             >
               {quickAddAi.state.status === 'ready' ? (
-                <QuickAddPreview
-                  output={quickAddAi.state.output}
-                  memberName={() => null}
-                  labelName={() => null}
-                  projectName={() => null}
-                />
+                <PersonalQuickAddPreview output={quickAddAi.state.output} request={quickAddText} />
               ) : null}
             </AiResultPanel>
           </Reveal>

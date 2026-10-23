@@ -19,7 +19,6 @@ import { useForcedState } from '../../lib/forced-state.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
-import { SettingsNavigation } from '../accounts/settings-navigation.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { fetchTelegramSetup, GROUP_KINDS, type GroupKind, type TelegramGroupDto } from './api.js'
 import {
@@ -481,7 +480,7 @@ function SetupGuide({ departmentId }: { departmentId: string | null }) {
   )
 }
 
-export default function TelegramScreen() {
+export default function TelegramScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useT()
   const forced = useForcedState()
   const online = useOnline()
@@ -521,9 +520,12 @@ export default function TelegramScreen() {
   const isHead = department?.role === 'head'
 
   return (
-    <div className="mx-auto flex max-w-160 flex-col gap-6">
-      <PageHeader eyebrow={t('accounts.settings.title')} title={t('telegram.title')} />
-      <SettingsNavigation />
+    <div className="flex min-w-0 flex-col gap-6">
+      {!embedded ? (
+        <PageHeader eyebrow={t('accounts.settings.title')} title={t('telegram.title')} />
+      ) : (
+        <h2 className="font-display text-h2">{t('telegram.title')}</h2>
+      )}
 
       <SetupGuide departmentId={isHead ? departmentId : null} />
 

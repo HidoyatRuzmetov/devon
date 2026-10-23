@@ -262,7 +262,9 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     deepLink: (f) =>
       str(f, 'subjectType') === 'page'
         ? '/pages?page=' + str(f, 'subjectId')
-        : '/work/card?id=' + str(f, 'subjectId'),
+        : str(f, 'subjectType') === 'ai_conversation'
+          ? '/?conversation=' + str(f, 'subjectId')
+          : '/work/card?id=' + str(f, 'subjectId'),
     title: (f) =>
       str(f, 'status') === 'rejected'
         ? plain(
@@ -711,13 +713,32 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     body: (f) => byActor(f, changeSummary(f)),
   },
 
+  'work.comment.updated': {
+    notify: false,
+    why: 'Revision reconciliation handles removed mentions and notifies only new mentions.',
+  },
+  'work.comment.deleted': {
+    notify: false,
+    why: 'Remove stale inbox entries without notifying about a deleted comment.',
+  },
+  'events.comment.updated': {
+    notify: false,
+    why: 'Discussion refresh; editing a comment does not notify the whole event again.',
+  },
+  'events.comment.deleted': {
+    notify: false,
+    why: 'Discussion refresh; deletion is retained in the audit log.',
+  },
   'work.card.commented': {
     notify: true,
     reason: 'mentioned',
     source: 'card_comment',
     subjectType: 'card',
     recipients: ['mentioned', 'assignee', 'giver', 'watchers'],
-    deepLink: (f) => (f.subjectId ? `/work/card?id=${f.subjectId}` : '/work'),
+    deepLink: (f) =>
+      f.subjectId
+        ? `/work/card?id=${f.subjectId}${str(f, 'commentId') ? '#comment-' + str(f, 'commentId') : ''}`
+        : '/work',
     title: (f) =>
       withName(
         plain('Yangi izoh', 'Янги изоҳ', 'Новый комментарий', 'New comment'),

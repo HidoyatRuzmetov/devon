@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "accountProfile": "Hisob profili",
+    "workspace": "Ulanishlar va ish muhiti",
+    "department": "Boshqarma",
+    "signInSecurity": "Kirish va xavfsizlik",
+    "description": "Profilingiz, ulangan xizmatlar va hisob xavfsizligi.",
+    "content": "Sozlamalar mazmuni",
+    "profile": {
+      "required": "Majburiy maydon",
+      "invalid": "Qiymatni tekshiring. Yil 1900–2200 oraligʻida boʻlishi kerak.",
+      "requiredHint": "Yozuv qoʻshilganda * bilan belgilangan maydonlar majburiy. Qolganlari ixtiyoriy.",
+      "introduction": "Oʻzingiz haqingizda",
+      "addHint": "Tayyor boʻlganingizda {section} maʼlumotlarini qoʻshing.",
+      "removeEntry": "{section} boʻlimidagi {number}-yozuvni oʻchirish",
+      "expectedYear": "Kutilayotgan bitirish yili",
+      "invalidPeriod": "Tugash yili boshlanish yilidan oldin boʻlmasligi kerak.",
+      "addSection": "{section} qoʻshish",
+      "capabilitiesInterests": "Koʻnikmalar va qiziqishlar",
+      "validationError": "Belgilangan maydonlarni tekshiring.",
+      "itemLimit": "Har bir band {max} belgidan oshmasligi kerak.",
+      "listLimit": "Koʻpi bilan {max} ta band kiriting.",
+      "invalidValue": "Qiymatni tekshiring."
+    }
+  },
+  "shell": {
+    "brandSubtitle": "Raqamli texnologiyalar"
+  },
+  "portal": {
+    "profile": {
+      "hobbies": "Qiziqishlar va sevimli mashgʻulotlar"
+    }
+  }
+}

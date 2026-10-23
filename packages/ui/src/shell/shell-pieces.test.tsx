@@ -146,7 +146,7 @@ describe('DepartmentSwitcher', () => {
 })
 
 describe('SidebarUserBlock', () => {
-  it('opens its menu and runs the chosen action', async () => {
+  it('opens profile settings directly without an intervening menu', async () => {
     const onSelect = vi.fn()
     render(
       <SidebarUserBlock
@@ -154,11 +154,11 @@ describe('SidebarUserBlock', () => {
         name="Aziza Karimova"
         secondary="Bosh mutaxassis"
         label="Hisob"
-        actions={[{ id: 'signout', label: 'Chiqish', onSelect, danger: true }]}
+        onSelect={onSelect}
       />,
     )
     await userEvent.click(screen.getByRole('button', { name: 'Hisob' }))
-    await userEvent.click(await screen.findByText('Chiqish'))
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     expect(onSelect).toHaveBeenCalledOnce()
   })
 })

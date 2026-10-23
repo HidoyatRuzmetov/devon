@@ -48,6 +48,7 @@ import {
   carpoolListResponseSchema,
   carpoolUpdateBodySchema,
   commentBodySchema,
+  editCommentBodySchema,
   commentDto,
   commentListResponseSchema,
   createEventBodySchema,
@@ -356,6 +357,30 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
           req.body.body,
         )
         reply.code(201).send(comment)
+      } catch (err) {
+        if (!mapServiceError(err, reply)) throw err
+      }
+    },
+  )
+
+  app.patch(
+    '/:eventId/comments/:commentId',
+    {
+      config: { permission: { action: 'update', subject: departmentChildSubject } },
+      schema: { params: commentIdParams, body: editCommentBodySchema },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      try {
+        await service.editComment(
+          toDbContext(req),
+          currentActor(req),
+          req.params.eventId,
+          req.params.commentId,
+          req.body.body,
+          req.body.editedAt,
+        )
+        reply.code(204).send()
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }

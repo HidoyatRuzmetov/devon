@@ -69,6 +69,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.card_activity' },
   { table: 'app.card_comments' },
   { table: 'app.card_checklist_items' },
+  { table: 'app.ai_file_text' },
   { table: 'app.attachments' },
   { table: 'app.cards' },
   { table: 'app.projects' },
@@ -106,6 +107,9 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   // Memberships are the department's last child before the department itself, and the reason a
   // colleague who joined the demo department through the product does not block the reset.
   { table: 'app.memberships' },
+  // Triggers on every removed source row can recreate these derived journals. Clear them last.
+  { table: 'app.ai_index_dirty' },
+  { table: 'app.ai_context_revisions' },
 ]
 
 /**
@@ -249,6 +253,16 @@ export async function sweepDepartmentResidue(
     const owners = members.map((m) => m.user_id).filter((id) => userIds.includes(id))
 
     for (const entry of DEPARTMENT_SWEEP_ORDER) {
+      if (entry.table === 'app.attachments') {
+        for (const member of members) {
+          const files = await asUser(tx, member.user_id, () =>
+            tx.raw<{ id: string }>(sql`delete from app.attachments
+              where department_id=${departmentId} and subject_type='ai_conversation'
+                and uploaded_by_user_id=${member.user_id} returning id`),
+          )
+          deleted += files.length
+        }
+      }
       if (entry.ownerColumn) {
         for (const userId of owners) {
           // nosemgrep: query-in-loop -- `user_id = app.current_user_id()` is the only predicate

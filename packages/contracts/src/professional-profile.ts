@@ -16,6 +16,7 @@ export const professionalProfileSchema = z
     location: text.default(''),
     skills: z.array(z.string().trim().min(1).max(100)).max(100).default([]),
     languages: z.array(z.string().trim().min(1).max(100)).max(50).default([]),
+    hobbies: z.array(z.string().trim().min(1).max(100)).max(50).default([]),
     education: z
       .array(
         z
@@ -66,5 +67,30 @@ export const professionalProfileSchema = z
 export type ProfessionalProfile = z.infer<typeof professionalProfileSchema>
 export const professionalProfileRecordSchema = z.object({
   profile: professionalProfileSchema,
+  version: z.number().int(),
+})
+
+/** Existing optional profiles remain readable; new edits cannot create nameless entries. */
+export const professionalProfileWriteSchema = professionalProfileSchema.superRefine(
+  (profile, ctx) => {
+    const required = {
+      education: ['institution'],
+      experience: ['organization', 'role'],
+      certifications: ['name'],
+      links: ['url'],
+    } as const
+    for (const section of ['education', 'experience', 'certifications', 'links'] as const) {
+      profile[section].forEach((entry, index) => {
+        for (const field of required[section]) {
+          if (!String((entry as unknown as Record<string, unknown>)[field] ?? '').trim()) {
+            ctx.addIssue({ code: 'custom', path: [section, index, field], message: 'Required' })
+          }
+        }
+      })
+    }
+  },
+)
+export const professionalProfileWriteRecordSchema = z.object({
+  profile: professionalProfileWriteSchema,
   version: z.number().int(),
 })

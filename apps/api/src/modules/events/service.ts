@@ -113,7 +113,11 @@ function toEventDto(
           note: extra.myRsvp.note,
         }
       : null,
-    canManage: extra.canManage,
+    canManage:
+      extra.canManage &&
+      row.ends_at.getTime() > Date.now() &&
+      row.status !== 'done' &&
+      row.status !== 'cancelled',
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     version: row.version,
@@ -241,6 +245,20 @@ export async function createEvent(
   })
 }
 
+/** Serialize operational writes with scheduling changes; discussion stays available afterwards. */
+async function requireOperationalEvent(tx: Tx, eventId: string): Promise<repo.EventRow> {
+  await repo.lockEventForCapacity(tx, eventId)
+  const event = await repo.getEventRow(tx, eventId)
+  if (!event) throw new EventNotFoundError()
+  if (
+    event.ends_at.getTime() <= Date.now() ||
+    event.status === 'done' ||
+    event.status === 'cancelled'
+  )
+    throw new EventConflictError('event_finished', 'event')
+  return event
+}
+
 export async function updateEvent(
   ctx: RequestContext,
   actor: Actor,
@@ -248,6 +266,7 @@ export async function updateEvent(
   body: UpdateEventBody,
 ): Promise<EventDto> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     await repo.lockEventForCapacity(tx, eventId)
     const before = await repo.getEventRow(tx, eventId)
     if (!before) throw new EventNotFoundError()
@@ -364,6 +383,7 @@ export async function cancelEvent(
   reason: string,
 ): Promise<EventDto> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     await repo.lockEventForCapacity(tx, eventId)
     const before = await repo.getEventRow(tx, eventId)
     if (!before) throw new EventNotFoundError()
@@ -416,6 +436,7 @@ export async function upsertRsvp(
 ): Promise<EventDto> {
   const userId = actor.userId
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     // Capacity is decided below by counting the existing `yes` units and comparing them to
     // `event.capacity`; without this lock two concurrent "yes" requests both read the pre-write
     // count and both seat themselves (the `concurrency-races` probe). Taken before the first read so
@@ -550,6 +571,7 @@ export async function listComments(
       },
       body: r.body,
       createdAt: r.created_at.toISOString(),
+      editedAt: r.edited_at?.toISOString() ?? null,
       canDelete: r.author_user_id === viewerUserId,
     }))
   })
@@ -588,8 +610,41 @@ export async function addComment(
       },
       body,
       createdAt: new Date().toISOString(),
+      editedAt: null,
       canDelete: true,
     }
+  })
+}
+
+export async function editComment(
+  ctx: RequestContext,
+  actor: Actor,
+  eventId: string,
+  commentId: string,
+  body: string,
+  editedAt: string | null,
+): Promise<void> {
+  return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'event_comments', commentId)))
+      throw new EventNotFoundError()
+    const author = await repo.getCommentAuthor(tx, commentId)
+    if (!author) throw new EventNotFoundError()
+    assertManage(actor, [author])
+    const before = (await repo.listComments(tx, eventId)).find((c) => c.id === commentId)
+    if (!(await repo.updateComment(tx, eventId, commentId, body, editedAt)))
+      throw new EventConflictError('comment_changed', 'comment')
+    tx.audit({
+      action: 'events.comment_edited',
+      subjectType: 'event_comment',
+      subjectId: commentId,
+      before: { body: before?.body },
+      after: { body },
+    })
+    tx.emit({
+      type: 'events.comment.updated',
+      departmentId: actor.departmentId,
+      payload: { eventId, commentId, actorUserId: actor.userId },
+    })
   })
 }
 
@@ -606,11 +661,20 @@ export async function deleteComment(
     if (!authorUserId) throw new EventNotFoundError()
     // SEV2 #10: a comment's owner set is its author.
     assertManage(actor, [authorUserId])
+    const before = (await repo.listComments(tx, eventId)).find(
+      (comment) => comment.id === commentId,
+    )
     await repo.softDeleteComment(tx, commentId)
     tx.audit({
       action: 'events.comment_deleted',
       subjectType: 'event_comment',
       subjectId: commentId,
+      before: { body: before?.body },
+    })
+    tx.emit({
+      type: 'events.comment.deleted',
+      departmentId: actor.departmentId,
+      payload: { eventId, commentId, actorUserId: actor.userId },
     })
   })
 }
@@ -708,6 +772,7 @@ export async function createCarpool(
   },
 ): Promise<CarpoolDto> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     // Cross-car invariants need the event lock, not merely a lock on the requested car.
     await repo.lockEventForCapacity(tx, eventId)
     const event = await repo.getEventRow(tx, eventId)
@@ -747,6 +812,7 @@ export async function updateCarpool(
   body: CarpoolUpdateBody,
 ): Promise<CarpoolDto> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     await repo.lockEventForCapacity(tx, eventId)
     const event = await repo.getEventRow(tx, eventId)
     const before = await repo.getCarpool(tx, carpoolId)
@@ -805,6 +871,7 @@ export async function deleteCarpool(
   carpoolId: string,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     await repo.lockEventForCapacity(tx, eventId)
     const event = await repo.getEventRow(tx, eventId)
     const carpool = await repo.getCarpool(tx, carpoolId)
@@ -838,6 +905,7 @@ export async function claimCarpoolSeat(
   seats: number,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     await repo.lockEventForCapacity(tx, eventId)
     if (!(await repo.eventChildBelongsTo(tx, eventId, 'carpools', carpoolId)))
       throw new EventNotFoundError()
@@ -912,6 +980,7 @@ export async function releaseCarpoolSeat(
   carpoolId: string,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     await repo.lockEventForCapacity(tx, eventId)
     if (!(await repo.eventChildBelongsTo(tx, eventId, 'carpools', carpoolId)))
       throw new EventNotFoundError()
@@ -984,6 +1053,7 @@ export async function addItem(
   body: { label: string; quantity: number },
 ): Promise<ItemDto> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     const event = await repo.getEventRow(tx, eventId)
     if (!event) throw new EventNotFoundError()
     const id = randomUUID()
@@ -1011,6 +1081,7 @@ export async function claimItem(
   itemId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     if (!(await repo.eventChildBelongsTo(tx, eventId, 'event_items', itemId)))
       throw new EventNotFoundError()
     const claimed = await repo.claimItem(tx, itemId, actor.userId)
@@ -1028,6 +1099,7 @@ export async function releaseItem(
   itemId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     if (!(await repo.eventChildBelongsTo(tx, eventId, 'event_items', itemId)))
       throw new EventNotFoundError()
     const released = await repo.releaseItem(tx, itemId, actor.userId)
@@ -1123,6 +1195,7 @@ export async function createPoll(
   },
 ): Promise<PollDto> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     const event = await repo.getEventRow(tx, eventId)
     if (!event) throw new EventNotFoundError()
     const id = randomUUID()
@@ -1166,6 +1239,7 @@ export async function voteOnPoll(
   optionIds: readonly string[],
 ): Promise<PollDto> {
   return withContext(ctx, async (tx) => {
+    await requireOperationalEvent(tx, eventId)
     if (!(await repo.eventChildBelongsTo(tx, eventId, 'polls', pollId)))
       throw new EventNotFoundError()
     const poll = await repo.getPoll(tx, pollId)

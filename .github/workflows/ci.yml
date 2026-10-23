@@ -184,6 +184,7 @@ jobs:
           FLOW_DB_NAME=devon_flow_e2e_dept_decision FLOW_API_PORT=49011 FLOW_WEB_PORT=49012 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-department-decision pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-department-decision.qa.spec.ts --project chromium
           FLOW_DB_NAME=devon_flow_e2e_scanner FLOW_API_PORT=49001 FLOW_WEB_PORT=49002 FLOW_CLAMAV_PORT=49003 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=1 QA_RUN_ID=ci-scanner pnpm --filter @devon/web exec playwright test --config test/e2e/scanner-qa.config.ts --project chromium
           FLOW_DB_NAME=devon_flow_e2e_avatar FLOW_API_PORT=48941 FLOW_WEB_PORT=48942 FLOW_CENTRIFUGO_PORT=48943 FLOW_REALTIME=1 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 pnpm --filter @devon/web exec playwright test --config test/e2e/avatar-interactions-qa.config.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_ai_actions FLOW_API_PORT=49061 FLOW_WEB_PORT=49062 FLOW_CENTRIFUGO_PORT=49063 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.ai-actions.config.ts --project chromium
 
       - name: Upload Playwright report
         if: always()

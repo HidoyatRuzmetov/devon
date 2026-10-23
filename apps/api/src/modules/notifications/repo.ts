@@ -800,3 +800,65 @@ export async function emitActionRequested(
 }
 
 export type { Tx }
+
+/** Reconcile against current persisted state so delayed revisions cannot revive stale mentions.
+ * Retained recipients keep their unread state and receive the corrected excerpt; removed recipients
+ * lose the outdated inbox entry. Sent Telegram messages remain delivery history. */
+export async function reconcileCommentNotifications(
+  departmentId: string | null,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  if (
+    !departmentId ||
+    typeof payload['cardId'] !== 'string' ||
+    typeof payload['commentId'] !== 'string'
+  )
+    return
+  const recipients = Array.isArray(payload['recipientIds'])
+    ? payload['recipientIds'].filter((id): id is string => typeof id === 'string')
+    : []
+  const link = `/work/card?id=${payload['cardId']}#comment-${payload['commentId']}`
+  const current = await withContext(
+    toRequestContext(departmentAuditCtx(), { departmentId, actorRole: 'super_admin' }),
+    async (tx) => {
+      const rows = await tx.raw<{
+        text: string | null
+        mentions: string[]
+        watchers: string[]
+        assignee_user_id: string | null
+        giver_user_id: string | null
+      }>(sql`select comment.body->>'text' as text,comment.mentions,card.watchers,
+        card.assignee_user_id,card.giver_user_id
+        from app.card_comments comment join app.cards card on card.id=comment.card_id
+        where comment.id=${payload['commentId']} and comment.card_id=${payload['cardId']}
+          and comment.department_id=${departmentId} and card.department_id=${departmentId}
+          and comment.deleted_at is null and card.deleted_at is null`)
+      return rows[0]
+    },
+  )
+  const retained = new Set(
+    current
+      ? [...current.mentions, ...current.watchers, current.assignee_user_id, current.giver_user_id]
+      : [],
+  )
+  const excerpt = current?.text?.slice(0, 240) ?? ''
+  const revisedBody = JSON.stringify({
+    en: excerpt,
+    ru: excerpt,
+    'uz-Latn': excerpt,
+    'uz-Cyrl': excerpt,
+  })
+  await Promise.all(
+    [...new Set(recipients)].map((userId) =>
+      withContext(toRequestContext(systemAuditCtx(userId)), async (tx) => {
+        if (retained.has(userId))
+          await tx.raw(sql`update app.notifications set body=${revisedBody}::jsonb
+          where user_id=${userId} and department_id=${departmentId} and type='work.card.commented' and deep_link=${link}`)
+        else
+          await tx.raw(sql`update app.notifications set read_at=coalesce(read_at,now()),archived_at=coalesce(archived_at,now())
+          where user_id=${userId} and department_id=${departmentId} and type='work.card.commented' and deep_link=${link}`)
+        tx.emit({ type: 'notifications.notification.updated', payload: { userId }, departmentId })
+      }),
+    ),
+  )
+}

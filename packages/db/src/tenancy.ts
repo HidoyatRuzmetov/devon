@@ -77,6 +77,9 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.ai_department_settings': 'department_owned',
   'app.ai_traces': 'department_owned',
   'app.ai_conversations': 'department_owned',
+  'app.ai_index_dirty': 'department_owned',
+  'app.ai_context_revisions': 'department_owned',
+  'app.ai_file_text': 'department_owned',
   // EPIC-016 AI L2: the search index behind semantic search and the "Ask" box (migration 0810).
   'app.ai_search_documents': 'department_owned',
   // v1.1 recapture #23: the head's department briefing, cached per department per day so the tile

@@ -24,25 +24,32 @@ function isTab(value: string | null): value is Tab {
   return value !== null && (TABS as readonly string[]).includes(value)
 }
 
-export default function CalendarScreen(): React.JSX.Element {
+export default function CalendarScreen({
+  embedded = false,
+}: { embedded?: boolean } = {}): React.JSX.Element {
   const t = useT()
   const params = useSearchParams()
   const raw = params.get('tab')
   const tab: Tab = isTab(raw) ? raw : 'agenda'
 
+  const basePath = embedded ? '/account/calendar' : '/calendar'
   return (
-    <PageTransition routeKey="/calendar">
+    <PageTransition routeKey={basePath}>
       <div className="flex flex-col gap-6">
-        <PageHeader
-          eyebrow={t('calendar.eyebrow')}
-          title={t('calendar.title')}
-          description={t('calendar.description')}
-        />
+        {!embedded ? (
+          <PageHeader
+            eyebrow={t('calendar.eyebrow')}
+            title={t('calendar.title')}
+            description={t('calendar.description')}
+          />
+        ) : (
+          <h2 className="font-display text-h2">{t('calendar.title')}</h2>
+        )}
 
         <Tabs
           value={tab}
           onValueChange={(next) =>
-            navigate(next === 'agenda' ? '/calendar' : `/calendar?tab=${next}`)
+            navigate(next === 'agenda' ? basePath : `${basePath}?tab=${next}`)
           }
         >
           <TabsList>

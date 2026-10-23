@@ -169,6 +169,51 @@
       "heading": "accounts.settings.title"
     },
     {
+      "path": "/account/professional",
+      "name": "account",
+      "slug": "accountprofessional",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "accounts.settings.title",
+      "roles": ["head", "member"]
+    },
+    {
+      "path": "/account/calendar",
+      "name": "account",
+      "slug": "accountcalendar",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "accounts.settings.title",
+      "roles": ["head", "member"]
+    },
+    {
+      "path": "/account/department",
+      "name": "account",
+      "slug": "accountdepartment",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "accounts.settings.title",
+      "roles": ["head", "member"]
+    },
+    {
+      "path": "/account/security",
+      "name": "account",
+      "slug": "accountsecurity",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "accounts.settings.title",
+      "roles": ["head", "member"]
+    },
+    {
+      "path": "/account/delete",
+      "name": "account",
+      "slug": "accountdelete",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "accounts.settings.title",
+      "roles": ["head", "member"]
+    },
+    {
       "path": "/admin/departments",
       "name": "admin",
       "slug": "admindepartments",
@@ -262,11 +307,12 @@
     },
     {
       "path": "/work/archive",
+      "redirect": "/work/mine",
       "name": "work",
       "slug": "workarchive",
       "auth": "session",
       "chrome": "app",
-      "heading": "work.view.archive",
+      "heading": "work.title",
       "roles": ["head", "member"]
     },
     {
@@ -298,20 +344,22 @@
     },
     {
       "path": "/department",
+      "redirect": "/account/department",
       "name": "departments",
       "slug": "department",
       "auth": "session",
       "chrome": "app",
-      "heading": "departments.settings.title",
+      "heading": "accounts.settings.title",
       "roles": ["head", "member"]
     },
     {
       "path": "/calendar",
+      "redirect": "/account/calendar",
       "name": "calendar",
       "slug": "calendar",
       "auth": "session",
       "chrome": "app",
-      "heading": "calendar.title"
+      "heading": "accounts.settings.title"
     },
     {
       "path": "/account/notifications",
@@ -319,7 +367,7 @@
       "slug": "inboxpreferences",
       "auth": "session",
       "chrome": "app",
-      "heading": "inbox.preferences.title"
+      "heading": "accounts.settings.title"
     },
     {
       "path": "/account/telegram",
@@ -327,7 +375,7 @@
       "slug": "inboxtelegram",
       "auth": "session",
       "chrome": "app",
-      "heading": "telegram.title"
+      "heading": "accounts.settings.title"
     },
     {
       "path": "/projects/view",

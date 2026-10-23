@@ -195,15 +195,14 @@ export default function ProjectPageScreen() {
     ownerUserIds: [project.ownerUserId, ...project.members],
   }).allowed
   const cards = cardsQuery.data ?? []
-  const objective = cards
-  const subjective = cards
+  const assignments = cards
   const percent = Math.round(project.progress * 100)
   const canDelete = can(actor, 'delete', {
     kind: 'owned',
     departmentId: actor?.departmentId ?? '',
     ownerUserIds: [project.ownerUserId],
   }).allowed
-  const openObjective = objective.filter((c) => c.status !== 'done')
+  const activeAssignments = assignments.filter((c) => c.status === 'active')
 
   async function removeProject() {
     try {
@@ -224,7 +223,7 @@ export default function ProjectPageScreen() {
   }
 
   function runPlanAi() {
-    if (openObjective.length === 0) return
+    if (!planEnabled || activeAssignments.length === 0) return
     setPlan(null)
     // AI-AUDIT §4 D-5: v1.0 lied to this feature to reuse it -- `sprintKind: 'day'` and
     // `goal: project.title` on a call that is not planning a day and has no goal. The scope is
@@ -242,7 +241,8 @@ export default function ProjectPageScreen() {
         periodEndsAt: horizon.toISOString(),
         capacityMin: null,
         goal: project.title,
-        items: openObjective.map((c) => ({
+        projectMilestones: project.milestones,
+        items: activeAssignments.map((c) => ({
           id: c.id,
           title: c.title,
           estimateMin: c.estimateMin,
@@ -274,15 +274,15 @@ export default function ProjectPageScreen() {
    */
   async function acceptPlan() {
     if (!plan) return
-    if (openObjective.some((c) => c.canEdit === false)) return
-    const byId = new Map(openObjective.map((c) => [c.id, c] as const))
+    if (activeAssignments.some((c) => c.canEdit === false)) return
+    const byId = new Map(activeAssignments.map((c) => [c.id, c] as const))
     const ordered = plan.output.orderedIds.filter((id) => byId.has(id))
 
     // One patch per card, all independent, so `Promise.all` rather than an awaited loop
     // (TECH-SPEC §16: no query in a loop).
     try {
       await Promise.all(
-        projectPlanRanks(openObjective, ordered).map(({ id, orderKey }) =>
+        projectPlanRanks(activeAssignments, ordered).map(({ id, orderKey }) =>
           patchCard.mutateAsync({ id, patch: { orderKey } }),
         ),
       )
@@ -574,13 +574,13 @@ export default function ProjectPageScreen() {
 
         <Tabs defaultValue="subjective" className="flex flex-col gap-3">
           <TabsList aria-label={t('projects.field.title')}>
-            <TabsTrigger value="subjective" count={subjective.length}>
+            <TabsTrigger value="subjective" count={assignments.length}>
               {t('projects.field.subjective')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="subjective" className="flex flex-col gap-3">
-            {canEdit && planEnabled && openObjective.length > 0 ? (
+            {canEdit && planEnabled && activeAssignments.length > 0 ? (
               <SparkleButton
                 aria-label={t('projects.ai.plan')}
                 label={t('projects.ai.plan')}
@@ -597,7 +597,7 @@ export default function ProjectPageScreen() {
                 acceptLabel={t('projects.ai.applyPlan')}
                 editLabel={t('work.ai.edit')}
                 {...(plan ? { meta: plan.meta } : {})}
-                readOnly={openObjective.some((c) => c.canEdit === false)}
+                readOnly={activeAssignments.some((c) => c.canEdit === false)}
                 onAccept={() => void acceptPlan()}
                 // Edit opens the focus card so the person can adjust it before the plan lands --
                 // v1.0's Edit discarded the answer, which is what Discard already did.
@@ -630,12 +630,12 @@ export default function ProjectPageScreen() {
                 }}
               />
             ) : null}
-            {subjective.some(
+            {assignments.some(
               (c) => !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
             ) ? (
               <div className="rounded-md border border-border p-2">
                 <h3 className="text-small font-medium">{t('work.board.unassigned')}</h3>
-                {subjective
+                {assignments
                   .filter(
                     (c) => !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
                   )
@@ -647,14 +647,14 @@ export default function ProjectPageScreen() {
             {[
               ...new Set([
                 ...project.members,
-                ...subjective
+                ...assignments
                   .map((c) => c.assigneeUserId)
                   .filter((id): id is string => Boolean(id)),
               ]),
             ].map((memberId) => {
               const member = members.find((m) => m.userId === memberId)
               if (!member) return null
-              const memberTasks = subjective.filter((c) => c.assigneeUserId === memberId)
+              const memberTasks = assignments.filter((c) => c.assigneeUserId === memberId)
               return (
                 <div
                   key={memberId}

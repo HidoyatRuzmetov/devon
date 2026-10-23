@@ -61,11 +61,15 @@ for (const role of ['head', 'member'] as const) {
         204,
       )
       const page = await context.newPage()
-      // Member Home has the personal Focus list; head Home is a management dashboard.
+      // Member Home has its personal assignments; head Home is a management dashboard.
       // Its routed card link must still resolve to the same real details panel.
       await page.goto(role === 'head' ? `/?card=${card.id}` : '/')
       if (role === 'member') {
-        await page.getByRole('button', { name: title, exact: true }).click()
+        // The row's accessible name includes stage/checklist context after the card title.
+        await page
+          .getByTestId('member-overview')
+          .getByRole('button', { name: new RegExp(`^${title}\\b`) })
+          .click()
       }
       await expect(page).toHaveURL(new RegExp(`/\\?card=${card.id}$`))
       const dialog = page.getByRole('dialog', { name: 'Card details', exact: true })

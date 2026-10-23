@@ -30,7 +30,7 @@ import {
   Textarea,
   toast,
 } from '@devon/ui'
-import { useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { useAiFeatureEnabled, useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { CatchUpPreview, PlanPreview } from '../ai/components/previews.js'
 import { parseFeatureOutput, type CatchUpOutput, type PlanSprintOutput } from '../ai/outputs.js'
@@ -231,6 +231,8 @@ export function SprintsView() {
   const createNote = useCreateNoteMutation()
   const planSprint = useRunAiFeatureMutation('plan_sprint')
   const catchUp = useRunAiFeatureMutation('catch_up')
+  const planEnabled = useAiFeatureEnabled('plan_sprint')
+  const catchUpEnabled = useAiFeatureEnabled('catch_up')
 
   const [open, setOpen] = React.useState(false)
   const [kind, setKind] = React.useState<SprintKind>('week')
@@ -356,6 +358,7 @@ export function SprintsView() {
   }
 
   function runPlanAi(sprint: Sprint) {
+    if (!planEnabled) return
     const bucket = openTopLevelTasks(sprint.id)
     if (bucket.length === 0) {
       toast(t('personal.ai.planSprint.emptyBucket'))
@@ -462,6 +465,7 @@ export function SprintsView() {
   }
 
   function runCatchUpAi() {
+    if (!catchUpEnabled) return
     const now = Date.now()
     const weekAgo = now - WEEK_MS
     const asItem = (tk: Task) => ({ id: tk.id, title: tk.title })
@@ -542,13 +546,15 @@ export function SprintsView() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-h3 text-foreground">{t('personal.sprints.active.title')}</h3>
         <div className="flex flex-wrap items-center gap-2">
-          <SparkleButton
-            aria-label={t('personal.ai.catchUp.action')}
-            label={t('personal.ai.catchUp.action')}
-            size="sm"
-            loading={catchUpAi?.status === 'pending'}
-            onClick={runCatchUpAi}
-          />
+          {catchUpEnabled ? (
+            <SparkleButton
+              aria-label={t('personal.ai.catchUp.action')}
+              label={t('personal.ai.catchUp.action')}
+              size="sm"
+              loading={catchUpAi?.status === 'pending'}
+              onClick={runCatchUpAi}
+            />
+          ) : null}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" disabled={periodPending}>
@@ -700,13 +706,15 @@ export function SprintsView() {
                       <Pencil className="size-4" aria-hidden="true" />
                       {t('personal.sprints.edit')}
                     </Button>
-                    <SparkleButton
-                      aria-label={t('personal.ai.planSprint.action')}
-                      label={t('personal.ai.planSprint.action')}
-                      size="sm"
-                      loading={planAi?.sprintId === sprint.id && planAi.status === 'pending'}
-                      onClick={() => runPlanAi(sprint)}
-                    />
+                    {planEnabled ? (
+                      <SparkleButton
+                        aria-label={t('personal.ai.planSprint.action')}
+                        label={t('personal.ai.planSprint.action')}
+                        size="sm"
+                        loading={planAi?.sprintId === sprint.id && planAi.status === 'pending'}
+                        onClick={() => runPlanAi(sprint)}
+                      />
+                    ) : null}
                     <Button
                       size="sm"
                       variant="secondary"

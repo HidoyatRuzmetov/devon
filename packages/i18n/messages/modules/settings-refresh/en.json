@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "accountProfile": "Account profile",
+    "workspace": "Connections & workspace",
+    "department": "Department",
+    "signInSecurity": "Sign-in & security",
+    "description": "Your profile, connected services and account security.",
+    "content": "Settings content",
+    "profile": {
+      "required": "Required",
+      "invalid": "Check this value. Years must be between 1900 and 2200.",
+      "requiredHint": "Fields marked * are required when you add an entry. Everything else is optional.",
+      "introduction": "Introduction",
+      "addHint": "Add your {section} when you are ready.",
+      "removeEntry": "Remove {section} entry {number}",
+      "expectedYear": "Expected graduation year",
+      "invalidPeriod": "End year must be the same as or later than the start year.",
+      "addSection": "Add {section}",
+      "capabilitiesInterests": "Skills & interests",
+      "validationError": "Please check the highlighted fields.",
+      "itemLimit": "Each item must be {max} characters or fewer.",
+      "listLimit": "Add no more than {max} items.",
+      "invalidValue": "Check this value."
+    }
+  },
+  "shell": {
+    "brandSubtitle": "Digital Technologies Ministry"
+  },
+  "portal": {
+    "profile": {
+      "hobbies": "Hobbies & interests"
+    }
+  }
+}

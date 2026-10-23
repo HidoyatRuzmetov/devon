@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { sql } from 'drizzle-orm'
 import { withContext, dispatch, type RequestContext } from '@devon/db'
@@ -8,6 +8,9 @@ import { __setProviderForTests } from '../../src/modules/ai/service.js'
 import { __setConversationEnqueueForTests } from '../../src/modules/ai/conversation-jobs.js'
 import * as chat from '../../src/modules/ai/conversations.js'
 import { conversationContext } from '../../src/modules/ai/conversation-context.js'
+import { configureConversationFiles } from '../../src/modules/ai/conversation-files.js'
+import { refreshIndex } from '../../src/modules/ai/search-repo.js'
+import type { ObjectStore } from '../../src/lib/storage/object-store.js'
 import {
   startHarness,
   stopHarness,
@@ -56,7 +59,11 @@ function provider() {
   return instance
 }
 async function create() {
-  return chat.createConversation(ctx, { id: randomUUID(), locale: 'en', seedBriefing: false })
+  return chat.createConversation(ctx, {
+    id: randomUUID(),
+    locale: 'en',
+    seedBriefing: false,
+  })
 }
 async function submit(
   id: string,
@@ -68,14 +75,20 @@ async function submit(
 beforeAll(async () => {
   ;({ db, server } = await startHarness())
   departmentId = (
-    await seedDepartment(db, { name: 'Conversation department', slug: `chat-${randomUUID()}` })
+    await seedDepartment(db, {
+      name: 'Conversation department',
+      slug: `chat-${randomUUID()}`,
+    })
   ).id
   const head = await seedMember(db, departmentId, { role: 'head' })
   owner = head.id
   const member = await seedMember(db, departmentId, { role: 'member' })
   other = member.id
   foreignDepartment = (
-    await seedDepartment(db, { name: 'Foreign department', slug: `foreign-${randomUUID()}` })
+    await seedDepartment(db, {
+      name: 'Foreign department',
+      slug: `foreign-${randomUUID()}`,
+    })
   ).id
   foreignHead = (await seedMember(db, foreignDepartment, { role: 'head' })).id
   ctx = {
@@ -104,7 +117,12 @@ beforeAll(async () => {
       departmentId,
       owner,
       JSON.stringify([
-        { id: randomUUID(), title: 'Evidence checked', done: false, dueOn: '2026-11-01' },
+        {
+          id: randomUUID(),
+          title: 'Evidence checked',
+          done: false,
+          dueOn: '2026-11-01',
+        },
       ]),
     ],
   )
@@ -161,18 +179,21 @@ afterAll(async () => {
   if (db && server) await stopHarness({ db, server })
 })
 
-describe('private persistent head conversations', () => {
+describe('private persistent work conversations', () => {
   it('gates routes, persists an immediate pending turn and reloads the saved completed answer', async () => {
     provider()
     await conversationContext(ctx, 'audit')
     const id = randomUUID()
     const url = `${server.baseUrl}/api/v1/ai/conversations`
-    expect((await fetch(url, { headers: memberSession.headers })).status).toBe(403)
+    expect((await fetch(url, { headers: memberSession.headers })).status).toBe(200)
     expect(
       (
         await fetch(url, {
           method: 'POST',
-          headers: { cookie: headSession.cookie, 'content-type': 'application/json' },
+          headers: {
+            cookie: headSession.cookie,
+            'content-type': 'application/json',
+          },
           body: JSON.stringify({ id, locale: 'en' }),
         })
       ).status,
@@ -187,7 +208,10 @@ describe('private persistent head conversations', () => {
     const sent = await fetch(`${url}/${id}/messages`, {
       method: 'POST',
       headers: headSession.headers,
-      body: JSON.stringify({ id: messageId, content: 'What is the audit deadline?' }),
+      body: JSON.stringify({
+        id: messageId,
+        content: 'What is the audit deadline?',
+      }),
     })
     expect(sent.status).toBe(202)
     expect(await sent.json()).toMatchObject({
@@ -202,7 +226,11 @@ describe('private persistent head conversations', () => {
     expect(saved.status).toBe('ready')
     expect(saved.messages.map((m) => m.status)).toEqual(['complete', 'complete'])
     expect(saved.messages[1]?.sources).toEqual([
-      { ref: `card:${cardId}`, title: 'Audit evidence', href: `/work/card?id=${cardId}` },
+      {
+        ref: `card:${cardId}`,
+        title: 'Audit evidence',
+        href: `/work/card?id=${cardId}`,
+      },
     ])
     expect((await submit(id, 'What is the audit deadline?', messageId)).job).toBeNull()
     await expect(submit(id, 'Changed content', messageId)).rejects.toMatchObject({
@@ -248,16 +276,20 @@ describe('private persistent head conversations', () => {
     })
     const context = await conversationContext(ctx, 'audit')
     expect(new Set(context.sources.map((s) => s.ref)).size).toBe(context.sources.length)
-    expect(context.totals).toMatchObject({ people: 2, units: 1, planned_positions: 6 })
+    expect(context.totals).toMatchObject({
+      people: 2,
+      units: 1,
+      planned_positions: 6,
+    })
   })
-  it('enforces owner, department, head and view-as isolation in both service and raw RLS reads', async () => {
+  it('enforces owner, department, membership and view-as isolation in both service and raw RLS reads', async () => {
     const conversation = await create()
     await Promise.all(
       [
         { ...ctx, userId: other },
         { ...ctx, userId: foreignHead, departmentId: foreignDepartment },
         { ...ctx, viewAs: true },
-        { ...ctx, departmentRole: 'member' as const },
+        { ...ctx, departmentRole: null },
       ].map(async (denied) => {
         await expect(chat.getConversation(denied, conversation.id)).rejects.toBeInstanceOf(
           chat.ConversationError,
@@ -327,7 +359,9 @@ describe('private persistent head conversations', () => {
       error: 'provider_failed',
     })
     __setProviderForTests(
-      new MockProvider({ respond: () => response('Fabricated answer', [`card:${randomUUID()}`]) }),
+      new MockProvider({
+        respond: () => response('Fabricated answer', [`card:${randomUUID()}`]),
+      }),
     )
     const retry = await submit(
       conversation.id,
@@ -371,7 +405,7 @@ describe('private persistent head conversations', () => {
     const oversized = {
       id: randomUUID(),
       role: 'assistant',
-      content: 'History '.repeat(20000),
+      content: 'History '.repeat(100000),
       createdAt: new Date().toISOString(),
       status: 'complete',
       sources: [],
@@ -387,7 +421,10 @@ describe('private persistent head conversations', () => {
     expect(model.calls).toHaveLength(0)
     const saved = await chat.getConversation(ctx, conversation.id)
     expect(saved.messages[0]?.content).toBe(oversized.content)
-    expect(saved.messages.at(-1)).toMatchObject({ status: 'failed', error: 'context_limit' })
+    expect(saved.messages.at(-1)).toMatchObject({
+      status: 'failed',
+      error: 'context_limit',
+    })
   })
   it('recovers save-before-enqueue crashes from the transactional outbox', async () => {
     const model = provider(),
@@ -426,7 +463,7 @@ describe('private persistent head conversations', () => {
         else if (mode === 'revoked')
           await superuserQuery(
             db,
-            `update app.memberships set role='member' where department_id=$1 and user_id=$2`,
+            `update app.memberships set status='removed' where department_id=$1 and user_id=$2`,
             [departmentId, owner],
           )
         else
@@ -441,7 +478,7 @@ describe('private persistent head conversations', () => {
         await superuserQuery(db, `update app.users set status='active' where id=$1`, [owner])
         await superuserQuery(
           db,
-          `update app.memberships set role='head' where department_id=$1 and user_id=$2`,
+          `update app.memberships set role='head',status='active' where department_id=$1 and user_id=$2`,
           [departmentId, owner],
         )
         await superuserQuery(db, `update app.departments set status='active' where id=$1`, [
@@ -500,7 +537,13 @@ describe('private persistent head conversations', () => {
     const output = {
       headline: 'Briefing cached once',
       wins: { text: 'Audit work is moving.', citedIds: [] },
-      risks: [{ cardId, text: 'The evidence package needs attention.', severity: 'high' }],
+      risks: [
+        {
+          cardId,
+          text: 'The evidence package needs attention.',
+          severity: 'high',
+        },
+      ],
       overloaded: [],
       lookingAhead: { text: 'Review the next milestone.', citedIds: [] },
       items: [],
@@ -529,8 +572,538 @@ describe('private persistent head conversations', () => {
     expect(model.calls[0]!.messages[1]?.content).toContain(`card:${cardId}`)
     expect(model.calls[0]!.messages[1]?.content).toContain('2026-10-20T04:00:00.000Z')
     expect(
-      (await chat.createConversation(ctx, { id: randomUUID(), locale: 'ru', seedBriefing: true }))
-        .messages,
+      (
+        await chat.createConversation(ctx, {
+          id: randomUUID(),
+          locale: 'ru',
+          seedBriefing: true,
+        })
+      ).messages,
     ).toEqual([])
+  })
+  it('refreshes only changed records and immediately removes edited/deleted content from cached context', async () => {
+    const noteId = randomUUID()
+    await superuserQuery(
+      db,
+      `insert into app.pages(id,department_id,title,blocks,created_by_user_id,updated_by_user_id) values($1,$2,'Cache original','{"text":"Old evidence"}',$3,$3)`,
+      [noteId, departmentId, owner],
+    )
+    await withContext(ctx, (tx) => refreshIndex(tx, departmentId))
+    expect(await withContext(ctx, (tx) => refreshIndex(tx, departmentId))).toBe(0)
+    expect(JSON.stringify(await conversationContext(ctx, 'Cache'))).toContain('Cache original')
+    await superuserQuery(
+      db,
+      `update app.pages set title='Cache revised',blocks='{"text":"Revised evidence"}' where id=$1`,
+      [noteId],
+    )
+    expect(await withContext(ctx, (tx) => refreshIndex(tx, departmentId))).toBe(1)
+    const updated = JSON.stringify(await conversationContext(ctx, 'Cache'))
+    expect(updated).toContain('Cache revised')
+    expect(updated).not.toContain('Cache original')
+    await superuserQuery(db, `update app.pages set deleted_at=now() where id=$1`, [noteId])
+    expect(JSON.stringify(await conversationContext(ctx, 'Cache'))).not.toContain('Cache revised')
+    expect(
+      await withContext(ctx, (tx) =>
+        tx.raw(sql`select id from app.ai_search_documents where subject_id=${noteId}`),
+      ),
+    ).toHaveLength(0)
+  })
+  it('extracts permitted file text once and rechecks file and parent deletion before every cached read', async () => {
+    const ownConversation = await create()
+    const memberCtx = {
+      ...ctx,
+      userId: other,
+      departmentRole: 'member' as const,
+    }
+    const privateConversation = await chat.createConversation(memberCtx, {
+      id: randomUUID(),
+      locale: 'en',
+      seedBriefing: false,
+    })
+    const sharedId = randomUUID(),
+      privateId = randomUUID(),
+      ownId = randomUUID()
+    const get = vi.fn(async (key: string) =>
+      Buffer.from(key.includes('private') ? 'PRIVATE FILE SECRET' : 'Phonebook extension 4567'),
+    )
+    configureConversationFiles({ get } as unknown as ObjectStore)
+    await Promise.all(
+      (
+        [
+          [sharedId, 'page', pageId, owner, 'shared'],
+          [privateId, 'ai_conversation', privateConversation.id, other, 'private'],
+          [ownId, 'ai_conversation', ownConversation.id, owner, 'own'],
+        ] as const
+      ).map(([id, subject, subjectId, user, key]) =>
+        superuserQuery(
+          db,
+          `insert into app.attachments(id,department_id,subject_type,subject_id,key,name,mime,size,uploaded_by_user_id,scan_status) values($1,$2,$3,$4,$5,'contact.txt','text/plain',23,$6,'clean')`,
+          [id, departmentId, subject, subjectId, key, user],
+        ),
+      ),
+    )
+    const initial = JSON.stringify(
+      await conversationContext(ctx, 'phonebook', [], ownConversation.id, [ownId]),
+    )
+    expect(initial).toContain('Phonebook extension 4567')
+    expect(initial).not.toContain('PRIVATE FILE SECRET')
+    expect(initial).not.toContain(privateId)
+    expect(get).toHaveBeenCalledTimes(2)
+    await conversationContext(ctx, 'phonebook', [], ownConversation.id, [ownId])
+    expect(get).toHaveBeenCalledTimes(2)
+    const memberText = JSON.stringify(
+      await conversationContext(memberCtx, 'phonebook', [], privateConversation.id, [privateId]),
+    )
+    expect(memberText).toContain('PRIVATE FILE SECRET')
+    expect(memberText).not.toContain(ownId)
+    expect(
+      await withContext(ctx, (tx) =>
+        tx.raw(sql`select attachment_id from app.ai_file_text where attachment_id=${privateId}`),
+      ),
+    ).toHaveLength(0)
+    await superuserQuery(db, `update app.attachments set deleted_at=now() where id=$1`, [ownId])
+    expect(
+      JSON.stringify(await conversationContext(ctx, 'phonebook', [], ownConversation.id)),
+    ).not.toContain(ownId)
+    await superuserQuery(db, `update app.pages set deleted_at=now() where id=$1`, [pageId])
+    expect(
+      JSON.stringify(await conversationContext(ctx, 'phonebook', [], ownConversation.id)),
+    ).not.toContain(sharedId)
+    await superuserQuery(db, `update app.pages set deleted_at=null where id=$1`, [pageId])
+    await superuserQuery(
+      db,
+      `update app.attachments set deleted_at=now() where id=any($1::uuid[])`,
+      [[sharedId, privateId]],
+    )
+  })
+  it('distinguishes an empty provider response from unavailability and preserves the saved question', async () => {
+    const conversation = await create(),
+      pending = await submit(conversation.id)
+    __setProviderForTests(
+      new MockProvider({
+        respond: () => ({
+          content: null,
+          reasoningContent: null,
+          toolCalls: [],
+          finishReason: 'length',
+          usage: {
+            promptTokens: 100,
+            completionTokens: 8192,
+            totalTokens: 8292,
+          },
+        }),
+      }),
+    )
+    await chat.processConversation(pending.job!)
+    expect((await chat.getConversation(ctx, conversation.id)).messages).toMatchObject([
+      {
+        status: 'failed',
+        error: 'empty_response',
+        content: 'What is the audit deadline?',
+      },
+    ])
+  })
+  it('refreshes account names without rebuilding unchanged documents', async () => {
+    await conversationContext(ctx, 'audit')
+    const [before] = await superuserQuery(db, `select given_name from app.users where id=$1`, [
+      owner,
+    ])
+    await superuserQuery(db, `update app.users set given_name='Updated roster name' where id=$1`, [
+      owner,
+    ])
+    expect(JSON.stringify(await conversationContext(ctx, 'audit'))).toContain('Updated roster name')
+    await superuserQuery(db, `update app.users set given_name=$2 where id=$1`, [
+      owner,
+      before!['given_name'],
+    ])
+  })
+  it('reloads a bounded snapshot when a follow-up references an omitted record', async () => {
+    const target = 'ffffffff-ffff-4fff-8fff-ffffffffffff'
+    await superuserQuery(
+      db,
+      `insert into app.pages(id,department_id,title,created_by_user_id,updated_by_user_id)
+      select gen_random_uuid(),$1,'Snapshot capacity fixture '||n,$2,$2 from generate_series(1,2001) n`,
+      [departmentId, owner],
+    )
+    await superuserQuery(
+      db,
+      `insert into app.pages(id,department_id,title,created_by_user_id,updated_by_user_id) values($1,$2,'Explicit continuation target',$3,$3)`,
+      [target, departmentId, owner],
+    )
+    const first = await conversationContext(ctx, 'zzzxnomatch')
+    expect(first.limited).toBe(true)
+    expect(first.sources.some((source) => source.ref === `page:${target}`)).toBe(false)
+    const followup = await conversationContext(ctx, 'zzzxnomatch', [`page:${target}`])
+    expect(followup.sources.some((source) => source.ref === `page:${target}`)).toBe(true)
+    await superuserQuery(
+      db,
+      `delete from app.pages where department_id=$1 and (title like 'Snapshot capacity fixture %' or id=$2)`,
+      [departmentId, target],
+    )
+  })
+  it('includes live actionable event logistics without other RSVP notes, reservations or anonymous voter identities', async () => {
+    const carpoolId = randomUUID(),
+      itemId = randomUUID(),
+      pollId = randomUUID(),
+      firstOption = randomUUID(),
+      secondOption = randomUUID()
+    const myRsvpId = randomUUID(),
+      otherRsvpId = randomUUID(),
+      mySeatId = randomUUID(),
+      otherSeatId = randomUUID()
+    const ownVoteId = randomUUID(),
+      otherVoteId = randomUUID(),
+      foreignEventId = randomUUID(),
+      foreignItemId = randomUUID()
+    const ownHash = createHash('sha256').update(`${pollId}:${owner}`).digest('hex')
+    const otherHash = createHash('sha256').update(`${pollId}:${other}`).digest('hex')
+    await Promise.all([
+      superuserQuery(
+        db,
+        `insert into app.event_rsvps(id,department_id,event_id,user_id,status,guests,note)
+        values($1,$2,$3,$4,'yes',1,'My dietary request'),($5,$2,$3,$6,'maybe',0,'PRIVATE OTHER RSVP NOTE')`,
+        [myRsvpId, departmentId, eventId, owner, otherRsvpId, other],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.carpools(id,department_id,event_id,driver_user_id,seats,departure_place)
+        values($1,$2,$3,$4,5,'North gate')`,
+        [carpoolId, departmentId, eventId, owner],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.event_items(id,department_id,event_id,label,quantity)
+        values($1,$2,$3,'Projector cables',2)`,
+        [itemId, departmentId, eventId],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.polls(id,department_id,event_id,kind,question,anonymous,created_by_user_id)
+        values($1,$2,$3,'single','Choose our meeting room',true,$4)`,
+        [pollId, departmentId, eventId, owner],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.events(id,department_id,title,starts_at,ends_at,organizer_user_id)
+        values($1,$2,'SECRET FOREIGN EVENT',now(),now()+interval '1 day',$3)`,
+        [foreignEventId, foreignDepartment, foreignHead],
+      ),
+    ])
+    await Promise.all([
+      superuserQuery(
+        db,
+        `insert into app.carpool_seats(id,department_id,carpool_id,user_id,seats_claimed,status)
+        values($1,$2,$3,$4,2,'confirmed'),($5,$2,$3,$6,1,'waitlist')`,
+        [mySeatId, departmentId, carpoolId, owner, otherSeatId, other],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.poll_options(id,department_id,poll_id,label,sort_order)
+        values($1,$2,$3,'Room A',0),($4,$2,$3,'Room B',1)`,
+        [firstOption, departmentId, pollId, secondOption],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.event_items(id,department_id,event_id,label,quantity)
+        values($1,$2,$3,'SECRET FOREIGN ITEM',1)`,
+        [foreignItemId, foreignDepartment, foreignEventId],
+      ),
+    ])
+    await superuserQuery(
+      db,
+      `insert into app.poll_votes(id,department_id,poll_id,option_id,voter_hash)
+      values($1,$2,$3,$4,$5),($6,$2,$3,$7,$8)`,
+      [ownVoteId, departmentId, pollId, firstOption, ownHash, otherVoteId, secondOption, otherHash],
+    )
+    const row = (context: Awaited<ReturnType<typeof conversationContext>>, ref: string) =>
+      context.snapshot.find((value) => (value as { ref: string }).ref === ref) as
+        | { ref: string; facts: Record<string, unknown> }
+        | undefined
+    const initial = await conversationContext(ctx, 'event logistics', [`event:${eventId}`])
+    expect(row(initial, `event_logistics:${eventId}`)?.facts).toMatchObject({
+      eventId,
+      rsvpTotals: { responses: 2, yesResponses: 1, goingPeople: 2, maybeResponses: 1 },
+      myRsvp: { id: myRsvpId, status: 'yes', guests: 1, note: 'My dietary request' },
+    })
+    expect(row(initial, `carpool:${carpoolId}`)?.facts).toMatchObject({
+      eventId,
+      seats: 5,
+      confirmedSeats: 2,
+      waitlistedSeats: 1,
+      availableSeats: 3,
+      myReservation: { id: mySeatId, seats: 2, status: 'confirmed' },
+    })
+    expect(row(initial, `event_item:${itemId}`)?.facts).toMatchObject({
+      eventId,
+      quantity: 2,
+      claimedById: null,
+      claimedByMe: false,
+    })
+    const pollFacts = row(initial, `poll:${pollId}`)?.facts
+    expect(pollFacts).toMatchObject({
+      eventId,
+      anonymous: true,
+      totalVotes: 2,
+      options: [
+        { id: firstOption, label: 'Room A', votes: 1, votedByMe: true },
+        { id: secondOption, label: 'Room B', votes: 1, votedByMe: false },
+      ],
+    })
+    const encoded = JSON.stringify(initial)
+    for (const secret of [
+      ownHash,
+      otherHash,
+      ownVoteId,
+      otherVoteId,
+      otherRsvpId,
+      otherSeatId,
+      'PRIVATE OTHER RSVP NOTE',
+      foreignItemId,
+      'SECRET FOREIGN EVENT',
+    ])
+      expect(encoded).not.toContain(secret)
+    expect(JSON.stringify(pollFacts)).not.toContain(other)
+    for (const [ref, title] of [
+      [`carpool:${carpoolId}`, 'North gate'],
+      [`event_item:${itemId}`, 'Projector cables'],
+      [`poll:${pollId}`, 'Choose our meeting room'],
+      [`poll_option:${firstOption}`, 'Room A'],
+      [`event_rsvp:${myRsvpId}`, 'yes'],
+      [`carpool_reservation:${mySeatId}`, 'confirmed'],
+    ])
+      expect(initial.sources.find((source) => source.ref === ref)).toMatchObject({
+        title: expect.stringContaining(title!),
+        href: `/events?event=${eventId}`,
+      })
+    // These child updates deliberately do not bump the department document revision. The next
+    // context must still observe current claims/votes instead of its cached event snapshot.
+    await Promise.all([
+      superuserQuery(
+        db,
+        `update app.event_items set claimed_by_user_id=$2,claimed_at=now() where id=$1`,
+        [itemId, owner],
+      ),
+      superuserQuery(db, `update app.carpool_seats set seats_claimed=3 where id=$1`, [mySeatId]),
+      superuserQuery(db, `update app.poll_votes set option_id=$2 where id=$1`, [
+        ownVoteId,
+        secondOption,
+      ]),
+      superuserQuery(db, `update app.event_rsvps set status='no',guests=0 where id=$1`, [myRsvpId]),
+    ])
+    const fresh = await conversationContext(ctx, 'event logistics', [`event:${eventId}`])
+    expect(row(fresh, `event_item:${itemId}`)?.facts).toMatchObject({
+      claimedById: owner,
+      claimedByMe: true,
+    })
+    expect(row(fresh, `carpool:${carpoolId}`)?.facts).toMatchObject({
+      confirmedSeats: 3,
+      availableSeats: 2,
+      myReservation: { seats: 3 },
+    })
+    expect(row(fresh, `event_logistics:${eventId}`)?.facts).toMatchObject({
+      myRsvp: { status: 'no' },
+      rsvpTotals: { goingPeople: 0, noResponses: 1 },
+    })
+    expect(row(fresh, `poll:${pollId}`)?.facts).toMatchObject({
+      options: [
+        { id: firstOption, votes: 0, votedByMe: false },
+        { id: secondOption, votes: 2, votedByMe: true },
+      ],
+    })
+    const member = await conversationContext(
+      { ...ctx, userId: other, departmentRole: 'member' },
+      'event logistics',
+    )
+    expect(row(member, `event_logistics:${eventId}`)?.facts).toMatchObject({
+      myRsvp: { id: otherRsvpId, note: 'PRIVATE OTHER RSVP NOTE' },
+    })
+    expect(JSON.stringify(member)).not.toContain('My dietary request')
+    expect(row(member, `carpool:${carpoolId}`)?.facts).toMatchObject({
+      myReservation: { id: otherSeatId, seats: 1, status: 'waitlist' },
+    })
+    expect(row(member, `poll:${pollId}`)?.facts).toMatchObject({
+      options: [
+        { id: firstOption, votedByMe: false },
+        { id: secondOption, votedByMe: true },
+      ],
+    })
+    await superuserQuery(db, `update app.events set deleted_at=now() where id=$1`, [eventId])
+    const deleted = JSON.stringify(await conversationContext(ctx, 'event logistics'))
+    for (const id of [carpoolId, itemId, pollId, myRsvpId, mySeatId, firstOption, secondOption])
+      expect(deleted).not.toContain(id)
+    await superuserQuery(db, `update app.events set deleted_at=null where id=$1`, [eventId])
+  })
+
+  it('reads only current-user sprints with current versions and exposes readable nested action references', async () => {
+    const sprintId = randomUUID(),
+      otherSprintId = randomUUID(),
+      deletedSprintId = randomUUID()
+    const checklistId = randomUUID(),
+      commentId = randomUUID(),
+      eventCommentId = randomUUID()
+    await Promise.all([
+      superuserQuery(
+        db,
+        `insert into app.personal_sprints(id,user_id,kind,starts_at,ends_at,goal)
+        values($1,$2,'week',now(),now()+interval '1 week','Finish evidence review'),
+        ($3,$4,'day',now(),now()+interval '1 day','SECRET OTHER SPRINT'),
+        ($5,$2,'day',now(),now()+interval '1 day','DELETED OWN SPRINT')`,
+        [sprintId, owner, otherSprintId, other, deletedSprintId],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.card_checklist_items(id,department_id,card_id,text,order_key)
+        values($1,$2,$3,'Check source documents','a0')`,
+        [checklistId, departmentId, cardId],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.card_comments(id,department_id,card_id,author_user_id,body)
+        values($1,$2,$3,$4,'{"format":"markdown","text":"Review completed evidence"}')`,
+        [commentId, departmentId, cardId, owner],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.event_comments(id,department_id,event_id,author_user_id,body)
+        values($1,$2,$3,$4,'Please bring the agenda')`,
+        [eventCommentId, departmentId, eventId, owner],
+      ),
+    ])
+    await superuserQuery(db, `update app.personal_sprints set deleted_at=now() where id=$1`, [
+      deletedSprintId,
+    ])
+    const initial = await conversationContext(ctx, 'evidence')
+    expect(initial.snapshot).toContainEqual(
+      expect.objectContaining({
+        ref: `personal_sprint:${sprintId}`,
+        title: 'Finish evidence review',
+        facts: expect.objectContaining({
+          kind: 'private_sprint',
+          sprintKind: 'week',
+          goal: 'Finish evidence review',
+          status: 'active',
+          version: 1,
+          startsAt: expect.any(String),
+          endsAt: expect.any(String),
+        }),
+      }),
+    )
+    for (const secret of [
+      'SECRET OTHER SPRINT',
+      'DELETED OWN SPRINT',
+      otherSprintId,
+      deletedSprintId,
+    ])
+      expect(JSON.stringify(initial)).not.toContain(secret)
+    for (const [ref, text, href] of [
+      [`checklist:${checklistId}`, 'Check source documents', `/work/card?id=${cardId}`],
+      [`comment:${commentId}`, 'Review completed evidence', `/work/card?id=${cardId}`],
+      [`event_comment:${eventCommentId}`, 'Please bring the agenda', `/events?event=${eventId}`],
+    ])
+      expect(initial.sources.find((source) => source.ref === ref)).toMatchObject({
+        title: expect.stringContaining(text!),
+        href,
+      })
+    expect(initial.sources).toContainEqual(
+      expect.objectContaining({
+        ref: expect.stringMatching(new RegExp(`^milestone:${projectId}:`)),
+        title: expect.stringContaining('Evidence checked'),
+        href: `/projects/view?id=${projectId}`,
+      }),
+    )
+    await superuserQuery(
+      db,
+      `update app.personal_sprints set goal='Review finished',status='completed',version=2 where id=$1`,
+      [sprintId],
+    )
+    const fresh = await conversationContext(ctx, 'evidence')
+    expect(fresh.snapshot).toContainEqual(
+      expect.objectContaining({
+        ref: `personal_sprint:${sprintId}`,
+        title: 'Review finished',
+        facts: expect.objectContaining({ status: 'completed', version: 2 }),
+      }),
+    )
+    const member = JSON.stringify(
+      await conversationContext({ ...ctx, userId: other, departmentRole: 'member' }, 'sprints'),
+    )
+    expect(member).toContain('SECRET OTHER SPRINT')
+    expect(member).not.toContain(sprintId)
+    await Promise.all([
+      superuserQuery(db, `update app.card_checklist_items set deleted_at=now() where id=$1`, [
+        checklistId,
+      ]),
+      superuserQuery(db, `update app.card_comments set deleted_at=now() where id=$1`, [commentId]),
+      superuserQuery(db, `update app.event_comments set deleted_at=now() where id=$1`, [
+        eventCommentId,
+      ]),
+    ])
+    const removed = JSON.stringify(await conversationContext(ctx, 'evidence'))
+    for (const id of [checklistId, commentId, eventCommentId]) expect(removed).not.toContain(id)
+  })
+  it('bounds logistics and poll options while prioritizing an explicitly selected child', async () => {
+    const boundedPollId = randomUUID()
+    const preferredItemId = 'ffffffff-ffff-4fff-8fff-fffffffffff1'
+    await Promise.all([
+      superuserQuery(
+        db,
+        `insert into app.event_items(id,department_id,event_id,label,quantity)
+        select gen_random_uuid(),$1,$2,'Bounded logistics fixture '||n,1 from generate_series(1,1001) n`,
+        [departmentId, eventId],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.event_items(id,department_id,event_id,label,quantity)
+        values($1,$2,$3,'Preferred logistics fixture',1)`,
+        [preferredItemId, departmentId, eventId],
+      ),
+      superuserQuery(
+        db,
+        `insert into app.polls(id,department_id,event_id,kind,question,created_by_user_id)
+        values($1,$2,$3,'single','Bounded legacy options',$4)`,
+        [boundedPollId, departmentId, eventId, owner],
+      ),
+    ])
+    await superuserQuery(
+      db,
+      `insert into app.poll_options(id,department_id,poll_id,label,sort_order)
+      select gen_random_uuid(),$1,$2,'Option '||n,n from generate_series(1,21) n`,
+      [departmentId, boundedPollId],
+    )
+    try {
+      const context = await conversationContext(ctx, 'zzzxnomatch', [
+        `event_item:${preferredItemId}`,
+        `poll:${boundedPollId}`,
+      ])
+      expect(context.limited).toBe(true)
+      expect(context.recordsTotal).toBeGreaterThan(1000)
+      expect(context.recordsIncluded).toBeLessThan(context.recordsTotal)
+      expect(Buffer.byteLength(JSON.stringify(context.snapshot), 'utf8')).toBeLessThan(410000)
+      expect(context.sources).toContainEqual({
+        ref: `event_item:${preferredItemId}`,
+        title: 'Preferred logistics fixture',
+        href: `/events?event=${eventId}`,
+      })
+      const poll = context.snapshot.find(
+        (value) => (value as { ref: string }).ref === `poll:${boundedPollId}`,
+      ) as { facts: { options: unknown[]; optionsTotal: number; limited: boolean } }
+      expect(poll.facts).toMatchObject({ optionsTotal: 21, limited: true })
+      expect(poll.facts.options).toHaveLength(20)
+      expect(
+        context.sources.some((source) =>
+          source.title.includes('Bounded legacy options — Option 21'),
+        ),
+      ).toBe(false)
+    } finally {
+      await Promise.all([
+        superuserQuery(
+          db,
+          `delete from app.event_items where department_id=$1 and (label like 'Bounded logistics fixture %' or id=$2)`,
+          [departmentId, preferredItemId],
+        ),
+        superuserQuery(db, `delete from app.poll_options where poll_id=$1`, [boundedPollId]),
+      ])
+      await superuserQuery(db, `delete from app.polls where id=$1`, [boundedPollId])
+    }
   })
 })

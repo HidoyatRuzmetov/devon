@@ -145,6 +145,11 @@ const SAMPLE_INPUT: Record<AiFeature, Record<string, unknown>> = {
     ],
     preserve: ['Nodira', 'EGDI'],
   },
+  draft_page: {
+    locale: 'uz-Latn',
+    title: 'Portal video qoʻllanmasi',
+    instructions: 'Hamkasblardan videoni koʻrishni soʻrang.',
+  },
   draft_reply: {
     locale: 'uz-Latn',
     subject: { kind: 'card', id: 'c1', title: 'Byudjetni tasdiqlash' },
@@ -396,6 +401,19 @@ describe('catch_up — the citation guard rail (AI-AUDIT §0.6)', () => {
 })
 
 describe('plan_sprint — faithfulness is rejected, not repaired (AI-AUDIT §3 F3)', () => {
+  it('keeps project milestones as outcome context and orders only assignment IDs', () => {
+    const spec = FEATURE_REGISTRY['plan_sprint']
+    const input = spec.inputSchema.parse({
+      ...SAMPLE_INPUT['plan_sprint'],
+      scope: 'project',
+      projectMilestones: [
+        { id: 'm1', title: 'Publish evidence', dueOn: '2026-09-15', doneAt: null },
+      ],
+    })
+    expect(spec.buildUserContent(input)).toContain('Publish evidence')
+    expect(spec.systemPrompt(input)).toContain('Project progress is measured by milestones')
+    expect(spec.simulate(input).orderedIds).not.toContain('m1')
+  })
   it('refuses a plan that dropped one of the items it was given', () => {
     const spec = FEATURE_REGISTRY['plan_sprint']
     const input = spec.inputSchema.parse(SAMPLE_INPUT['plan_sprint'])

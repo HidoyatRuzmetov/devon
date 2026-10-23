@@ -231,6 +231,10 @@ function EventHeader({
   const starts = new Date(event.startsAt)
   const ends = new Date(event.endsAt)
   const sameDay = starts.toDateString() === ends.toDateString()
+  const operational =
+    ends.getTime() > Date.now() && event.status !== 'done' && event.status !== 'cancelled'
+  const displayedStatus =
+    ends.getTime() <= Date.now() && event.status !== 'cancelled' ? 'done' : event.status
 
   return (
     <div className="flex flex-col gap-4">
@@ -244,8 +248,8 @@ function EventHeader({
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-h3 text-foreground">{event.title}</h2>
-            <EventChip tone={STATUS_TONE[event.status]}>
-              {t(`events.status.${event.status}`)}
+            <EventChip tone={STATUS_TONE[displayedStatus]}>
+              {t(`events.status.${displayedStatus}`)}
             </EventChip>
             <EventChip tone="outline">{t(`events.category.${event.category}`)}</EventChip>
           </div>
@@ -271,7 +275,7 @@ function EventHeader({
               </Button>
             }
           />
-          {event.canManage && event.status !== 'cancelled' && event.status !== 'done' ? (
+          {event.canManage && operational ? (
             <>
               <Button variant="secondary" size="sm" onClick={onEdit}>
                 <Pencil className="size-3.5" aria-hidden="true" />
@@ -367,6 +371,12 @@ export function EventDetailDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useT()
+  const [, tick] = React.useReducer((n: number) => n + 1, 0)
+  React.useEffect(() => {
+    if (!open) return
+    const timer = setInterval(tick, 1000)
+    return () => clearInterval(timer)
+  }, [open])
   const eventQuery = useEventQuery(eventId)
   const updateMutation = useUpdateEventMutation(eventId)
   const [tab, setTab] = React.useState('rsvp')
@@ -430,6 +440,10 @@ export function EventDetailDialog({
       )
     }
     const event = eventQuery.data
+    const operational =
+      new Date(event.endsAt).getTime() > Date.now() &&
+      event.status !== 'done' &&
+      event.status !== 'cancelled'
     return (
       <div className="mt-2 flex flex-col gap-5">
         <EventHeader
@@ -440,31 +454,47 @@ export function EventDetailDialog({
           onExportIcs={handleExportIcs}
           exporting={exporting}
         />
+        {!operational ? (
+          <p role="status" className="rounded-md bg-muted p-3 text-small text-muted-foreground">
+            {t('events.finished.readOnly')}
+          </p>
+        ) : null}
         <Tabs value={tab} onValueChange={setTab} className="flex flex-col gap-5">
-          <TabsList aria-label={event.title}>
+          <TabsList
+            aria-label={event.title}
+            className="flex h-auto flex-wrap overflow-visible gap-1"
+          >
             {tabs.map((item) => (
-              <TabsTrigger key={item.id} value={item.id}>
+              <TabsTrigger key={item.id} value={item.id} className="min-h-10 flex-1 px-2">
                 {item.label}
               </TabsTrigger>
             ))}
           </TabsList>
           <TabsContent value="rsvp">
-            <RsvpPanel event={event} eventId={eventId} />
+            <fieldset disabled={!operational} className="min-w-0 disabled:opacity-70">
+              <RsvpPanel event={event} eventId={eventId} />
+            </fieldset>
           </TabsContent>
           <TabsContent value="carpool">
-            <CarpoolPanel
-              eventId={eventId}
-              eventClosed={
-                (event.status !== 'open' && event.status !== 'full') ||
-                new Date(event.startsAt).getTime() <= Date.now()
-              }
-            />
+            <fieldset disabled={!operational} className="min-w-0 disabled:opacity-70">
+              <CarpoolPanel
+                eventId={eventId}
+                eventClosed={
+                  (event.status !== 'open' && event.status !== 'full') ||
+                  new Date(event.startsAt).getTime() <= Date.now()
+                }
+              />
+            </fieldset>
           </TabsContent>
           <TabsContent value="items">
-            <ItemsPanel eventId={eventId} />
+            <fieldset disabled={!operational} className="min-w-0 disabled:opacity-70">
+              <ItemsPanel eventId={eventId} />
+            </fieldset>
           </TabsContent>
           <TabsContent value="polls">
-            <PollsPanel eventId={eventId} />
+            <fieldset disabled={!operational} className="min-w-0 disabled:opacity-70">
+              <PollsPanel eventId={eventId} />
+            </fieldset>
           </TabsContent>
           <TabsContent value="comments">
             <CommentsPanel eventId={eventId} eventTitle={event.title} />

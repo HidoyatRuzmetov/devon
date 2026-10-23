@@ -254,6 +254,7 @@ export const FEATURE_OUTPUT_SCHEMAS: Record<AiFeatureId, z.ZodTypeAny> = {
   nl_analytics: nlAnalyticsOutputSchema,
   translate: translateOutputSchema,
   draft_reply: draftReplyOutputSchema,
+  draft_page: z.object({ markdown: z.string().min(1).max(20000) }),
   board_risk_digest: boardRiskDigestOutputSchema,
   suggest_assignee: suggestAssigneeOutputSchema,
   duplicate_check: duplicateCheckOutputSchema,

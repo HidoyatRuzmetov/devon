@@ -3,6 +3,32 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it('refreshes member Home assignments and counts from one card event without polling', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } })
+    const keys = [
+      ['work', 'member-home', 'cards', 'department-a', 'member-a', null],
+      ['work', 'member-home', 'counts', 'department-a', 'member-a', null],
+    ]
+    let status = 'active'
+    const read = vi.fn(async () => status)
+    await Promise.all(keys.map((queryKey) => client.fetchQuery({ queryKey, queryFn: read })))
+    const stops = keys.map((queryKey) =>
+      new QueryObserver(client, { queryKey, queryFn: read }).subscribe(() => {}),
+    )
+    const bridge = createRealtimeInvalidator(client)
+    try {
+      status = 'done'
+      bridge.receive('work.card.updated')
+      await vi.waitFor(() => {
+        for (const key of keys) expect(client.getQueryData(key)).toBe('done')
+      })
+      expect(read).toHaveBeenCalledTimes(4)
+    } finally {
+      bridge.dispose()
+      for (const stop of stops) stop()
+      client.clear()
+    }
+  })
   it.each(['attachments.approval.reviewed', 'inbox.notification.created'])(
     'refreshes an open approval view on %s without a per-screen timer',
     async (type) => {

@@ -1061,6 +1061,20 @@ export async function deleteChecklistItem(
   })
 }
 
+async function activeMentionIds(
+  tx: Tx,
+  departmentId: string,
+  ids: readonly string[],
+): Promise<string[]> {
+  if (ids.length === 0) return []
+  const rows = await tx.raw<{ user_id: string }>(sql`
+    select m.user_id from app.memberships m join app.users u on u.id=m.user_id
+    where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null
+      and u.status='active' and u.deleted_at is null and m.user_id=any(${sql.param([...new Set(ids)])}::uuid[])
+  `)
+  return rows.map((row) => row.user_id)
+}
+
 export async function addComment(
   ctx: RequestContext,
   departmentId: string,
@@ -1071,11 +1085,12 @@ export async function addComment(
 ): Promise<string | null> {
   return withContext(ctx, async (tx) => {
     if (!(await cardIsVisible(tx, departmentId, cardId))) return null
+    const safeMentions = await activeMentionIds(tx, departmentId, mentions)
     const id = randomUUID()
     await tx.raw(
       sql`insert into app.card_comments (id, department_id, card_id, author_user_id, body, mentions)
           values (${id}, ${departmentId}, ${cardId}, ${authorUserId},
-            ${JSON.stringify({ format: 'markdown', text })}::jsonb, ${sql.param(mentions)}::uuid[])`,
+            ${JSON.stringify({ format: 'markdown', text })}::jsonb, ${sql.param(safeMentions)}::uuid[])`,
     )
     await tx.raw(
       sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
@@ -1089,7 +1104,7 @@ export async function addComment(
     })
     tx.emit({
       type: 'work.card.commented',
-      payload: { cardId, commentId: id, mentions, actorUserId: authorUserId },
+      payload: { cardId, commentId: id, mentions: safeMentions, actorUserId: authorUserId },
       departmentId,
     })
     return id
@@ -1191,22 +1206,6 @@ export async function deleteSavedView(
   })
 }
 
-export async function listArchiveForMember(
-  ctx: RequestContext,
-  departmentId: string,
-  memberUserId: string,
-): Promise<CardDTO[]> {
-  return withContext(ctx, async (tx) => {
-    const rows = await tx.raw<CardRow>(
-      sql`${cardSelect(ctx.userId)}
-          where c.department_id = ${departmentId} and c.assignee_user_id = ${memberUserId}
-            and c.status = 'archived' and c.deleted_at is null
-          order by c.archived_at desc`,
-    )
-    return rows.map(toCardDTO)
-  })
-}
-
 /** Retains the row and children. Audit snapshots remain visible to the superadmin. */
 export async function deleteCard(
   ctx: RequestContext,
@@ -1294,5 +1293,81 @@ export async function restoreCard(
       departmentId,
     })
     return true
+  })
+}
+
+export async function changeComment(
+  ctx: RequestContext,
+  actor: Actor | null,
+  departmentId: string,
+  cardId: string,
+  commentId: string,
+  input: { text: string; mentions: string[]; editedAt: string | null } | null,
+): Promise<'ok' | 'not_found' | 'forbidden' | 'conflict'> {
+  return withContext(ctx, async (tx) => {
+    if (!(await cardIsVisible(tx, departmentId, cardId))) return 'not_found'
+    const rows = await tx.raw<{
+      author_user_id: string
+      body: { text: string }
+      mentions: string[]
+      edited_at: Date | string | null
+    }>(sql`
+      select author_user_id,body,mentions,edited_at from app.card_comments
+      where id=${commentId} and card_id=${cardId} and department_id=${departmentId} and deleted_at is null for update`)
+    const before = rows[0]
+    if (!before) return 'not_found'
+    if (
+      !can(actor, input ? 'update' : 'delete', {
+        kind: 'owned',
+        departmentId,
+        ownerUserIds: [before.author_user_id],
+      }).allowed
+    )
+      return 'forbidden'
+    if (
+      input &&
+      (before.edited_at ? new Date(before.edited_at).toISOString() : null) !== input.editedAt
+    )
+      return 'conflict'
+    const safeMentions = input ? await activeMentionIds(tx, departmentId, input.mentions) : []
+    const cards = await tx.raw<{
+      assignee_user_id: string | null
+      giver_user_id: string | null
+      watchers: string[]
+    }>(sql`
+      select assignee_user_id,giver_user_id,watchers from app.cards where id=${cardId}`)
+    const card = cards[0]!
+    const recipients = [
+      ...new Set(
+        [
+          ...(before.mentions ?? []),
+          ...(card.watchers ?? []),
+          card.assignee_user_id,
+          card.giver_user_id,
+        ].filter((id): id is string => Boolean(id)),
+      ),
+    ]
+    if (input)
+      await tx.raw(sql`update app.card_comments set body=${JSON.stringify({ format: 'markdown', text: input.text })}::jsonb,
+      mentions=${sql.param(safeMentions)}::uuid[], edited_at=now() where id=${commentId}`)
+    else await tx.raw(sql`update app.card_comments set deleted_at=now() where id=${commentId}`)
+    tx.audit({
+      action: input ? 'work.comment_edited' : 'work.comment_deleted',
+      subjectType: 'card_comment',
+      subjectId: commentId,
+      departmentId,
+      before: { body: before.body, mentions: before.mentions },
+      ...(input ? { after: { body: { text: input.text }, mentions: safeMentions } } : {}),
+    })
+    const payload = {
+      cardId,
+      commentId,
+      actorUserId: ctx.userId,
+      recipientIds: recipients,
+      mentions: safeMentions.filter((id) => !before.mentions.includes(id)),
+    }
+    if (input) tx.emit({ type: 'work.comment.updated', departmentId, payload })
+    else tx.emit({ type: 'work.comment.deleted', departmentId, payload })
+    return 'ok'
   })
 }

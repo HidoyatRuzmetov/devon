@@ -82,6 +82,8 @@ import {
   nextDoneStatus,
   useAddChecklistItemMutation,
   useAddCommentMutation,
+  useEditCommentMutation,
+  useDeleteCommentMutation,
   useCardQuery,
   useCreateLabelMutation,
   useDeleteChecklistItemMutation,
@@ -1479,7 +1481,13 @@ function Comments({
 }: {
   cardId: string
   cardTitle: string
-  comments: Array<{ id: string; authorUserId: string; body: { text: string }; createdAt: string }>
+  comments: Array<{
+    id: string
+    authorUserId: string
+    body: { text: string }
+    createdAt: string
+    editedAt: string | null
+  }>
   members: readonly MemberSummary[]
 }) {
   const t = useT()
@@ -1494,6 +1502,21 @@ function Comments({
   const commentsReduced = useReducedMotion()
   const [text, setText] = React.useState('')
   const addComment = useAddCommentMutation(cardId)
+  const editComment = useEditCommentMutation(cardId)
+  const deleteComment = useDeleteCommentMutation(cardId)
+  const [editing, setEditing] = React.useState<string | null>(null)
+  const [editedText, setEditedText] = React.useState('')
+  const [editedRevision, setEditedRevision] = React.useState<string | null>(null)
+  const [deleting, setDeleting] = React.useState<string | null>(null)
+  function mentionedUsers(value: string) {
+    return [
+      ...new Set(
+        [...value.matchAll(/@([\p{L}]+)/gu)]
+          .map((match) => resolveQuickAddAssignee(match[1]!, members)?.userId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ]
+  }
 
   // v1.1 EPIC-018: tell colleagues a comment is being written, while it is being written.
   //
@@ -1616,6 +1639,7 @@ function Comments({
 
   return (
     <Field
+      grouped
       label={`${t('work.field.comments')} (${comments.length})`}
       action={
         summarizeEnabled && comments.length > 0 ? (
@@ -1662,7 +1686,103 @@ function Comments({
                       {formatDate(new Date(c.createdAt), locale)}
                     </span>
                   </div>
-                  <p className="whitespace-pre-wrap text-small text-foreground">{c.body.text}</p>
+                  {editing === c.id ? (
+                    <form
+                      className="mt-2 flex flex-col gap-2"
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        void editComment
+                          .mutateAsync({
+                            id: c.id,
+                            text: editedText.trim(),
+                            mentions: mentionedUsers(editedText),
+                            editedAt: editedRevision,
+                          })
+                          .then(() => setEditing(null))
+                          .catch(() => toast.error(t('work.comments.saveError')))
+                      }}
+                    >
+                      <textarea
+                        aria-label={t('work.comments.edit')}
+                        value={editedText}
+                        maxLength={10000}
+                        onChange={(event) => setEditedText(event.target.value)}
+                        rows={3}
+                        className="w-full rounded-sm border border-border bg-card p-2 text-small"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          type="submit"
+                          disabled={!editedText.trim()}
+                          loading={editComment.isPending}
+                        >
+                          {t('common.save')}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={editComment.isPending}
+                          onClick={() => setEditing(null)}
+                        >
+                          {t('common.cancel')}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <p className="whitespace-pre-wrap wrap-anywhere text-small text-foreground">
+                      {c.body.text}
+                    </p>
+                  )}
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    {c.editedAt ? (
+                      <span className="text-caption text-muted-foreground">
+                        {t('work.comments.edited')}
+                      </span>
+                    ) : null}
+                    {(c.authorUserId === user?.id || viewerRole === 'head') && editing !== c.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditing(c.id)
+                            setEditedText(c.body.text)
+                            setEditedRevision(c.editedAt)
+                          }}
+                        >
+                          {t('work.comments.edit')}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setDeleting(c.id)}>
+                          {t('work.action.delete')}
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                  {deleting === c.id ? (
+                    <div className="mt-2 rounded-sm border border-border p-2">
+                      <p className="text-small">{t('work.comments.deleteConfirm')}</p>
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          loading={deleteComment.isPending}
+                          onClick={() =>
+                            void deleteComment
+                              .mutateAsync(c.id)
+                              .then(() => setDeleting(null))
+                              .catch(() => toast.error(t('work.comments.saveError')))
+                          }
+                        >
+                          {t('work.action.delete')}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setDeleting(null)}>
+                          {t('common.cancel')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </motion.div>
             )

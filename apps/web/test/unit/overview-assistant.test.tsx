@@ -54,6 +54,7 @@ vi.mock('../../src/features/ai/conversations.js', () => ({
     reset: vi.fn(),
     isPending: false,
   }),
+  useConversationUploadMutation: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }))
 
 function Harness() {

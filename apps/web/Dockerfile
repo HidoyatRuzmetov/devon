@@ -10,7 +10,7 @@
 #
 # syntax=docker/dockerfile:1
 ARG NODE_IMAGE=node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
-ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:stable-alpine@sha256:15c994d10d6d78658721c3bcafff14cb281fba2a4bdf9d5ba92c416a472516e3
+ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:1.30.6-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
 
 FROM ${NODE_IMAGE} AS build
 RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
@@ -24,7 +24,7 @@ COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/i18n/package.json packages/i18n/package.json
 COPY packages/ui/package.json packages/ui/package.json
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --network-concurrency=8 --fetch-timeout=120000
 COPY packages/config packages/config
 COPY packages/contracts packages/contracts
 COPY packages/i18n packages/i18n
@@ -39,8 +39,8 @@ COPY apps/web apps/web
 RUN pnpm --filter @devon/web build
 
 FROM ${NGINX_IMAGE} AS runtime
-# Patch vulnerable libraries in the pinned upstream image (CVE-2026-4775,
-# CVE-2026-77214 and CVE-2026-88806), then restore the original non-root user.
+# nginx 1.30.6 fixes CVE-2026-15176, CVE-2026-93479 and CVE-2026-97205, with matching
+# upstream modules. Patch remaining libraries and restore the non-root user afterwards.
 USER root
 RUN apk add --no-cache tiff=4.7.2-r0 libexpat=2.9.0-r0 libx11=1.8.14-r0
 USER 101

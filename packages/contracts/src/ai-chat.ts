@@ -1,6 +1,24 @@
 import { z } from 'zod'
 
 export const AI_CHAT_MESSAGE_MAX = 4000
+export const aiChatAttachmentSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  mime: z.string(),
+  size: z.number().nonnegative(),
+  downloadPath: z.string().startsWith('/').optional(),
+})
+export const aiChatProposalSchema = z.object({
+  id: z.uuid(),
+  kind: z.string(),
+  title: z.string(),
+  summary: z.string(),
+  arguments: z.record(z.string(), z.unknown()),
+  status: z.enum(['pending', 'executing', 'executed', 'discarded', 'failed', 'expired']),
+  result: z.object({ href: z.string().startsWith('/'), label: z.string() }).optional(),
+  error: z.string().optional(),
+  startedAt: z.string().optional(),
+})
 export const aiChatSourceSchema = z.object({
   ref: z.string(),
   title: z.string(),
@@ -22,6 +40,8 @@ export const aiChatMessageSchema = z.object({
   error: z.string().nullable(),
   sources: z.array(aiChatSourceSchema),
   context: aiChatContextSchema.nullable(),
+  attachments: z.array(aiChatAttachmentSchema).optional(),
+  proposals: z.array(aiChatProposalSchema).optional(),
 })
 export const aiConversationSummarySchema = z.object({
   id: z.uuid(),
@@ -50,6 +70,7 @@ export const sendAiChatMessageSchema = z
   .object({
     id: z.uuid(),
     content: z.string().trim().min(1).max(AI_CHAT_MESSAGE_MAX),
+    attachmentIds: z.array(z.uuid()).max(10).default([]),
   })
   .strict()
 export const cancelAiChatMessageSchema = z.object({ messageId: z.uuid() }).strict()
@@ -58,3 +79,5 @@ export type AiChatContext = z.infer<typeof aiChatContextSchema>
 export type AiChatMessage = z.infer<typeof aiChatMessageSchema>
 export type AiConversationSummary = z.infer<typeof aiConversationSummarySchema>
 export type AiConversation = z.infer<typeof aiConversationSchema>
+export type AiChatProposal = z.infer<typeof aiChatProposalSchema>
+export type AiChatAttachment = z.infer<typeof aiChatAttachmentSchema>

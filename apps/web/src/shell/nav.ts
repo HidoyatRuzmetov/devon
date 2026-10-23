@@ -103,14 +103,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     id: 'manage-head',
     labelKey: 'shell.nav.group.manageHead',
-    entryIds: ['people-table', 'workload', 'goals', 'fields', 'automations', 'department-settings'],
+    entryIds: ['people-table', 'workload', 'goals', 'fields', 'automations'],
     collapsible: true,
   },
   {
-    id: 'manage',
-    labelKey: 'shell.nav.group.manage',
-    entryIds: ['departments', 'department-requests', 'account-settings', 'admin'],
-    collapsible: true,
+    id: 'administration',
+    entryIds: ['department-requests', 'admin'],
   },
 ]
 
@@ -123,12 +121,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
  * This is only the first-run default: the moment anyone toggles a group the whole set is persisted
  * per user and this is never consulted again.
  */
-export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = [
-  'team',
-  'knowledge',
-  'manage-head',
-  'manage',
-]
+export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = ['team', 'knowledge', 'manage-head']
 
 /** The five areas the bottom tab bar carries at 390 px (UI-OVERHAUL.md §2: "bottom tab bar for the
  * five most used areas"). Everything else stays one tap away behind ☰, which opens the full sidebar

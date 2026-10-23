@@ -19,6 +19,11 @@
             "type": "string",
             "description": "The URL path Playwright navigates to, e.g. \"/admin\"."
           },
+          "redirect": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Expected destination pathname for a preserved legacy URL. The destination still receives the full rendering and accessibility checks."
+          },
           "name": {
             "type": "string",
             "description": "The route's internal name (apps/web/src/lib/router.tsx RouteName)."

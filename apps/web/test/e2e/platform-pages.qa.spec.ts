@@ -10,7 +10,7 @@ const doc = (text: string) => ({
   content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
 })
 
-test("@qa a colleague may edit a shared page but cannot delete or restore its owner's work", async ({
+test('@qa an active colleague may edit, delete and restore a shared wiki page', async ({
   browser,
 }) => {
   const owner = await newFlowContext(browser)
@@ -36,11 +36,11 @@ test("@qa a colleague may edit a shared page but cannot delete or restore its ow
       ).status(),
     ).toBe(200)
     const page = await colleague.newPage()
-    await page.goto(`/pages?page=${created.id}`)
+    await page.goto(`/pages?page=${created.id}&edit=true`)
     await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
       'Collaborative title',
     )
-    await expect(page.getByRole('button', { name: 'More actions', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'More actions', exact: true })).toBeVisible()
     const history = page
       .getByRole('heading', { name: 'Version history', exact: true })
       .locator('..')
@@ -48,22 +48,16 @@ test("@qa a colleague may edit a shared page but cannot delete or restore its ow
     await history.getByRole('listitem').nth(1).getByRole('button').click()
     await expect(
       history.getByRole('button', { name: 'Restore this version', exact: true }),
-    ).toHaveCount(0)
+    ).toBeVisible()
     expect(
       (
         await colleague.request.delete(path, {
           headers: { 'x-csrf-token': await csrfToken(colleague) },
         })
       ).status(),
-    ).toBe(403)
-    expect(
-      (
-        await owner.request.delete(path, { headers: { 'x-csrf-token': await csrfToken(owner) } })
-      ).status(),
     ).toBe(204)
-    expect((await authedPost(colleague, `${path}/restore`, {})).status()).toBe(403)
     expect((await colleague.request.get(path)).status()).toBe(404)
-    expect((await authedPost(owner, `${path}/restore`, {})).status()).toBe(204)
+    expect((await authedPost(colleague, `${path}/restore`, {})).status()).toBe(204)
     expect((await owner.request.get(path)).status()).toBe(200)
   } finally {
     await owner.close()
@@ -86,7 +80,7 @@ test('@qa a knowledge page saves title and body together instead of dropping the
     expect(response.status()).toBe(201)
     const created = await response.json()
     const page = await context.newPage()
-    await page.goto(`/pages?page=${created.id}`)
+    await page.goto(`/pages?page=${created.id}&edit=true`)
     const title = page.getByRole('textbox', { name: 'Title', exact: true })
     const body = page.locator('main [contenteditable="true"]')
     await expect(title).toHaveValue(created.title)
@@ -119,7 +113,7 @@ test('@qa a refused knowledge save preserves the draft and offers an actual retr
     expect(response.status()).toBe(201)
     const created = await response.json()
     const page = await context.newPage()
-    await page.goto(`/pages?page=${created.id}`)
+    await page.goto(`/pages?page=${created.id}&edit=true`)
     const title = page.getByRole('textbox', { name: 'Title', exact: true })
     await expect(title).toHaveValue(created.title)
     await page.route(`**/api/v1/pages/${created.id}`, async (route) => {
@@ -178,7 +172,7 @@ test('@qa restoring a page version updates the visible title and editor without 
       ).status(),
     ).toBe(200)
     const page = await context.newPage()
-    await page.goto(`/pages?page=${created.id}`)
+    await page.goto(`/pages?page=${created.id}&edit=true`)
     const title = page.getByRole('textbox', { name: 'Title', exact: true })
     const body = page.locator('main [contenteditable="true"]')
     await expect(title).toHaveValue('Later knowledge title')
@@ -232,7 +226,7 @@ test('@qa a failed version preview has a retry and does not show stale history',
     const page = await context.newPage()
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
-    await page.goto(`/pages?page=${created.id}`)
+    await page.goto(`/pages?page=${created.id}&edit=true`)
     const history = page
       .getByRole('heading', { name: 'Version history', exact: true })
       .locator('..')

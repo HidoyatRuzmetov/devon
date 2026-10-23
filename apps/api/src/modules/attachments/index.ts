@@ -18,6 +18,7 @@ import { contextFromRequest } from '../work/context.js'
 import { getCardOwners } from '../work/repo.js'
 import * as repo from './repo.js'
 import { getPage } from '../pages/repo.js'
+import { getConversation } from '../ai/conversations.js'
 import {
   APPROVAL_THRESHOLD,
   requestApproval,
@@ -27,7 +28,9 @@ import {
 } from './approvals.js'
 
 const paramsSchema = z.object({ id: z.string().uuid() })
-const attachmentParams = paramsSchema.extend({ attachmentId: z.string().uuid() })
+const attachmentParams = paramsSchema.extend({
+  attachmentId: z.string().uuid(),
+})
 const attachmentSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -53,8 +56,17 @@ async function allowed(
   reply: FastifyReply,
   cardId: string,
   write = false,
-  subjectType: 'card' | 'page' = 'card',
+  subjectType: repo.AttachmentSubject = 'card',
 ) {
+  if (subjectType === 'ai_conversation') {
+    try {
+      await getConversation(contextFromRequest(req), cardId)
+      return true
+    } catch {
+      sendProblem(reply, 'not_found')
+      return false
+    }
+  }
   if (subjectType === 'page') {
     const page = await getPage(req.actor!.departmentId!, cardId, audit(req))
     if (!page) sendProblem(reply, 'not_found')
@@ -86,7 +98,10 @@ const attachmentRoutes: FastifyPluginAsyncZod = async (app) => {
     '/admin/file-upload-approvals',
     {
       config: {
-        permission: { action: 'administer', subject: () => ({ kind: 'instance' as const }) },
+        permission: {
+          action: 'administer',
+          subject: () => ({ kind: 'instance' as const }),
+        },
       },
       schema: {
         response: {
@@ -109,9 +124,15 @@ const attachmentRoutes: FastifyPluginAsyncZod = async (app) => {
     '/admin/file-upload-approvals/:id',
     {
       config: {
-        permission: { action: 'administer', subject: () => ({ kind: 'instance' as const }) },
+        permission: {
+          action: 'administer',
+          subject: () => ({ kind: 'instance' as const }),
+        },
       },
-      schema: { params: paramsSchema, body: z.object({ approved: z.boolean() }).strict() },
+      schema: {
+        params: paramsSchema,
+        body: z.object({ approved: z.boolean() }).strict(),
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -122,15 +143,17 @@ const attachmentRoutes: FastifyPluginAsyncZod = async (app) => {
   )
   registerSubjectAttachmentRoutes(app, 'card', scanState)
   registerSubjectAttachmentRoutes(app, 'page', scanState)
+  registerSubjectAttachmentRoutes(app, 'ai_conversation', scanState)
 }
 
 // Registration is synchronous. Database operations below run only when a request reaches its handler.
 function registerSubjectAttachmentRoutes(
   app: Parameters<FastifyPluginAsyncZod>[0],
-  subjectType: 'card' | 'page',
+  subjectType: repo.AttachmentSubject,
   scanState: { finalizing: boolean },
 ) {
-  const routePrefix = subjectType === 'card' ? '/cards' : '/pages'
+  const routePrefix =
+    subjectType === 'card' ? '/cards' : subjectType === 'page' ? '/pages' : '/ai/conversations'
   app.get(
     `${routePrefix}/:id/attachments/approvals`,
     {
@@ -152,7 +175,10 @@ function registerSubjectAttachmentRoutes(
     `${routePrefix}/:id/attachments`,
     {
       config: { permission: { action: 'read', subject } },
-      schema: { params: paramsSchema, response: { 200: z.array(attachmentSchema) } },
+      schema: {
+        params: paramsSchema,
+        response: { 200: z.array(attachmentSchema) },
+      },
     },
     async (req, reply) => {
       if (!(await allowed(req, reply, req.params.id, false, subjectType))) return
@@ -172,7 +198,10 @@ function registerSubjectAttachmentRoutes(
       schema: {
         params: paramsSchema,
         body: z
-          .object({ name: z.string().min(1).max(255), size: z.number().int().positive() })
+          .object({
+            name: z.string().min(1).max(255),
+            size: z.number().int().positive(),
+          })
           .strict(),
         response: {
           202: z.object({ approvalRequired: z.literal(true) }),
@@ -244,9 +273,11 @@ function registerSubjectAttachmentRoutes(
         expiresInSeconds: uploadTtlSeconds,
         userId: req.actor!.userId,
       })
-      return reply
-        .code(201)
-        .send({ uploadId: id, ...signed, expiresAt: signed.expiresAt.toISOString() })
+      return reply.code(201).send({
+        uploadId: id,
+        ...signed,
+        expiresAt: signed.expiresAt.toISOString(),
+      })
     },
   )
 
@@ -283,7 +314,9 @@ function registerSubjectAttachmentRoutes(
         )
         await repo.rejectPending(ctx, upload.id, infected)
         await app.storage.store.remove([upload.key])
-        return sendProblem(reply, 'validation_failed', { errors: [{ path: 'file', code }] })
+        return sendProblem(reply, 'validation_failed', {
+          errors: [{ path: 'file', code }],
+        })
       }
       if (scanState.finalizing) return sendProblem(reply, 'maintenance')
       const releaseWork = reserveBufferedTransfer(
