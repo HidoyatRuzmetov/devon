@@ -1,6 +1,6 @@
 {
   "cardRefinement": {
-    "task": "Task",
+    "cardLabel": "Card",
     "actions": "More actions",
     "details": "More details"
   }

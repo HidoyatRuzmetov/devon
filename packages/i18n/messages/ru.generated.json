@@ -2909,7 +2909,7 @@
     }
   },
   "cardRefinement": {
-    "task": "Задача",
+    "cardLabel": "Задача",
     "actions": "Другие действия",
     "details": "Другие сведения"
   },

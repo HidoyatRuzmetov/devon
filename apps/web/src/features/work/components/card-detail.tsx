@@ -620,7 +620,7 @@ export function CardDetailContent({
               <FolderKanban className="size-4 shrink-0 text-primary" aria-hidden="true" />
             ) : null}
             <span className="truncate" title={project?.title}>
-              {project?.title ?? t('cardRefinement.task')}
+              {project?.title ?? t('cardRefinement.cardLabel')}
             </span>
           </span>
           <div className="flex shrink-0 items-center gap-1">
