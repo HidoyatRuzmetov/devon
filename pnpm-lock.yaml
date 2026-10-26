@@ -12,6 +12,7 @@ overrides:
   source-map-js@1.2.1: 1.2.2
   launch-editor@2: 2.14.2
   vite@8.2.2: 8.2.4
+  zod@4: 4.6.6
 
 importers:
 
@@ -73,7 +74,7 @@ importers:
         version: 6.0.0
       fastify-type-provider-zod:
         specifier: 7.0.0
-        version: 7.0.0(@fastify/swagger@9.8.1(supports-color@7.2.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.5.4)
+        version: 7.0.0(@fastify/swagger@9.8.1(supports-color@7.2.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.6)
       fractional-indexing:
         specifier: 4.0.0
         version: 4.0.0
@@ -102,8 +103,8 @@ importers:
         specifier: 3.6.7
         version: 3.6.7(supports-color@7.2.0)
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.6
+        version: 4.6.6
     devDependencies:
       '@devon/config':
         specifier: workspace:*
@@ -163,8 +164,8 @@ importers:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.6
+        version: 4.6.6
     devDependencies:
       '@devon/config':
         specifier: workspace:*
@@ -308,8 +309,8 @@ importers:
         specifier: 3.10.1
         version: 3.10.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react-is@17.0.2)(react@19.2.8)(redux@5.0.1)
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.6
+        version: 4.6.6
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.13.0
@@ -381,8 +382,8 @@ importers:
         specifier: workspace:*
         version: link:../contracts
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.6
+        version: 4.6.6
     devDependencies:
       '@devon/config':
         specifier: workspace:*
@@ -454,8 +455,8 @@ importers:
   packages/contracts:
     dependencies:
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.6
+        version: 4.6.6
     devDependencies:
       '@devon/config':
         specifier: workspace:*
@@ -531,8 +532,8 @@ importers:
   packages/i18n:
     dependencies:
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.6
+        version: 4.6.6
     devDependencies:
       '@devon/config':
         specifier: workspace:*
@@ -4893,7 +4894,7 @@ packages:
       '@fastify/swagger': '>=9.5.1'
       fastify: ^5.5.0
       openapi-types: ^12.1.3
-      zod: '>=4.1.5'
+      zod: 4.6.6
 
   fastify@5.12.5:
     resolution: {integrity: sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==}
@@ -7156,8 +7157,8 @@ packages:
   zlibjs@0.3.1:
     resolution: {integrity: sha512-+J9RrgTKOmlxFSDHo0pI1xM6BLVUv+o0ZT9ANtCxGkjIVCCUdx9alUF8Gm+dGLKbkkkidWIHFDZHDMpfITt4+w==}
 
-  zod@4.5.4:
-    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
 snapshots:
 
@@ -11037,13 +11038,13 @@ snapshots:
 
   fastify-plugin@6.0.0: {}
 
-  fastify-type-provider-zod@7.0.0(@fastify/swagger@9.8.1(supports-color@7.2.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.5.4):
+  fastify-type-provider-zod@7.0.0(@fastify/swagger@9.8.1(supports-color@7.2.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.6):
     dependencies:
       '@fastify/error': 4.2.0
       '@fastify/swagger': 9.8.1(supports-color@7.2.0)
       fastify: 5.12.5
       openapi-types: 12.1.3
-      zod: 4.5.4
+      zod: 4.6.6
 
   fastify@5.12.5:
     dependencies:
@@ -11606,7 +11607,7 @@ snapshots:
       tinyglobby: 0.2.17
       unbash: 4.0.11
       yaml: 2.9.0
-      zod: 4.5.4
+      zod: 4.6.6
 
   language-subtag-registry@0.3.23: {}
 
@@ -13601,4 +13602,4 @@ snapshots:
 
   zlibjs@0.3.1: {}
 
-  zod@4.5.4: {}
+  zod@4.6.6: {}

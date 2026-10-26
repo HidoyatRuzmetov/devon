@@ -76,7 +76,9 @@ test('@flow notification preferences expose working channels and save consistent
     })
     await settingsPane.selectOption('/account/telegram')
     await expect(page).toHaveURL(/\/account\/telegram$/)
-    await expect(page.getByRole('heading', { name: 'Telegram', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Telegram', exact: true })).toHaveCount(0)
+    await expect(settingsPane).toHaveValue('/account/telegram')
+    await expect(page.getByRole('heading', { name: 'Telegramingiz', exact: true })).toBeVisible()
     await page.getByRole('button', { name: 'Bildirishnoma sozlamalari', exact: true }).click()
     await expect(page).toHaveURL(/\/account\/notifications$/)
     await expect(
@@ -89,7 +91,11 @@ test('@flow notification preferences expose working channels and save consistent
     await expect(page).toHaveURL(/\/account\/telegram$/)
     await page.goto('/inbox/preferences')
     await expect(page).toHaveURL(/\/account\/notifications$/)
-    await expect(page.getByRole('heading', { name: 'Bildirishnoma sozlamalari' })).toBeVisible()
+    await expect(settingsPane).toHaveValue('/account/notifications')
+    await expect(
+      page.getByRole('heading', { name: 'Bildirishnoma sozlamalari', exact: true }),
+    ).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Turi va kanali boʻyicha' })).toBeVisible()
     await expect(page.getByRole('columnheader', { name: 'E-pochta' })).toHaveCount(0)
     await expect(page.getByRole('columnheader', { name: 'Ilovada', exact: true })).toBeVisible()
     await expect(

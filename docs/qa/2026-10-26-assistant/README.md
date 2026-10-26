@@ -7,36 +7,36 @@ The same opt-in live-model runner (`apps/api/test/checks/assistant-quality-eval.
 ## Measured result
 
 - Baseline: 16/17 scenarios passed; 696,131 total tokens.
-- Candidate: 17/17 passed; 157,974 total tokens: **77.3% reduction** across this suite.
-- Three checklist changes: 41,075 → 14,780 tokens, with all three confirmed writes verified in PostgreSQL.
+- Final candidate after the Zod security update: 17/17 passed; 254,044 total tokens: **63.5% reduction** across this suite.
+- Three checklist changes: 41,075 → 13,976 tokens, with all three confirmed writes verified in PostgreSQL.
 - The baseline scope failure answered a generic Dijkstra request. The candidate asks for its work purpose; work-related technical help remains available.
-- An earlier passing candidate run used the full-context recovery path for one file-to-page request (54,470 versus 41,011 tokens). Its snapshot is retained in `candidate-recovery.json`. The final run needed 6,497 tokens for that case. Savings vary with model behavior and workload; recovery deliberately prioritizes correctness over reducing every individual request.
+- Three passing candidate runs used 157,974, 204,866 and 254,044 tokens: **63.5–77.3% less than baseline**. Earlier snapshots are retained in `candidate-efficient.json` and `candidate-recovery.json`. The final run used full-context recovery for RSVP and attaching a file to an existing card; both confirmed writes succeeded. Savings vary with model behavior and workload; recovery deliberately prioritizes correctness over reducing every individual request.
 
 | Scenario                  | Baseline | Candidate | Baseline tokens | Candidate tokens |
 | ------------------------- | -------- | --------- | --------------: | ---------------: |
-| checklist-three-actions   | Pass     | Pass      |          41,075 |           14,780 |
-| follow-up                 | Pass     | Pass      |          41,181 |            6,998 |
-| page-grounding            | Pass     | Pass      |          40,339 |            6,213 |
-| broad-totals              | Pass     | Pass      |          40,357 |            6,220 |
-| milestone                 | Pass     | Pass      |          40,591 |           13,192 |
-| rsvp                      | Pass     | Pass      |          40,819 |           13,138 |
-| file-to-page              | Pass     | Pass      |          41,011 |            6,497 |
-| page-attachment-retrieval | Pass     | Pass      |          40,989 |            6,460 |
-| file-to-existing-card     | Pass     | Pass      |          40,924 |           14,254 |
-| uzbek                     | Pass     | Pass      |          40,966 |            6,825 |
-| russian                   | Pass     | Pass      |          40,934 |            6,388 |
-| private-owner             | Pass     | Pass      |          40,990 |            6,423 |
-| private-denial            | Pass     | Pass      |          40,961 |            6,402 |
-| ambiguous-target          | Pass     | Pass      |          41,826 |           25,068 |
-| general-code-scope        | Fail     | Pass      |          41,259 |            6,306 |
-| legitimate-work-code      | Pass     | Pass      |          40,866 |            6,321 |
-| document-injection        | Pass     | Pass      |          41,043 |            6,489 |
+| checklist-three-actions   | Pass     | Pass      |          41,075 |           13,976 |
+| follow-up                 | Pass     | Pass      |          41,181 |            7,004 |
+| page-grounding            | Pass     | Pass      |          40,339 |            6,219 |
+| broad-totals              | Pass     | Pass      |          40,357 |            6,228 |
+| milestone                 | Pass     | Pass      |          40,591 |           19,870 |
+| rsvp                      | Pass     | Pass      |          40,819 |           53,960 |
+| file-to-page              | Pass     | Pass      |          41,011 |           13,595 |
+| page-attachment-retrieval | Pass     | Pass      |          40,989 |            6,709 |
+| file-to-existing-card     | Pass     | Pass      |          40,924 |           55,007 |
+| uzbek                     | Pass     | Pass      |          40,966 |            6,833 |
+| russian                   | Pass     | Pass      |          40,934 |            6,623 |
+| private-owner             | Pass     | Pass      |          40,990 |            6,679 |
+| private-denial            | Pass     | Pass      |          40,961 |            6,581 |
+| ambiguous-target          | Pass     | Pass      |          41,826 |           24,868 |
+| general-code-scope        | Fail     | Pass      |          41,259 |            6,566 |
+| legitimate-work-code      | Pass     | Pass      |          40,866 |            6,588 |
+| document-injection        | Pass     | Pass      |          41,043 |            6,738 |
 
 ## Design and safeguards
 
 The same model, complete saved conversation history, source permissions and 44 registered action handlers remain. A compact source directory and current totals replace unrelated full bodies in the initial request. The model can request full records, attachment text, search results and exact action schemas; broad requests and validation failures can recover the original bounded full snapshot. Internal read requests are strictly validated and never saved as user-facing answers. Expansion is bounded and shares a 180-second deadline. Each call, including repair attempts, is metered and budget checked. Actual writes still require confirmation and re-enter the ordinary API permissions, validation, concurrency and audit pipeline.
 
-The existing incremental index and extracted-file cache remain. Static action schemas are computed once. Dynamic timestamps follow stable prompt instructions and context, improving prefix reuse where the serving endpoint supports it. Cached input counters are recorded only if reported; absence is shown as “Not reported”. The UZS figure is a token-based reference estimate, not a GPU utilization measurement or a bill. No serving-side cache hit rate or GPU saving is claimed by this test.
+The existing incremental index and extracted-file cache remain. Static action schemas are computed once. Dynamic timestamps follow stable prompt instructions and context, improving prefix reuse where the serving endpoint supports it. Cached input counters are recorded only if reported; absence is shown as “Not reported”. The final provider run reported 94,912 cached input tokens out of 250,094 input tokens across 25 calls. The baseline did not record that counter, so this is not a before/after cache comparison. The UZS figure is a token-based reference estimate, not a GPU utilization measurement or a bill. No GPU saving is claimed by this test.
 
 Intermediate live runs exposed malformed read requests and incomplete schema proposals. Strict output validation, targeted schema repair and a full-context fallback corrected them before the candidate snapshot above was accepted.
 
@@ -46,6 +46,7 @@ Intermediate live runs exposed malformed read requests and incomplete schema pro
 
 - Original Docker capability suite: 56/56 before and after (conversations, action confirmation, attachments, permissions, fresh context, helper grounding and file extraction).
 - AI package: 191/191 tests, including wire protocol, retries, structured output, language and cached-token mapping.
+- Release follow-up: updated Zod to 4.6.6, including the transitive tooling copy, for [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5). All workspace type checks, 191 AI-package tests, 50 Docker conversation/action regressions and the 17 live-model cases passed again. Notification settings navigation was checked for both roles after removing the obsolete pane-heading assertions.
 - Added regressions cover directory expansion, related file content, source isolation, full fallback, internal read persistence, joining-date order, manual/assisted checklist activity and recovery of historical missing actors from the immutable audit.
 - Real browser flow for head and member: scanned upload → confirmed action → saved page/card attachment → download → reload/history continuation; both passed. The browser provider is scripted; real model quality is measured separately above.
 - Desktop/phone settings, profile drawer, Inbox, assistant history and source-return navigation: four browser journeys passed, including accessibility checks.

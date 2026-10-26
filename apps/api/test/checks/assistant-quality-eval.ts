@@ -2,7 +2,7 @@
  * Run the identical script before/after changes; reports include model usage and verified writes.
  * No model response is mocked. Existing integration/browser suites separately exercise failures,
  * scanner quarantine, permissions, concurrent confirmations and deletion during extraction. */
-import { randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { createProvider, hasApiKey, loadAiConfig, type ChatUsage } from '@devon/ai'
@@ -169,7 +169,7 @@ try {
   )
   const store = createLocalStore({
     dir: resolve(output, 'files'),
-    signingSecret: 'synthetic-evaluation-only',
+    signingSecret: randomBytes(32).toString('base64url'),
     urlPrefix: '/api/v1/storage',
   })
   configureConversationFiles(store)

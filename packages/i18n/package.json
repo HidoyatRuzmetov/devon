@@ -23,7 +23,7 @@
     "break:hardcoded": "tsx src/cli/break-hardcoded.ts"
   },
   "dependencies": {
-    "zod": "4.5.4"
+    "zod": "4.6.6"
   },
   "peerDependencies": {
     "react": "^19.0.0"

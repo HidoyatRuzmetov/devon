@@ -527,6 +527,7 @@ export async function processConversation(job: ConversationJob): Promise<void> {
       if (Date.now() >= deadline)
         throw new AiRunFailedError('Conversation deadline reached', 'timeout')
       try {
+        // nosemgrep: query-in-loop -- At most four model passes; each needs the preceding answer's requested records/schemas and shares one deadline.
         answer = await runDepartmentChatForActor(ctx, {
           locale: row.locale,
           messages,
@@ -549,6 +550,7 @@ export async function processConversation(job: ConversationJob): Promise<void> {
       }
       for (const kind of request.actionKinds) actionKinds.add(kind)
       if (request.queries.length) {
+        // nosemgrep: query-in-loop -- The search is chosen by the preceding model response; results are bulk-loaded for the next bounded pass.
         context = await conversationContext(
           ctx,
           request.queries.join(' '),
