@@ -886,6 +886,7 @@ export async function listMembers(
             isNull(schema.memberships.deletedAt),
           ),
         )
+        .orderBy(schema.memberships.joinedAt, schema.memberships.id)
       return rows
     },
   )

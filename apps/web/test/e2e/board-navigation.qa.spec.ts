@@ -53,27 +53,25 @@ async function fixture(browser: Browser, touch = false) {
       })
     ).status(),
   ).toBe(200)
-  const joinColleague = async (context: (typeof colleagues)[number], index: number) => {
-    await joinDepartmentAsNewUser(context, {
-      login: uniqueLogin('board.nav.member'),
-      password: examplePassword(),
-      joinKey: department.joinKey,
-      joinPassword: department.joinPassword,
-    })
-    expect(
-      (
-        await authedPatch(context, '/api/v1/accounts/profile', {
-          givenName: index === 7 ? 'Zarina' : `Colleague ${index + 1}`,
-          familyName: 'Navigator',
-        })
-      ).status(),
-    ).toBe(200)
-  }
-  await Promise.all(colleagues.slice(0, 7).map(joinColleague))
+  await Promise.all(
+    colleagues.map(async (context, index) => {
+      await joinDepartmentAsNewUser(context, {
+        login: uniqueLogin('board.nav.member'),
+        password: examplePassword(),
+        joinKey: department.joinKey,
+        joinPassword: department.joinPassword,
+      })
+      expect(
+        (
+          await authedPatch(context, '/api/v1/accounts/profile', {
+            givenName: index === 7 ? 'Zarina' : `Colleague ${index + 1}`,
+            familyName: 'Navigator',
+          })
+        ).status(),
+      ).toBe(200)
+    }),
+  )
   const member = colleagues[7]!
-  // Columns follow joining date. Join the target last so it is reliably off-screen;
-  // a name beginning with Z no longer determines its position, and parallel joins race.
-  await joinColleague(member, 7)
   await Promise.all(
     [head, member].map(async (context) => {
       expect((await authedPatch(context, '/api/v1/me', { locale: 'en' })).status()).toBe(200)

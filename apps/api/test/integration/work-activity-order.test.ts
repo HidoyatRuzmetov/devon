@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { afterAll, beforeAll, expect, it } from 'vitest'
-import type { RequestContext } from '@devon/db'
+import { withContext, type RequestContext } from '@devon/db'
 import { startHarness, stopHarness, seedDepartment, seedMember, superuserQuery } from './harness.js'
 import {
   addChecklistItem,
@@ -11,6 +11,8 @@ import {
   getMembers,
 } from '../../src/modules/work/repo.js'
 import { listMembers } from '../../src/modules/structure/repo.js'
+import { listMembers as listSettingsMembers } from '../../src/modules/departments/repo.js'
+import { activeMemberIds, nameRows } from '../../src/modules/people/repo.js'
 
 let harness: Awaited<ReturnType<typeof startHarness>>
 let ctx: RequestContext, departmentId: string, headId: string, memberId: string
@@ -22,6 +24,12 @@ beforeAll(async () => {
   ).id
   headId = (await seedMember(harness.db, departmentId, { role: 'head' })).id
   memberId = (await seedMember(harness.db, departmentId, { role: 'member' })).id
+  await superuserQuery(
+    harness.db,
+    `update app.users set given_name=case when id=$1 then 'Ada' else 'Zarina' end,
+      family_name=case when id=$1 then 'Adams' else 'Zaman' end where id in ($1,$2)`,
+    [headId, memberId],
+  )
   ctx = {
     requestId: randomUUID(),
     userId: headId,
@@ -47,8 +55,18 @@ beforeAll(async () => {
 afterAll(async () => {
   if (harness) await stopHarness(harness)
 })
-it('orders board and directory members by joining date, even when the head joined later', async () => {
-  expect((await getMembers(ctx, departmentId)).map((m) => m.userId)).toEqual([memberId, headId])
+it('sorts only department settings members by joining date; board, directory and reports keep their existing order', async () => {
+  expect((await listSettingsMembers(departmentId, headId, 'head')).map((m) => m.userId)).toEqual([
+    memberId,
+    headId,
+  ])
+  expect((await getMembers(ctx, departmentId)).map((m) => m.userId)).toEqual([headId, memberId])
+  expect(await activeMemberIds(ctx, departmentId)).toEqual([headId, memberId])
+  expect(
+    (await withContext(ctx, (tx) => nameRows(tx, departmentId, [memberId, headId]))).map(
+      (m) => m.userId,
+    ),
+  ).toEqual([headId, memberId])
   expect(
     (
       await listMembers(
@@ -62,7 +80,7 @@ it('orders board and directory members by joining date, even when the head joine
         departmentId,
       )
     ).map((m) => m.userId),
-  ).toEqual([memberId, headId])
+  ).toEqual([headId, memberId])
 })
 it('attributes checklist add, edit and removal to the human actor and marks assisted edits', async () => {
   const id = await addChecklistItem(ctx, departmentId, cardId, { text: 'Acceptance evidence' })

@@ -189,7 +189,7 @@ export async function getMembers(
           left join app.units un on un.id = ur.unit_id and un.deleted_at is null
           where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
             and u.deleted_at is null and u.status != 'deleted'
-          order by m.joined_at asc, m.id asc`,
+          order by (m.role = 'head') desc, u.given_name asc, u.family_name asc`,
     )
     return rows.map((r) => ({
       userId: r.user_id,

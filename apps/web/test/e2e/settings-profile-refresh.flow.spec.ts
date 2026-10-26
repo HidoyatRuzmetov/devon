@@ -160,6 +160,26 @@ test('settings panes, legacy links and professional profiles work on desktop and
       'aria-selected',
       'true',
     )
+    const settingsMembersResponse = await member.request.get(
+      `/api/v1/departments/${department.departmentId}/members`,
+    )
+    expect(settingsMembersResponse.status()).toBe(200)
+    const settingsMembers = (await settingsMembersResponse.json()).members as {
+      givenName: string
+      familyName: string
+      joinedAt: string
+    }[]
+    const joinedDates = settingsMembers.map((person) => Date.parse(person.joinedAt))
+    expect(joinedDates).toEqual([...joinedDates].sort((a, b) => a - b))
+    const settingsRows = page
+      .getByRole('list', { name: 'Members', exact: true })
+      .getByRole('listitem')
+    await expect(settingsRows).toHaveCount(settingsMembers.length)
+    await Promise.all(
+      settingsMembers.map((person, index) =>
+        expect(settingsRows.nth(index)).toContainText(`${person.givenName} ${person.familyName}`),
+      ),
+    )
     await expect(page.getByRole('tab', { name: /Invite|Danger/ })).toHaveCount(0)
     for (const tabs of await page.getByRole('tablist').all()) {
       expect(
