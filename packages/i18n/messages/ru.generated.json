@@ -1115,7 +1115,7 @@
         "feature": "Помощник",
         "status": "Статус",
         "tokens": "Токены",
-        "cost": "Стоимость",
+        "cost": "Оценка",
         "latency": "Задержка"
       },
       "unknownUser": "Сотрудник вне отдела",
@@ -1150,7 +1150,10 @@
         "previous": "Назад",
         "next": "Вперёд",
         "of": "Страница {page} из {pages}"
-      }
+      },
+      "tokenDetails": "Вход {input} · Выход {output} · Кэш входа {cached}",
+      "cacheUnknown": "Не сообщается",
+      "referenceEstimate": "Справочная оценка по токенам; это не счёт и не измерение нагрузки GPU."
     },
     "result": {
       "title": "Предпросмотр",
@@ -1963,7 +1966,11 @@
       "due": "изменил(а) срок",
       "comment": "оставил(а) комментарий",
       "checklist": "добавил(а) пункт в чек-лист",
-      "system": "Система"
+      "system": "Система",
+      "viaAssistant": "через Ассистента",
+      "unknownActor": "Бывший участник",
+      "checklistUpdated": "изменил пункт списка",
+      "checklistDeleted": "удалил пункт списка"
     },
     "table": {
       "open": "Открыть",
@@ -2063,7 +2070,8 @@
       "suggestAssignee": "Кому поручить",
       "suggestAssigneePreviewTitle": "Предложенные исполнители",
       "boardDigest": "Кто задерживает",
-      "boardDigestPreviewTitle": "Самые рискованные дела на доске"
+      "boardDigestPreviewTitle": "Самые рискованные дела на доске",
+      "reviewRisk": "Риски"
     },
     "actions": {
       "create": "Новая задача"

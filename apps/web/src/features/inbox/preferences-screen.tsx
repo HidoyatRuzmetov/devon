@@ -1,4 +1,4 @@
-import { SettingsSection, SettingsPaneHeader } from '../accounts/settings-section.js'
+import { SettingsSection } from '../accounts/settings-section.js'
 // `/account/notifications` ("preferences per type and channel ... quiet hours").
 // Every toggle in the matrix saves itself the moment it changes (no separate Save button for a grid
 // of checkboxes -- CLAUDE.md "undo over confirm" generalises to "no confirm step for a reversible
@@ -443,9 +443,7 @@ export default function PreferencesScreen({ embedded = false }: { embedded?: boo
           title={t('inbox.preferences.title')}
           description={t('inbox.preferences.body')}
         />
-      ) : (
-        <SettingsPaneHeader title={t('inbox.preferences.title')} />
-      )}
+      ) : null}
       <PrefsMatrixBody query={prefsQuery} />
 
       <QuietHoursCard departmentId={departmentId} />

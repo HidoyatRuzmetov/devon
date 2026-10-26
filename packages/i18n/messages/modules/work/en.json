@@ -167,7 +167,11 @@
       "due": "changed the due date",
       "comment": "left a comment",
       "checklist": "added a checklist item",
-      "system": "System"
+      "system": "System",
+      "viaAssistant": "via Assistant",
+      "unknownActor": "Former member",
+      "checklistUpdated": "updated a checklist item",
+      "checklistDeleted": "removed a checklist item"
     },
     "table": {
       "open": "Open",
@@ -267,7 +271,8 @@
       "suggestAssignee": "Who should take this",
       "suggestAssigneePreviewTitle": "Suggested owners",
       "boardDigest": "Who is running late",
-      "boardDigestPreviewTitle": "The riskiest work on the board"
+      "boardDigestPreviewTitle": "The riskiest work on the board",
+      "reviewRisk": "At risk"
     },
     "actions": {
       "create": "New card"

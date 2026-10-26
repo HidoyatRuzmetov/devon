@@ -38,6 +38,7 @@ type WireResponse = {
     prompt_tokens?: number
     completion_tokens?: number
     total_tokens?: number
+    prompt_tokens_details?: { cached_tokens?: number }
   }
 }
 
@@ -214,6 +215,17 @@ export class GlmProvider implements AiProvider {
           promptTokens: parsed.usage?.prompt_tokens ?? 0,
           completionTokens: parsed.usage?.completion_tokens ?? 0,
           totalTokens: parsed.usage?.total_tokens ?? 0,
+          ...(typeof parsed.usage?.prompt_tokens_details?.cached_tokens === 'number'
+            ? {
+                cachedPromptTokens: Math.max(
+                  0,
+                  Math.min(
+                    parsed.usage.prompt_tokens ?? 0,
+                    parsed.usage.prompt_tokens_details.cached_tokens,
+                  ),
+                ),
+              }
+            : {}),
         }
 
         return {

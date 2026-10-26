@@ -2137,9 +2137,19 @@ function ActivityTimeline({
         return (
           <li key={event.id} className="text-caption text-muted-foreground">
             <span className="text-foreground">
-              {actor ? fullName(actor) : t('work.activity.system')}
+              {actor
+                ? fullName(actor)
+                : typeof event.data['actorName'] === 'string'
+                  ? event.data['actorName']
+                  : event.actorUserId
+                    ? t('work.activity.unknownActor')
+                    : t('work.activity.system')}
+              {event.data['via'] === 'ai' ? ` · ${t('work.activity.viaAssistant')}` : ''}
             </span>{' '}
-            {t(`work.activity.${event.kind}`)} · {formatDate(new Date(event.at), locale)}
+            {t(
+              `work.activity.${event.kind === 'checklist' && event.data['operation'] === 'updated' ? 'checklistUpdated' : event.kind === 'checklist' && event.data['operation'] === 'deleted' ? 'checklistDeleted' : event.kind}`,
+            )}{' '}
+            · {formatDate(new Date(event.at), locale)}
           </li>
         )
       })}

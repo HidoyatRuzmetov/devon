@@ -1,4 +1,4 @@
-import { SettingsSection, SettingsPaneHeader } from '../accounts/settings-section.js'
+import { SettingsSection } from '../accounts/settings-section.js'
 // `/account/telegram` (this module's task: "linking via /start <code> + QR in Settings" + "department
 // group connection"). Personal linking is every signed-in user's own card. Group connection follows
 // the active department's head-only/everyone policy; group edit/disconnect remains head-only.
@@ -78,7 +78,7 @@ function TelegramPhoneMock({
   )
 }
 
-function PersonalLinkCard({ compact = false }: { compact?: boolean }) {
+function PersonalLinkCard() {
   const t = useT()
   const locale = useLocale()
   const linkCode = useTelegramLinkCodeMutation()
@@ -113,12 +113,6 @@ function PersonalLinkCard({ compact = false }: { compact?: boolean }) {
           kind="empty"
           titleKey="telegram.notConfigured.title"
           bodyKey="telegram.notConfigured.body"
-          compact={compact}
-          className={
-            compact
-              ? 'max-w-none border-0 px-0 py-2 text-left [&>div]:items-start [&>div]:gap-2 [&_h3]:text-body [&_h3]:font-sans [&_p]:max-w-none'
-              : ''
-          }
         />
       </SettingsSection>
     )
@@ -139,15 +133,13 @@ function PersonalLinkCard({ compact = false }: { compact?: boolean }) {
       }
     >
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        {!compact ? (
-          <Reveal>
-            <TelegramPhoneMock
-              botUsername={status.botUsername}
-              connected={status.linked}
-              {...(linkCode.data ? { code: linkCode.data.code } : {})}
-            />
-          </Reveal>
-        ) : null}
+        <Reveal>
+          <TelegramPhoneMock
+            botUsername={status.botUsername}
+            connected={status.linked}
+            {...(linkCode.data ? { code: linkCode.data.code } : {})}
+          />
+        </Reveal>
 
         <div className="min-w-0 flex-1">
           {!status.available ? (
@@ -531,11 +523,9 @@ export default function TelegramScreen({ embedded = false }: { embedded?: boolea
     <div className="flex min-w-0 flex-col gap-4">
       {!embedded ? (
         <PageHeader eyebrow={t('accounts.settings.title')} title={t('telegram.title')} />
-      ) : (
-        <SettingsPaneHeader title={t('telegram.title')} />
-      )}
+      ) : null}
 
-      <PersonalLinkCard compact={embedded} />
+      <PersonalLinkCard />
 
       {departmentId && telegram.data?.configured && (isHead || telegram.data?.canConnectGroup) ? (
         <GroupsCard departmentId={departmentId} canManage={isHead} />

@@ -96,7 +96,7 @@ export const TabsList = React.forwardRef<
               measure()
             }}
             className={cn(
-              'relative flex items-center gap-1 overflow-x-auto border-b border-border',
+              'relative flex items-center gap-1 overflow-x-auto overflow-y-hidden border-b border-border',
               // v1.1 (WALKTHROUGH-FINDINGS 2.6): at 390px a full-width native horizontal scrollbar
               // rendered *inside* the event sheet, under the tab strip, reading as a broken layout.
               // The strip still scrolls -- swipe, arrow keys and Tab all work -- it just no longer
@@ -157,7 +157,7 @@ export const TabsTrigger = React.forwardRef<
         'group relative inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap px-3 text-body',
         'text-muted-foreground transition-colors duration-(--dur-micro) ease-out',
         'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        'focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+        'focus-visible:ring-inset disabled:pointer-events-none disabled:opacity-50',
         'data-[state=active]:font-medium data-[state=active]:text-foreground',
         className,
       )}
@@ -169,7 +169,7 @@ export const TabsTrigger = React.forwardRef<
           {count}
         </span>
       ) : null}
-      <span className="absolute inset-x-0 -bottom-px hidden h-0.5 group-data-[state=active]:block">
+      <span className="absolute inset-x-0 bottom-0 hidden h-0.5 group-data-[state=active]:block">
         {reduced ? (
           <span className="block size-full rounded-full bg-primary" />
         ) : (

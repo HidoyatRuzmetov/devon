@@ -167,7 +167,11 @@
       "due": "муддатни ўзгартирди",
       "comment": "изоҳ қолдирди",
       "checklist": "бажариш рўйхатига банд қўшди",
-      "system": "Тизим"
+      "system": "Тизим",
+      "viaAssistant": "Ёрдамчи орқали",
+      "unknownActor": "Собиқ аъзо",
+      "checklistUpdated": "рўйхат бандини янгилади",
+      "checklistDeleted": "рўйхат бандини ўчирди"
     },
     "table": {
       "open": "Очиш",
@@ -267,7 +271,8 @@
       "suggestAssignee": "Кимга топшириш",
       "suggestAssigneePreviewTitle": "Таклиф қилинган масъуллар",
       "boardDigest": "Ким кечикйапти",
-      "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар"
+      "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар",
+      "reviewRisk": "Хавф остида"
     },
     "actions": {
       "create": "Янги карта"

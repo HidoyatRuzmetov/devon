@@ -147,7 +147,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
     )
     await page.goto('/inbox/telegram')
     await expect(page).toHaveURL(/\/account\/telegram$/)
-    await expect(page.getByRole('heading', { name: 'Telegram', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Telegram', exact: true })).toHaveCount(0)
     await page.goto('/calendar?tab=feeds')
     await expect(page).toHaveURL(/\/account\/calendar\?tab=feeds$/)
     await expect(page.getByRole('tab', { name: /Subscription|Feeds/ })).toHaveAttribute(
@@ -161,6 +161,14 @@ test('settings panes, legacy links and professional profiles work on desktop and
       'true',
     )
     await expect(page.getByRole('tab', { name: /Invite|Danger/ })).toHaveCount(0)
+    for (const tabs of await page.getByRole('tablist').all()) {
+      expect(
+        await tabs.evaluate((el) => ({
+          overflow: getComputedStyle(el).overflowY,
+          extra: el.scrollHeight - el.clientHeight,
+        })),
+      ).toEqual({ overflow: 'hidden', extra: 0 })
+    }
     await page.goto('/account#section-password')
     await expect(page).toHaveURL(/\/account\/security#section-password$/)
     await expect(page.getByRole('heading', { name: 'Change password', exact: true })).toBeVisible()

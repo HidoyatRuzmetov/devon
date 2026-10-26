@@ -256,6 +256,7 @@ function BoardScreenInner() {
   const q = search.get('q') ?? ''
 
   const board = boardQuery.data
+  const riskDigest = useBoardRiskDigest(board)
   const projects = React.useMemo(() => projectsQuery.data ?? [], [projectsQuery.data])
 
   React.useEffect(() => {
@@ -658,6 +659,7 @@ function BoardScreenInner() {
       hideMeControl
       fillViewport
       toolbar={toolbar}
+      viewAction={riskDigest.trigger}
       mobileToolbar={
         <div className="flex items-center gap-1">
           {sortControl}
@@ -670,7 +672,7 @@ function BoardScreenInner() {
           at-risk cards on this board, in ONE batched call instead of one per card. Head only, on the
           server (`department_managed`) and here: it is a ranked list of who is late, which is
           management information about other people. */}
-        <BoardRiskDigest board={board} />
+        {riskDigest.panel}
         <div className="shrink-0 md:hidden" data-board-mobile-navigation>
           <BoardNavigation
             mobile
@@ -826,18 +828,18 @@ export default function BoardScreen() {
  * Renders nothing at all for a member, or when nothing on the board is at risk. An empty AI panel
  * over a healthy board is noise.
  */
-function BoardRiskDigest({
-  board,
-}: {
-  board: {
-    members: readonly { userId: string }[]
-    columns: readonly {
-      member: { userId: string; givenName: string; familyName: string }
-      cards: readonly Card[]
-    }[]
-    unassigned: readonly Card[]
-  }
-}) {
+function useBoardRiskDigest(
+  board:
+    | {
+        members: readonly { userId: string }[]
+        columns: readonly {
+          member: { userId: string; givenName: string; familyName: string }
+          cards: readonly Card[]
+        }[]
+        unassigned: readonly Card[]
+      }
+    | undefined,
+) {
   const t = useT()
   const locale = useLocale()
   const { department } = useDepartment()
@@ -858,15 +860,15 @@ function BoardRiskDigest({
   const nameFor = React.useCallback(
     (userId: string | null): string | null => {
       if (!userId) return null
-      const column = board.columns.find((c) => c.member.userId === userId)
+      const column = board?.columns.find((c) => c.member.userId === userId)
       return column ? fullName(column.member) : null
     },
-    [board.columns],
+    [board?.columns],
   )
 
   const allCards = React.useMemo(
-    () => [...board.columns.flatMap((column) => column.cards), ...board.unassigned],
-    [board.columns, board.unassigned],
+    () => (board ? [...board.columns.flatMap((column) => column.cards), ...board.unassigned] : []),
+    [board],
   )
   const atRisk = React.useMemo(
     () => allCards.filter((card) => card.risk !== 'none' && card.status === 'active'),
@@ -874,7 +876,7 @@ function BoardRiskDigest({
   )
 
   function run() {
-    if (atRisk.length === 0) return
+    if (!board || atRisk.length === 0) return
     setDigest(null)
     const today = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Tashkent',
@@ -920,21 +922,22 @@ function BoardRiskDigest({
     )
   }
 
-  if (!enabled || atRisk.length === 0) {
-    return null
-  }
+  if (!enabled || atRisk.length === 0) return { trigger: null, panel: null }
 
-  return (
-    <section className="flex flex-col gap-2 px-1">
+  return {
+    trigger: (
       <SparkleButton
         aria-label={t('work.ai.boardDigest')}
-        label={t('work.ai.boardDigest')}
+        label={`${t('work.ai.reviewRisk')} · ${atRisk.length}`}
+        title={t('work.ai.boardDigest')}
         size="sm"
-        className="self-start"
+        className="shrink-0"
         loading={digestAi.isPending}
         onClick={run}
       />
-      {digestAi.isPending || digest || digestAi.isError ? (
+    ),
+    panel:
+      digestAi.isPending || digest || digestAi.isError ? (
         <AiResultPanel
           title={t('work.ai.boardDigestPreviewTitle')}
           status={digestAi.isPending ? 'pending' : digestAi.isError ? 'error' : 'ready'}
@@ -957,7 +960,6 @@ function BoardRiskDigest({
             />
           ) : null}
         </AiResultPanel>
-      ) : null}
-    </section>
-  )
+      ) : null,
+  }
 }

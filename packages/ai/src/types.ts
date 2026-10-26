@@ -46,6 +46,8 @@ export type ChatUsage = {
   promptTokens: number
   completionTokens: number
   totalTokens: number
+  /** Absent means the serving endpoint did not report a cache counter. */
+  cachedPromptTokens?: number
 }
 
 export type ChatCompletionResult = {
@@ -157,6 +159,7 @@ export type RunMeta = {
   feature: AiFeature
   model: string
   promptTokens: number
+  cachedPromptTokens?: number
   completionTokens: number
   reasoningTokens: number
   totalTokens: number

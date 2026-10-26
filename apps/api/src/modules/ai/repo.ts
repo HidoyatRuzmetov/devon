@@ -120,6 +120,7 @@ export type InsertTraceInput = {
   feature: string
   model: string
   promptTokens: number
+  cachedPromptTokens?: number | undefined
   completionTokens: number
   totalTokens: number
   costUzs: number
@@ -141,11 +142,11 @@ export async function insertTrace(tx: Tx, input: InsertTraceInput): Promise<stri
   const rows = await tx.raw<{ id: string }>(sql`
     insert into app.ai_traces (
       department_id, user_id, feature, model, prompt_tokens, completion_tokens, total_tokens,
-      cost_uzs, latency_ms, retried, status
+      cached_prompt_tokens, cost_uzs, latency_ms, retried, status
     ) values (
       ${input.departmentId}, ${input.userId}, ${input.feature}, ${input.model},
       ${input.promptTokens}, ${input.completionTokens}, ${input.totalTokens},
-      ${input.costUzs}, ${input.latencyMs}, ${input.retried}, ${input.status}
+      ${input.cachedPromptTokens ?? null}, ${input.costUzs}, ${input.latencyMs}, ${input.retried}, ${input.status}
     )
     returning id
   `)
@@ -178,6 +179,7 @@ export type TraceRow = {
   feature: string
   model: string
   prompt_tokens: number
+  cached_prompt_tokens: number | null
   completion_tokens: number
   total_tokens: number
   cost_uzs: number
@@ -203,7 +205,7 @@ export async function listTraces(
     select t.id, t.user_id,
            coalesce(nullif(trim(concat_ws(' ', u.family_name, u.given_name)), ''), '') as user_name,
            t.feature, t.model,
-           t.prompt_tokens, t.completion_tokens, t.total_tokens, t.cost_uzs,
+           t.prompt_tokens, t.cached_prompt_tokens, t.completion_tokens, t.total_tokens, t.cost_uzs,
            t.latency_ms, t.retried, t.status, t.created_at
     from app.ai_traces t
     left join app.memberships m

@@ -58,6 +58,7 @@ export interface WorkShellProps {
   showQuickAdd?: boolean
   /** View-specific controls share the view-switcher row on wide screens. */
   toolbar?: React.ReactNode
+  viewAction?: React.ReactNode
   /** Phone controls sit beside a compact view switcher instead of compressing the desktop tabs. */
   mobileToolbar?: React.ReactNode
   /** Let the board consume the remaining viewport through CSS, including animated chrome. */
@@ -83,6 +84,7 @@ export function WorkShell({
   showQuickAdd = true,
   hideMeControl = false,
   toolbar,
+  viewAction,
   mobileToolbar,
   fillViewport = false,
   children,
@@ -197,6 +199,7 @@ export function WorkShell({
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
+              {viewAction}
               {mobileToolbar}
             </div>
             <nav
@@ -218,6 +221,7 @@ export function WorkShell({
                   {t(tab.labelKey)}
                 </RouterLink>
               ))}
+              <div className="ml-2 flex shrink-0 items-center">{viewAction}</div>
             </nav>
             {toolbar}
             {/* A9: "Mening" -- a visible segmented control on every work view, not a setting buried in

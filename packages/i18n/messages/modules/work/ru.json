@@ -167,7 +167,11 @@
       "due": "изменил(а) срок",
       "comment": "оставил(а) комментарий",
       "checklist": "добавил(а) пункт в чек-лист",
-      "system": "Система"
+      "system": "Система",
+      "viaAssistant": "через Ассистента",
+      "unknownActor": "Бывший участник",
+      "checklistUpdated": "изменил пункт списка",
+      "checklistDeleted": "удалил пункт списка"
     },
     "table": {
       "open": "Открыть",
@@ -267,7 +271,8 @@
       "suggestAssignee": "Кому поручить",
       "suggestAssigneePreviewTitle": "Предложенные исполнители",
       "boardDigest": "Кто задерживает",
-      "boardDigestPreviewTitle": "Самые рискованные дела на доске"
+      "boardDigestPreviewTitle": "Самые рискованные дела на доске",
+      "reviewRisk": "Риски"
     },
     "actions": {
       "create": "Новая задача"

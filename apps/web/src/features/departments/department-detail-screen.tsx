@@ -1,4 +1,4 @@
-import { SettingsSection, SettingsPaneHeader } from '../accounts/settings-section.js'
+import { SettingsSection } from '../accounts/settings-section.js'
 import { avatarUrl } from '../../lib/avatar.js'
 // `/department?id=<uuid>` -- detail, settings, invite and membership management for one department
 // (TECH-SPEC §2.2, §2.3). Query-string id, not a path param: `src/lib/router.tsx` supports exact
@@ -1337,7 +1337,7 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
       className="flex min-w-0 flex-col gap-4"
     >
       {embedded ? (
-        <SettingsPaneHeader title={`${dept.emoji ? `${dept.emoji} ` : ''}${dept.name}`}>
+        <>
           <TabsList className="flex h-auto min-h-11 flex-wrap">
             <TabsTrigger value="general">{t('departments.settings.general')}</TabsTrigger>
             {isHead ? (
@@ -1348,7 +1348,7 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
               <TabsTrigger value="danger">{t('departments.settings.dangerZone')}</TabsTrigger>
             ) : null}
           </TabsList>
-        </SettingsPaneHeader>
+        </>
       ) : (
         <PageHeader
           eyebrow={t('departments.title')}

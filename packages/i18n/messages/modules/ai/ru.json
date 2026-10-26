@@ -56,7 +56,7 @@
         "feature": "Помощник",
         "status": "Статус",
         "tokens": "Токены",
-        "cost": "Стоимость",
+        "cost": "Оценка",
         "latency": "Задержка"
       },
       "unknownUser": "Сотрудник вне отдела",
@@ -91,7 +91,10 @@
         "previous": "Назад",
         "next": "Вперёд",
         "of": "Страница {page} из {pages}"
-      }
+      },
+      "tokenDetails": "Вход {input} · Выход {output} · Кэш входа {cached}",
+      "cacheUnknown": "Не сообщается",
+      "referenceEstimate": "Справочная оценка по токенам; это не счёт и не измерение нагрузки GPU."
     },
     "result": {
       "title": "Предпросмотр",

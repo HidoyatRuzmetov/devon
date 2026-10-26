@@ -1115,7 +1115,7 @@
         "feature": "Yordamchi",
         "status": "Holat",
         "tokens": "Tokenlar",
-        "cost": "Narx",
+        "cost": "Taxminiy qiymat",
         "latency": "Javob vaqti"
       },
       "unknownUser": "Boshqarmadan chiqqan xodim",
@@ -1150,7 +1150,10 @@
         "previous": "Oldingi",
         "next": "Keyingi",
         "of": "{pages} sahifadan {page}-si"
-      }
+      },
+      "tokenDetails": "Kirish {input} · Chiqish {output} · Keshlangan kirish {cached}",
+      "cacheUnknown": "Koʻrsatilmagan",
+      "referenceEstimate": "Tokenlar asosidagi taxminiy qiymat; bu toʻlov yoki GPU yuklamasi oʻlchovi emas."
     },
     "result": {
       "title": "Oldindan koʻrish",
@@ -1963,7 +1966,11 @@
       "due": "muddatni oʻzgartirdi",
       "comment": "izoh qoldirdi",
       "checklist": "bajarish roʻyxatiga band qoʻshdi",
-      "system": "Tizim"
+      "system": "Tizim",
+      "viaAssistant": "Yordamchi orqali",
+      "unknownActor": "Sobiq aʼzo",
+      "checklistUpdated": "roʻyxat bandini yangiladi",
+      "checklistDeleted": "roʻyxat bandini oʻchirdi"
     },
     "table": {
       "open": "Ochish",
@@ -2063,7 +2070,8 @@
       "suggestAssignee": "Kimga topshirish",
       "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
       "boardDigest": "Kim kechikyapti",
-      "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar"
+      "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar",
+      "reviewRisk": "Xavf ostida"
     },
     "actions": {
       "create": "Yangi karta"

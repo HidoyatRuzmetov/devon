@@ -167,7 +167,11 @@
       "due": "muddatni oʻzgartirdi",
       "comment": "izoh qoldirdi",
       "checklist": "bajarish roʻyxatiga band qoʻshdi",
-      "system": "Tizim"
+      "system": "Tizim",
+      "viaAssistant": "Yordamchi orqali",
+      "unknownActor": "Sobiq aʼzo",
+      "checklistUpdated": "roʻyxat bandini yangiladi",
+      "checklistDeleted": "roʻyxat bandini oʻchirdi"
     },
     "table": {
       "open": "Ochish",
@@ -267,7 +271,8 @@
       "suggestAssignee": "Kimga topshirish",
       "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
       "boardDigest": "Kim kechikyapti",
-      "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar"
+      "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar",
+      "reviewRisk": "Xavf ostida"
     },
     "actions": {
       "create": "Yangi karta"

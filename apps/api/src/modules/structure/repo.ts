@@ -674,7 +674,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
       left join app.unit_roles ur
         on ur.department_id = m.department_id and ur.user_id = m.user_id and ur.deleted_at is null
       where m.department_id = ${departmentId} and m.status = 'active'
-      order by u.family_name, u.given_name
+      order by m.joined_at asc, m.id asc
     `)
     return rows.map((r) => ({
       userId: r.user_id,

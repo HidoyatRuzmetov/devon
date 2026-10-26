@@ -63,6 +63,7 @@ export function traceToDto(row: TraceRow): TraceDto {
     feature: row.feature as TraceDto['feature'],
     model: row.model,
     promptTokens: row.prompt_tokens,
+    cachedPromptTokens: row.cached_prompt_tokens ?? null,
     completionTokens: row.completion_tokens,
     totalTokens: row.total_tokens,
     costUzs: row.cost_uzs,

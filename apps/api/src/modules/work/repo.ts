@@ -189,7 +189,7 @@ export async function getMembers(
           left join app.units un on un.id = ur.unit_id and un.deleted_at is null
           where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
             and u.deleted_at is null and u.status != 'deleted'
-          order by (m.role = 'head') desc, u.given_name asc, u.family_name asc`,
+          order by m.joined_at asc, m.id asc`,
     )
     return rows.map((r) => ({
       userId: r.user_id,
@@ -422,8 +422,10 @@ export async function getActivity(ctx: RequestContext, cardId: string) {
       data: Record<string, unknown>
       at: Date
     }>(
-      sql`select id, card_id, actor_user_id, kind, data, at
-          from app.card_activity where card_id = ${cardId} order by at asc`,
+      sql`select a.id, a.card_id, a.actor_user_id, a.kind,
+          coalesce(a.data,'{}'::jsonb)||jsonb_build_object('actorName',nullif(trim(concat_ws(' ',u.given_name,u.family_name)),'')) as data, a.at
+          from app.card_activity a left join app.users u on u.id=a.actor_user_id
+          where a.card_id = ${cardId} order by a.at asc, a.id asc`,
     )
     return rows.map((r) => ({
       id: r.id,
@@ -961,8 +963,8 @@ export async function addChecklistItem(
             ${input.assigneeUserId ?? null}, ${input.dueAt ?? null}, ${input.orderKey ?? 'a0'})`,
     )
     await tx.raw(
-      sql`insert into app.card_activity (id, department_id, card_id, kind, data)
-          values (${randomUUID()}, ${departmentId}, ${cardId}, 'checklist', ${JSON.stringify({ added: input.text })}::jsonb)`,
+      sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
+          values (${randomUUID()}, ${departmentId}, ${cardId}, ${ctx.userId}, 'checklist', ${JSON.stringify({ added: input.text, itemId: id, via: ctx.userAgent?.includes(' ai-action/') ? 'ai' : 'manual' })}::jsonb)`,
     )
     tx.audit({
       action: 'work.checklist_item_added',
@@ -1007,6 +1009,16 @@ export async function patchChecklistItem(
           returning card_id`,
     )
     if (result.length > 0) {
+      if (
+        patch.text !== undefined ||
+        patch.done !== undefined ||
+        patch.assigneeUserId !== undefined ||
+        patch.dueAt !== undefined
+      ) {
+        await tx.raw(sql`insert into app.card_activity(id,department_id,card_id,actor_user_id,kind,data)
+          values(${randomUUID()},${departmentId},${cardId},${ctx.userId},'checklist',
+            ${JSON.stringify({ operation: 'updated', itemId, ...patch, via: ctx.userAgent?.includes(' ai-action/') ? 'ai' : 'manual' })}::jsonb)`)
+      }
       tx.audit({
         action: 'work.checklist_item_updated',
         subjectType: 'card_checklist_item',
@@ -1044,6 +1056,9 @@ export async function deleteChecklistItem(
           where id in (select id from subtree) returning id`,
     )
     if (result.length > 0) {
+      await tx.raw(sql`insert into app.card_activity(id,department_id,card_id,actor_user_id,kind,data)
+        values(${randomUUID()},${departmentId},${cardId},${ctx.userId},'checklist',
+          ${JSON.stringify({ operation: 'deleted', itemIds: result.map((row) => row.id), via: ctx.userAgent?.includes(' ai-action/') ? 'ai' : 'manual' })}::jsonb)`)
       tx.audit({
         action: 'work.checklist_item_deleted',
         subjectType: 'card_checklist_item',

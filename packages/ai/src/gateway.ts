@@ -123,6 +123,8 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
   })
 
   const usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+  let cachedPromptTokens = 0
+  let cacheReported: boolean | undefined
   let retried = false
 
   const marginForReply = requestedMaxTokens * 2 // room for a possible doubled retry, kept out of history
@@ -137,6 +139,7 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
     feature,
     model: config.model,
     promptTokens: usage.promptTokens,
+    ...(cacheReported ? { cachedPromptTokens } : {}),
     completionTokens: usage.completionTokens,
     // GLM bills reasoning inside `completion_tokens` and never reports it separately, so this can
     // only ever be 0 here -- TECH-SPEC §8 forbids storing the text anyway (AI-AUDIT G-3: the honest
@@ -180,6 +183,8 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
     usage.promptTokens += result.usage.promptTokens
     usage.completionTokens += result.usage.completionTokens
     usage.totalTokens += result.usage.totalTokens
+    cacheReported = cacheReported !== false && result.usage.cachedPromptTokens !== undefined
+    cachedPromptTokens += result.usage.cachedPromptTokens ?? 0
     lastContent = result.content
     lastToolCalls = result.toolCalls
     extraction = extractArguments(result.toolCalls, tool.name, result.content)
@@ -271,6 +276,8 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
     usage.promptTokens += retryResult.usage.promptTokens
     usage.completionTokens += retryResult.usage.completionTokens
     usage.totalTokens += retryResult.usage.totalTokens
+    cacheReported = cacheReported !== false && retryResult.usage.cachedPromptTokens !== undefined
+    cachedPromptTokens += retryResult.usage.cachedPromptTokens ?? 0
     retried = true
 
     const retryExtraction = extractArguments(retryResult.toolCalls, tool.name, retryResult.content)

@@ -56,7 +56,7 @@
         "feature": "Yordamchi",
         "status": "Holat",
         "tokens": "Tokenlar",
-        "cost": "Narx",
+        "cost": "Taxminiy qiymat",
         "latency": "Javob vaqti"
       },
       "unknownUser": "Boshqarmadan chiqqan xodim",
@@ -91,7 +91,10 @@
         "previous": "Oldingi",
         "next": "Keyingi",
         "of": "{pages} sahifadan {page}-si"
-      }
+      },
+      "tokenDetails": "Kirish {input} · Chiqish {output} · Keshlangan kirish {cached}",
+      "cacheUnknown": "Koʻrsatilmagan",
+      "referenceEstimate": "Tokenlar asosidagi taxminiy qiymat; bu toʻlov yoki GPU yuklamasi oʻlchovi emas."
     },
     "result": {
       "title": "Oldindan koʻrish",

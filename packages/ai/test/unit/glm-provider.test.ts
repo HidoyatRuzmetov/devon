@@ -399,6 +399,32 @@ describe('GlmProvider', () => {
     expect(body.max_tokens).toBe(1024)
   })
 
+  it('preserves reported cached input without treating absent cache telemetry as zero', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse({
+        choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 5,
+          total_tokens: 105,
+          prompt_tokens_details: { cached_tokens: 80 },
+        },
+      }),
+    )
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl,
+    })
+    expect((await provider.complete(REQUEST)).usage).toEqual({
+      promptTokens: 100,
+      completionTokens: 5,
+      totalTokens: 105,
+      cachedPromptTokens: 80,
+    })
+  })
+
   it('maps tool_calls through with id/name/arguments intact', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse({

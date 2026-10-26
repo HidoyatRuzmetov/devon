@@ -1159,4 +1159,76 @@ describe('private persistent work conversations', () => {
       await superuserQuery(db, `delete from app.polls where id=$1`, [boundedPollId])
     }
   })
+  it('expands authorized context and action schemas without showing internal read requests', async () => {
+    let reads = 0
+    const model = new MockProvider({
+      respond: () => {
+        reads++
+        if (reads === 1) {
+          const result = response('Reading relevant records', [])
+          result.toolCalls[0]!.argumentsJson = JSON.stringify({
+            content: 'Reading relevant records',
+            citations: [],
+            actions: [],
+            contextRequest: { refs: [`card:${cardId}`], actionKinds: ['checklist.update'] },
+          })
+          return result
+        }
+        return response('Expanded answer', [])
+      },
+    })
+    __setProviderForTests(model)
+    const conversation = await create()
+    const pending = await submit(conversation.id, 'Help with our work')
+    await chat.processConversation(pending.job!)
+    const saved = await chat.getConversation(ctx, conversation.id)
+    expect(saved.messages).toHaveLength(2)
+    expect(saved.messages.at(-1)?.content).toBe('Expanded answer')
+    expect(model.calls).toHaveLength(2)
+    expect(model.calls[1]!.messages[0]!.content).toContain('itemId')
+    const traces = await superuserQuery(
+      db,
+      `select count(*)::int as count from app.ai_traces where user_id=$1`,
+      [owner],
+    )
+    expect(traces[0]!['count']).toBeGreaterThanOrEqual(2)
+  })
+
+  it('falls back to the full schema after invalid compact proposals, without executing any change', async () => {
+    let calls = 0
+    const model = new MockProvider({
+      respond: () => {
+        calls++
+        if (calls <= 2) {
+          const result = response('Invalid proposal', [])
+          result.toolCalls[0]!.argumentsJson = JSON.stringify({
+            content: 'Invalid proposal',
+            citations: [],
+            actions: [
+              {
+                kind: 'card.delete',
+                title: 'Invalid',
+                summary: 'Invalid',
+                arguments: { id: 'not-an-id' },
+              },
+            ],
+          })
+          return result
+        }
+        return response('Please identify the intended card.', [])
+      },
+    })
+    __setProviderForTests(model)
+    const conversation = await create()
+    const pending = await submit(conversation.id, 'Help with our work')
+    await chat.processConversation(pending.job!)
+    const saved = await chat.getConversation(ctx, conversation.id)
+    expect(model.calls).toHaveLength(3)
+    expect(saved.messages.at(-1)).toMatchObject({
+      role: 'assistant',
+      content: 'Please identify the intended card.',
+      proposals: [],
+    })
+    expect(model.calls[2]!.messages[0]!.content).toContain('This is the full available context')
+  })
 })

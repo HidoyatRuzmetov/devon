@@ -1,0 +1,55 @@
+# Assistant capability and consumption comparison — 26 October 2026
+
+Baseline source: `554bda51f707a3a2f0f76f7311d0a82f57c47387`.
+
+The same opt-in live-model runner (`apps/api/test/checks/assistant-quality-eval.ts`) ran before and after the implementation. Both runs used the configured `glm-5.3` endpoint and isolated Docker PostgreSQL databases with the same synthetic workload: 181 cards, project/milestone, event, page, private note, users, and uploaded files. UUIDs differ between runs. No production records or credentials are included in these reports.
+
+## Measured result
+
+- Baseline: 16/17 scenarios passed; 696,131 total tokens.
+- Candidate: 17/17 passed; 157,974 total tokens: **77.3% reduction** across this suite.
+- Three checklist changes: 41,075 → 14,780 tokens, with all three confirmed writes verified in PostgreSQL.
+- The baseline scope failure answered a generic Dijkstra request. The candidate asks for its work purpose; work-related technical help remains available.
+- An earlier passing candidate run used the full-context recovery path for one file-to-page request (54,470 versus 41,011 tokens). Its snapshot is retained in `candidate-recovery.json`. The final run needed 6,497 tokens for that case. Savings vary with model behavior and workload; recovery deliberately prioritizes correctness over reducing every individual request.
+
+| Scenario                  | Baseline | Candidate | Baseline tokens | Candidate tokens |
+| ------------------------- | -------- | --------- | --------------: | ---------------: |
+| checklist-three-actions   | Pass     | Pass      |          41,075 |           14,780 |
+| follow-up                 | Pass     | Pass      |          41,181 |            6,998 |
+| page-grounding            | Pass     | Pass      |          40,339 |            6,213 |
+| broad-totals              | Pass     | Pass      |          40,357 |            6,220 |
+| milestone                 | Pass     | Pass      |          40,591 |           13,192 |
+| rsvp                      | Pass     | Pass      |          40,819 |           13,138 |
+| file-to-page              | Pass     | Pass      |          41,011 |            6,497 |
+| page-attachment-retrieval | Pass     | Pass      |          40,989 |            6,460 |
+| file-to-existing-card     | Pass     | Pass      |          40,924 |           14,254 |
+| uzbek                     | Pass     | Pass      |          40,966 |            6,825 |
+| russian                   | Pass     | Pass      |          40,934 |            6,388 |
+| private-owner             | Pass     | Pass      |          40,990 |            6,423 |
+| private-denial            | Pass     | Pass      |          40,961 |            6,402 |
+| ambiguous-target          | Pass     | Pass      |          41,826 |           25,068 |
+| general-code-scope        | Fail     | Pass      |          41,259 |            6,306 |
+| legitimate-work-code      | Pass     | Pass      |          40,866 |            6,321 |
+| document-injection        | Pass     | Pass      |          41,043 |            6,489 |
+
+## Design and safeguards
+
+The same model, complete saved conversation history, source permissions and 44 registered action handlers remain. A compact source directory and current totals replace unrelated full bodies in the initial request. The model can request full records, attachment text, search results and exact action schemas; broad requests and validation failures can recover the original bounded full snapshot. Internal read requests are strictly validated and never saved as user-facing answers. Expansion is bounded and shares a 180-second deadline. Each call, including repair attempts, is metered and budget checked. Actual writes still require confirmation and re-enter the ordinary API permissions, validation, concurrency and audit pipeline.
+
+The existing incremental index and extracted-file cache remain. Static action schemas are computed once. Dynamic timestamps follow stable prompt instructions and context, improving prefix reuse where the serving endpoint supports it. Cached input counters are recorded only if reported; absence is shown as “Not reported”. The UZS figure is a token-based reference estimate, not a GPU utilization measurement or a bill. No serving-side cache hit rate or GPU saving is claimed by this test.
+
+Intermediate live runs exposed malformed read requests and incomplete schema proposals. Strict output validation, targeted schema repair and a full-context fallback corrected them before the candidate snapshot above was accepted.
+
+## Validation
+
+- Complete API suite: **1,102/1,102 tests passed** across 133 files in local Docker.
+
+- Original Docker capability suite: 56/56 before and after (conversations, action confirmation, attachments, permissions, fresh context, helper grounding and file extraction).
+- AI package: 191/191 tests, including wire protocol, retries, structured output, language and cached-token mapping.
+- Added regressions cover directory expansion, related file content, source isolation, full fallback, internal read persistence, joining-date order, manual/assisted checklist activity and recovery of historical missing actors from the immutable audit.
+- Real browser flow for head and member: scanned upload → confirmed action → saved page/card attachment → download → reload/history continuation; both passed. The browser provider is scripted; real model quality is measured separately above.
+- Desktop/phone settings, profile drawer, Inbox, assistant history and source-return navigation: four browser journeys passed, including accessibility checks.
+- Additional browser regression passed for head/member Home tab geometry, the native mobile Inbox switch, and the head risk-review button beside Calendar with its existing opening panel.
+- Historical actor migration was tested against a deliberately reproduced missing-actor activity row; the audit author was recovered without modifying the audit chain.
+
+This is an empirical regression suite, not a guarantee that every possible natural-language request is equivalent. Source coverage/extraction limits remain explicit; originals remain available for expansion. Deployment and final production visual-check results are recorded in the release follow-up.

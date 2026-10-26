@@ -1,4 +1,3 @@
-import { SettingsPaneHeader } from '../accounts/settings-section.js'
 // `/calendar` (v1.1 SPEC §10, EPIC-019): the agenda, the secret subscription feeds, and the web-push
 // opt-in -- three things that are all "my calendar leaves WorkPortal and reaches me elsewhere".
 //
@@ -43,9 +42,7 @@ export default function CalendarScreen({
             title={t('calendar.title')}
             description={t('calendar.description')}
           />
-        ) : (
-          <SettingsPaneHeader title={t('calendar.title')} />
-        )}
+        ) : null}
 
         <Tabs
           className="flex min-w-0 flex-col gap-4"

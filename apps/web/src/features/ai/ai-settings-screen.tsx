@@ -34,6 +34,9 @@ import {
   Celebrate,
   PageHeader,
   ProgressRing,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Stagger,
   StaggerItem,
   StateView,
@@ -656,7 +659,9 @@ function UsageTab() {
                   <th className="px-3 py-2">{t('ai.usage.columns.feature')}</th>
                   <th className="px-3 py-2">{t('ai.usage.columns.status')}</th>
                   <th className="px-3 py-2">{t('ai.usage.columns.tokens')}</th>
-                  <th className="px-3 py-2">{t('ai.usage.columns.cost')}</th>
+                  <th className="px-3 py-2" title={t('ai.usage.referenceEstimate')}>
+                    {t('ai.usage.columns.cost')}
+                  </th>
                   <th className="px-3 py-2">{t('ai.usage.columns.latency')}</th>
                 </tr>
               </thead>
@@ -687,7 +692,26 @@ function UsageTab() {
                         </Badge>
                       </td>
                       <td className="px-3 py-2 tabular-nums text-foreground">
-                        {formatNumber(trace.totalTokens, locale)}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="cursor-pointer underline decoration-dotted underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              {formatNumber(trace.totalTokens, locale)}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="max-w-72 text-small">
+                            {t('ai.usage.tokenDetails', {
+                              input: formatNumber(trace.promptTokens, locale),
+                              output: formatNumber(trace.completionTokens, locale),
+                              cached:
+                                trace.cachedPromptTokens == null
+                                  ? t('ai.usage.cacheUnknown')
+                                  : formatNumber(trace.cachedPromptTokens, locale),
+                            })}
+                          </PopoverContent>
+                        </Popover>
                       </td>
                       <td className="px-3 py-2 text-foreground">
                         {formatUzs(trace.costUzs, locale)}

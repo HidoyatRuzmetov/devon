@@ -18,7 +18,7 @@ import {
 } from '@devon/ai'
 import type { AiProvider, ChatMessage, Locale } from '@devon/ai'
 import { z } from 'zod'
-import { parseAction, proposedActionSchema } from './action-catalog.js'
+import { actionInstructions, parseAction, proposedActionSchema } from './action-catalog.js'
 import * as search from './search-service.js'
 import * as repo from './repo.js'
 import { prepareFeatureInput } from './request-context.js'
@@ -63,11 +63,22 @@ export function __setProviderForTests(provider: AiProvider | null): void {
   providerIsTestOverride = provider !== null
 }
 
-const chatAnswerSchema = z.object({
-  content: z.string().trim().min(1).max(12_000),
-  citations: z.array(z.string()).max(20),
-  actions: z.array(proposedActionSchema).max(5).default([]),
-})
+const chatAnswerSchema = z
+  .object({
+    content: z.string().trim().min(1).max(12_000),
+    citations: z.array(z.string()).max(20),
+    actions: z.array(proposedActionSchema).max(5).default([]),
+    contextRequest: z
+      .object({
+        refs: z.array(z.string().max(200)).max(100).default([]),
+        queries: z.array(z.string().max(300)).max(5).default([]),
+        actionKinds: z.array(z.string().max(80)).max(44).default([]),
+        fullSnapshot: z.boolean().default(false),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
 
 /** Conversation answers share the same flags, configured GLM, metering and outage breaker as Ask.
  * A missing provider is an explicit unavailable state, never an offline simulated conversation. */
@@ -78,6 +89,7 @@ export async function runDepartmentChatForActor(
     messages: ChatMessage[]
     allowedRefs: Set<string>
     signal: AbortSignal
+    timeoutMs?: number
   },
 ): Promise<z.infer<typeof chatAnswerSchema>> {
   if (!hasApiKey(aiConfig) && !providerIsTestOverride) throw new Error('provider_unavailable')
@@ -116,7 +128,7 @@ export async function runDepartmentChatForActor(
     signal: input.signal,
     maxTokens: 8192,
     temperature: 0.1,
-    overallTimeoutMs: 180_000,
+    overallTimeoutMs: input.timeoutMs ?? 180_000,
     tool: {
       name: 'department_chat_answer',
       description:
@@ -128,6 +140,18 @@ export async function runDepartmentChatForActor(
         properties: {
           content: { type: 'string', maxLength: 12000 },
           citations: { type: 'array', maxItems: 20, items: { type: 'string' } },
+          contextRequest: {
+            type: 'object',
+            description:
+              'Read more authorized context before answering. No actions may accompany a read request.',
+            properties: {
+              refs: { type: 'array', maxItems: 100, items: { type: 'string' } },
+              queries: { type: 'array', maxItems: 5, items: { type: 'string' } },
+              actionKinds: { type: 'array', maxItems: 44, items: { type: 'string' } },
+              fullSnapshot: { type: 'boolean' },
+            },
+            additionalProperties: false,
+          },
           actions: {
             type: 'array',
             maxItems: 5,
@@ -149,6 +173,17 @@ export async function runDepartmentChatForActor(
       },
     },
     validate: (output) => {
+      if (output.content === 'Reading relevant records' && !output.contextRequest)
+        return {
+          ok: false,
+          error:
+            'Internal reads require contextRequest:{refs:[],queries:[],actionKinds:[],fullSnapshot:false}. Do not return an internal progress message as a final answer.',
+        }
+      if (output.contextRequest && output.actions.length)
+        return {
+          ok: false,
+          error: 'Request context first, with actions: []. Propose changes after reading it.',
+        }
       if (!output.citations.every((ref) => input.allowedRefs.has(ref)))
         return {
           ok: false,
@@ -172,7 +207,12 @@ export async function runDepartmentChatForActor(
           error:
             'An action did not match its registered schema: ' +
             detail +
-            '. Correct the arguments exactly. attachmentIds belongs beside body, never inside body. If required information is missing, ask a question without an action.',
+            '. Correct the arguments exactly. attachmentIds belongs beside body, never inside body. If required information is missing, ask a question without an action. Exact schemas for these actions: ' +
+            JSON.stringify(
+              actionInstructions().filter((action) =>
+                output.actions.some((proposal) => proposal.kind === action.kind),
+              ),
+            ),
         }
       }
     },
@@ -188,6 +228,7 @@ export async function runDepartmentChatForActor(
       feature: 'semantic_ask',
       model: result.meta.model,
       promptTokens: result.meta.promptTokens,
+      cachedPromptTokens: result.meta.cachedPromptTokens,
       completionTokens: result.meta.completionTokens,
       totalTokens: result.meta.totalTokens,
       costUzs: result.meta.costUzs,
@@ -218,6 +259,7 @@ export async function runDepartmentChatForActor(
         : result.meta.status === 'empty_after_retry'
           ? 'empty'
           : 'failed',
+      result.meta.status === 'schema_invalid_after_retry',
     )
   return result.data
 }
@@ -253,6 +295,7 @@ export function recordAiRunMetrics(
     latencyMs: number
     costUzs: number
     promptTokens: number
+    cachedPromptTokens?: number | undefined
     completionTokens: number
   },
 ): void {
@@ -420,6 +463,7 @@ export type RunFeatureOutcome = {
     feature: string
     model: string
     promptTokens: number
+    cachedPromptTokens?: number | undefined
     completionTokens: number
     totalTokens: number
     costUzs: number
@@ -609,6 +653,7 @@ export async function runFeatureForActor(
       feature: params.feature,
       model: result.meta.model,
       promptTokens: result.meta.promptTokens,
+      cachedPromptTokens: result.meta.cachedPromptTokens,
       completionTokens: result.meta.completionTokens,
       totalTokens: result.meta.totalTokens,
       costUzs: result.meta.costUzs,
@@ -644,6 +689,7 @@ export async function runFeatureForActor(
       feature: params.feature,
       model: result.meta.model,
       promptTokens: result.meta.promptTokens,
+      cachedPromptTokens: result.meta.cachedPromptTokens,
       completionTokens: result.meta.completionTokens,
       totalTokens: result.meta.totalTokens,
       costUzs: result.meta.costUzs,

@@ -1115,7 +1115,7 @@
         "feature": "Ёрдамчи",
         "status": "Ҳолат",
         "tokens": "Токенлар",
-        "cost": "Нарх",
+        "cost": "Тахминий қиймат",
         "latency": "Жавоб вақти"
       },
       "unknownUser": "Бошқармадан чиққан ходим",
@@ -1150,7 +1150,10 @@
         "previous": "Олдинги",
         "next": "Кейинги",
         "of": "{pages} саҳифадан {page}-си"
-      }
+      },
+      "tokenDetails": "Кириш {input} · Чиқиш {output} · Кешланган кириш {cached}",
+      "cacheUnknown": "Кўрсатилмаган",
+      "referenceEstimate": "Токенлар асосидаги тахминий қиймат; бу тўлов ёки GPU юкламаси ўлчови эмас."
     },
     "result": {
       "title": "Олдиндан кўриш",
@@ -1963,7 +1966,11 @@
       "due": "муддатни ўзгартирди",
       "comment": "изоҳ қолдирди",
       "checklist": "бажариш рўйхатига банд қўшди",
-      "system": "Тизим"
+      "system": "Тизим",
+      "viaAssistant": "Ёрдамчи орқали",
+      "unknownActor": "Собиқ аъзо",
+      "checklistUpdated": "рўйхат бандини янгилади",
+      "checklistDeleted": "рўйхат бандини ўчирди"
     },
     "table": {
       "open": "Очиш",
@@ -2063,7 +2070,8 @@
       "suggestAssignee": "Кимга топшириш",
       "suggestAssigneePreviewTitle": "Таклиф қилинган масъуллар",
       "boardDigest": "Ким кечикйапти",
-      "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар"
+      "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар",
+      "reviewRisk": "Хавф остида"
     },
     "actions": {
       "create": "Янги карта"

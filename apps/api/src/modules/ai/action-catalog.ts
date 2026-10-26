@@ -458,10 +458,11 @@ export function parseAction(kind: string, args: unknown): Args {
   if (issues.length) throw new z.ZodError(issues)
   return parsed as Args
 }
+const ACTION_INSTRUCTIONS = Object.entries(ACTIONS).map(([kind, action]) => ({
+  kind,
+  description: action.description,
+  arguments: z.toJSONSchema(action.schema, { unrepresentable: 'any' }),
+}))
 export function actionInstructions() {
-  return Object.entries(ACTIONS).map(([kind, action]) => ({
-    kind,
-    description: action.description,
-    arguments: z.toJSONSchema(action.schema, { unrepresentable: 'any' }),
-  }))
+  return ACTION_INSTRUCTIONS
 }

@@ -31,6 +31,7 @@ export class AiRunFailedError extends Error {
      * too long, try again" plus a retry button -- a different sentence, and a different remedy, from
      * a provider that refused. */
     public readonly kind: 'failed' | 'timeout' | 'empty' = 'failed',
+    public readonly recoverableWithContext = false,
   ) {
     super(message)
     this.name = 'AiRunFailedError'

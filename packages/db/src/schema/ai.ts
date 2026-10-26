@@ -54,6 +54,7 @@ export const aiTraces = appSchema.table('ai_traces', {
   feature: text('feature').notNull(),
   model: text('model').notNull(),
   promptTokens: integer('prompt_tokens').notNull().default(0),
+  cachedPromptTokens: integer('cached_prompt_tokens'),
   completionTokens: integer('completion_tokens').notNull().default(0),
   totalTokens: integer('total_tokens').notNull().default(0),
   costUzs: integer('cost_uzs').notNull().default(0),

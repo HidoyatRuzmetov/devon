@@ -384,7 +384,7 @@ export async function focusMinutes7d(
   return out
 }
 
-/** The department's active member ids, in board order (head first, then by name). */
+/** The department's active member ids, in board order (earliest joining date first). */
 export async function activeMemberIds(
   ctx: RequestContext,
   departmentId: string,
@@ -398,7 +398,7 @@ export async function activeMemberIds(
         and m.status = 'active'
         and m.deleted_at is null
         and u.deleted_at is null
-      order by (m.role = 'head') desc, u.given_name asc, u.family_name asc
+      order by m.joined_at asc, m.id asc
     `)
     return rows.map((r) => r.user_id)
   })
@@ -414,8 +414,7 @@ export type NameRow = {
 }
 
 /**
- * Names, titles and bo'lim for a cohort, ordered exactly like `activeMemberIds` (head first, then by
- * name) so an export's row order matches the table the head exported it from. One query, never one
+ * Names, titles and bo'lim for a cohort, ordered exactly like `activeMemberIds` (earliest joining date first) so an export's row order matches the table the head exported it from. One query, never one
  * per person (I-14).
  */
 export async function nameRows(
@@ -449,7 +448,7 @@ export async function nameRows(
       and m.deleted_at is null
       and u.deleted_at is null
       and m.user_id = any(${ids}::uuid[])
-    order by (m.role = 'head') desc, u.given_name asc, u.family_name asc
+    order by m.joined_at asc, m.id asc
   `)
   return rows.map((r) => ({
     userId: r.user_id,
