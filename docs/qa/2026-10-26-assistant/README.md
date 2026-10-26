@@ -52,6 +52,7 @@ Intermediate live runs exposed malformed read requests and incomplete schema pro
 - Real browser flow for head and member: scanned upload → confirmed action → saved page/card attachment → download → reload/history continuation; both passed. The browser provider is scripted; real model quality is measured separately above.
 - Desktop/phone settings, profile drawer, Inbox, assistant history and source-return navigation: four browser journeys passed, including accessibility checks.
 - Additional browser regression passed for head/member Home tab geometry, the native mobile Inbox switch, and the head risk-review button beside Calendar with its existing opening panel.
+- Desktop and phone board navigation passed three repeated runs (6/6). The fixture now joins its distant target last; alphabetical naming cannot determine its position under the requested joining-date order.
 - Historical actor migration was tested against a deliberately reproduced missing-actor activity row; the audit author was recovered without modifying the audit chain.
 
 This is an empirical regression suite, not a guarantee that every possible natural-language request is equivalent. Source coverage/extraction limits remain explicit; originals remain available for expansion. Deployment and final production visual-check results are recorded in the release follow-up.
