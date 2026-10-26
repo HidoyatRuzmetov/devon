@@ -42,7 +42,9 @@ FROM ${NGINX_IMAGE} AS runtime
 # nginx 1.30.6 fixes CVE-2026-15176, CVE-2026-93479 and CVE-2026-97205, with matching
 # upstream modules. Patch remaining libraries and restore the non-root user afterwards.
 USER root
-RUN apk add --no-cache tiff=4.7.2-r0 libexpat=2.9.0-r0 libx11=1.8.14-r0
+# CVE-2026-111497 / CVE-2026-92392: the pinned upstream image predates these library fixes.
+RUN apk add --no-cache tiff=4.7.2-r0 libexpat=2.9.0-r0 libx11=1.8.14-r0 \
+    brotli-libs=1.2.1-r0 curl=8.23.0-r0 libcurl=8.23.0-r0
 USER 101
 # `nginx-unprivileged` already runs its worker AND master process as the `nginx` user (uid 101) on an
 # unprivileged port -- a real non-root container, not just non-root worker processes behind a root
