@@ -181,14 +181,15 @@ if [ -n "$DEPLOY_PUBLIC_KEY" ]; then
   do_it install -m 0600 -o "$DEVON_USER" -g "$DEVON_USER" \
     "$DEPLOY_PUBLIC_KEY" "/home/$DEVON_USER/.ssh/authorized_keys"
 
-  # remote-deploy.sh may start the pre-release backup, but no other root command is needed.
+  # remote-deploy.sh may start backup creation and restore verification, but no other root
+  # command is needed. Both services load the protected backup configuration themselves.
   # Docker-group membership is already intentionally equivalent to host root for this deploy user;
   # keeping sudo scoped prevents an accidental `sudo <anything>` in the workflow.
   SUDOERS_FILE="/etc/sudoers.d/devon-deploy"
   if [ "$DRY_RUN" = "1" ]; then
-    say "(dry-run) would allow '$DEVON_USER' to start devon-backup.service without a password"
+    say "(dry-run) would allow '$DEVON_USER' to start backup and restore-verification services without a password"
   else
-    printf '%s ALL=(root) NOPASSWD: /usr/bin/systemctl start devon-backup.service\n' \
+    printf '%s ALL=(root) NOPASSWD: /usr/bin/systemctl start devon-backup.service, /usr/bin/systemctl start devon-backup-verify.service\n' \
       "$DEVON_USER" > "$SUDOERS_FILE"
     chmod 0440 "$SUDOERS_FILE"
     visudo -cf "$SUDOERS_FILE" >/dev/null

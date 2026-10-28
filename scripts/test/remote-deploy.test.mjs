@@ -20,10 +20,20 @@ function deploy(scenario, { previousManifest = true, dotenv } = {}) {
   mkdirSync(join(dir, 'bin'))
   mkdirSync(join(dir, 'infra'))
   mkdirSync(join(dir, 'infra/backup'))
-  writeFileSync(
-    join(dir, 'infra/backup/verify.sh'),
-    '#!/usr/bin/env bash\nprintf \"restore-verified\\n\" >> \"$TEST_ROOT/calls\"\n[ \"$SCENARIO\" != contract-verify-failed ]\n',
-  )
+  // Run the real verifier. Backups deliberately live outside its default directory, and only
+  // the service invocation supplies that setting: calling the script directly must fail.
+  for (const name of ['verify.sh', 'lib.sh']) {
+    writeFileSync(
+      join(dir, 'infra/backup', name),
+      readFileSync(new URL('../../infra/backup/' + name, import.meta.url), 'utf8').replaceAll(
+        '\r\n',
+        '\n',
+      ),
+    )
+  }
+  mkdirSync(join(dir, 'protected-backups'))
+  writeFileSync(join(dir, 'protected-backups/devon-devon-20261028T120000Z.dump'), 'fixture dump')
+  writeFileSync(join(dir, 'infra/docker-compose.yml'), '  postgres:\n    image: fixture-postgres\n')
   writeFileSync(
     join(dir, '.env'),
     dotenv ??
@@ -51,8 +61,22 @@ if [[ "$*" == *'cli-migrate.ts'* ]]; then
   printf '%s' "\${DANGEROUS_DOTENV_VALUE:-not-exported}" > "$TEST_ROOT/unrelated-value"
 fi
 case "$name" in
-  sudo) if [ "$SCENARIO" = backup-start-failed ]; then exit 17; fi ;;
-  systemctl) if [ "$SCENARIO" = backup-failed ]; then echo exit-code; else echo success; fi ;;
+  sudo)
+    if [[ "$*" == *'-l /usr/bin/systemctl start devon-backup-verify.service' ]]; then
+      [ "$SCENARIO" != contract-permission-denied ] || exit 77
+    elif [[ "$*" == *'start devon-backup-verify.service' ]]; then
+      [ "$SCENARIO" != contract-verify-failed ] || exit 19
+      BACKUP_DIR="$TEST_ROOT/protected-backups" bash "$TEST_ROOT/infra/backup/verify.sh"
+      printf 'restore-verified\\n' >> "$TEST_ROOT/calls"
+    elif [ "$SCENARIO" = backup-start-failed ]; then exit 17
+    fi ;;
+  systemctl)
+    if [[ "$*" == *'LoadState'* ]]; then
+      if [ "$SCENARIO" = contract-service-missing ]; then echo not-found; else echo loaded; fi
+    elif [[ "$*" == *'devon-backup-verify.service'* ]]; then
+      if [ "$SCENARIO" = contract-verify-result-failed ]; then echo exit-code; else echo success; fi
+    elif [ "$SCENARIO" = backup-failed ]; then echo exit-code; else echo success
+    fi ;;
   flock|sleep) exit 0 ;;
   seq) echo 1 ;;
   curl) [ "$SCENARIO" != readiness-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ] ;;
@@ -69,6 +93,8 @@ case "$name" in
       if [ "$SCENARIO" = data-tier-failed ]; then exit 43; fi
     elif [[ "$*" == *'cli-contract-status.ts'* ]]; then
       case "$SCENARIO" in contract-*) echo required ;; *) echo none ;; esac
+    elif [[ "$*" == *' psql '* ]]; then
+      printf '1|1|89|3\\n'
     elif [[ "$*" == *' run '* ]]; then
       [ "$SCENARIO" != migration-failed ] && [ "$SCENARIO" != contract-migration-failed ]
     elif [[ "$*" == *' api web caddy' ]]; then
@@ -235,15 +261,30 @@ test('pending contract migration quiesces writes, takes a fresh backup and verif
   assert.ok(stop > 0 && freshBackup > stop)
   assert.ok(result.calls.indexOf('restore-verified') > freshBackup)
   assert.ok(result.calls.indexOf('cli-migrate.ts') > result.calls.indexOf('restore-verified'))
+  assert.match(result.output, /restoring .*protected-backups.* into throwaway database/)
+  assert.match(result.calls, /pg_restore .*devon_verify_/)
+  assert.match(result.calls, /dropdb .*devon_verify_/)
 })
 
-test('failed restore proof resumes the old application before any contract migration', () => {
-  const result = deploy('contract-verify-failed')
-  assert.notEqual(result.status, 0)
-  assert.doesNotMatch(result.calls, /cli-migrate.ts/)
-  assert.match(result.calls, /api web caddy image=old-api/)
-  assert.equal(result.manifest, 'previous manifest')
-})
+for (const scenario of ['contract-service-missing', 'contract-permission-denied']) {
+  test(`${scenario} refuses the migration before stopping the healthy application`, () => {
+    const result = deploy(scenario)
+    assert.notEqual(result.status, 0)
+    assert.doesNotMatch(result.calls, /stop api worker|cli-migrate.ts/)
+    assert.equal(result.state, previous)
+    assert.equal(result.manifest, 'previous manifest')
+  })
+}
+
+for (const scenario of ['contract-verify-failed', 'contract-verify-result-failed']) {
+  test(`${scenario} resumes the old application before any contract migration`, () => {
+    const result = deploy(scenario)
+    assert.notEqual(result.status, 0)
+    assert.doesNotMatch(result.calls, /cli-migrate.ts/)
+    assert.match(result.calls, /api web caddy image=old-api/)
+    assert.equal(result.manifest, 'previous manifest')
+  })
+}
 
 for (const scenario of ['contract-migration-failed', 'contract-rollout-failed']) {
   test(`${scenario} holds application stopped instead of running incompatible old images`, () => {

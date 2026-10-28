@@ -187,12 +187,25 @@ contract_status="$("${COMPOSE[@]}" run --rm --no-deps -e MIGRATION_DATABASE_URL 
 case "$contract_status" in
   none) ;;
   required)
+    # Production keeps backup paths and decryption credentials in the service's protected
+    # EnvironmentFile, outside application dotenv. Check access before stopping any writers.
+    if [ "$(systemctl show devon-backup-verify.service --property=LoadState --value)" != loaded ]; then
+      echo "[deploy] configured backup verification service is missing; refusing contract migration" >&2
+      exit 78
+    fi
+    sudo -n -l /usr/bin/systemctl start devon-backup-verify.service >/dev/null
     echo "[deploy] stopping application writes before the contract-migration backup"
     QUIESCED=true
     "${COMPOSE[@]}" stop api worker
     take_backup
-    # Runs a complete restore into a disposable database on the same isolated server network.
-    bash "$ROOT/infra/backup/verify.sh"
+    # Use the same service environment as backup creation, including its external directory and
+    # encryption key. The service performs a full restore into a disposable database.
+    echo "[deploy] verifying the fresh backup through its configured restore service"
+    sudo -n /usr/bin/systemctl start devon-backup-verify.service
+    if [ "$(systemctl show devon-backup-verify.service --property=Result --value)" != success ]; then
+      echo "[deploy] backup restore verification failed; contract migration refused" >&2
+      exit 1
+    fi
     CONTRACT_BOUNDARY=true
     ;;
   *) echo "[deploy] unexpected contract migration status; refusing migration" >&2; exit 78 ;;

@@ -68,8 +68,14 @@ human-friendly name.
 2. API and web images are built, scanned for fixable high/critical vulnerabilities, tagged with the
    full commit SHA, and pushed to GHCR. The workflow checks again that `main` has not advanced.
 3. Only non-secret operational manifests are copied to `/opt/devon`.
-4. The server takes an encrypted backup if a database already exists.
-5. Migrations run before the new application containers.
+4. The server takes an encrypted backup if a database already exists. Before a contract migration,
+   it checks access to the configured restore-verification service, stops writers, takes another
+   fresh backup, and starts that service to prove the backup restores into a scratch database.
+   Both services load `/etc/devon/backup.env`; never call the verifier directly from the deployment
+   shell, which does not have the external backup directory or decryption configuration.
+5. Migrations run before the new application containers. The deployment account's sudo rule must
+   allow exactly `systemctl start devon-backup.service` and
+   `systemctl start devon-backup-verify.service`. Missing service/access fails before writers stop.
 6. Caddy is recreated to load the installed proxy file, even when its image/Compose settings did not
    change. Certificate volumes remain persistent; expect a brief proxy interruption during this step.
 7. `/readyz` gates success. A failed rollout restores previous application images, the Compose
