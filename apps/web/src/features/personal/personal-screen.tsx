@@ -6,7 +6,6 @@ import { replaceSearchParam, useSearchParams } from '../../lib/router.js'
 import { useMeQuery } from '../../lib/session.js'
 import { PersonalCalendarView } from './calendar-view.js'
 import { PomodoroPanel } from './pomodoro-panel.js'
-import { PomodoroWidget } from './pomodoro-widget.js'
 import { TasksView } from './tasks-view.js'
 
 type TabId = 'calendar' | 'tasks' | 'pomodoro'
@@ -42,7 +41,6 @@ export default function PersonalScreen() {
       <PageHeader
         eyebrow={t('personal.eyebrow')}
         title={t('personal.title')}
-        actions={tab === 'pomodoro' ? undefined : <PomodoroWidget />}
         tabs={
           <TabsList
             aria-label={t('personal.title')}

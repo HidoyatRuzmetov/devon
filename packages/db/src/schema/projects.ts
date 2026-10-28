@@ -37,3 +37,18 @@ export const projects = appSchema.table('projects', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   version: integer('version').notNull().default(1),
 })
+
+export const projectComments = appSchema.table('project_comments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  departmentId: uuid('department_id').notNull(),
+  projectId: uuid('project_id').notNull(),
+  authorUserId: uuid('author_user_id').notNull(),
+  body: jsonb('body').notNull(),
+  mentions: uuid('mentions')
+    .array()
+    .notNull()
+    .default(sql`'{}'::uuid[]`),
+  editedAt: timestamp('edited_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+})

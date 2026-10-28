@@ -406,7 +406,10 @@
           "work.time_log_removed": "removed a time entry",
           "work.time_logged": "recorded work time",
           "admin.user.deleted_identity_restored": "corrected a deleted account’s historical identity",
-          "admin.user.deleted": "deleted an account"
+          "admin.user.deleted": "deleted an account",
+          "projects.comment_added": "commented on a project",
+          "projects.comment_edited": "edited a project comment",
+          "projects.comment_deleted": "deleted a project comment"
         },
         "subjectType": {
           "session": "Session",

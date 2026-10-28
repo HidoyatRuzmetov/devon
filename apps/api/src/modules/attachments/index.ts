@@ -18,6 +18,7 @@ import { contextFromRequest } from '../work/context.js'
 import { getCardOwners } from '../work/repo.js'
 import * as repo from './repo.js'
 import { getPage } from '../pages/repo.js'
+import { getProject } from '../projects/repo.js'
 import { getConversation } from '../ai/conversations.js'
 import {
   APPROVAL_THRESHOLD,
@@ -58,6 +59,25 @@ async function allowed(
   write = false,
   subjectType: repo.AttachmentSubject = 'card',
 ) {
+  if (subjectType === 'project') {
+    const project = await getProject(contextFromRequest(req), req.actor!.departmentId!, cardId)
+    if (!project) {
+      sendProblem(reply, 'not_found')
+      return false
+    }
+    if (
+      write &&
+      !can(req.actor, 'update', {
+        kind: 'owned',
+        departmentId: req.actor!.departmentId!,
+        ownerUserIds: [project.ownerUserId, ...project.members],
+      }).allowed
+    ) {
+      sendProblem(reply, 'forbidden')
+      return false
+    }
+    return true
+  }
   if (subjectType === 'ai_conversation') {
     try {
       await getConversation(contextFromRequest(req), cardId)
@@ -143,6 +163,7 @@ const attachmentRoutes: FastifyPluginAsyncZod = async (app) => {
   )
   registerSubjectAttachmentRoutes(app, 'card', scanState)
   registerSubjectAttachmentRoutes(app, 'page', scanState)
+  registerSubjectAttachmentRoutes(app, 'project', scanState)
   registerSubjectAttachmentRoutes(app, 'ai_conversation', scanState)
 }
 
@@ -153,7 +174,13 @@ function registerSubjectAttachmentRoutes(
   scanState: { finalizing: boolean },
 ) {
   const routePrefix =
-    subjectType === 'card' ? '/cards' : subjectType === 'page' ? '/pages' : '/ai/conversations'
+    subjectType === 'card'
+      ? '/cards'
+      : subjectType === 'page'
+        ? '/pages'
+        : subjectType === 'project'
+          ? '/projects'
+          : '/ai/conversations'
   app.get(
     `${routePrefix}/:id/attachments/approvals`,
     {

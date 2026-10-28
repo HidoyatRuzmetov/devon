@@ -48,20 +48,13 @@ test('@flow pure Pomodoro completes a phase without loading history or activity 
     const sprite = page.locator(
       '.pomodoro-character-layer[data-active="true"] .pomodoro-character-sprite',
     )
-    const frameCount = await sprite.evaluate((element) => {
-      const animation = element.getAnimations()[0]!
-      animation.pause()
-      const duration = Number(animation.effect!.getTiming().duration)
-      const positions = new Set<string>()
-      for (let frame = 0; frame < 24; frame++) {
-        animation.currentTime = ((frame + 0.25) / 24) * duration
-        positions.add(getComputedStyle(element).backgroundPosition)
-      }
-      animation.currentTime = 0
-      animation.play()
-      return positions.size
-    })
-    expect(frameCount).toBe(24)
+    await expect(sprite).toHaveAttribute('data-ready', 'true')
+    const frames = new Set([await sprite.getAttribute('data-frame')])
+    for (let step = 0; step < 50; step++) {
+      await page.clock.runFor(65)
+      frames.add(await sprite.getAttribute('data-frame'))
+    }
+    expect(frames.size).toBe(24)
     // Entry downloads one visible story, the next story, and the completion reaction.
     expect(artworkReads.size).toBeLessThanOrEqual(3)
     const activities = new Set([await scene.getAttribute('data-activity')])
@@ -70,32 +63,29 @@ test('@flow pure Pomodoro completes a phase without loading history or activity 
       const name = (await scene.getAttribute('data-activity'))!
       if (captured.has(name)) return
       captured.add(name)
-      await sprite.evaluate((element) => {
-        const animation = element.getAnimations()[0]!
-        animation.pause()
-        animation.currentTime = Number(animation.effect!.getTiming().duration) / 2
-      })
+      await expect(sprite).toHaveAttribute('data-ready', 'true')
+      await page.clock.runFor(1500)
       await scene.screenshot({ path: info.outputPath(`activity-${name}.png`) })
-      await sprite.evaluate((element) => element.getAnimations()[0]!.play())
     }
     await captureActivity()
     for (let index = 0; index < 10; index++) {
       const before = await scene.getAttribute('data-activity')
-      await sprite.evaluate((element) => element.getAnimations()[0]!.finish())
+      await page.clock.runFor(4000)
       await expect(scene).toHaveAttribute('data-story-complete', 'true')
-      await page.clock.fastForward(2000)
+      await page.clock.fastForward(20000)
+      await expect(scene).toHaveAttribute('data-activity', before!)
+      await page.clock.fastForward(40000)
       await expect(scene).not.toHaveAttribute('data-activity', before!)
       activities.add(await scene.getAttribute('data-activity'))
       await captureActivity()
       expect(
-        await sprite.evaluate(async (element) => {
-          const url = getComputedStyle(element).backgroundImage.slice(5, -2)
-          const image = new Image()
-          image.src = url
-          await image.decode()
-          return [image.naturalWidth, image.naturalHeight]
+        await sprite.evaluate((element: HTMLCanvasElement) => {
+          const pixels = element
+            .getContext('2d')!
+            .getImageData(0, 0, element.width, element.height).data
+          return pixels.some((value, i) => i % 4 === 3 && value > 0)
         }),
-      ).toEqual([1536, 1024])
+      ).toBe(true)
     }
     expect(activities.size).toBe(11)
     const beforeBreak = await scene.getAttribute('data-activity')
@@ -106,9 +96,11 @@ test('@flow pure Pomodoro completes a phase without loading history or activity 
     await captureActivity()
     for (let index = 0; index < 11; index++) {
       const before = await scene.getAttribute('data-activity')
-      await sprite.evaluate((element) => element.getAnimations()[0]!.finish())
+      await page.clock.runFor(4000)
       await expect(scene).toHaveAttribute('data-story-complete', 'true')
-      await page.clock.fastForward(2000)
+      await page.clock.fastForward(20000)
+      await expect(scene).toHaveAttribute('data-activity', before!)
+      await page.clock.fastForward(40000)
       await expect(scene).not.toHaveAttribute('data-activity', before!)
       breakActivities.add(await scene.getAttribute('data-activity'))
       await captureActivity()

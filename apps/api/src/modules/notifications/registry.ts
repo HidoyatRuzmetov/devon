@@ -61,6 +61,7 @@ export type SubjectSource =
   | 'file_upload_approval'
   | 'card'
   | 'card_comment'
+  | 'project_comment'
   | 'event'
   | 'carpool'
   | 'poll'
@@ -297,6 +298,40 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   'projects.project.updated': {
     notify: false,
     why: 'Project settings and milestone edits refresh the project without creating inbox noise.',
+  },
+  'projects.project.commented': {
+    notify: true,
+    reason: 'mentioned',
+    source: 'project_comment',
+    subjectType: 'project',
+    recipients: ['project_members', 'mentioned'],
+    deepLink: (f) =>
+      f.subjectId
+        ? `/projects/view?id=${f.subjectId}&tab=discussion#comment-${str(f, 'commentId')}`
+        : '/projects',
+    title: (f) =>
+      withName(
+        plain('Yangi izoh', 'Янги изоҳ', 'Новый комментарий', 'New comment'),
+        f.subjectTitle,
+      ),
+    body: (f) =>
+      str(f, 'excerpt')
+        ? byActor(
+            f,
+            plain(str(f, 'excerpt'), str(f, 'excerpt'), str(f, 'excerpt'), str(f, 'excerpt')),
+          )
+        : byActor(
+            f,
+            plain('izoh qoldirdi.', 'изоҳ қолдирди.', 'оставил комментарий.', 'left a comment.'),
+          ),
+  },
+  'projects.comment.updated': {
+    notify: false,
+    why: 'Reconcile existing notifications and notify only newly mentioned people.',
+  },
+  'projects.comment.deleted': {
+    notify: false,
+    why: 'Archive notifications for the deleted message, retaining the audit record.',
   },
   // --- accounts -----------------------------------------------------------------------------------
   'accounts.user.registered': {

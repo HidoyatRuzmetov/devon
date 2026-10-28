@@ -27,6 +27,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.cards': 'department_owned',
   'app.card_checklist_items': 'department_owned',
   'app.card_comments': 'department_owned',
+  'app.project_comments': 'department_owned',
   'app.card_activity': 'department_owned',
   'app.attachments': 'department_owned',
   'app.file_upload_approvals': 'department_owned',

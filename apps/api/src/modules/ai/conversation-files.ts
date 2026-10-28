@@ -23,6 +23,7 @@ function visibleFile(ctx: RequestContext, conversationId?: string): SQL {
   return sql`a.department_id=${ctx.departmentId} and a.deleted_at is null and a.scan_status='clean' and (
     (a.subject_type='card' and exists(select 1 from app.cards c where c.id=a.subject_id and c.deleted_at is null)) or
     (a.subject_type='page' and exists(select 1 from app.pages p where p.id=a.subject_id and p.deleted_at is null)) or
+    (a.subject_type='project' and exists(select 1 from app.projects p where p.id=a.subject_id and p.deleted_at is null)) or
     (a.subject_type='ai_conversation' and a.subject_id=${conversationId ?? null}::uuid and a.uploaded_by_user_id=${ctx.userId}
       and exists(select 1 from app.ai_conversations c where c.id=a.subject_id and c.owner_user_id=${ctx.userId}))
   )`
@@ -109,7 +110,9 @@ export async function conversationFiles(
         ? `/pages?page=${file.subject_id}`
         : file.subject_type === 'card'
           ? `/work/card?id=${file.subject_id}`
-          : '/'
+          : file.subject_type === 'project'
+            ? `/projects/view?id=${file.subject_id}&tab=files`
+            : '/'
     sources.push({ ref, title: file.name, href })
     evidence.push({
       ref,

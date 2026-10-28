@@ -1,7 +1,7 @@
 import { useReducedMotion } from '@devon/ui'
 import * as React from 'react'
 import { TomatoDirector, type TomatoActivity, type TomatoContext } from './lib/tomato-director.js'
-import './pomodoro-atlas.css'
+import atlas from './pomodoro-atlas.json'
 
 // Import URLs, not pixels: only the current/next activity and completion are downloaded.
 const sheets = import.meta.glob<string>('./assets/*-sprite.webp', {
@@ -10,13 +10,13 @@ const sheets = import.meta.glob<string>('./assets/*-sprite.webp', {
   import: 'default',
 })
 const urlFor = (clip: TomatoActivity) => sheets[`./assets/${clip}-sprite.webp`]!
-const decoded = new Map<TomatoActivity, Promise<void>>()
-function prepare(clip: TomatoActivity): Promise<void> {
+const decoded = new Map<TomatoActivity, Promise<HTMLImageElement>>()
+function prepare(clip: TomatoActivity): Promise<HTMLImageElement> {
   let pending = decoded.get(clip)
   if (!pending) {
     const image = new Image()
     image.src = urlFor(clip)
-    pending = image.decode()
+    pending = image.decode().then(() => image)
     decoded.set(clip, pending)
     void pending.catch(() => decoded.delete(clip))
   }
@@ -24,9 +24,111 @@ function prepare(clip: TomatoActivity): Promise<void> {
 }
 
 type Scene = { clip: TomatoActivity; serial: number; duration: number; hold: number }
-const initial: Scene = { clip: 'focus', serial: 0, duration: 2600, hold: 900 }
+const initial: Scene = { clip: 'focus', serial: 0, duration: 3000, hold: 30000 }
 
-/** One 24-frame story at a time, with short natural rests and no repeated playlist.
+/** Frame registration fixes scale/camera drift. Brief temporal blending softens the joins
+ * between the 24 original poses; requestAnimationFrame stops entirely during quiet rests. */
+function StoryFrames({
+  scene,
+  enabled,
+  active,
+  onComplete,
+}: {
+  scene: Scene
+  enabled: boolean
+  active: boolean
+  onComplete: () => void
+}) {
+  const canvas = React.useRef<HTMLCanvasElement>(null)
+  const elapsed = React.useRef(0)
+  const complete = React.useRef(false)
+  const onDone = React.useRef(onComplete)
+  onDone.current = onComplete
+  React.useEffect(() => {
+    const node = canvas.current
+    if (!node) return
+    let live = true,
+      frame = 0,
+      last: number | null = null
+    const context = node.getContext('2d')
+    if (!context) return
+    const poses = atlas[scene.clip]
+    let image: HTMLImageElement | undefined
+    const draw = () => {
+      if (!image) return
+      const size = Math.max(
+        256,
+        Math.round(node.clientWidth * Math.min(window.devicePixelRatio || 1, 2)),
+      )
+      if (node.width !== size) {
+        node.width = size
+        node.height = size
+      }
+      context.setTransform(size / 256, 0, 0, size / 256, 0, 0)
+      context.clearRect(0, 0, 256, 256)
+      context.imageSmoothingEnabled = true
+      context.imageSmoothingQuality = 'high'
+      const position = Math.min(23, (elapsed.current / scene.duration) * 24)
+      const index = Math.floor(position)
+      // Hold the crisp pose for most of each interval; dissolve only at its end.
+      const fraction = Math.max(0, (position - index - 0.55) / 0.45)
+      const mix = fraction * fraction * (3 - 2 * fraction)
+      const paint = (i: number, opacity: number) => {
+        const r = poses[i]!
+        context.globalAlpha = opacity
+        context.drawImage(image!, r[0]!, r[1]!, r[2]!, r[3]!, r[4]!, r[5]!, r[6]!, r[7]!)
+      }
+      context.globalCompositeOperation = 'source-over'
+      paint(index, 1 - mix)
+      if (mix > 0 && index < 23) {
+        context.globalCompositeOperation = 'lighter'
+        paint(index + 1, mix)
+      }
+      context.globalAlpha = 1
+      context.globalCompositeOperation = 'source-over'
+      node.dataset['frame'] = String(index)
+      node.dataset['ready'] = 'true'
+    }
+    const tick = (now: number) => {
+      if (!live) return
+      if (last !== null) elapsed.current = Math.min(scene.duration, elapsed.current + now - last)
+      last = now
+      draw()
+      if (elapsed.current < scene.duration) frame = requestAnimationFrame(tick)
+      else if (!complete.current) {
+        complete.current = true
+        onDone.current()
+      }
+    }
+    const resize = new ResizeObserver(draw)
+    resize.observe(node)
+    void prepare(scene.clip)
+      .then((loaded) => {
+        if (!live) return
+        image = loaded
+        draw()
+        if (enabled && active && !complete.current) frame = requestAnimationFrame(tick)
+      })
+      .catch(() => {})
+    return () => {
+      live = false
+      cancelAnimationFrame(frame)
+      resize.disconnect()
+    }
+  }, [scene.clip, scene.duration, enabled, active])
+  return (
+    <canvas
+      ref={canvas}
+      width={512}
+      height={512}
+      className="pomodoro-character-sprite"
+      data-sequence={scene.clip}
+      data-frame-count={24}
+    />
+  )
+}
+
+/** One 24-frame story at a time, separated by quiet rests rather than a continuous showcase.
  * Image decoding precedes transitions; hidden/offscreen views pause without advancing the story. */
 export function PomodoroCharacter({
   phase,
@@ -70,8 +172,8 @@ export function PomodoroCharacter({
     const next = {
       clip,
       serial: old.serial + 1,
-      duration: clip === 'complete' ? 2000 : 2500 + Math.floor(Math.random() * 600),
-      hold: 700 + Math.floor(Math.random() * 1100),
+      duration: clip === 'complete' ? 2200 : 2800 + Math.floor(Math.random() * 400),
+      hold: 25000 + Math.floor(Math.random() * 30000),
     }
     activeScene.current = next
     setPrevious(old)
@@ -147,19 +249,12 @@ export function PomodoroCharacter({
             className="pomodoro-character-layer"
             data-active={entry.serial === scene.serial}
           >
-            <div
-              className="pomodoro-character-sprite"
-              data-sequence={entry.clip}
-              style={{
-                backgroundImage: `url("${urlFor(entry.clip)}")`,
-                animationDuration: `${entry.duration}ms`,
-              }}
-              onAnimationEnd={(event) => {
-                if (
-                  entry.serial === activeScene.current.serial &&
-                  event.animationName.startsWith('pomodoro-character-frames-')
-                )
-                  setSettled(true)
+            <StoryFrames
+              scene={entry}
+              enabled={enabled}
+              active={entry.serial === scene.serial}
+              onComplete={() => {
+                if (entry.serial === activeScene.current.serial) setSettled(true)
               }}
             />
           </div>

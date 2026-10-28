@@ -944,3 +944,56 @@ export async function reconcileCommentNotifications(
     ),
   )
 }
+
+/** Resolve the current message before handling an edit event: delayed outbox delivery must never
+ * resurrect a removed mention or a deleted comment. Already-delivered Telegram pings cannot be recalled. */
+export async function reconcileProjectCommentNotifications(
+  departmentId: string | null,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  if (
+    !departmentId ||
+    typeof payload['projectId'] !== 'string' ||
+    typeof payload['commentId'] !== 'string'
+  )
+    return
+  const recipients = Array.isArray(payload['recipientIds'])
+    ? payload['recipientIds'].filter((id): id is string => typeof id === 'string')
+    : []
+  const link = `/projects/view?id=${payload['projectId']}&tab=discussion#comment-${payload['commentId']}`
+  const current = await withContext(
+    toRequestContext(departmentAuditCtx(), { departmentId, actorRole: 'super_admin' }),
+    async (tx) => {
+      const [row] = await tx.raw<{
+        text: string
+        mentions: string[]
+        members: string[]
+        owner_user_id: string
+      }>(sql`select c.body->>'text' as text,c.mentions,p.members,p.owner_user_id
+      from app.project_comments c join app.projects p on p.id=c.project_id
+      where c.id=${payload['commentId']} and p.id=${payload['projectId']} and c.department_id=${departmentId} and p.department_id=${departmentId}
+      and c.deleted_at is null and p.deleted_at is null`)
+      return row
+    },
+  )
+  const retained = new Set(
+    current ? [...current.mentions, ...current.members, current.owner_user_id] : [],
+  )
+  const excerpt = current?.text.slice(0, 240) ?? ''
+  const body = JSON.stringify({ en: excerpt, ru: excerpt, 'uz-Latn': excerpt, 'uz-Cyrl': excerpt })
+  await Promise.all(
+    [...new Set(recipients)].map((userId) =>
+      withContext(toRequestContext(systemAuditCtx(userId)), async (tx) => {
+        if (retained.has(userId))
+          await tx.raw(
+            sql`update app.notifications set body=${body}::jsonb where user_id=${userId} and department_id=${departmentId} and type='projects.project.commented' and deep_link=${link}`,
+          )
+        else
+          await tx.raw(
+            sql`update app.notifications set read_at=coalesce(read_at,now()),archived_at=coalesce(archived_at,now()) where user_id=${userId} and department_id=${departmentId} and type='projects.project.commented' and deep_link=${link}`,
+          )
+        tx.emit({ type: 'notifications.notification.updated', payload: { userId }, departmentId })
+      }),
+    ),
+  )
+}

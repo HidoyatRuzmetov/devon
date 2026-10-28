@@ -177,7 +177,8 @@ export async function conversationContext(
         union all
         select 'project:'||p.id,p.title,'/projects/view?id='||p.id,
           jsonb_build_object('kind','project','status',p.status,'ownerId',p.owner_user_id,'members',p.members,
-            'targetDate',p.target_on,'milestones',p.milestones,'description',p.description,'version',p.version),3
+            'targetDate',p.target_on,'milestones',p.milestones,'description',p.description,'version',p.version,
+            'comments',coalesce((select jsonb_agg(jsonb_build_object('id',cm.id,'authorId',cm.author_user_id,'body',cm.body,'mentions',cm.mentions,'editedAt',cm.edited_at,'createdAt',cm.created_at) order by cm.created_at,cm.id) from app.project_comments cm where cm.project_id=p.id and cm.deleted_at is null),'[]'::jsonb)),3
         from app.projects p where p.department_id=${departmentId} and p.deleted_at is null
         union all
         select 'card:'||c.id,c.title,'/work/card?id='||c.id,

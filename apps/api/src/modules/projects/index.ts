@@ -10,6 +10,7 @@ import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from './context.js'
 import * as repo from './repo.js'
 import * as lifecycle from './lifecycle-repo.js'
+import { projectDiscussionRoutes } from './discussion.js'
 import { getCardOwners } from '../work/repo.js'
 import {
   addMilestoneBodySchema,
@@ -93,6 +94,7 @@ const PROJECT_TEMPLATES = [
 ] as const
 
 const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(projectDiscussionRoutes)
   app.setErrorHandler((error, _req, reply) => {
     if (error instanceof repo.InvalidProjectMembers || error instanceof repo.InvalidProjectTemplate)
       return sendProblem(reply, 'validation_failed')

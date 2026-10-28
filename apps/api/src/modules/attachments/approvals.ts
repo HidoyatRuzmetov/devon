@@ -3,7 +3,7 @@ import { withContext, type RequestContext } from '@devon/db'
 
 export const APPROVAL_THRESHOLD = 100 * 1024 * 1024
 type Request = {
-  subjectType: 'card' | 'page' | 'ai_conversation'
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project'
   subjectId: string
   name: string
   size: number
@@ -75,7 +75,7 @@ export async function listApprovals(ctx: RequestContext) {
 }
 export async function ownApprovals(
   ctx: RequestContext,
-  subjectType: 'card' | 'page' | 'ai_conversation',
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project',
   subjectId: string,
 ) {
   return withContext(ctx, (tx) =>

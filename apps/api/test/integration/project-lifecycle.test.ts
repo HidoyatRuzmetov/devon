@@ -268,3 +268,66 @@ describe('project lifecycle', () => {
     )
   })
 })
+
+it('project discussion preserves author permissions, revisions, audit and project visibility', async () => {
+  const project = await createProject()
+  const base = `/projects/${project.id}/comments`
+  expect((await request(base, 'GET', undefined, foreign)).status).toBe(404)
+  const created = await request(base, 'POST', { text: 'First decision', mentions: [colleagueId] })
+  expect(created.status, await created.text()).toBe(201)
+  const comments = (await (await request(base)).json()) as {
+    id: string
+    body: { text: string }
+    editedAt: string | null
+    mentions: string[]
+  }[]
+  const c = comments[0]!
+  expect(c.mentions).toEqual([colleagueId])
+  expect(
+    (
+      await request(
+        `${base}/${c.id}`,
+        'PATCH',
+        { text: 'Forged edit', mentions: [], editedAt: null },
+        colleague,
+      )
+    ).status,
+  ).toBe(403)
+  expect(
+    (
+      await request(`${base}/${c.id}`, 'PATCH', {
+        text: 'Revised decision',
+        mentions: [],
+        editedAt: null,
+      })
+    ).status,
+  ).toBe(204)
+  expect(
+    (
+      await request(`${base}/${c.id}`, 'PATCH', {
+        text: 'Stale edit',
+        mentions: [],
+        editedAt: null,
+      })
+    ).status,
+  ).toBe(409)
+  const edited = (await (await request(base)).json()) as typeof comments
+  expect(edited[0]?.body.text).toBe('Revised decision')
+  expect(edited[0]?.mentions).toEqual([])
+  expect((await request(`${base}/${c.id}`, 'DELETE', undefined, foreign)).status).toBe(404)
+  expect((await request(`${base}/${c.id}`, 'DELETE', undefined, head)).status).toBe(204)
+  expect(await (await request(base)).json()).toEqual([])
+  const audit = await superuserQuery<{ action: string }>(
+    db,
+    'select action from audit.events where subject_id=$1 order by at',
+    [c.id],
+  )
+  expect(audit.map((row) => row.action)).toEqual([
+    'projects.comment_added',
+    'projects.comment_edited',
+    'projects.comment_deleted',
+  ])
+  expect((await request(`/projects/${project.id}`, 'DELETE')).status).toBe(204)
+  expect((await request(base, 'POST', { text: 'Too late' })).status).toBe(404)
+  expect((await request(base)).status).toBe(404)
+})

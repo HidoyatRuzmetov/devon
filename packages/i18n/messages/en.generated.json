@@ -785,7 +785,10 @@
           "work.time_log_removed": "removed a time entry",
           "work.time_logged": "recorded work time",
           "admin.user.deleted_identity_restored": "corrected a deleted account’s historical identity",
-          "admin.user.deleted": "deleted an account"
+          "admin.user.deleted": "deleted an account",
+          "projects.comment_added": "commented on a project",
+          "projects.comment_edited": "edited a project comment",
+          "projects.comment_deleted": "deleted a project comment"
         },
         "subjectType": {
           "session": "Session",
@@ -4181,6 +4184,19 @@
     "convert": "Create group",
     "convertHint": "Choose your teammates. This card becomes the assignee’s personal card in the new group project; its comments, checklist and files stay with it. You can edit the project and members afterwards.",
     "converted": "Group project created"
+  },
+  "projectCollaboration": {
+    "plan": "Plan",
+    "discussion": "Discussion",
+    "files": "Files",
+    "messages": "Project messages",
+    "empty": "Start the conversation",
+    "emptyHint": "Share updates, questions and decisions with your project team.",
+    "placeholder": "Write a message…",
+    "mention": "Mention a colleague",
+    "composeHint": "@ to mention · Ctrl/⌘ + Enter to send",
+    "send": "Send message",
+    "formerMember": "Former member"
   },
   "projectLifecycle": {
     "editMilestone": "Edit milestone",

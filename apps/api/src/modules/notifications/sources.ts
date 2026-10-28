@@ -349,6 +349,29 @@ async function loadProject(tx: Tx, payload: Record<string, unknown>): Promise<Pa
   }
 }
 
+async function loadProjectComment(
+  tx: Tx,
+  payload: Record<string, unknown>,
+): Promise<Partial_ | null> {
+  const project = await loadProject(tx, payload)
+  const id = pickString(payload, 'commentId')
+  if (!project || !id) return null
+  const [comment] = await tx.raw<{ body: { text: string }; mentions: string[] }>(
+    sql`select body,mentions from app.project_comments where id=${id} and project_id=${project.subjectId} and deleted_at is null`,
+  )
+  if (!comment) return null
+  return {
+    ...project,
+    extra: { commentId: id, excerpt: comment.body.text.slice(0, 240) },
+    byRule: {
+      project_members: payload['revisionOnly'] ? [] : (project.byRule.project_members ?? []),
+      mentioned: payload['revisionOnly']
+        ? pickStringArray(payload, 'mentions').filter((id) => comment.mentions.includes(id))
+        : comment.mentions,
+    },
+  }
+}
+
 async function loadMembership(tx: Tx, payload: Record<string, unknown>): Promise<Partial_ | null> {
   const userId = pickString(payload, 'userId') ?? pickString(payload, 'headUserId')
   if (!userId) return null
@@ -477,6 +500,9 @@ export async function resolveEvent(input: {
         break
       case 'project':
         part = await loadProject(tx, payload)
+        break
+      case 'project_comment':
+        part = await loadProjectComment(tx, payload)
         break
       case 'membership':
         part = await loadMembership(tx, payload)
