@@ -54,7 +54,7 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
       'Guruhni ulash uchun: /connect <kod>. Kodni boshqarma boshligʻidan soʻrang.',
     'group.connect_invalid': 'Kod notoʻgʻri yoki eskirgan.',
     'group.connect_already_used': 'Bu kod allaqachon ishlatilgan.',
-    help: 'Buyruqlar: /today — bugungi eslatmalar, /mytasks — soʻnggi bildirishnomalar, /events — yaqin tadbirlar, /mute <daqiqa> — bildirishnomalarni oʻchirish.\n\nGuruhda @all yozilsa, bot tekshirilgan a’zolarni tilga oladi. Bot guruh administratori bo‘lishi kerak.',
+    help: 'Buyruqlar: /today — bugungi eslatmalar, /mytasks — soʻnggi bildirishnomalar, /events — yaqin tadbirlar, /mute <daqiqa> — bildirishnomalarni oʻchirish.\n\nGuruhda @all yozilsa, bot tekshirilgan aʼzolarni tilga oladi. Bot guruh administratori boʻlishi kerak.',
     'button.mark_done': 'Bajarildi',
     'button.snooze_1d': '1 kunga kechiktirish',
     'button.rsvp_yes': 'Boraman',
