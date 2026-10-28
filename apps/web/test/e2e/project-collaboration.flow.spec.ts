@@ -34,10 +34,14 @@ test('@flow project discussion, mentions, revisions and downloadable files', asy
     await authedPatch(head, '/api/v1/me', { locale: 'en' })
     await authedPatch(member, '/api/v1/me', { locale: 'en' })
     const headId = (
-      (await (await head.request.get('/api/v1/me')).json()) as { user: { id: string } }
+      (await (await head.request.get('/api/v1/me')).json()) as {
+        user: { id: string }
+      }
     ).user.id
     const memberId = (
-      (await (await member.request.get('/api/v1/me')).json()) as { user: { id: string } }
+      (await (await member.request.get('/api/v1/me')).json()) as {
+        user: { id: string }
+      }
     ).user.id
     const response = await authedPost(head, '/api/v1/projects', {
       title: 'Public service evidence',
@@ -49,7 +53,15 @@ test('@flow project discussion, mentions, revisions and downloadable files', asy
     const page = await head.newPage()
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(`/projects/view?id=${project.id}&tab=discussion`)
-    const composer = page.getByRole('textbox', { name: 'Send message', exact: true })
+    // A middle tab must retain a visible selection underline; CSS-hidden siblings previously
+    // stole the shared layout animation and left this indicator permanently transparent.
+    await expect(
+      page.getByRole('tab', { name: 'Discussion', exact: true }).locator('.bg-primary'),
+    ).toHaveCSS('opacity', '1')
+    const composer = page.getByRole('textbox', {
+      name: 'Send message',
+      exact: true,
+    })
     await composer.fill('Please review @Test Member')
     await page
       .getByRole('group', { name: 'Mention a colleague' })
@@ -75,7 +87,9 @@ test('@flow project discussion, mentions, revisions and downloadable files', asy
       .fill('Evidence approved. Upload the final pack here.')
     await page.getByRole('button', { name: 'Save', exact: true }).click()
     await expect(
-      page.getByText('Evidence approved. Upload the final pack here.', { exact: true }),
+      page.getByText('Evidence approved. Upload the final pack here.', {
+        exact: true,
+      }),
     ).toBeVisible()
     const revised = (await (
       await head.request.get(`/api/v1/projects/${project.id}/comments`)
@@ -83,9 +97,9 @@ test('@flow project discussion, mentions, revisions and downloadable files', asy
     expect(revised[0]?.mentions).toEqual([])
     if (process.env['FLOW_REALTIME'] === '1') {
       await expect(
-        reader
-          .getByRole('log')
-          .getByText('Evidence approved. Upload the final pack here.', { exact: true }),
+        reader.getByRole('log').getByText('Evidence approved. Upload the final pack here.', {
+          exact: true,
+        }),
       ).toBeVisible()
     }
     expect(
@@ -101,6 +115,9 @@ test('@flow project discussion, mentions, revisions and downloadable files', asy
       fullPage: true,
     })
     await page.getByRole('tab', { name: 'Files', exact: true }).click()
+    await expect(
+      page.getByRole('tab', { name: 'Files', exact: true }).locator('.bg-primary'),
+    ).toHaveCSS('opacity', '1')
     await reader.getByRole('tab', { name: 'Files', exact: true }).click()
     await page.locator('input[type=file]').setInputFiles({
       name: 'evidence.html',
@@ -114,9 +131,15 @@ test('@flow project discussion, mentions, revisions and downloadable files', asy
     const download = page.waitForEvent('download')
     await file.click()
     expect((await download).suggestedFilename()).toBe('evidence.html')
-    await page.screenshot({ path: info.outputPath('project-files-desktop.png'), fullPage: true })
+    await page.screenshot({
+      path: info.outputPath('project-files-desktop.png'),
+      fullPage: true,
+    })
     await page.setViewportSize({ width: 390, height: 844 })
     await page.getByRole('tab', { name: 'Discussion', exact: true }).click()
+    await expect(
+      page.getByRole('tab', { name: 'Discussion', exact: true }).locator('.bg-primary'),
+    ).toHaveCSS('opacity', '1')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     )

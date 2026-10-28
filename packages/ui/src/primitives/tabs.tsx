@@ -5,7 +5,29 @@ import { cn } from '../lib/cn.js'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
 import { springSettle, tweenOut, crossfade } from '../motion/tokens.js'
 
-export const Tabs = TabsPrimitive.Root
+const ActiveTabContext = React.createContext<string | undefined>(undefined)
+
+export const Tabs = React.forwardRef<
+  React.ComponentRef<typeof TabsPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>
+>(({ value, defaultValue, onValueChange, ...props }, ref) => {
+  const [selection, setSelection] = React.useState(defaultValue)
+  const active = value ?? selection
+  return (
+    <ActiveTabContext.Provider value={active}>
+      <TabsPrimitive.Root
+        ref={ref}
+        {...props}
+        value={active ?? ''}
+        onValueChange={(next) => {
+          if (value === undefined) setSelection(next)
+          onValueChange?.(next)
+        }}
+      />
+    </ActiveTabContext.Provider>
+  )
+})
+Tabs.displayName = 'Tabs'
 
 /** UI-OVERHAUL.md §3 "Sidebar active item, tabs": the underline morphing between triggers was the
  * only motion a tab change carried -- the panel itself (Radix unmounts the inactive one by default,
@@ -149,6 +171,7 @@ export const TabsTrigger = React.forwardRef<
   TabsTriggerProps
 >(({ className, children, count, ...props }, ref) => {
   const layoutId = React.useContext(TabsIdContext)
+  const active = React.useContext(ActiveTabContext) === props.value
   const reduced = useReducedMotion()
   return (
     <TabsPrimitive.Trigger
@@ -169,17 +192,21 @@ export const TabsTrigger = React.forwardRef<
           {count}
         </span>
       ) : null}
-      <span className="absolute inset-x-0 bottom-0 hidden h-0.5 group-data-[state=active]:block">
-        {reduced ? (
-          <span className="block size-full rounded-full bg-primary" />
-        ) : (
-          <motion.span
-            layoutId={`${layoutId}-underline`}
-            className="block size-full rounded-full bg-primary"
-            transition={springSettle}
-          />
-        )}
-      </span>
+      {/* Only the selected trigger owns the shared indicator. CSS-hidden motion elements still
+          participate in layout projection and can leave the visible underline at opacity zero. */}
+      {active ? (
+        <span className="absolute inset-x-0 bottom-0 h-0.5" data-tab-indicator="">
+          {reduced ? (
+            <span className="block size-full rounded-full bg-primary" />
+          ) : (
+            <motion.span
+              layoutId={`${layoutId}-underline`}
+              className="block size-full rounded-full bg-primary"
+              transition={springSettle}
+            />
+          )}
+        </span>
+      ) : null}
     </TabsPrimitive.Trigger>
   )
 })
