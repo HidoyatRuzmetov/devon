@@ -1,6 +1,6 @@
 # Deliverables, personal calendar, and assistant release
 
-Status: implementation and local verification complete. Commit, CI and production verification are still required.
+Status: implementation and local verification complete. PR #13 is awaiting final CI and production verification.
 
 ## Evidence so far (28 October)
 
@@ -12,7 +12,10 @@ Status: implementation and local verification complete. Commit, CI and productio
 - Contracts: 690 passed after obsolete permission cases were removed (724 before cleanup). Web: 372 passed, with the affected timer/navigation tests rechecked (12 passed). Telegram Mini App: 35 passed. AI package: 186 passed. Database verifier: 1,004/1,004 checks plus 5 migration tests. Workspace types passed. Four-locale checks: zero errors; secrets: zero hits.
 - Browser development: 41/45 initially passed; all four failures fixed and affected 6/6 rechecked, including head/member/superadmin/public accessibility. Compiled production journeys: 41/41 passed before the final sprite artwork, then 6/6 focused artwork/timer and all-role accessibility checks passed. All three image assets are decoded as part of the browser proof. Timer recovery/account-boundary checks: 12/12 passed.
 - Release script regressions: 87 passed, 1 environment-dependent skip; deployment backup/rollback safeguards: 21 passed. Dependency cycles and URL architecture checks passed. Knip still reports prior unrelated exports; no claim of a clean Knip report.
-- Pomodoro has no session history, weekly statistics, or task linkage. It includes original ImageGen artwork: three 24-frame sequences, approximately 893 KB total WebP, content-hashed route assets. See [artwork and generation prompts](../../design/pomodoro-artwork.md). Animation is decorative, independent of timer accuracy, and disabled for reduced motion/hidden tabs/offscreen views.
+- Pomodoro has no session history, weekly statistics, or task linkage. The expanded repertoire contains fifteen original ImageGen sequences with 24 frames each (360 frames), 5,158,990 total WebP bytes. Only the current/next story and completion load on entry; all assets have content-hashed URLs. See [artwork and generation prompts](../../design/pomodoro-artwork.md). A shuffled repertoire avoids repetition and varies between focus/breaks; animation is decorative, independent of timer accuracy, and disabled for reduced motion/hidden tabs/offscreen views.
+- Follow-up local checks: database reset coverage 62/62, deterministic helper evaluations 81/81, animation/realtime 27/27, private calendar publication 12/12. Local repository Semgrep rules: zero findings (one parser warning in the existing analytics type). Check-in and calendar refreshes use realtime invalidation; private calendar events publish only to the owner's channel with no content.
+- Final repertoire browser proof: 11 unique focus activities and 12 unique break activities (14 shared activities), plus nap/pause, resume and completion. The CSS sequence exposes 24 distinct frame positions, and entry requests at most three sheets. Director unit tests also cover 100,000 arbitrary phase changes without immediate repeats. Desktop/mobile timer and check-in/Progress/calendar flows passed against the compiled production build; accessibility checks found no violations in the timer.
+- Compiled head/member assistant journeys passed with the compact batch UI: checked proposals, persisted history, no writes before confirmation, one applied result, scanned attachment download and mobile overflow. Reset/evaluation fixtures were updated for retired features. The shared visible-screen reconciliation also covers unavailable realtime transport without adding per-screen polling timers.
 
 ## UI rationale sources
 

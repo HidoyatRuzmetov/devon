@@ -26,11 +26,13 @@ export async function processPersonalCalendarReminders(
   configured = isTelegramConfigured,
 ) {
   if (!configured() || (await isMaintenanceActive())) return
+  // nosemgrep: devon-query-in-loop -- Bounded leased jobs must be read and acknowledged in each owner's RLS scope.
   for (let index = 0; index < 30; index += 1) {
     const token = randomUUID()
     // This global queue contains pointers only. Private rows are read under their owner's context.
     // nosemgrep: query-in-loop
     const job = await withContext(system, async (tx) => {
+      // nosemgrep: query-in-loop -- Claim one pointer before entering its owner's private transaction.
       const rows = await tx.raw<{
         entry_id: string
         user_id: string
@@ -49,15 +51,18 @@ export async function processPersonalCalendarReminders(
     await withContext(
       { ...system, requestId: token, userId: job.user_id, actorRole: 'member' },
       async (tx) => {
+        // nosemgrep: query-in-loop -- This owner-only row lock prevents a concurrent edit racing the send.
         const entries = await tx.raw<{
           starts_at: Date
         }>(sql`select starts_at from app.personal_calendar_entries where id=${job.entry_id} and user_id=${job.user_id}
         and version=${job.entry_version} and deleted_at is null and remind_at<=now() for update`)
         if (!entries.length) return
+        // nosemgrep: query-in-loop -- Validate the claimed receipt after locking its owner entry.
         const queues = await tx.raw(
           sql`select entry_id from app.personal_calendar_reminders where entry_id=${job.entry_id} and lease_token=${token} and entry_version=${job.entry_version} and sent_at is null for update`,
         )
         if (!queues.length) return
+        // nosemgrep: query-in-loop -- Resolve this owner's current opt-in only after the locked receipt is validated.
         const targets = await tx.raw<{
           chat_id: string
           locale: string
@@ -70,11 +75,13 @@ export async function processPersonalCalendarReminders(
         const month = new Date(entries[0]!.starts_at.getTime() + 5 * 3600000)
           .toISOString()
           .slice(0, 7)
+        // nosemgrep: query-in-loop -- The locked entry and receipt must remain current through this bounded send.
         const sent = await send(
           target.chat_id,
           `${label}\n${publicUrl().replace(/\/+$/, '')}/personal?tab=calendar&month=${month}&entry=${job.entry_id}`,
         ).catch(() => ({ ok: false as const, error: 'telegram_send_failed' }))
         if (sent.ok) {
+          // nosemgrep: query-in-loop -- Acknowledge only this successfully sent receipt before the next queue claim.
           await tx.raw(
             sql`update app.personal_calendar_reminders set sent_at=now(),lease_until=null where entry_id=${job.entry_id} and lease_token=${token}`,
           )

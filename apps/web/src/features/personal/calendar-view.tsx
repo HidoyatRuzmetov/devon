@@ -235,7 +235,6 @@ export function PersonalCalendarView() {
     queryKey: ['personal', 'calendar', me.data?.user?.id, departmentId, from, to],
     queryFn: () =>
       apiClient.get(`/api/v1/personal/calendar?from=${from}&to=${to}`, personalCalendarListSchema),
-    refetchInterval: 30_000,
   })
   const [editor, setEditor] = React.useState<{
     item: PersonalCalendarItem | null

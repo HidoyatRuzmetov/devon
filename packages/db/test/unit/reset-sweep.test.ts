@@ -75,8 +75,8 @@ describe('reset sweep coverage', () => {
     // parent listed before its child is a crash on the next used instance, not a style preference.
     const at = (t: string): number => DEPARTMENT_SWEEP_ORDER.findIndex((e) => e.table === t)
     const pairs: ReadonlyArray<readonly [string, string]> = [
-      ['app.automation_runs', 'app.automation_rules'],
-      ['app.automation_runs', 'app.cards'],
+      ['app.checkin_entries', 'app.checkin_cycles'],
+      ['app.checkin_reminders', 'app.checkin_cycles'],
       ['app.card_activity', 'app.cards'],
       ['app.card_comments', 'app.cards'],
       ['app.card_checklist_items', 'app.cards'],
@@ -85,8 +85,6 @@ describe('reset sweep coverage', () => {
       ['app.card_time_logs', 'app.cards'],
       ['app.focus_pins', 'app.cards'],
       ['app.cards', 'app.projects'],
-      ['app.field_requests', 'app.field_defs'],
-      ['app.field_values', 'app.field_defs'],
       ['app.event_telegram_deliveries', 'app.polls'],
       ['app.event_telegram_deliveries', 'app.events'],
       ['app.poll_votes', 'app.poll_options'],
@@ -112,7 +110,8 @@ describe('reset sweep coverage', () => {
       order.indexOf('app.notifications'),
     )
     expect(order.indexOf('app.pomodoro_sessions')).toBeLessThan(order.indexOf('app.personal_tasks'))
-    expect(order.indexOf('app.personal_tasks')).toBeLessThan(order.indexOf('app.personal_sprints'))
+    expect(order).toContain('app.personal_calendar_entries')
+    expect(order).not.toContain('app.personal_sprints')
   })
 
   it('gives every excused table a written reason', () => {

@@ -753,6 +753,7 @@ export function ChatProposalBatch({
   return (
     <div
       className="mt-3 overflow-hidden rounded-lg border border-primary/20 bg-background"
+      role="group"
       aria-label={t('assistantBatch.review')}
     >
       {proposals.map((proposal) => (

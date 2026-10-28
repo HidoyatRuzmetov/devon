@@ -276,6 +276,12 @@ export function registerRealtimeEventSubscriptions(
       // A private conversation's existence, IDs and generation state belong to its owner too.
       // Its authenticated polling endpoint provides progress; never broadcast it to department peers.
       if (event.type.startsWith('ai.conversation.')) return
+      if (event.type.startsWith('personal.calendar.')) {
+        const owner = (event.payload as Record<string, unknown> | null)?.['userId']
+        if (typeof owner === 'string')
+          await publish(personalChannel(owner), { type: event.type, payload: {} })
+        return
+      }
       if (event.type === 'notifications.notification.updated') {
         const payload = (event.payload ?? {}) as Record<string, unknown>
         if (typeof payload['userId'] === 'string') {

@@ -3,6 +3,29 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it.each([
+    { event: 'checkins.entry.updated', keys: [['checkins', 'department-a', 'current']] },
+    {
+      event: 'work.checklist.updated',
+      keys: [
+        ['checkins', 'department-a'],
+        ['personal', 'calendar', 'member-a'],
+      ],
+    },
+    { event: 'events.rsvp.updated', keys: [['personal', 'calendar', 'member-a']] },
+    { event: 'personal.calendar.updated', keys: [['personal', 'calendar', 'member-a']] },
+  ])('refreshes new views on $event without per-screen polling', ({ event, keys }) => {
+    const client = new QueryClient()
+    for (const key of keys) client.setQueryData(key, 'old')
+    const bridge = createRealtimeInvalidator(client)
+    try {
+      bridge.receive(event)
+      for (const key of keys) expect(client.getQueryState(key)?.isInvalidated).toBe(true)
+    } finally {
+      bridge.dispose()
+      client.clear()
+    }
+  })
   it('refreshes member Home assignments and counts from one card event without polling', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } })
     const keys = [
@@ -292,10 +315,12 @@ describe('live refresh during optimistic writes', () => {
     expect(refresh).not.toHaveBeenCalled()
     second(new Error('controlled local failure'))
     await two
-    expect(refresh).toHaveBeenCalledExactlyOnceWith({ queryKey: ['events'] })
+    expect(refresh).toHaveBeenCalledTimes(2)
+    expect(refresh).toHaveBeenNthCalledWith(1, { queryKey: ['events'] })
+    expect(refresh).toHaveBeenNthCalledWith(2, { queryKey: ['personal', 'calendar'] })
     bridge.dispose()
     client.clear()
-    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(refresh).toHaveBeenCalledTimes(2)
   })
 
   it('refreshes unrelated structure updates immediately during a pending RSVP write', async () => {

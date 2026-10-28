@@ -1,8 +1,10 @@
 # Pomodoro character artwork
 
-Original artwork generated with the built-in ImageGen tool on 28 October 2026. Three 24-frame, 6 × 4 transparent sprite sheets: concentrating, stretching, and completion. Runtime playback is 12 frames per second with a quiet rest between loops. The timer runs independently of decorative animation. Pausing, hidden tabs, offscreen views, reduced-motion preferences and the animation toggle stop decorative playback.
+Original artwork generated with the built-in ImageGen tool on 28 October 2026. Fifteen 24-frame, 6 × 4 transparent sprite sheets (360 frames): concentrating, reading, writing, tea, gardening, paper planes, puzzles, juggling, dancing, balancing, bubbles, peekaboo, napping, stretching, and completion. The twelve additional prompts are in [pomodoro-activity-prompts.md](pomodoro-activity-prompts.md).
 
-Production assets: `apps/web/src/features/personal/assets/*-sprite.webp`, bundled with content-hashed URLs and loaded with the Personal route. Source PNGs are retained in this folder's `pomodoro-source` directory. Format conversion preserves alpha; no generated figure is repainted in code.
+Each story plays once over 2.5–3.1 seconds with a variable short rest. A shuffled repertoire exhausts each phase's activities before repeating; recent history persists across focus/break changes. Pausing plays one nap, completion has its own two-second celebration, and resuming returns to the varied repertoire. The timer runs independently. Hidden tabs, offscreen views, reduced-motion preferences and the animation toggle suspend decorative playback.
+
+Production assets: `apps/web/src/features/personal/assets/*-sprite.webp`, bundled with content-hashed URLs. Only the visible story, the next story and completion are initially downloaded; a new sheet is decoded before crossfading. Source PNGs are retained in this folder's `pomodoro-source` directory. Format conversion preserves alpha; no generated figure is repainted in code.
 
 ## Prompts
 

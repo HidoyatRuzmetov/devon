@@ -162,6 +162,7 @@ export function registerGroupMentions(bot: Bot) {
         const batch = await Promise.all(
           candidates.slice(i, i + 5).map(async (id) => {
             try {
+              // nosemgrep: query-in-loop -- This await is inside the concurrent five-member batch, with an eight-second bound.
               return await withTimeout(
                 ctx.api.getChatMember(ctx.chat!.id, id),
                 8000,
@@ -177,6 +178,7 @@ export function registerGroupMentions(bot: Bot) {
       }
       const chunks = mentionMessages(body, people, messages.heading)
       for (const chunk of chunks) {
+        // nosemgrep: query-in-loop -- Telegram chunks must stay in order and stop immediately after any failed delivery.
         const result = await sendMentionMessage(
           String(ctx.chat.id),
           chunk.text,

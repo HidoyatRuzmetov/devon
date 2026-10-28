@@ -46,6 +46,7 @@ export async function maintainCycles(
   )
   const first = latest[0]?.starts_on ?? currentStart
   // Bounded calendar catch-up, not an N+1 render query. Each cycle depends on the previous snapshot.
+  // nosemgrep: devon-query-in-loop -- Each cycle carries the preceding frozen snapshot forward; chronological writes are dependent.
   for (let day = first; day <= currentStart; day = addDays(day, 14)) {
     const dates = cycleDates(day)
     // nosemgrep: query-in-loop

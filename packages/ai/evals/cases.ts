@@ -338,7 +338,7 @@ export const EVAL_CASES: EvalCase[] = [
   ...(() => {
     const base = {
       locale: 'uz-Latn',
-      scope: 'personal',
+      scope: 'project',
       periodKind: 'day',
       now: '2026-09-12T09:00:00+05:00',
       periodEndsAt: '2026-09-12T18:00:00+05:00',
@@ -364,7 +364,7 @@ export const EVAL_CASES: EvalCase[] = [
     }
     return [
       {
-        id: 'plan.personal.day.faithful',
+        id: 'plan.project.day.faithful',
         feature: 'plan_sprint' as const,
         determinism: true,
         input: { ...base, capacityMin: 420, items },
@@ -378,7 +378,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.day.due-first',
+        id: 'plan.project.day.due-first',
         feature: 'plan_sprint' as const,
         input: { ...base, capacityMin: 420, items },
         check: (out: unknown) => {
@@ -389,7 +389,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.blocked',
+        id: 'plan.project.blocked',
         feature: 'plan_sprint' as const,
         input: {
           ...base,
@@ -407,7 +407,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.capacity',
+        id: 'plan.project.capacity',
         feature: 'plan_sprint' as const,
         input: { ...base, capacityMin: 120, items },
         check: (out: unknown) => {
@@ -420,7 +420,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.fits',
+        id: 'plan.project.fits',
         feature: 'plan_sprint' as const,
         input: {
           ...base,

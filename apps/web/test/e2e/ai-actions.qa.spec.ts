@@ -77,9 +77,13 @@ for (const role of ['head', 'member'] as const) {
           : 'Create a task to review the published directory and attach this review evidence.',
       )
       await page.getByRole('button', { name: 'Send message', exact: true }).click()
-      const proposal = page.getByRole('region', { name: proposalTitle, exact: true })
+      const proposal = page.getByRole('group', { name: 'Review changes', exact: true })
       await expect(proposal).toBeVisible({ timeout: 30_000 })
+      await expect(
+        proposal.getByRole('checkbox', { name: `Include: ${proposalTitle}` }),
+      ).toBeChecked()
       await expect(proposal).toContainText(title)
+      await proposal.getByRole('button', { name: 'Show details', exact: true }).click()
       await expect(proposal).toContainText(fileName)
       await expect(proposal).not.toContainText('"type":"doc"')
       expect((await records()).some((record) => record.title === title)).toBe(false)
@@ -98,13 +102,13 @@ for (const role of ['head', 'member'] as const) {
       ).toMatchObject([{ name: fileName }])
       await page.reload()
       await expect(
-        proposal.getByRole('button', { name: 'Confirm and apply', exact: true }),
+        proposal.getByRole('button', { name: 'Confirm selected', exact: true }),
       ).toBeVisible()
       await page.screenshot({ path: testInfo.outputPath(`proposal-${role}.png`) })
-      await proposal.getByRole('button', { name: 'Confirm and apply', exact: true }).click()
+      await proposal.getByRole('button', { name: 'Confirm selected', exact: true }).click()
       await expect(proposal).toContainText('Applied', { timeout: 30_000 })
       await expect(
-        proposal.getByRole('button', { name: 'Confirm and apply', exact: true }),
+        proposal.getByRole('button', { name: 'Confirm selected', exact: true }),
       ).toHaveCount(0)
       const after = await read()
       const applied = after.messages.flatMap((message) => message.proposals ?? [])[0]!
@@ -113,7 +117,7 @@ for (const role of ['head', 'member'] as const) {
       const conversationUrl = page.url()
       await page.reload()
       await expect(proposal).toContainText('Applied')
-      await proposal.getByRole('link').filter({ hasText: applied.result!.label }).click()
+      await proposal.getByRole('link', { name: 'Open result', exact: true }).click()
       await expect(page).toHaveURL(isPage ? /\/pages\?page=/ : /\/work\/card\?id=/)
       const download = page.getByRole('link', { name: fileName, exact: true })
       await expect(download).toBeVisible()

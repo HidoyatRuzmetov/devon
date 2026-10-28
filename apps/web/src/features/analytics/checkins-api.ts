@@ -17,7 +17,6 @@ export function useCheckins(cycleId?: string) {
         `${BASE}/${cycleId ? `?cycleId=${encodeURIComponent(cycleId)}` : ''}`,
         checkinBoardSchema,
       ),
-    refetchInterval: 15_000,
   })
 }
 type Change =

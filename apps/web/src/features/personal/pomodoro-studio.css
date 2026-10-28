@@ -175,28 +175,25 @@
   background-size: 600% 400%;
   background-repeat: no-repeat;
 }
-.pomodoro-character-sprite[data-sequence='focus'] {
-  background-image: url('./assets/focus-sprite.webp');
+.pomodoro-character-layer[data-active='true'] .pomodoro-character-sprite {
+  animation: pomodoro-character-frames 2.6s steps(1, end) both;
 }
-.pomodoro-character-sprite[data-sequence='break'] {
-  background-image: url('./assets/break-sprite.webp');
+.pomodoro-character-layer[data-active='false'] .pomodoro-character-sprite {
+  background-position: 100% 100%;
 }
-.pomodoro-character-sprite[data-sequence='complete'] {
-  background-image: url('./assets/complete-sprite.webp');
+.pomodoro-character-scene[data-motion='off'] .pomodoro-character-sprite {
+  animation-play-state: paused;
 }
-.pomodoro-character-scene[data-motion='on'][data-paused='false']
-  .pomodoro-character-layer[data-active='true']
-  .pomodoro-character-sprite {
-  animation: pomodoro-character-loop 4s steps(1, end) infinite;
+.pomodoro-character-layer[data-active='true'] {
+  animation: pomodoro-character-arrive 220ms ease-out both;
 }
-.pomodoro-character-scene[data-motion='on'][data-mode='complete']
-  .pomodoro-character-layer[data-active='true']
-  .pomodoro-character-sprite {
-  animation: pomodoro-character-complete 2s steps(1, end) both;
-}
-.pomodoro-character-scene[data-paused='true'][data-mode='focus']
-  .pomodoro-character-sprite[data-sequence='focus'] {
-  background-position: 60% 33.333333%;
+@keyframes pomodoro-character-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .pomodoro-particle {
   position: absolute;
@@ -311,85 +308,7 @@
   }
 }
 
-@keyframes pomodoro-character-loop {
-  0% {
-    background-position: 0% 0%;
-  }
-  2.083333333333333% {
-    background-position: 20% 0%;
-  }
-  4.166666666666666% {
-    background-position: 40% 0%;
-  }
-  6.25% {
-    background-position: 60% 0%;
-  }
-  8.333333333333332% {
-    background-position: 80% 0%;
-  }
-  10.416666666666668% {
-    background-position: 100% 0%;
-  }
-  12.5% {
-    background-position: 0% 33.33333333333333%;
-  }
-  14.583333333333334% {
-    background-position: 20% 33.33333333333333%;
-  }
-  16.666666666666664% {
-    background-position: 40% 33.33333333333333%;
-  }
-  18.75% {
-    background-position: 60% 33.33333333333333%;
-  }
-  20.833333333333336% {
-    background-position: 80% 33.33333333333333%;
-  }
-  22.916666666666664% {
-    background-position: 100% 33.33333333333333%;
-  }
-  25% {
-    background-position: 0% 66.66666666666666%;
-  }
-  27.083333333333332% {
-    background-position: 20% 66.66666666666666%;
-  }
-  29.166666666666668% {
-    background-position: 40% 66.66666666666666%;
-  }
-  31.25% {
-    background-position: 60% 66.66666666666666%;
-  }
-  33.33333333333333% {
-    background-position: 80% 66.66666666666666%;
-  }
-  35.41666666666667% {
-    background-position: 100% 66.66666666666666%;
-  }
-  37.5% {
-    background-position: 0% 100%;
-  }
-  39.58333333333333% {
-    background-position: 20% 100%;
-  }
-  41.66666666666667% {
-    background-position: 40% 100%;
-  }
-  43.75% {
-    background-position: 60% 100%;
-  }
-  45.83333333333333% {
-    background-position: 80% 100%;
-  }
-  47.91666666666667% {
-    background-position: 100% 100%;
-  }
-  50%,
-  100% {
-    background-position: 0% 0%;
-  }
-}
-@keyframes pomodoro-character-complete {
+@keyframes pomodoro-character-frames {
   0% {
     background-position: 0% 0%;
   }

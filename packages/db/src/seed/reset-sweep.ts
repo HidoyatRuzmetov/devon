@@ -172,6 +172,12 @@ export const GLOBAL_SWEEP: readonly {
  * is a recorded decision rather than an omission nobody noticed.
  */
 export const SWEEP_NOT_NEEDED: Readonly<Record<string, string>> = Object.freeze({
+  'app.personal_calendar_reminders':
+    'Deleted by the entry_id ON DELETE CASCADE when the owner calendar entries are swept.',
+  'app.telegram_group_members':
+    'Deleted by the group_id ON DELETE CASCADE when the connected Telegram groups are swept.',
+  'app.telegram_group_mentions':
+    'Deleted by the group_id ON DELETE CASCADE when the connected Telegram groups are swept.',
   'app.departments': 'The parent the sweep exists to unblock; deleted by its own module / demo.ts.',
   'app.users': 'The other parent; deleted last, by demo.ts, from DEMO_DELETE_ORDER.',
   'app.instance_settings':

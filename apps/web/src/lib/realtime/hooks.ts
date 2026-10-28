@@ -175,7 +175,7 @@ const INVALIDATIONS: ReadonlyArray<{
 }> = [
   {
     match: /^work\.(card|checklist|focus)\./,
-    keys: [['work'], ['projects']],
+    keys: [['work'], ['projects'], ['checkins'], ['personal', 'calendar']],
     mutationKeys: [
       ['work', 'checklist'],
       ['work', 'card-write'],
@@ -189,7 +189,13 @@ const INVALIDATIONS: ReadonlyArray<{
       ['work', 'card-write'],
     ],
   },
-  { match: /^events\./, keys: [['events']], mutationKeys: [['events', 'rsvp']] },
+  {
+    match: /^events\./,
+    keys: [['events'], ['personal', 'calendar']],
+    mutationKeys: [['events', 'rsvp']],
+  },
+  { match: /^checkins\./, keys: [['checkins']] },
+  { match: /^personal\.calendar\./, keys: [['personal', 'calendar']] },
   { match: /^structure\./, keys: [['structure']] },
   {
     match: /^attachments\./,
@@ -207,7 +213,6 @@ const INVALIDATIONS: ReadonlyArray<{
       ['work', 'card-write'],
     ],
   },
-  { match: /^automations\./, keys: [['automations']] },
   {
     match: /^pages\./,
     keys: [['pages']],
@@ -229,7 +234,6 @@ const INVALIDATIONS: ReadonlyArray<{
     match: /^departments\.(?!(membership\.changed|join_request\.decided)$)/,
     keys: [['departments'], ['people']],
   },
-  { match: /^realtime\.canvas\./, keys: [['realtime', 'canvas-shares']] },
   // Personal delivery updates reminders and file approvals, including the superadmin queue
   // whose requests can originate outside the administrator's active department.
   {
@@ -341,9 +345,10 @@ export function useRealtimeBridge(): void {
   })
 
   React.useEffect(() => {
-    if (!signedIn || status !== 'connected') return
+    if (!signedIn) return
     // A healthy socket does not prove the server successfully published every committed write.
-    // Reconcile visible screens at a bounded interval; the publisher is best-effort with no history.
+    // The same bounded reconciliation covers a temporarily unavailable transport. Keep this in
+    // the shell so individual screens do not add their own polling timers.
     const reconcile = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) invalidator.current?.catchUp()
     }

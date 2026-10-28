@@ -51,12 +51,15 @@ export async function processCheckins(
 ): Promise<void> {
   if (await isMaintenanceActive()) return
   const departments = await listAllDepartmentIds()
+  // nosemgrep: devon-query-in-loop -- Each department requires its own RLS transaction; do not combine tenant scopes.
   for (let index = 0; index < departments.length; index += 1) {
     const ctx = context(departments[index]!)
     // Bounded per-department transactions: cycles are not allowed to borrow another tenant's context.
     // nosemgrep: query-in-loop
     await withContext(ctx, async (tx) => {
+      // nosemgrep: query-in-loop -- The reminder insert must follow cycle locking in this tenant's transaction.
       await maintainCycles(tx, ctx, now)
+      // nosemgrep: query-in-loop -- Depends on this tenant's completed cycle maintenance above.
       await tx.raw(sql`insert into app.checkin_reminders(department_id,cycle_id,phase,chat_id)
         select c.department_id,c.id,phase.name,g.chat_id from app.checkin_cycles c
         join app.telegram_groups g on g.department_id=c.department_id and g.disconnected_at is null
@@ -67,10 +70,12 @@ export async function processCheckins(
         on conflict(cycle_id,phase,chat_id) do nothing`)
     })
     if (!configured()) continue
+    // nosemgrep: devon-query-in-loop -- Bounded queue claims: each send is acknowledged before claiming the next delivery.
     for (let target = 0; target < 20; target += 1) {
       const token = randomUUID()
       // nosemgrep: query-in-loop
       const delivery = await withContext(ctx, async (tx) => {
+        // nosemgrep: query-in-loop -- Claim exactly one leased delivery before making its bounded external send.
         const rows = await tx.raw<{
           id: string
           phase: 'checkin' | 'checkout'
@@ -100,6 +105,7 @@ export async function processCheckins(
       if (result.ok) {
         // nosemgrep: query-in-loop
         await withContext(ctx, async (tx) => {
+          // nosemgrep: query-in-loop -- Acknowledge this delivery only after the transport accepted it.
           const saved = await tx.raw<{ id: string }>(
             sql`update app.checkin_reminders set sent_at=now(),lease_until=null where id=${delivery.id} and lease_token=${token} returning id`,
           )
