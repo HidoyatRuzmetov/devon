@@ -1,16 +1,15 @@
-import { describe, expect, it } from 'vitest'
 import {
   WORK_TITLE_MAX,
   cardTemplatePayloadSchema,
   projectTemplatePayloadSchema,
-  automationWritableActionSchema,
 } from '@devon/contracts'
-import { createCardBodySchema, patchCardBodySchema } from '../../src/modules/work/schemas.js'
+import { describe, expect, it } from 'vitest'
 import {
+  addMilestoneBodySchema,
   createProjectBodySchema,
   patchProjectBodySchema,
-  addMilestoneBodySchema,
 } from '../../src/modules/projects/schemas.js'
+import { createCardBodySchema, patchCardBodySchema } from '../../src/modules/work/schemas.js'
 
 describe('work title limits across input paths', () => {
   const valid = 'A'.repeat(WORK_TITLE_MAX)
@@ -39,15 +38,9 @@ describe('work title limits across input paths', () => {
     expect(patchProjectBodySchema.safeParse({ status: 'active' }).success).toBe(true)
     expect(patchProjectBodySchema.safeParse({ title: long }).success).toBe(false)
   })
-  it('prevents new templates and follow-up rules from bypassing title limits', () => {
+  it('prevents new templates from bypassing title limits', () => {
     expect(cardTemplatePayloadSchema.safeParse({ title: valid }).success).toBe(true)
     expect(cardTemplatePayloadSchema.safeParse({ title: long }).success).toBe(false)
     expect(projectTemplatePayloadSchema.safeParse({ title: long }).success).toBe(false)
-    expect(
-      automationWritableActionSchema.safeParse({ kind: 'create_followup', title: valid }).success,
-    ).toBe(true)
-    expect(
-      automationWritableActionSchema.safeParse({ kind: 'create_followup', title: long }).success,
-    ).toBe(false)
   })
 })

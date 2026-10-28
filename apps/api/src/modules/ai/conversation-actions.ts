@@ -1,10 +1,12 @@
-import type { FastifyInstance, FastifyRequest } from 'fastify'
-import { sql } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
 import { can, type AiChatMessage, type AiChatProposal } from '@devon/contracts'
+import { withContext, type RequestContext } from '@devon/db'
+import { sql } from 'drizzle-orm'
+import type { FastifyInstance, FastifyRequest } from 'fastify'
+import { z } from 'zod'
 import { contextFromRequest } from '../work/context.js'
 import { getCardOwners } from '../work/repo.js'
-import { ACTIONS, parseAction } from './action-catalog.js'
+import { ACTIONS } from './action-catalog.js'
+import { CREATED_ENTITY, parsePlannedArguments, resolveActionBindings } from './action-plan.js'
 import { ConversationError, getConversation } from './conversations.js'
 
 async function changeProposal(
@@ -76,8 +78,9 @@ async function attachFiles(
     const rows = await tx.raw<{
       id: string
     }>(sql`select id from app.attachments where id=any(${sql.param(ids)}::uuid[])
-      and department_id=${ctx.departmentId} and uploaded_by_user_id=${ctx.userId} and subject_type='ai_conversation'
-      and subject_id=${conversationId} and deleted_at is null and scan_status='clean' for update`)
+      and department_id=${ctx.departmentId} and uploaded_by_user_id=${ctx.userId}
+      and ((subject_type='ai_conversation' and subject_id=${conversationId}) or (subject_type=${targetType} and subject_id=${targetId}))
+      and deleted_at is null and scan_status='clean' for update`)
     if (rows.length !== new Set(ids).size)
       throw new ConversationError('conflict', 'attachment_unavailable')
     await tx.raw(sql`update app.attachments set subject_type=${targetType},subject_id=${targetId}
@@ -129,24 +132,37 @@ export async function resolveProposal(
   conversationId: string,
   proposalId: string,
   execute: boolean,
+  batchClaimed?: AiChatProposal,
 ) {
   const ctx = contextFromRequest(req)
-  await getConversation(ctx, conversationId)
-  let claimed = false
-  const proposal = await changeProposal(ctx, conversationId, proposalId, (p, createdAt) => {
-    if (p.status !== 'pending') return p
-    if (Date.now() - Date.parse(createdAt) > 24 * 60 * 60 * 1000) return { ...p, status: 'expired' }
-    claimed = execute
-    return {
-      ...p,
-      status: execute ? 'executing' : 'discarded',
-      ...(execute ? { startedAt: new Date().toISOString() } : {}),
-    }
-  })
+  const snapshot = await getConversation(ctx, conversationId)
+  let claimed = !!batchClaimed
+  const proposal =
+    batchClaimed ??
+    (await changeProposal(ctx, conversationId, proposalId, (p, createdAt) => {
+      if (p.status !== 'pending') return p
+      if (Date.now() - Date.parse(createdAt) > 24 * 60 * 60 * 1000)
+        return { ...p, status: 'expired' }
+      claimed = execute
+      return {
+        ...p,
+        status: execute ? 'executing' : 'discarded',
+        ...(execute ? { startedAt: new Date().toISOString() } : {}),
+      }
+    }))
   if (!claimed) return getConversation(ctx, conversationId)
   let result: AiChatProposal['result']
   try {
-    const args = parseAction(proposal.kind, proposal.arguments)
+    const siblings =
+      snapshot.messages.find((m) => m.proposals?.some((p) => p.id === proposalId))?.proposals ?? []
+    const prior = siblings.slice(
+      0,
+      siblings.findIndex((p) => p.id === proposalId),
+    )
+    const args = resolveActionBindings(
+      proposal,
+      new Map(prior.filter((p) => p.key).map((p) => [p.key!, p])),
+    )
     const operation = ACTIONS[proposal.kind]!
     if (proposal.kind === 'attachment.attach') {
       await attachFiles(
@@ -177,6 +193,7 @@ export async function resolveProposal(
           cookie: req.headers.cookie ?? '',
           'x-csrf-token': String(req.headers['x-csrf-token'] ?? ''),
           'user-agent': `${req.headers['user-agent'] ?? 'WorkPortal'} ai-action/${proposalId}`,
+          'x-operation-id': proposalId,
         },
         ...(args['body'] ? { payload: args['body'] as Record<string, unknown> } : {}),
       })
@@ -194,13 +211,21 @@ export async function resolveProposal(
       const responseBody = response.body
         ? (JSON.parse(response.body) as Record<string, unknown>)
         : {}
-      result = { href: operation.href(args, responseBody), label: proposal.title }
+      result = {
+        href: operation.href(args, responseBody),
+        label: proposal.title,
+        ...(CREATED_ENTITY[proposal.kind] && z.uuid().safeParse(responseBody['id']).success
+          ? { entityId: responseBody['id'] as string }
+          : {}),
+      }
       if (attachmentIds?.length)
         await attachFiles(
           req,
           conversationId,
           attachmentIds,
-          proposal.kind === 'card.create' ? 'card' : 'page',
+          proposal.kind === 'card.create' || proposal.kind === 'card.withChecklist'
+            ? 'card'
+            : 'page',
           String(responseBody['id']),
         )
     }
@@ -210,7 +235,14 @@ export async function resolveProposal(
       result,
     }))
   } catch (error) {
-    const known = ['forbidden', 'not_found', 'conflict', 'attachment_unavailable', 'action_failed']
+    const known = [
+      'forbidden',
+      'not_found',
+      'conflict',
+      'attachment_unavailable',
+      'action_failed',
+      'dependency_unavailable',
+    ]
     const code =
       error instanceof Error && known.includes(error.message) ? error.message : 'action_failed'
     await changeProposal(ctx, conversationId, proposalId, (p) => ({
@@ -219,6 +251,96 @@ export async function resolveProposal(
       error: result ? 'attachment_failed' : code,
       ...(result ? { result } : {}),
     }))
+  }
+  return getConversation(ctx, conversationId)
+}
+
+export async function editProposal(
+  ctx: RequestContext,
+  conversationId: string,
+  proposalId: string,
+  input: { revision: number; arguments: Record<string, unknown> },
+) {
+  await changeProposal(ctx, conversationId, proposalId, (p) => {
+    if (p.status !== 'pending' || (p.revision ?? 0) !== input.revision)
+      throw new ConversationError('conflict', 'proposal_changed')
+    let parsed: Record<string, unknown>
+    try {
+      parsed = parsePlannedArguments({ ...p, arguments: input.arguments })
+    } catch {
+      throw new ConversationError('validation_failed', 'invalid_action_arguments')
+    }
+    return { ...p, arguments: parsed, revision: (p.revision ?? 0) + 1 }
+  })
+  return getConversation(ctx, conversationId)
+}
+
+/** Claim the entire reviewed selection in one transaction. A racing edit cannot replace an
+ * unchecked or approved operation between review and execution. Each domain operation commits
+ * independently; failures remain visible per row, and an interrupted batch is never replayed. */
+export async function resolveProposalBatch(
+  app: FastifyInstance,
+  req: FastifyRequest,
+  conversationId: string,
+  input: { messageId: string; proposals: { id: string; revision: number; selected: boolean }[] },
+) {
+  const ctx = contextFromRequest(req)
+  if (ctx.viewAs || !ctx.userId || !ctx.departmentId) throw new ConversationError('forbidden')
+  const claimed = await withContext(ctx, async (tx) => {
+    const rows = await tx.raw<{
+      messages: AiChatMessage[]
+    }>(sql`select messages from app.ai_conversations where id=${conversationId}
+      and owner_user_id=${ctx.userId} and department_id=${ctx.departmentId} for update`)
+    if (!rows[0]) throw new ConversationError('not_found')
+    const message = rows[0].messages.find((m) => m.id === input.messageId && m.role === 'assistant')
+    if (!message) throw new ConversationError('not_found')
+    const choices = new Map(input.proposals.map((p) => [p.id, p]))
+    const proposals = message.proposals ?? []
+    if (input.proposals.some((p) => !proposals.some((existing) => existing.id === p.id)))
+      throw new ConversationError('not_found')
+    const currentPending = proposals.filter((p) => p.status === 'pending')
+    // A retry after the selection was claimed is a read, never a second execution.
+    if (!currentPending.length) return []
+    if (
+      currentPending.some(
+        (p) => !choices.has(p.id) || choices.get(p.id)!.revision !== (p.revision ?? 0),
+      )
+    )
+      throw new ConversationError('conflict', 'proposal_changed')
+    if (Date.now() - Date.parse(message.createdAt) > 24 * 3600000)
+      throw new ConversationError('conflict', 'proposal_expired')
+    const dispatch: AiChatProposal[] = []
+    message.proposals = proposals.map((p) => {
+      if (p.status !== 'pending') return p
+      const selected = choices.get(p.id)!.selected
+      if (selected) parsePlannedArguments(p)
+      const next: AiChatProposal = {
+        ...p,
+        status: selected ? 'executing' : 'discarded',
+        ...(selected ? { startedAt: new Date().toISOString() } : {}),
+      }
+      if (selected) dispatch.push(next)
+      return next
+    })
+    await tx.raw(
+      sql`update app.ai_conversations set messages=${JSON.stringify(rows[0].messages)}::jsonb,updated_at=now() where id=${conversationId}`,
+    )
+    tx.audit({
+      action: 'ai.actions.confirmed',
+      subjectType: 'ai_conversation',
+      subjectId: conversationId,
+      after: { via: 'ai', messageId: input.messageId, choices: input.proposals },
+    })
+    tx.emit({
+      type: 'ai.conversation.answered',
+      payload: { conversationId, userId: ctx.userId, messageId: input.messageId },
+    })
+    return dispatch
+  })
+  for (let index = 0; index < claimed.length; index += 1) {
+    // Ordered domain operations may refer to a previous change. These are not independent reads.
+    // nosemgrep: query-in-loop
+    await resolveProposal(app, req, conversationId, claimed[index]!.id, true, claimed[index])
   }
   return getConversation(ctx, conversationId)
 }

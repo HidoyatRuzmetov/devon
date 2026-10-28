@@ -14,70 +14,50 @@
 //  2. **A switch that is off is a 404-shaped refusal, not a silent success.** SPEC §7 puts each of
 //     these behind an Imkoniyatlar switch; `requireFeature` below answers `not_found` for a
 //     capability the department has not turned on, so a probe cannot enumerate what exists.
+import { resolveFeatures, type FeatureKey } from '@devon/contracts'
+import { withContext } from '@devon/db'
+import { sql } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
-import { sql } from 'drizzle-orm'
-import { withContext } from '@devon/db'
-import {
-  DEFAULT_WEEKLY_CAPACITY_HOURS,
-  minutesToHours,
-  resolveFeatures,
-  type FeatureKey,
-  type FilterableCard,
-} from '@devon/contracts'
 import { isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from './context.js'
 import {
   departmentChildSubject,
-  departmentManagedSubject,
   ownViewerSubject,
   requireCardOwnership,
   requireDepartmentId,
 } from './guards.js'
 import * as plus from './plus-repo.js'
 import * as repo from './repo.js'
-import { idParamsSchema, type CardDTO } from './schemas.js'
 import {
   addFocusBodySchema,
   bulkCardPatchBodySchema,
   bulkCardResultSchema,
   bulkUndoBodySchema,
-  capacityListSchema,
   cardDependenciesSchema,
   cardReminderListSchema,
   cardTimeLogSchema,
   createDependencyBodySchema,
   createFromCardTemplateBodySchema,
-  createGoalBodySchema,
   createReminderBodySchema,
   createTimeLogBodySchema,
   createWorkTemplateBodySchema,
   dependencyParamsSchema,
   focusListSchema,
-  goalListSchema,
-  moveWorkloadBodySchema,
-  patchGoalBodySchema,
   patchWorkTemplateBodySchema,
-  putCapacityBodySchema,
   reminderParamsSchema,
   reorderFocusBodySchema,
   templateIdParamsSchema,
   templateListQuerySchema,
   timeLogParamsSchema,
-  userIdParamsSchema,
   workTemplateListSchema,
-  workloadQuerySchema,
-  workloadSchema,
 } from './schemas-plus.js'
+import { idParamsSchema } from './schemas.js'
 
 type ZodApp = Parameters<FastifyPluginAsyncZod>[0]
-
-/** Asia/Tashkent is UTC+5 all year (no daylight saving), which is why a plain fixed offset is
- * correct here and not a simplification waiting to break twice a year. */
-const TASHKENT_OFFSET = '+05:00'
 
 /**
  * SPEC §7: every capability in this file is behind an Imkoniyatlar switch, off by default.
@@ -105,24 +85,6 @@ async function requireFeature(
     return false
   }
   return true
-}
-
-/** The Monday (ISO date) of the week `isoDate` falls in, counted in Asia/Tashkent. */
-function mondayOf(isoDate: string): string {
-  const date = new Date(`${isoDate}T00:00:00.000Z`)
-  const day = date.getUTCDay() === 0 ? 7 : date.getUTCDay()
-  date.setUTCDate(date.getUTCDate() - (day - 1))
-  return date.toISOString().slice(0, 10)
-}
-
-function addDays(isoDate: string, days: number): string {
-  const date = new Date(`${isoDate}T00:00:00.000Z`)
-  date.setUTCDate(date.getUTCDate() + days)
-  return date.toISOString().slice(0, 10)
-}
-
-function todayInTashkent(): string {
-  return new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
 
 export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
@@ -807,398 +769,4 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       return reply.code(204).send()
     },
   )
-
-  // -------------------------------------------------------------------------------------------
-  // A4 -- capacity and the workload grid
-  // -------------------------------------------------------------------------------------------
-
-  app.get(
-    '/work/capacity',
-    {
-      config: {
-        permission: {
-          action: 'read',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: { response: { 200: capacityListSchema } },
-    },
-    async (req, reply) => {
-      const departmentId = requireDepartmentId(req)
-      if (!departmentId) return reply.send([])
-      return reply.send(await plus.listCapacity(contextFromRequest(req), departmentId))
-    },
-  )
-
-  app.put(
-    '/work/capacity/:userId',
-    {
-      config: {
-        permission: {
-          action: 'update',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        params: userIdParamsSchema,
-        body: putCapacityBodySchema,
-        response: { 204: z.undefined() },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      // SPEC §7 A4: a member sets their own capacity, the head sets anybody's. Expressed as an
-      // `owned` decision with the subject person as the owner set, so the rule is `can()`'s and not
-      // a second `role === 'head'` written here (I-7). RLS enforces the same thing underneath.
-      const me = req.actor!.userId
-      if (req.params.userId !== me && !isHeadOf(req.actor, departmentId)) {
-        return sendProblem(reply, 'forbidden')
-      }
-      await plus.putCapacity(
-        contextFromRequest(req),
-        departmentId,
-        req.params.userId,
-        req.body.weeklyHours,
-        me,
-      )
-      return reply.code(204).send()
-    },
-  )
-
-  /** SPEC §2.2: the grid itself is head-only. A member's own row comes from `/work/workload/mine`
-   * below, which is the same service with the rows narrowed to the caller. */
-  app.get(
-    '/work/workload',
-    {
-      config: {
-        permission: {
-          action: 'read',
-          subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        querystring: workloadQuerySchema,
-        response: { 200: workloadSchema },
-      },
-    },
-    async (req, reply) => {
-      const departmentId = requireDepartmentId(req)!
-      if (!(await requireFeature(req, reply, departmentId, 'workload'))) return
-      return reply.send(await buildWorkload(req, departmentId, null))
-    },
-  )
-
-  app.get(
-    '/work/workload/mine',
-    {
-      config: {
-        permission: {
-          action: 'read',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        querystring: workloadQuerySchema,
-        response: { 200: workloadSchema },
-      },
-    },
-    async (req, reply) => {
-      const departmentId = requireDepartmentId(req)
-      if (!departmentId) {
-        return reply.send({
-          weekStarts: [],
-          rows: [],
-          unscheduled: { noDueDate: 0, noEstimate: 0, openTotal: 0 },
-        })
-      }
-      // "Mening yuklamam" is exactly one row -- the caller's. There is no parameter to widen it,
-      // which is what keeps a member from reading a colleague's load through the back door.
-      return reply.send(await buildWorkload(req, departmentId, req.actor!.userId))
-    },
-  )
-
-  app.post(
-    '/work/workload/move',
-    {
-      config: {
-        permission: {
-          action: 'update',
-          subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        body: moveWorkloadBodySchema,
-        response: { 204: z.undefined() },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      const ctx = contextFromRequest(req)
-      const card = await repo.getCard(ctx, departmentId, req.body.cardId)
-      if (!card) return sendProblem(reply, 'not_found')
-      // Dragging inside the grid is a reassignment plus a re-dating, so it writes through the same
-      // `patchCard` the card sheet does -- one activity trail, one set of domain events, one undo.
-      const weekStart = mondayOf(req.body.toWeekStart)
-      const weekdayOffset = card.dueAt
-        ? (() => {
-            const day = new Date(card.dueAt).getUTCDay()
-            return day === 0 ? 6 : day - 1
-          })()
-        : 4 // no due date yet: land it on the Friday of the target week
-      const dueAt = `${addDays(weekStart, weekdayOffset)}T09:00:00.000${TASHKENT_OFFSET}`
-      const result = await repo.patchCard(
-        ctx,
-        departmentId,
-        req.body.cardId,
-        {
-          assigneeUserId: req.body.toUserId,
-          dueAt: new Date(dueAt).toISOString(),
-        },
-        undefined,
-        req.actor!.userId,
-      )
-      if (!result.ok) return sendProblem(reply, 'not_found')
-      return reply.code(204).send()
-    },
-  )
-
-  // -------------------------------------------------------------------------------------------
-  // A11 -- department goals
-  // -------------------------------------------------------------------------------------------
-
-  app.get(
-    '/goals',
-    {
-      config: {
-        permission: {
-          action: 'read',
-          subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        querystring: z.object({
-          includeArchived: z.coerce.boolean().optional(),
-        }),
-        response: { 200: goalListSchema },
-      },
-    },
-    async (req, reply) => {
-      const departmentId = requireDepartmentId(req)!
-      if (!(await requireFeature(req, reply, departmentId, 'goals'))) return
-      const ctx = contextFromRequest(req)
-      const [goals, cards, members, labels, projectNames] = await Promise.all([
-        plus.listGoals(ctx, departmentId, req.query.includeArchived === true),
-        repo.listCards(ctx, departmentId, {}),
-        repo.getMembers(ctx, departmentId),
-        repo.getLabels(ctx, departmentId),
-        repo.getProjectNames(ctx, departmentId),
-      ])
-      // Every goal on the page is computed from the SAME already-loaded card array -- eight goals
-      // are still one card query, not eight (I-14).
-      const filterable = makeFilterableFactory(members, labels, projectNames)
-      return reply.type('application/json').send(
-        goals.map((goal) => ({
-          ...goal,
-          ...plus.computeGoalValue(
-            goal.metric,
-            goal.filter,
-            goal.targetValue,
-            { startsOn: goal.startsOn, dueOn: goal.dueOn },
-            cards,
-            filterable,
-            {
-              meUserId: req.actor!.userId,
-              resolveUserIds: (token) => resolveMemberIds(token, members),
-            },
-          ),
-        })),
-      )
-    },
-  )
-
-  app.post(
-    '/goals',
-    {
-      config: {
-        permission: {
-          action: 'create',
-          subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        body: createGoalBodySchema,
-        response: { 201: z.object({ id: z.string().uuid() }) },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      if (!(await requireFeature(req, reply, departmentId, 'goals'))) return
-      const id = await plus.createGoal(
-        contextFromRequest(req),
-        departmentId,
-        req.actor!.userId,
-        req.body,
-      )
-      return reply.code(201).send({ id })
-    },
-  )
-
-  app.patch(
-    '/goals/:id',
-    {
-      config: {
-        permission: {
-          action: 'update',
-          subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        params: idParamsSchema,
-        body: patchGoalBodySchema,
-        response: { 204: z.undefined() },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      const { version, ...patch } = req.body
-      if (!(await requireFeature(req, reply, departmentId, 'goals'))) return
-      const result = await plus.patchGoal(
-        contextFromRequest(req),
-        departmentId,
-        req.params.id,
-        patch,
-        version,
-      )
-      if (result === 'not_found') return sendProblem(reply, 'not_found')
-      if (result === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.code(204).send()
-    },
-  )
-
-  app.delete(
-    '/goals/:id',
-    {
-      config: {
-        permission: {
-          action: 'delete',
-          subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      if (!(await requireFeature(req, reply, departmentId, 'goals'))) return
-      const ok = await plus.deleteGoal(contextFromRequest(req), departmentId, req.params.id)
-      if (!ok) return sendProblem(reply, 'not_found')
-      return reply.code(204).send()
-    },
-  )
-}
-
-// ---------------------------------------------------------------------------------------------
-// shared helpers
-// ---------------------------------------------------------------------------------------------
-
-/** The filter grammar needs a card's project, label and boʻlim *names*, which live on other rows.
- * Building the three maps once and closing over them keeps a page of goals at one query per source
- * instead of one per goal per card. */
-function makeFilterableFactory(
-  members: readonly { userId: string; unitName: string | null }[],
-  labels: readonly { id: string; name: string }[],
-  projectNames: Map<string, string>,
-): (card: CardDTO) => FilterableCard {
-  const labelNames = new Map(labels.map((l) => [l.id, l.name]))
-  const unitNames = new Map(
-    members.filter((m) => m.unitName).map((m) => [m.userId, m.unitName as string]),
-  )
-  return (card) => ({
-    id: card.id,
-    title: card.title,
-    description: card.description?.text ?? null,
-    status: card.status,
-    assigneeUserId: card.assigneeUserId,
-    giverUserId: card.giverUserId,
-    dueAt: card.dueAt,
-    estimateMin: card.estimateMin ?? null,
-    projectName: card.projectId ? (projectNames.get(card.projectId) ?? null) : null,
-    labelNames: card.labels.map((id) => labelNames.get(id) ?? '').filter(Boolean),
-    unitName: card.assigneeUserId ? (unitNames.get(card.assigneeUserId) ?? null) : null,
-  })
-}
-
-function resolveMemberIds(
-  token: string,
-  members: readonly { userId: string; givenName: string; familyName: string }[],
-): string[] {
-  const needle = token.replace(/^@/, '').toLowerCase()
-  return members
-    .filter(
-      (m) =>
-        m.givenName.toLowerCase().includes(needle) || m.familyName.toLowerCase().includes(needle),
-    )
-    .map((m) => m.userId)
-}
-
-/**
- * The workload grid, for the whole department or for exactly one person.
- *
- * Three queries total regardless of size: the roster, the capacity rows and one grouped card scan.
- * Everything after that is arithmetic over arrays already in memory.
- */
-async function buildWorkload(
-  req: FastifyRequest,
-  departmentId: string,
-  onlyUserId: string | null,
-): Promise<z.infer<typeof workloadSchema>> {
-  const query = req.query as z.infer<typeof workloadQuerySchema>
-  const weeks = query.weeks ?? 6
-  const firstWeek = mondayOf(query.start ?? todayInTashkent())
-  const weekStarts = Array.from({ length: weeks }, (_, i) => addDays(firstWeek, i * 7))
-  const fromIso = `${firstWeek}T00:00:00.000${TASHKENT_OFFSET}`
-  const toIso = `${addDays(firstWeek, weeks * 7)}T00:00:00.000${TASHKENT_OFFSET}`
-
-  const ctx = contextFromRequest(req)
-  const [members, capacity, raw] = await Promise.all([
-    repo.getMembers(ctx, departmentId),
-    plus.listCapacity(ctx, departmentId),
-    plus.getWorkloadBuckets(ctx, departmentId, fromIso, toIso),
-  ])
-
-  const capacityByUser = new Map(capacity.map((c) => [c.userId, c.weeklyHours]))
-  const bucketKey = (userId: string, weekStart: string) => `${userId}:${weekStart}`
-  const buckets = new Map(
-    raw.buckets
-      .filter((b) => b.userId !== null)
-      .map((b) => [bucketKey(b.userId as string, b.weekStart), b]),
-  )
-
-  const rosterRows = onlyUserId ? members.filter((m) => m.userId === onlyUserId) : members
-
-  return {
-    weekStarts,
-    rows: rosterRows.map((member) => ({
-      member,
-      capacityHours: capacityByUser.get(member.userId) ?? DEFAULT_WEEKLY_CAPACITY_HOURS,
-      cells: weekStarts.map((weekStart) => {
-        const bucket = buckets.get(bucketKey(member.userId, weekStart))
-        return {
-          weekStart,
-          estimateHours: bucket ? minutesToHours(bucket.estimateMinutes) : 0,
-          cardCount: bucket?.cardCount ?? 0,
-          overdueCount: bucket?.overdueCount ?? 0,
-        }
-      }),
-    })),
-    unscheduled: {
-      noDueDate: raw.noDueDate,
-      noEstimate: raw.noEstimate,
-      openTotal: raw.openTotal,
-    },
-  }
 }

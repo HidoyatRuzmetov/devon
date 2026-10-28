@@ -3,7 +3,6 @@
 // singleton's internals stay swappable.
 export {
   ensureRealtimeConnection,
-  publishToCanvas,
   realtimeChannels,
   realtimeStatus,
   resetRealtime,

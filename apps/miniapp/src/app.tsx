@@ -1,21 +1,20 @@
-import * as React from 'react'
-import { Bell, CalendarDays, CheckSquare, LayoutGrid, Timer } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { cn, MotionProvider, StateView, Toaster } from '@devon/ui'
+import { Bell, CalendarDays, CheckSquare, LayoutGrid, Timer } from 'lucide-react'
+import * as React from 'react'
+import { ListSkeleton, ScreenBody, ScreenHeader } from './components/screen.js'
+import { TabBar, type TabEntry } from './components/tab-bar.js'
+import { navigate, routeFromStartParam, useRoute, type Route } from './lib/router.js'
 import { SessionProvider, useIsDevMode, useSessionState } from './lib/session.js'
 import { tg } from './lib/telegram.js'
-import { navigate, routeFromStartParam, useRoute, type Route } from './lib/router.js'
-import { TabBar, type TabEntry } from './components/tab-bar.js'
-import { ListSkeleton, ScreenBody, ScreenHeader } from './components/screen.js'
-import { TodayScreen } from './screens/today-screen.js'
-import { InboxScreen } from './screens/inbox-screen.js'
 import { BoardScreen } from './screens/board-screen.js'
 import { CardScreen } from './screens/card-screen.js'
-import { EventsScreen } from './screens/events-screen.js'
 import { EventScreen } from './screens/event-screen.js'
+import { EventsScreen } from './screens/events-screen.js'
 import { FocusScreen } from './screens/focus-screen.js'
-import { FieldsScreen } from './screens/fields-screen.js'
+import { InboxScreen } from './screens/inbox-screen.js'
 import { SetupScreen } from './screens/setup-screen.js'
+import { TodayScreen } from './screens/today-screen.js'
 
 /** Keeps `<html data-theme>` in step with Telegram's own light/dark switch, and repaints the sheet
  * chrome with Devon's tokens afterwards so the frame and the app are one surface. Outside Telegram
@@ -118,7 +117,7 @@ function tabsFor(t: ReturnType<typeof useT>, unreadCount: number): TabEntry[] {
 function activeTabFor(route: Route): string {
   if (route.name === 'card') return 'board'
   if (route.name === 'event') return 'events'
-  if (route.name === 'fields' || route.name === 'setup') return 'today'
+  if (route.name === 'setup') return 'today'
   return route.name
 }
 
@@ -132,8 +131,6 @@ function Screens({ route }: { route: Route }): React.ReactElement {
       return <EventsScreen />
     case 'focus':
       return <FocusScreen />
-    case 'fields':
-      return <FieldsScreen />
     case 'setup':
       return <SetupScreen />
     case 'card':

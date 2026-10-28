@@ -1,15 +1,15 @@
 // Real migrated Postgres. Direct repositories are the boundary used by background automations;
 // fixtures use the superuser only to order concurrent removal/locking transactions deterministically.
+import type { RequestContext } from '@devon/db'
 import { randomUUID } from 'node:crypto'
 import { Client } from 'pg'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { systemContext } from '../../src/modules/automations/context.js'
-import { createCard, patchCard, CardTargetUnavailableError } from '../../src/modules/work/repo.js'
 import {
   insertNotification,
-  systemAuditCtx,
   NotificationRecipientUnavailableError,
+  systemAuditCtx,
 } from '../../src/modules/notifications/repo.js'
+import { CardTargetUnavailableError, createCard, patchCard } from '../../src/modules/work/repo.js'
 import {
   loginAs,
   seedDepartment,
@@ -20,6 +20,19 @@ import {
   type Db,
   type Server,
 } from './harness.js'
+function systemContext(departmentId: string, userId: string | null): RequestContext {
+  return {
+    requestId: randomUUID(),
+    userId,
+    departmentId,
+    departmentRole: 'head',
+    actorRole: null,
+    actingForUserId: null,
+    viewAs: false,
+    ip: '',
+    userAgent: 'assignment-lock-test',
+  }
+}
 
 let db: Db
 let server: Server

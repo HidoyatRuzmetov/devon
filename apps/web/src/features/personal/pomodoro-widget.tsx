@@ -8,7 +8,6 @@
 // points a feature manifest gets today; there is no "always-mounted widget" slot yet). Flagged for
 // the integration step rather than silently shipped as `/personal`-only.
 import { useT } from '@devon/i18n'
-import { Timer, Pause, Play, SkipForward, Square, Volume2, BellRing } from 'lucide-react'
 import {
   Button,
   IconButton,
@@ -19,6 +18,8 @@ import {
   Separator,
   cn,
 } from '@devon/ui'
+import { BellRing, Pause, Play, SkipForward, Square, Timer, Volume2 } from 'lucide-react'
+import { usePomodoroControls } from './pomodoro-controls.js'
 import {
   PHASE_RING_TONE,
   pause as pauseEngine,
@@ -28,7 +29,6 @@ import {
   type PomodoroPhase,
 } from './pomodoro-engine.js'
 import { usePomodoroSettingsQuery } from './use-personal.js'
-import { usePomodoroControls } from './pomodoro-controls.js'
 
 function formatCountdown(ms: number): string {
   const totalSeconds = Math.max(0, Math.round(ms / 1000))
@@ -44,7 +44,7 @@ const PHASE_LABEL_KEY: Record<PomodoroPhase, string> = {
   long_break: 'personal.pomodoro.phase.longBreak',
 }
 
-export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null }) {
+export function PomodoroWidget() {
   const t = useT()
   const state = usePomodoroState()
   // F3: the per-second snapshot. It drives the mini ring *and* re-arms the end-of-phase effect
@@ -65,11 +65,11 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
 
   function start(kind: 'focus' | 'short_break' | 'long_break') {
     if (!settings) return
-    controls.start(kind, settings, activeTaskId ?? null)
+    controls.start(kind, settings)
   }
 
   function skip() {
-    if (settings) controls.finish(false, settings, state.taskId)
+    if (settings) controls.finish(false, settings)
   }
 
   return (

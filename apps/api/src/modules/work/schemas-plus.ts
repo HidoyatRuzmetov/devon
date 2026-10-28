@@ -5,20 +5,14 @@
 // card contract and is referenced by name in half a dozen comments across the codebase. Splitting on
 // "what v1.1 added" keeps both files readable and makes the diff for this package one new file plus
 // a handful of added lines, instead of one 500-line file nobody can review.
-import { z } from 'zod'
 import {
   MAX_ESTIMATE_MINUTES,
   MAX_TIME_LOG_MINUTES,
-  goalMetricSchema,
   workTemplateKindSchema,
   workTemplateScopeSchema,
 } from '@devon/contracts'
-import {
-  cardPrioritySchema,
-  cardRiskSchema,
-  cardStatusSchema,
-  memberSummarySchema,
-} from './schemas.js'
+import { z } from 'zod'
+import { cardPrioritySchema, cardRiskSchema, cardStatusSchema } from './schemas.js'
 
 /** A card as a *reference*: what a dependency list, a blocked chip, a focus pin and a goal
  * breakdown all need, with none of the weight of the full DTO. */
@@ -199,108 +193,6 @@ export const addFocusBodySchema = z.object({ cardId: z.string().uuid() })
 export const reorderFocusBodySchema = z.object({
   cardIds: z.array(z.string().uuid()).max(5),
 })
-
-export const capacityRowSchema = z.object({
-  userId: z.string().uuid(),
-  weeklyHours: z.number(),
-  /** True when the department has never set this person's capacity and the registry default
-   * applies -- the settings row says so instead of showing 40 as if somebody had chosen it. */
-  isDefault: z.boolean(),
-})
-export const capacityListSchema = z.array(capacityRowSchema)
-export const putCapacityBodySchema = z.object({
-  weeklyHours: z.number().min(0).max(168),
-})
-
-export const workloadCellSchema = z.object({
-  weekStart: z.string(),
-  estimateHours: z.number(),
-  cardCount: z.number().int(),
-  overdueCount: z.number().int(),
-})
-export const workloadRowSchema = z.object({
-  member: memberSummarySchema,
-  capacityHours: z.number(),
-  cells: z.array(workloadCellSchema),
-})
-export const workloadSchema = z.object({
-  weekStarts: z.array(z.string()),
-  rows: z.array(workloadRowSchema),
-  /** A4's "Hisobga olinmagan" panel: open cards with no due date (so they land in no week) or no
-   * estimate (so they add nothing to any bar) -- the two ways a workload grid quietly lies. */
-  unscheduled: z.object({
-    noDueDate: z.number().int(),
-    noEstimate: z.number().int(),
-    /** Every open card in the department. v1.1 critique SEV2 #3: the grid's three-step colour is
-     * computed from estimates, so when estimates cover under half the open work every cell comes out
-     * green and the view whose only job is to show load says "joy bor" for everyone. The client
-     * needs the denominator to know that, and to say so on screen. */
-    openTotal: z.number().int(),
-  }),
-})
-
-export const workloadQuerySchema = z.object({
-  weeks: z.coerce.number().int().min(1).max(12).optional(),
-  start: z.string().date().optional(),
-  /** SPEC §2.2: the grid is head-only, but a member gets their own row on Home through the same
-   * service -- this is that call, and the handler refuses any other user id for a member. */
-  userId: z.string().uuid().optional(),
-})
-
-export const moveWorkloadBodySchema = z.object({
-  cardId: z.string().uuid(),
-  toUserId: z.string().uuid().nullable(),
-  /** ISO date of the target week's Monday. The card's due date moves to the same weekday inside
-   * that week, or to its Friday when the card had no due date at all. */
-  toWeekStart: z.string().date(),
-})
-
-export const goalSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  description: z.string().nullable(),
-  metric: goalMetricSchema,
-  filter: z.string(),
-  targetValue: z.number(),
-  startsOn: z.string().nullable(),
-  dueOn: z.string().nullable(),
-  archivedAt: z.string().nullable(),
-  createdAt: z.string(),
-  version: z.number().int(),
-  /** Recomputed on every read from the cards the filter matches -- never stored (SPEC §7 A11), so
-   * it can no more drift from the work than `projects.progress` can. */
-  currentValue: z.number(),
-  progress: z.number().min(0).max(1),
-  /** How many cards the filter matched at all, so a goal with nothing behind it reads as "no
-   * matching work yet" rather than as a flat 0 %. */
-  matchedCards: z.number().int(),
-})
-export const goalListSchema = z.array(goalSchema)
-
-export const createGoalBodySchema = z.object({
-  title: z.string().min(1).max(160),
-  description: z.string().max(1000).optional(),
-  metric: goalMetricSchema,
-  filter: z.string().max(500).optional(),
-  targetValue: z.number().min(0).max(1_000_000),
-  startsOn: z.string().date().nullable().optional(),
-  dueOn: z.string().date().nullable().optional(),
-})
-
-export const patchGoalBodySchema = z
-  .object({
-    title: z.string().min(1).max(160),
-    description: z.string().max(1000).nullable(),
-    metric: goalMetricSchema,
-    filter: z.string().max(500),
-    targetValue: z.number().min(0).max(1_000_000),
-    startsOn: z.string().date().nullable(),
-    dueOn: z.string().date().nullable(),
-    archived: z.boolean(),
-    version: z.number().int(),
-  })
-  .partial()
-  .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' })
 
 export const dependencyParamsSchema = z.object({
   id: z.string().uuid(),

@@ -55,8 +55,8 @@ function build(imports, expression) {
 
 test('a public Button consumer excludes unused calendar and schema modules and preserves imported CSS', () => {
   const result = build(
-    "import { Button } from '@devon/ui'; import { DEFAULT_WEEKLY_CAPACITY_HOURS } from '@devon/contracts'",
-    'React.createElement(Button, null, String(DEFAULT_WEEKLY_CAPACITY_HOURS))',
+    "import { Button } from '@devon/ui'; import { WORK_TITLE_MAX } from '@devon/contracts'",
+    'React.createElement(Button, null, String(WORK_TITLE_MAX))',
   )
   assert.ok(
     !result.sources.some((name) => name.includes('react-day-picker')),

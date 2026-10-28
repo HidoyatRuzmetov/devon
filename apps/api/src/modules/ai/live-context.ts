@@ -1,7 +1,7 @@
-import { sql } from 'drizzle-orm'
-import { withContext, type RequestContext, type Tx } from '@devon/db'
-import { z } from 'zod'
 import { glossaryFor } from '@devon/ai'
+import { withContext, type RequestContext, type Tx } from '@devon/db'
+import { sql } from 'drizzle-orm'
+import { z } from 'zod'
 import { AiInputValidationError } from './errors.js'
 
 export const tashkentToday = () =>
@@ -99,31 +99,7 @@ export async function prepareLiveContext(
         dueInDays: null,
       }
     })
-  if (feature === 'plan_sprint' && input['scope'] === 'personal' && input['periodId'])
-    return withContext(ctx, async (tx) => {
-      const periodId = recordId(input['periodId'])
-      const periods = await tx.raw<{ kind: string; goal: string | null; endsAt: string }>(
-        sql`select kind,goal,ends_at as "endsAt" from app.personal_sprints where id=${periodId} and user_id=${ctx.userId} and deleted_at is null and status='active'`,
-      )
-      if (!periods[0])
-        throw new AiInputValidationError('The referenced working period is unavailable')
-      const period = periods[0]
-      const items = await tx.raw(
-        sql`select id,title,estimate_min as "estimateMin",null::text as "dueAt",'none'::text as priority,null::text as "assigneeName",'{}'::uuid[] as "blockedByIds" from app.personal_tasks where sprint_id=${periodId} and user_id=${ctx.userId} and deleted_at is null and done_at is null and parent_id is null order by sort,id limit 100`,
-      )
-      return {
-        ...input,
-        periodKind: period.kind,
-        goal: period.goal,
-        now: new Date().toISOString(),
-        periodEndsAt: iso(period.endsAt),
-        capacityMin:
-          period.kind === '3h'
-            ? Math.max(0, Math.round((new Date(period.endsAt).getTime() - Date.now()) / 60_000))
-            : null,
-        items,
-      }
-    })
+
   if (feature === 'translate' && typeof input['text'] === 'string')
     return withContext(ctx, async (tx) => {
       const text = input['text'] as string
@@ -216,42 +192,19 @@ export async function prepareLiveContext(
       }
     })
   }
-  if (feature === 'draft_event' || feature === 'nl_analytics')
+  if (feature === 'draft_event')
     return withContext(ctx, async (tx) => {
-      if (feature === 'draft_event') {
-        const counts = await tx.raw<{ count: number }>(
-          sql`select count(*)::int as count from app.memberships m join app.users u on u.id=m.user_id where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null and u.deleted_at is null and u.status='active'`,
-        )
-        const events = await tx.raw<{ title: string }>(
-          sql`select title from app.events where department_id=${departmentId} and deleted_at is null order by starts_at desc,id limit 10`,
-        )
-        return {
-          ...input,
-          today: tashkentToday(),
-          departmentSize: Math.max(1, counts[0]?.count ?? 0),
-          recentEventTitles: events.map((e) => e.title),
-        }
-      }
-      const members = await tx.raw<{ name: string }>(
-        sql`select concat_ws(' ',u.given_name,u.family_name) as name from app.memberships m join app.users u on u.id=m.user_id where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null and u.deleted_at is null and u.status='active' order by u.id limit 200`,
+      const counts = await tx.raw<{ count: number }>(
+        sql`select count(*)::int as count from app.memberships m join app.users u on u.id=m.user_id where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null and u.deleted_at is null and u.status='active'`,
       )
-      const units = await tx.raw<{ name: string }>(
-        sql`select name from app.units where department_id=${departmentId} and deleted_at is null order by name,id limit 100`,
+      const events = await tx.raw<{ title: string }>(
+        sql`select title from app.events where department_id=${departmentId} and deleted_at is null order by starts_at desc,id limit 10`,
       )
-      const labels = await tx.raw<{ name: string }>(
-        sql`select name from app.labels where department_id=${departmentId} and deleted_at is null order by name,id limit 200`,
-      )
-      const projects = await tx.raw<{ title: string }>(
-        sql`select title from app.projects where department_id=${departmentId} and deleted_at is null order by updated_at desc,id limit 100`,
-      )
-      // The filter resolver accepts a full name; no login or email needs to leave the server.
       return {
         ...input,
         today: tashkentToday(),
-        knownUnits: units.map((x) => x.name),
-        knownLabels: labels.map((x) => x.name),
-        knownProjects: projects.map((x) => x.title),
-        knownMembers: members.slice(0, 200).map((x) => ({ name: x.name, handle: x.name })),
+        departmentSize: Math.max(1, counts[0]?.count ?? 0),
+        recentEventTitles: events.map((e) => e.title),
       }
     })
   if (feature === 'board_risk_digest')

@@ -4,7 +4,7 @@
 // Pure: no Fastify, no database, no network -- so `test/unit/realtime.channels.test.ts` can assert
 // every cell of the matrix (member, head, super admin, a stranger, view-as) without booting anything.
 //
-// Four channel families, and exactly four:
+// Three channel families:
 //
 //   dept:<departmentId>      data that changed -- card moved/created/updated, project, event, so the
 //                            client can invalidate the right query instead of polling. Every active
@@ -17,22 +17,17 @@
 //                            reminder. `#` is Centrifugo's user-limited boundary, so the server
 //                            itself refuses a subscription whose token subject is anyone else --
 //                            belt and braces on top of the check below.
-//   canvas:<sharedCanvasId>  a canvas its owner published to a project or an event: live cursors and
-//                            sticky-note sync. Never a private canvas (I-1) -- the id here is a
-//                            `app.shared_canvases` row, which only exists because its owner made one.
-//
 // The channel *string* is never parsed anywhere else in the codebase; `parseChannel` below is the
 // only parser, and every route that accepts a channel from a client runs it.
 import { can, type Actor } from '@devon/contracts'
 
-export const CHANNEL_NAMESPACES = ['dept', 'board', 'personal', 'canvas'] as const
+export const CHANNEL_NAMESPACES = ['dept', 'board', 'personal'] as const
 export type ChannelNamespace = (typeof CHANNEL_NAMESPACES)[number]
 
 export type ParsedChannel =
   | { namespace: 'dept'; departmentId: string }
   | { namespace: 'board'; departmentId: string }
   | { namespace: 'personal'; userId: string }
-  | { namespace: 'canvas'; sharedCanvasId: string }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -45,11 +40,7 @@ export function boardChannel(departmentId: string): string {
 export function personalChannel(userId: string): string {
   return `personal#${userId}`
 }
-export function canvasChannel(sharedCanvasId: string): string {
-  return `canvas:${sharedCanvasId}`
-}
-
-/** `null` for anything that is not one of the four families, with a real uuid in the right place.
+/** `null` for anything that is not one of the three families, with a real uuid in the right place.
  * A client that asks for `dept:*`, `dept:` or `admin:everything` gets the same `null` and therefore
  * the same 403 -- there is no "unknown namespace, allow it" branch. */
 export function parseChannel(channel: string): ParsedChannel | null {
@@ -68,23 +59,14 @@ export function parseChannel(channel: string): ParsedChannel | null {
   if (!UUID.test(id)) return null
   if (namespace === 'dept') return { namespace: 'dept', departmentId: id }
   if (namespace === 'board') return { namespace: 'board', departmentId: id }
-  if (namespace === 'canvas') return { namespace: 'canvas', sharedCanvasId: id }
   return null
 }
 
 export type ChannelDecision =
   | { allowed: true }
-  | { allowed: false; reason: 'unknown_channel' | 'forbidden' | 'needs_lookup' }
+  | { allowed: false; reason: 'unknown_channel' | 'forbidden' }
 
-/**
- * The synchronous half of the decision: everything `can()` can answer from the actor alone.
- *
- * `canvas:` deliberately returns `needs_lookup` rather than a verdict -- whether this person may
- * watch a shared canvas depends on the share row (which project or event it was published to) and on
- * that project's members / that event's participants, which is a database question. `index.ts` asks
- * it through `canvasAudience()` and never hands out a token before it has an answer. Returning a
- * third value instead of `false` keeps "I refuse" and "I have not decided yet" from looking alike.
- */
+/** Decide channel access from the authenticated actor. */
 export function decideChannel(actor: Actor | null, parsed: ParsedChannel | null): ChannelDecision {
   if (!parsed) return { allowed: false, reason: 'unknown_channel' }
   if (!actor) return { allowed: false, reason: 'forbidden' }
@@ -108,7 +90,5 @@ export function decideChannel(actor: Actor | null, parsed: ParsedChannel | null)
       const decision = can(actor, 'read', { kind: 'personal', ownerUserId: parsed.userId })
       return decision.allowed ? { allowed: true } : { allowed: false, reason: 'forbidden' }
     }
-    case 'canvas':
-      return { allowed: false, reason: 'needs_lookup' }
   }
 }

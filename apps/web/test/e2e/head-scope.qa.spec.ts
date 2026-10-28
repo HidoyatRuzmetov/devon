@@ -179,14 +179,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl'] as const) {
         expect((await authedPatch(f.head, '/api/v1/me', { locale })).status()).toBe(200)
         await f.page.addInitScript((value) => localStorage.setItem('devon_theme', value), theme)
         await f.page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' })
-        const routes = [
-          '/people',
-          '/work',
-          '/people/table',
-          `/people?person=${f.userIds[0]}`,
-          '/work/workload',
-          '/analytics',
-        ]
+        const routes = ['/people', '/work', `/people?person=${f.userIds[0]}`, '/analytics']
         const sizes = [
           { width: 320, height: 640, scale: 1 },
           { width: 768, height: 800, scale: 1 },
@@ -201,7 +194,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl'] as const) {
             await f.page.goto(route)
             await waitForLoadedRoute(f.page, route)
             await setTextScale(f.page, size.scale)
-            if (route === '/people' || route === '/work' || route === '/people/table') {
+            if (route === '/people' || route === '/work') {
               const label = f.page.getByText(catalog.headScope.leadership).first()
               await expect(label).toBeVisible()
               const bounds = await label.evaluate((element) => ({
@@ -224,25 +217,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl'] as const) {
                 expect(bounds.scroll, name).toBeLessThanOrEqual(bounds.client + 1)
               }
             }
-            if (route === '/people/table') {
-              for (const text of [
-                'HeadScope Synthetic',
-                'OrdinaryScope Synthetic',
-                'UnitScope Synthetic',
-                'Synthetic head owned task',
-              ]) {
-                const label = f.page
-                  .locator('a span')
-                  .filter({ hasText: new RegExp(`^${text}$`) })
-                  .last()
-                const bounds = await label.evaluate((element) => ({
-                  client: element.clientWidth,
-                  scroll: element.scrollWidth,
-                }))
-                expect(bounds.scroll, text).toBeLessThanOrEqual(bounds.client + 1)
-              }
-            }
-            if (route.includes('?person=') || route === '/work/workload') {
+            if (route.includes('?person=')) {
               await expect(
                 f.page.getByText(catalog.headScope.departmentWide, { exact: true }).first(),
               ).toBeVisible()
@@ -295,53 +270,6 @@ test('board keeps the head’s own work in department leadership and ordinary un
   }
 })
 
-test('analytics separates leadership and ordinary unassigned load while retaining all three persisted tasks', async ({
-  browser,
-}) => {
-  const f = await fixture(browser)
-  try {
-    const read = f.page.waitForResponse(
-      (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/api/v1/analytics/summary',
-    )
-    await f.page.goto('/analytics')
-    expect((await read).status()).toBe(200)
-    const summary = await (await read).json()
-    expect(
-      summary.loadPerUnit.find((row: { scope: string }) => row.scope === 'department')?.openCount,
-    ).toBe(1)
-    expect(
-      summary.loadPerUnit.find((row: { scope: string }) => row.scope === 'unassigned')?.openCount,
-    ).toBe(1)
-    expect(
-      summary.loadPerUnit.find((row: { unitId: string }) => row.unitId === f.unit.id)?.openCount,
-    ).toBe(1)
-    expect(
-      summary.loadPerUnit.reduce(
-        (sum: number, row: { openCount: number }) => sum + row.openCount,
-        0,
-      ),
-    ).toBe(3)
-    const region = f.page.getByRole('region', { name: 'Load per unit', exact: true })
-    await region.getByRole('button', { name: 'View as table', exact: true }).click()
-    await expect(
-      region.getByRole('row').filter({ hasText: 'Department leadership' }),
-    ).toContainText('1')
-    await expect(region.getByRole('row').filter({ hasText: 'Unassigned' })).toContainText('1')
-    await region.getByRole('button', { name: 'Export', exact: true }).click()
-    const download = f.page.waitForEvent('download')
-    await f.page.getByRole('menuitem', { name: 'Download as CSV', exact: true }).click()
-    const actualDownload = await download
-    const csv = await readFile((await actualDownload.path())!, 'utf8')
-    expect(csv).toContain('(department leadership),1,0')
-    expect(csv).toContain('(unassigned),1,0')
-    expect(csv).toContain('Synthetic actual unit,1,0')
-  } finally {
-    await f.close()
-  }
-})
-
 test('a real optional head unit remains assigned while directory scope and person metadata stay accurate', async ({
   browser,
 }) => {
@@ -373,13 +301,6 @@ test('a real optional head unit remains assigned while directory scope and perso
     expect(
       roster.find((member: { userId: string }) => member.userId === f.userIds[0]),
     ).toMatchObject({ membershipRole: 'head', unitId: f.unit.id, unitRole: 'member' })
-    const summary = await (await f.head.request.get('/api/v1/analytics/summary')).json()
-    expect(
-      summary.loadPerUnit.find((row: { scope: string }) => row.scope === 'department').openCount,
-    ).toBe(1)
-    expect(
-      summary.loadPerUnit.find((row: { unitId: string }) => row.unitId === f.unit.id).openCount,
-    ).toBe(1)
     expect(
       (await (await f.head.request.get(`/api/v1/cards/${f.cards[0]!.id}`)).json()).assigneeUserId,
     ).toBe(f.userIds[0])
@@ -388,7 +309,7 @@ test('a real optional head unit remains assigned while directory scope and perso
   }
 })
 
-test('an ordinary colleague can assign a new card to the head, whose Mine and workload retain it', async ({
+test('an ordinary colleague can assign a new card to the head, whose Mine retains it', async ({
   browser,
 }) => {
   const f = await fixture(browser)
@@ -429,110 +350,6 @@ test('an ordinary colleague can assign a new card to the head, whose Mine and wo
     await expect(
       f.page.getByText('Synthetic colleague assigned head task', { exact: true }).first(),
     ).toBeVisible()
-    await f.page.goto('/work/workload')
-    const row = f.page.getByRole('row').filter({ hasText: 'HeadScope Synthetic' })
-    await expect(row.getByText('Department-wide', { exact: true })).toBeVisible()
-    const mine = await (await f.head.request.get('/api/v1/work/workload/mine')).json()
-    expect(
-      mine.rows.find(
-        (entry: { member: { userId: string } }) => entry.member.userId === f.userIds[0],
-      ).member.role,
-    ).toBe('head')
-  } finally {
-    await f.close()
-  }
-})
-
-test('the indicator table separates leadership from ordinary empty-unit values and keeps head tasks', async ({
-  browser,
-}) => {
-  const f = await fixture(browser)
-  try {
-    await f.page.goto('/people/table')
-    await expect(f.page.getByRole('row').filter({ hasText: 'Department leadership' })).toBeVisible()
-    const headRow = f.page.getByRole('row').filter({ hasText: 'HeadScope Synthetic' })
-    await expect(headRow.getByText('Department-wide', { exact: true })).toBeVisible()
-    await expect(headRow.getByText('Synthetic head owned task', { exact: true })).toBeVisible()
-    const independent = await (
-      await f.head.request.get('/api/v1/people/indicators?keys=unit,openCards')
-    ).json()
-    expect(
-      independent.people.find((entry: { userId: string }) => entry.userId === f.userIds[0]).values
-        .unit,
-    ).toBeNull()
-    expect(
-      independent.people.find((entry: { userId: string }) => entry.userId === f.userIds[0]).values
-        .openCards,
-    ).toBe(1)
-    await f.page.reload()
-    await expect(
-      f.page
-        .getByRole('row')
-        .filter({ hasText: 'HeadScope Synthetic' })
-        .getByText('Department-wide', { exact: true }),
-    ).toBeVisible()
-  } finally {
-    await f.close()
-  }
-})
-
-test('same-named actual units retain separate chart categories and persisted load rows', async ({
-  browser,
-}) => {
-  const f = await fixture(browser)
-  try {
-    const second = await authedPost(
-      f.head,
-      `/api/v1/departments/${f.department.departmentId}/units`,
-      { name: f.unit.name },
-    )
-    expect(second.status()).toBe(201)
-    const secondUnit = await second.json()
-    expect(
-      (
-        await authedPost(f.head, `/api/v1/departments/${f.department.departmentId}/unit-roles`, {
-          unitId: secondUnit.id,
-          userId: f.userIds[1],
-          role: 'member',
-        })
-      ).status(),
-    ).toBe(201)
-    const response = f.page.waitForResponse(
-      (item) =>
-        item.request().method() === 'GET' &&
-        new URL(item.url()).pathname === '/api/v1/analytics/summary',
-    )
-    await f.page.goto('/analytics')
-    const summary = await (await response).json()
-    const units = summary.loadPerUnit.filter((row: { scope: string }) => row.scope === 'unit')
-    expect(units).toHaveLength(2)
-    expect(units.map((row: { unitId: string }) => row.unitId).sort()).toEqual(
-      [f.unit.id, secondUnit.id].sort(),
-    )
-    expect(units.map((row: { openCount: number }) => row.openCount)).toEqual([1, 1])
-    const region = f.page.getByRole('region', { name: 'Load per unit', exact: true })
-    // Recharts 3 places tick labels in a separate SVG layer; wrapped lines are distinct tspans.
-    await expect
-      .poll(async () =>
-        region
-          .locator('.recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value')
-          .evaluateAll(
-            (elements) =>
-              elements
-                .map((element) =>
-                  [...element.querySelectorAll('tspan')].map((span) => span.textContent).join(' '),
-                )
-                .filter((text) => text === 'Synthetic actual unit').length,
-          ),
-      )
-      .toBe(2)
-    await region.getByRole('button', { name: 'View as table', exact: true }).click()
-    await expect(region.getByRole('columnheader', { name: 'Unit', exact: true })).toBeVisible()
-    await expect(region.getByRole('row').filter({ hasText: f.unit.name })).toHaveCount(2)
-    await f.page.reload()
-    expect(
-      (await (await f.head.request.get(`/api/v1/cards/${f.cards[0]!.id}`)).json()).assigneeUserId,
-    ).toBe(f.userIds[0])
   } finally {
     await f.close()
   }
@@ -560,41 +377,6 @@ test('directory names remain fully readable at 200 percent text size', async ({
             scroll: element.scrollWidth,
           }))
           expect(bounds.scroll, name).toBeLessThanOrEqual(bounds.client + 1)
-        },
-      ),
-    )
-  } finally {
-    await f.close()
-  }
-})
-
-test('narrow Russian indicator names and task titles remain fully readable beside the head badge', async ({
-  browser,
-}, testInfo) => {
-  const f = await fixture(browser)
-  try {
-    expect((await authedPatch(f.head, '/api/v1/me', { locale: 'ru' })).status()).toBe(200)
-    await f.page.setViewportSize({ width: 320, height: 640 })
-    await f.page.goto('/people/table')
-    await waitForLoadedRoute(f.page, '/people/table')
-    await settleCapture(f.page)
-    await f.page.screenshot({
-      path: testInfo.outputPath('indicator-narrow-ru.png'),
-      fullPage: true,
-    })
-    await Promise.all(
-      ['HeadScope Synthetic', 'OrdinaryScope Synthetic', 'Synthetic head owned task'].map(
-        async (text) => {
-          const label = f.page
-            .locator('a span')
-            .filter({ hasText: new RegExp(`^${text}$`) })
-            .last()
-          await expect(label).toBeVisible()
-          const bounds = await label.evaluate((element) => ({
-            client: element.clientWidth,
-            scroll: element.scrollWidth,
-          }))
-          expect(bounds.scroll, text).toBeLessThanOrEqual(bounds.client + 1)
         },
       ),
     )

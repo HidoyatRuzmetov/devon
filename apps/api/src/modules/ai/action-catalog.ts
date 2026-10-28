@@ -1,42 +1,44 @@
+import {
+  aiActionBindingSchema,
+  checkinAddSchema,
+  checkinLockSchema,
+  checkinUpdateSchema,
+  personalCalendarBodySchema,
+  personalCalendarUpdateSchema,
+} from '@devon/contracts'
 import { z } from 'zod'
 import {
-  createCardBodySchema,
-  patchCardBodySchema,
-  createChecklistItemBodySchema,
-  patchChecklistItemBodySchema,
-  createCommentBodySchema,
-  patchCommentBodySchema,
-} from '../work/schemas.js'
-import { createPageBodySchema, patchPageBodySchema } from '../pages/schemas.js'
-import {
-  createProjectBodySchema,
-  patchProjectBodySchema,
-  addMilestoneBodySchema,
-  patchMilestoneBodySchema,
-} from '../projects/schemas.js'
-import {
-  createTaskBodySchema,
-  patchTaskBodySchema,
-  createNoteBodySchema,
-  patchNoteBodySchema,
-  createSprintBodySchema,
-  patchSprintBodySchema,
-} from '../personal/schemas.js'
-import {
-  createEventBodySchema,
-  updateEventBodySchema,
   cancelEventBodySchema,
-  rsvpBodySchema,
+  carpoolBodySchema,
+  carpoolClaimBodySchema,
+  carpoolUpdateBodySchema,
+  createEventBodySchema,
+  editCommentBodySchema as editEventCommentBodySchema,
   commentBodySchema as eventCommentBodySchema,
   feedbackBodySchema,
-  editCommentBodySchema as editEventCommentBodySchema,
-  carpoolBodySchema,
-  carpoolUpdateBodySchema,
-  carpoolClaimBodySchema,
   itemBodySchema,
   pollBodySchema,
   pollVoteBodySchema,
+  rsvpBodySchema,
+  updateEventBodySchema,
 } from '../events/schemas.js'
+import { createPageBodySchema, patchPageBodySchema } from '../pages/schemas.js'
+import { createTaskBodySchema, patchTaskBodySchema } from '../personal/schemas.js'
+import {
+  addMilestoneBodySchema,
+  createProjectBodySchema,
+  patchMilestoneBodySchema,
+  patchProjectBodySchema,
+} from '../projects/schemas.js'
+import {
+  createCardBodySchema,
+  createChecklistItemBodySchema,
+  createCommentBodySchema,
+  patchCardBodySchema,
+  patchChecklistItemBodySchema,
+  patchCommentBodySchema,
+} from '../work/schemas.js'
+import { assignManySchema, cardChecklistPlanSchema } from '../work/workflow-schemas.js'
 
 const id = z.uuid()
 const target = z.object({ id }).strict()
@@ -79,6 +81,74 @@ const milestoneId = z
 /** The model selects a named operation, never a URL, SQL statement, script or arbitrary method.
  * Every execution re-enters the ordinary API's permissions, validation, audit and event pipeline. */
 export const ACTIONS: Record<string, Action> = {
+  'personal.calendar.create': resource(
+    'personal/calendar',
+    (id) => `/personal?tab=calendar&entry=${id}`,
+    'POST',
+    body(personalCalendarBodySchema),
+    'Create an owner-only personal calendar entry, with optional Telegram reminder. Use this for a personal appointment/reminder, not a department event. Times must include the timezone; local time is Tashkent UTC+5. A reminder is at or before start.',
+  ),
+  'personal.calendar.update': resource(
+    'personal/calendar',
+    (id) => `/personal?tab=calendar&entry=${id}`,
+    'PATCH',
+    patch(personalCalendarUpdateSchema),
+    'Update the current user’s private calendar entry. Include its current version and the complete entry with unchanged fields preserved.',
+  ),
+  'personal.calendar.delete': {
+    schema: z.object({ id, version: z.number().int().positive() }).strict(),
+    description:
+      'Delete only the current user’s personal calendar entry, with its current version. Never deletes a work task or a signed-up event.',
+    method: 'DELETE',
+    path: (a) => `/personal/calendar/${a['id']}?version=${a['version']}`,
+    href: () => '/personal?tab=calendar',
+  },
+  'card.withChecklist': resource(
+    'cards/with-checklist',
+    cardHref,
+    'POST',
+    withFiles(cardChecklistPlanSchema),
+    'Atomically reuse an existing card (body.existingCardId) OR create a missing card (body.create), then append real body.checklist rows. All new-card properties, including assigneeUserId and projectId, belong inside body.create. attachmentIds belongs beside body. Prefer this for outlines and task+subtask requests. checklist entries have local key, text, optional parentKey (earlier entry) or parentItemId (existing checklist). Existing matching checklist rows are preserved, not duplicated. Never put requested checklist items into description.',
+  ),
+  'card.assignMany': resource(
+    'cards/assign-many',
+    () => '/work',
+    'POST',
+    body(assignManySchema),
+    'HEAD ONLY: one reviewed operation assigns the same task and optional checklist to every specified recipientUserId. For everyone use all active member IDs from the directory, excluding the head unless explicitly requested. One proposal, never one confirmation per member. All assignments commit together.',
+  ),
+  'checkin.add': {
+    schema: patch(checkinAddSchema),
+    description:
+      'Add one source checklist item to a cycle. id is the cycle ID; body.checklistItemId is the source. Later additions count toward its total.',
+    method: 'POST',
+    path: (a) => `/checkins/cycles/${a['id']}/entries`,
+    href: (a) => `/analytics?cycle=${a['id']}`,
+  },
+  'checkin.update': {
+    schema: patch(checkinUpdateSchema),
+    description:
+      'Update a check-in entry text or state (pending/done/blocked), with current version. id MUST be entryId from a checkin_entry record, never its cycleId or checklistItemId. Also updates its live source checklist. Locked checkout is immutable.',
+    method: 'PATCH',
+    path: (a) => `/checkins/entries/${a['id']}`,
+    href: () => '/analytics',
+  },
+  'checkin.remove': {
+    schema: target,
+    description:
+      'Remove a check-in entry from an unlocked check-in only. id MUST be entryId from a checkin_entry record, never its cycleId or checklistItemId. Does not delete the original checklist item.',
+    method: 'DELETE',
+    path: (a) => `/checkins/entries/${a['id']}`,
+    href: () => '/analytics',
+  },
+  'checkin.lock': {
+    schema: patch(checkinLockSchema),
+    description:
+      'HEAD ONLY: agree checkin (prevents removal) or lock checkout (freezes historical results). id is the cycle ID. Only on an explicit request to lock/agreement.',
+    method: 'POST',
+    path: (a) => `/checkins/cycles/${a['id']}/lock`,
+    href: (a) => `/analytics?cycle=${a['id']}`,
+  },
   'card.create': resource(
     'cards',
     cardHref,
@@ -365,34 +435,6 @@ export const ACTIONS: Record<string, Action> = {
     patch(patchTaskBodySchema),
     'Edit or complete a private personal task owned by the current user.',
   ),
-  'personal.note.create': resource(
-    'personal/notes',
-    () => '/personal',
-    'POST',
-    body(createNoteBodySchema),
-    'Create a private note for the current user.',
-  ),
-  'personal.note.update': resource(
-    'personal/notes',
-    () => '/personal',
-    'PATCH',
-    patch(patchNoteBodySchema),
-    'Update a private note belonging to the current user.',
-  ),
-  'personal.sprint.create': resource(
-    'personal/sprints',
-    () => '/personal',
-    'POST',
-    body(createSprintBodySchema),
-    'Create a personal planning period.',
-  ),
-  'personal.sprint.update': resource(
-    'personal/sprints',
-    () => '/personal',
-    'PATCH',
-    patch(patchSprintBodySchema),
-    'Update the current user’s personal planning period.',
-  ),
   'attachment.attach': {
     schema: z
       .object({
@@ -412,14 +454,66 @@ export const ACTIONS: Record<string, Action> = {
   },
 }
 
-export const proposedActionSchema = z
-  .object({
-    kind: z.string(),
-    title: z.string().min(1).max(140),
-    summary: z.string().min(1).max(1600),
-    arguments: z.record(z.string(), z.unknown()),
-  })
-  .strict()
+/** Tolerate transport-shaped JSON mistakes without inferring intent or IDs. Every recovered
+ * value is still checked against the same strict action schema before it reaches review. */
+export function decodeActionJson(value: unknown): unknown {
+  if (typeof value !== 'string' || value.length > 200_000) return value
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}
+function normalizeModelAction(value: unknown): unknown {
+  const decoded = decodeActionJson(value)
+  if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded)) return decoded
+  const action = { ...decoded } as Record<string, unknown>,
+    raw = decodeActionJson(action['arguments'])
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return action
+  const args = { ...raw } as Record<string, unknown>
+  // Some providers flatten nested create fields. Relocate only explicitly supplied domain
+  // fields, never infer a value or resolve conflicting identities. The strict schema still
+  // validates every field and rejects unknown fields after this transport normalization.
+  if (action['kind'] === 'card.withChecklist' && args['body'] && typeof args['body'] === 'object') {
+    const body = { ...(args['body'] as Record<string, unknown>) }
+    if (!body['existingCardId'] && body['create'] && typeof body['create'] === 'object') {
+      const create = { ...(body['create'] as Record<string, unknown>) }
+      for (const key of Object.keys(createCardBodySchema.shape)) {
+        if (!Object.hasOwn(body, key)) continue
+        if (Object.hasOwn(create, key) && JSON.stringify(create[key]) !== JSON.stringify(body[key]))
+          continue
+        create[key] = body[key]
+        delete body[key]
+      }
+      body['create'] = create
+      args['body'] = body
+    }
+  }
+  for (const key of ['id', 'itemId', 'version', 'attachmentIds']) {
+    if (Object.hasOwn(action, key) && !Object.hasOwn(args, key)) {
+      args[key] = action[key]
+      delete action[key]
+    }
+  }
+  action['arguments'] = args
+  return action
+}
+export const proposedActionSchema = z.preprocess(
+  normalizeModelAction,
+  z
+    .object({
+      kind: z.string(),
+      key: z
+        .string()
+        .regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/)
+        .optional(),
+      bindings: z.array(aiActionBindingSchema).max(8).optional(),
+      title: z.string().min(1).max(140),
+      summary: z.string().min(1).max(1600),
+      arguments: z.record(z.string(), z.unknown()),
+    })
+    .strict(),
+)
 export function parseAction(kind: string, args: unknown): Args {
   const action = Object.hasOwn(ACTIONS, kind) ? ACTIONS[kind] : undefined
   if (!action) throw new Error('unsupported_action')

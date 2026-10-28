@@ -1,8 +1,8 @@
 # Devon (WorkPortal)
 
 Self-hosted platform where a department runs its week: a board with a column per person, group
-projects, a private personal workspace (sprints, nested tasks, canvas, Pomodoro), events with RSVP,
-carpooling and polls, an inbox and a Telegram bot, analytics for everyone, AI helpers on the
+projects, a private calendar and nested to-dos, an illustrated Pomodoro timer, events with RSVP,
+carpooling and polls, an inbox and a Telegram bot, fortnightly check-in/out with frozen progress snapshots, AI helpers on the
 government's GLM-5.2, one super admin with pause and wipe switches. Anyone registers; a fresh account
 creates a department (approved once by the super admin, creator becomes head) or joins one with a key
 and a password. Four locales, uz-Latn default. No ministry layer, no HR, no documents, no chat.

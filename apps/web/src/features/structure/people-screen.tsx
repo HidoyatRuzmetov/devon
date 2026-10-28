@@ -1,13 +1,9 @@
 // `/people` -- TECH-SPEC EPIC-003: "the People page listing members grouped by unit." Rebuilt to
 // UI-OVERHAUL.md's Jakob row "People directory" (Slack members, Google Contacts): search first,
 // cards with unit identity and professional profile drawers, unit filters and distinct empty/no-results.
-import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import {
-  Avatar,
   Badge,
-  Button,
   FilterChip,
   Input,
   SegmentedControl,
@@ -15,31 +11,24 @@ import {
   StaggerItem,
   StateView,
   cn,
-  initialsFromName,
   normalizeForSearch,
 } from '@devon/ui'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Building2, Search } from 'lucide-react'
-import { useForcedState } from '../../lib/forced-state.js'
-import { ForcedStateBlock } from '../../shell/forced-state-block.js'
-import { useOnline } from '../../lib/use-online.js'
-import { navigate, useSearchParams } from '../../lib/router.js'
+import * as React from 'react'
 import { ApiError } from '../../lib/api-client.js'
+import { useForcedState } from '../../lib/forced-state.js'
+import { useSearchParams } from '../../lib/router.js'
+import { useMeQuery } from '../../lib/session.js'
 import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
-import { avatarUrl } from '../../lib/avatar.js'
-import { useCan } from '../../lib/can.js'
-import { useSession } from '../../lib/session.js'
-import { PersonPage } from '../people/person/person-page.js'
-import { personIdFromSearch, personPath } from '../people/routes.js'
+import { useOnline } from '../../lib/use-online.js'
+import { ForcedStateBlock } from '../../shell/forced-state-block.js'
+import { createCard } from '../work/api.js'
+import { QuickAssignSheet, type QuickAssignSubmit } from '../work/components/quick-assign-sheet.js'
 import { fetchMembers, fetchUnitsOverview, type Member, type Unit } from './api.js'
-import { useMyDepartments } from './use-my-departments.js'
 import { DepartmentHeader } from './department-header.js'
 import { MemberCard, formalName, fullName } from './member-card.js'
-import { useCsrfToken } from '../people/hooks.js'
-import {
-  QuickAssignSheet,
-  type QuickAssignSubmit,
-} from '../people/components/quick-assign-sheet.js'
-import { createCard } from '../work/api.js'
+import { useMyDepartments } from './use-my-departments.js'
 
 type Group = {
   scope: 'department' | 'unit' | 'unassigned'
@@ -119,20 +108,8 @@ export default function PeopleScreen() {
   // once the directory has loaded. `consumedRef` makes this a one-shot effect (the param stays in the
   // URL after landing, so a later re-render must not keep re-scrolling/re-clearing the filter).
   const search = useSearchParams()
-  const session = useSession()
-  const canSeeAnyPerson = useCan('people.person.read')
-  const personId = personIdFromSearch(search)
-  // SPEC §4.1: a member gets the directory; SPEC §6: the only person page they may open is their
-  // own. `useCan` hides the link; the server refuses it regardless (`{kind:'department_managed'}`).
-  const profileHrefFor = React.useCallback(
-    (userId: string): string | undefined => {
-      if (canSeeAnyPerson.allowed) return personPath(userId)
-      return userId === session.user?.id ? '/people/me' : undefined
-    },
-    [canSeeAnyPerson.allowed, session.user?.id],
-  )
-  // Colleague cards retain the department-authorized quick task assignment flow.
-  const csrf = useCsrfToken()
+  const me = useMeQuery().data
+  const csrf = me?.csrfToken ?? ''
   const queryClient = useQueryClient()
   const [assignTarget, setAssignTarget] = React.useState<Member | null>(null)
 
@@ -194,31 +171,6 @@ export default function PeopleScreen() {
   }, [highlightMemberId, membersQuery.data])
 
   if (forced) return <ForcedStateBlock kind={forced} />
-
-  // The `person` search param on `/people` is the person page (SPEC §6). The exact-path router this shell ships means
-  // a detail view is a search param, exactly like `/work?card=` and `/events?event=` -- see
-  // `features/people/routes.ts` for why, and for the one place that changes when a param-bearing
-  // router lands.
-  if (personId) {
-    if (!canSeeAnyPerson.allowed && personId !== session.user?.id) {
-      return (
-        <StateView
-          kind="forbidden"
-          titleKey="people.person.denied.title"
-          bodyKey="people.person.denied.body"
-          action={{
-            labelKey: 'people.person.denied.action',
-            onAction: () => navigate('/people/me'),
-          }}
-        />
-      )
-    }
-    return (
-      <div className="flex flex-col gap-4">
-        <PersonPage userId={personId} onBack={() => navigate('/people')} />
-      </div>
-    )
-  }
 
   if (!online) {
     return (
@@ -328,7 +280,6 @@ export default function PeopleScreen() {
           </thead>
           <Stagger as="tbody" animateKey={`${query}:${unitFilter ?? ''}`}>
             {filtered.map((m) => {
-              const href = profileHrefFor(m.userId)
               const unitName = m.unitId ? (unitsById.get(m.unitId)?.name ?? null) : null
               return (
                 <StaggerItem
@@ -337,9 +288,9 @@ export default function PeopleScreen() {
                   className="border-b border-border last:border-0 hover:bg-accent/50"
                 >
                   <th scope="row" className="px-3 py-2 font-normal">
-                    <DirectoryName
+                    <MemberCard
+                      compact
                       member={m}
-                      href={href}
                       unitColour={unitColorClass(
                         unitPalette,
                         m.unitId,
@@ -400,8 +351,7 @@ export default function PeopleScreen() {
                 member={m}
                 unitColour={unitColorClass(unitPalette, m.unitId, m.membershipRole === 'head')}
                 unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
-                profileHref={profileHrefFor(m.userId)}
-                onAssign={m.userId === session.user?.id ? undefined : () => setAssignTarget(m)}
+                onAssign={m.userId === me?.user.id ? undefined : () => setAssignTarget(m)}
               />
             </div>
           </StaggerItem>
@@ -463,10 +413,7 @@ export default function PeopleScreen() {
                         m.membershipRole === 'head',
                       )}
                       unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
-                      profileHref={profileHrefFor(m.userId)}
-                      onAssign={
-                        m.userId === session.user?.id ? undefined : () => setAssignTarget(m)
-                      }
+                      onAssign={m.userId === me?.user.id ? undefined : () => setAssignTarget(m)}
                     />
                   </div>
                 </StaggerItem>
@@ -510,11 +457,6 @@ export default function PeopleScreen() {
             { value: 'table', label: t('structure.people.layout.table') },
           ]}
         />
-        {canSeeAnyPerson.allowed ? (
-          <Button variant="secondary" size="sm" onClick={() => navigate('/people/table')}>
-            {t('structure.people.openTable')}
-          </Button>
-        ) : null}
       </div>
 
       {hasAnyMembers && units.length > 0 ? (
@@ -565,44 +507,5 @@ export default function PeopleScreen() {
         pending={assignMutation.isPending}
       />
     </div>
-  )
-}
-
-/** The directory table's name cell: avatar + name, a link to the person page when the viewer may
- * open it, plain text when they may not (never a link that answers 403). */
-function DirectoryName({
-  member,
-  href,
-  unitColour,
-}: {
-  member: Member
-  href: string | undefined
-  unitColour: string
-}): React.JSX.Element {
-  const content = (
-    <span className="flex items-center gap-2.5">
-      <Avatar
-        size="sm"
-        alt={fullName(member)}
-        className={unitColour}
-        initials={initialsFromName(member.givenName, member.familyName)}
-        src={avatarUrl(member.avatarKey, 64)}
-      />
-      <span className="truncate font-medium">{fullName(member)}</span>
-    </span>
-  )
-  if (!href) return content
-  return (
-    <a
-      href={href}
-      onClick={(event) => {
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
-        event.preventDefault()
-        navigate(href)
-      }}
-      className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {content}
-    </a>
   )
 }

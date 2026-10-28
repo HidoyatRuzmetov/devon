@@ -2,17 +2,15 @@
 // the same contract `apps/web/src/lib/api-client.ts` implements for the web app, kept separate
 // because this app has its own sign-in step (`signIn()`) and its own recovery rule (a 401 means the
 // Telegram session expired while the sheet was open, so re-exchange once and retry).
-import { z } from 'zod'
 import {
   MINIAPP_INIT_DATA_HEADER,
   problemSchema,
   type MiniappBoardPeek,
-  type MiniappFields,
-  type MiniappFieldValue,
   type MiniappFocusAlert,
   type MiniappSession,
   type MiniappSetupChecklist,
 } from '@devon/contracts'
+import { z } from 'zod'
 import { tg } from './telegram.js'
 
 /** Every outbound call is bounded (TECH-SPEC §16: "timeouts on every outbound call"). A phone on a
@@ -178,7 +176,6 @@ const sessionSchema = z.object({
   source: z.enum(['telegram', 'web_session']),
   startParam: z.string().nullable(),
   unreadCount: z.number(),
-  fieldsAvailable: z.boolean(),
   csrfToken: z.string(),
 })
 
@@ -497,7 +494,7 @@ export function getPomodoroSettings(): Promise<PomodoroSettings> {
 
 export const pomodoroSessionSchema = z.object({
   id: z.string(),
-  taskId: z.string().nullable(),
+
   kind: z.enum(['focus', 'short_break', 'long_break']),
   startedAt: z.string(),
   endedAt: z.string().nullable(),
@@ -530,24 +527,6 @@ export function endPomodoroSession(
   })
 }
 
-const pomodoroStatsSchema = z.object({
-  today: z.object({
-    focusMinutes: z.number(),
-    focusSessions: z.number(),
-    completedSessions: z.number(),
-  }),
-  week: z.object({
-    focusMinutes: z.number(),
-    focusSessions: z.number(),
-    completedSessions: z.number(),
-  }),
-})
-export type PomodoroStats = z.infer<typeof pomodoroStatsSchema>
-
-export function getPomodoroStats(): Promise<PomodoroStats> {
-  return request('/personal/pomodoro/stats', pomodoroStatsSchema)
-}
-
 const focusAlertSchema = z.object({
   sent: z.boolean(),
   reason: z.enum(['ok', 'not_linked', 'not_configured', 'muted', 'failed']),
@@ -560,39 +539,6 @@ export function sendFocusAlert(
   return request('/telegram/miniapp/focus-alert', focusAlertSchema, {
     method: 'POST',
     body: { kind, minutes },
-  })
-}
-
-// --- My person fields (SPEC §5's notify-to-fill lands here) -------------------------------------------
-
-const fieldsSchema = z.object({
-  available: z.boolean(),
-  items: z.array(
-    z.object({
-      defId: z.string(),
-      key: z.string(),
-      label: localizedSchema,
-      description: localizedSchema.nullable(),
-      type: z.string(),
-      options: z.array(
-        z.object({ id: z.string(), label: localizedSchema, colorToken: z.string() }),
-      ),
-      required: z.boolean(),
-      selfEditable: z.boolean(),
-      value: z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.null()]),
-      requested: z.boolean(),
-    }),
-  ),
-})
-
-export function getMyFields(): Promise<MiniappFields> {
-  return request('/telegram/miniapp/fields', fieldsSchema)
-}
-
-export function setMyField(defId: string, value: MiniappFieldValue): Promise<MiniappFields> {
-  return request(`/telegram/miniapp/fields/${defId}`, fieldsSchema, {
-    method: 'PUT',
-    body: { value },
   })
 }
 

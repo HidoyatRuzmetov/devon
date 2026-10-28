@@ -1,12 +1,12 @@
-import { randomUUID } from 'node:crypto'
-import { beforeAll, afterAll, describe, expect, it } from 'vitest'
 import type { RequestContext } from '@devon/db'
+import { randomUUID } from 'node:crypto'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { prepareFeatureInput } from '../../src/modules/ai/request-context.js'
 import {
-  startHarness,
-  stopHarness,
   seedDepartment,
   seedMember,
+  startHarness,
+  stopHarness,
   superuserQuery,
   type Db,
   type Server,
@@ -141,20 +141,14 @@ describe('live helper context and isolation', () => {
     ])
     expect(digest['departmentName']).toBe('AI live helper testing')
   })
-  it('reads only the selected owner private task and working period', async () => {
-    const periodId = randomUUID(),
-      taskId = randomUUID(),
+  it('reads only the selected owner private task', async () => {
+    const taskId = randomUUID(),
       foreignTaskId = randomUUID(),
       childId = randomUUID()
     await superuserQuery(
       db,
-      `insert into app.personal_sprints(id,user_id,kind,starts_at,ends_at) values($1,$2,'3h',now(),now()+interval '3 hours')`,
-      [periodId, owner],
-    )
-    await superuserQuery(
-      db,
-      `insert into app.personal_tasks(id,user_id,sprint_id,parent_id,title,notes,estimate_min) values($1,$2,$3,null,'Personal audit','Private source notes',30),($4,$2,$3,$1,'Already asked for data',null,15),($5,$6,null,null,'Foreign private task',null,30)`,
-      [taskId, owner, periodId, childId, foreignTaskId, other],
+      `insert into app.personal_tasks(id,user_id,parent_id,title,notes,estimate_min) values($1,$2,null,'Personal audit','Private source notes',30),($3,$2,$1,'Already asked for data',null,15),($4,$5,null,'Foreign private task',null,30)`,
+      [taskId, owner, childId, foreignTaskId, other],
     )
     const steps = await prepareFeatureInput(ctx, departmentId, 'subtask_breakdown', {
       locale: 'en',
@@ -168,14 +162,6 @@ describe('live helper context and isolation', () => {
       labels: [],
       projectTitle: null,
     })
-    const plan = await prepareFeatureInput(ctx, departmentId, 'plan_sprint', {
-      locale: 'en',
-      scope: 'personal',
-      periodId,
-      items: [{ id: foreignTaskId, title: 'Forged foreign task' }],
-    })
-    expect(plan['items']).toMatchObject([{ id: taskId, title: 'Personal audit', estimateMin: 30 }])
-    expect(plan['capacityMin']).toBeGreaterThan(170)
     const recap = await prepareFeatureInput(ctx, departmentId, 'catch_up', {
       locale: 'en',
       scope: 'person',
@@ -292,16 +278,7 @@ describe('live helper context and isolation', () => {
     ])
     expect(input['commentsTruncated']).toBe(false)
   })
-  it('loads allowed analytics names and byte-preserves names, links and document codes', async () => {
-    const analytics = await prepareFeatureInput(ctx, departmentId, 'nl_analytics', {
-      locale: 'en',
-      knownMembers: [{ name: 'Fake', handle: 'fake' }],
-      knownLabels: [],
-    })
-    expect(analytics['knownMembers']).toEqual(
-      expect.arrayContaining([{ name: 'Nodira Karimova', handle: 'Nodira Karimova' }]),
-    )
-    expect(analytics['knownLabels']).toEqual(['EGDI'])
+  it('byte-preserves names, links and document codes', async () => {
     const translate = await prepareFeatureInput(ctx, departmentId, 'translate', {
       locale: 'en',
       targetLocale: 'ru',

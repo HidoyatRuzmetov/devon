@@ -8,11 +8,10 @@
 // The one property worth stating up front: **there is no "unknown namespace, allow it" branch.** A
 // name that does not parse is refused, and a name that parses is refused unless `can()` says
 // otherwise. Both halves are asserted below.
-import { describe, expect, it } from 'vitest'
 import type { Actor } from '@devon/contracts'
+import { describe, expect, it } from 'vitest'
 import {
   boardChannel,
-  canvasChannel,
   decideChannel,
   departmentChannel,
   parseChannel,
@@ -52,7 +51,7 @@ function superAdmin(viewing: string | null = null): Actor {
 }
 
 describe('channel names round-trip', () => {
-  it('builds and parses each of the four families', () => {
+  it('builds and parses each supported family', () => {
     expect(parseChannel(departmentChannel(DEPT_A))).toEqual({
       namespace: 'dept',
       departmentId: DEPT_A,
@@ -64,10 +63,6 @@ describe('channel names round-trip', () => {
     expect(parseChannel(personalChannel(USER_A))).toEqual({
       namespace: 'personal',
       userId: USER_A,
-    })
-    expect(parseChannel(canvasChannel(CANVAS))).toEqual({
-      namespace: 'canvas',
-      sharedCanvasId: CANVAS,
     })
   })
 
@@ -178,24 +173,11 @@ describe('decideChannel', () => {
     })
   })
 
-  it('answers `needs_lookup` for a canvas rather than guessing', () => {
-    // Whether somebody may watch a shared canvas depends on the share row and on that project's
-    // members -- a database question. Returning a third value keeps "I refuse" and "I have not
-    // decided yet" from looking alike, so a caller cannot mistake one for the other and mint a token.
-    expect(decideChannel(member(), parseChannel(canvasChannel(CANVAS)))).toEqual({
-      allowed: false,
-      reason: 'needs_lookup',
-    })
-    expect(decideChannel(head(), parseChannel(canvasChannel(CANVAS)))).toEqual({
-      allowed: false,
-      reason: 'needs_lookup',
-    })
-  })
-
-  it('never returns `allowed: true` for a canvas without a lookup', () => {
+  it('rejects the retired canvas namespace for every actor', () => {
     for (const actor of [member(), head(), superAdmin(DEPT_A), superAdmin()]) {
-      expect(decideChannel(actor, parseChannel(canvasChannel(CANVAS)))).not.toEqual({
-        allowed: true,
+      expect(decideChannel(actor, parseChannel(`canvas:${CANVAS}`))).toEqual({
+        allowed: false,
+        reason: 'unknown_channel',
       })
     }
   })

@@ -5,54 +5,32 @@
 // Mounted at `/api/v1/personal/*`. Every mutating route runs `checkCsrf` first (the same double-submit
 // check `PATCH /api/v1/me` uses -- `apps/api/src/lib/csrf.ts`'s header names ADR-003 as "the whole
 // product"'s compensating control for `SameSite=Lax`, not a `/me`-only rule).
-import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import type { FastifyRequest } from 'fastify'
-import { z } from 'zod'
 import {
   personalDeleteReceiptSchema,
   personalRestoreBodySchema,
   personalTaskVersionChangeSchema,
   personalTaskVersionsQuerySchema,
 } from '@devon/contracts'
+import type { FastifyRequest } from 'fastify'
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { AuditCtx } from '../../types.js'
-import {
-  canvasSummaryToDto,
-  canvasToDto,
-  noteToDto,
-  pomodoroSessionToDto,
-  pomodoroSettingsToDto,
-  pomodoroStatsToDto,
-  sprintToDto,
-  taskToDto,
-} from './dto.js'
+import { calendarRoutes } from './calendar-routes.js'
+import { pomodoroSessionToDto, pomodoroSettingsToDto, taskToDto } from './dto.js'
 import * as repo from './repo.js'
 import {
-  canvasSchema,
-  canvasSummaryListSchema,
-  createCanvasBodySchema,
-  createNoteBodySchema,
   createPomodoroSessionBodySchema,
-  createSprintBodySchema,
   createTaskBodySchema,
-  noteListSchema,
-  noteSchema,
-  patchCanvasBodySchema,
-  patchNoteBodySchema,
   patchPomodoroSessionBodySchema,
   patchPomodoroSettingsBodySchema,
-  patchSprintBodySchema,
   patchTaskBodySchema,
   pomodoroSessionListSchema,
   pomodoroSessionSchema,
   pomodoroSettingsSchema,
-  pomodoroStatsSchema,
   reorderTasksBodySchema,
-  rolloverSprintBodySchema,
-  sprintListSchema,
-  sprintSchema,
   taskListSchema,
   taskSchema,
 } from './schemas.js'
@@ -72,88 +50,11 @@ function ctxFrom(req: FastifyRequest): AuditCtx {
 }
 
 const personalRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(calendarRoutes)
   const ownerSubject = (r: { actor: { userId: string } | null }) => ({
     kind: 'personal' as const,
     ownerUserId: r.actor?.userId ?? '',
   })
-
-  // -- Sprints --------------------------------------------------------------------------------------
-
-  app.get(
-    '/sprints',
-    {
-      config: { permission: { action: 'read', subject: ownerSubject } },
-      schema: { response: { 200: sprintListSchema } },
-    },
-    async (req) => {
-      const rows = await repo.listSprints(req.actor!.userId, ctxFrom(req))
-      return rows.map(sprintToDto)
-    },
-  )
-
-  app.post(
-    '/sprints',
-    {
-      config: { permission: { action: 'create', subject: ownerSubject } },
-      schema: { body: createSprintBodySchema, response: { 201: sprintSchema } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const row = await repo.createSprint(req.actor!.userId, req.body, ctxFrom(req))
-      return reply.code(201).send(sprintToDto(row))
-    },
-  )
-
-  app.patch(
-    '/sprints/:id',
-    {
-      config: { permission: { action: 'update', subject: ownerSubject } },
-      schema: {
-        params: idParamsSchema,
-        body: patchSprintBodySchema,
-        response: { 200: sprintSchema },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const outcome = await repo.patchSprint(
-        req.actor!.userId,
-        req.params.id,
-        req.body,
-        ctxFrom(req),
-      )
-      if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
-      if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.type('application/json').send(sprintToDto(outcome.row))
-    },
-  )
-
-  app.post(
-    '/sprints/:id/rollover',
-    {
-      config: { permission: { action: 'update', subject: ownerSubject } },
-      schema: {
-        params: idParamsSchema,
-        body: rolloverSprintBodySchema,
-        response: { 200: z.object({ sprint: sprintSchema, movedTaskCount: z.number().int() }) },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const outcome = await repo.rolloverSprint(
-        req.actor!.userId,
-        req.params.id,
-        req.body,
-        ctxFrom(req),
-      )
-      if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
-      if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send({
-        sprint: sprintToDto(outcome.sprint),
-        movedTaskCount: outcome.movedTaskCount,
-      })
-    },
-  )
 
   // -- Tasks ------------------------------------------------------------------------------------------
 
@@ -287,198 +188,6 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
-  // -- Notes ------------------------------------------------------------------------------------------
-
-  app.get(
-    '/notes',
-    {
-      config: { permission: { action: 'read', subject: ownerSubject } },
-      schema: { response: { 200: noteListSchema } },
-    },
-    async (req) => {
-      const rows = await repo.listNotes(req.actor!.userId, ctxFrom(req))
-      return rows.map(noteToDto)
-    },
-  )
-
-  app.post(
-    '/notes',
-    {
-      config: { permission: { action: 'create', subject: ownerSubject } },
-      schema: { body: createNoteBodySchema, response: { 201: noteSchema } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const row = await repo.createNote(req.actor!.userId, req.body, ctxFrom(req))
-      return reply.code(201).send(noteToDto(row))
-    },
-  )
-
-  app.patch(
-    '/notes/:id',
-    {
-      config: { permission: { action: 'update', subject: ownerSubject } },
-      schema: { params: idParamsSchema, body: patchNoteBodySchema, response: { 200: noteSchema } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const outcome = await repo.patchNote(req.actor!.userId, req.params.id, req.body, ctxFrom(req))
-      if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
-      if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.type('application/json').send(noteToDto(outcome.row))
-    },
-  )
-
-  app.delete(
-    '/notes/:id',
-    {
-      config: { permission: { action: 'delete', subject: ownerSubject } },
-      schema: {
-        params: idParamsSchema,
-        querystring: deleteQuerySchema,
-        response: { 200: personalDeleteReceiptSchema, 204: z.undefined() },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const receipt = await repo.deleteNote(req.actor!.userId, req.params.id, ctxFrom(req))
-      if (!receipt) return sendProblem(reply, 'not_found')
-      if (req.query.receipt === 'true') return reply.type('application/json').send(receipt)
-      return reply.code(204).send()
-    },
-  )
-
-  app.post(
-    '/notes/:id/restore',
-    {
-      config: { permission: { action: 'update', subject: ownerSubject } },
-      schema: {
-        params: idParamsSchema,
-        body: personalRestoreBodySchema,
-        response: { 200: noteSchema },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const result = await repo.restoreNote(
-        req.actor!.userId,
-        req.params.id,
-        req.body.restoreToken,
-        ctxFrom(req),
-      )
-      if (result.ok === 'not_found') return sendProblem(reply, 'not_found')
-      if (result.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.type('application/json').send(noteToDto(result.row))
-    },
-  )
-
-  // -- Canvases ---------------------------------------------------------------------------------------
-
-  app.get(
-    '/canvases',
-    {
-      config: { permission: { action: 'read', subject: ownerSubject } },
-      schema: { response: { 200: canvasSummaryListSchema } },
-    },
-    async (req) => {
-      const rows = await repo.listCanvases(req.actor!.userId, ctxFrom(req))
-      return rows.map(canvasSummaryToDto)
-    },
-  )
-
-  app.get(
-    '/canvases/:id',
-    {
-      config: { permission: { action: 'read', subject: ownerSubject } },
-      schema: { params: idParamsSchema, response: { 200: canvasSchema } },
-    },
-    async (req, reply) => {
-      const row = await repo.getCanvas(req.actor!.userId, req.params.id, ctxFrom(req))
-      if (!row) return sendProblem(reply, 'not_found')
-      return reply.type('application/json').send(canvasToDto(row))
-    },
-  )
-
-  app.post(
-    '/canvases',
-    {
-      config: { permission: { action: 'create', subject: ownerSubject } },
-      schema: { body: createCanvasBodySchema, response: { 201: canvasSchema } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const row = await repo.createCanvas(req.actor!.userId, req.body, ctxFrom(req))
-      return reply.code(201).send(canvasToDto(row))
-    },
-  )
-
-  app.patch(
-    '/canvases/:id',
-    {
-      config: { permission: { action: 'update', subject: ownerSubject } },
-      schema: {
-        params: idParamsSchema,
-        body: patchCanvasBodySchema,
-        response: { 200: canvasSchema },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const outcome = await repo.patchCanvas(
-        req.actor!.userId,
-        req.params.id,
-        req.body,
-        ctxFrom(req),
-      )
-      if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
-      if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.type('application/json').send(canvasToDto(outcome.row))
-    },
-  )
-
-  app.delete(
-    '/canvases/:id',
-    {
-      config: { permission: { action: 'delete', subject: ownerSubject } },
-      schema: {
-        params: idParamsSchema,
-        querystring: deleteQuerySchema,
-        response: { 200: personalDeleteReceiptSchema, 204: z.undefined() },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const receipt = await repo.deleteCanvas(req.actor!.userId, req.params.id, ctxFrom(req))
-      if (!receipt) return sendProblem(reply, 'not_found')
-      if (req.query.receipt === 'true') return reply.type('application/json').send(receipt)
-      return reply.code(204).send()
-    },
-  )
-
-  app.post(
-    '/canvases/:id/restore',
-    {
-      config: { permission: { action: 'update', subject: ownerSubject } },
-      schema: {
-        params: idParamsSchema,
-        body: personalRestoreBodySchema,
-        response: { 200: canvasSchema },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const result = await repo.restoreCanvas(
-        req.actor!.userId,
-        req.params.id,
-        req.body.restoreToken,
-        ctxFrom(req),
-      )
-      if (result.ok === 'not_found') return sendProblem(reply, 'not_found')
-      if (result.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.type('application/json').send(canvasToDto(result.row))
-    },
-  )
-
   // -- Pomodoro ---------------------------------------------------------------------------------------
 
   app.get(
@@ -556,18 +265,6 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (!row) return sendProblem(reply, 'not_found')
       return reply.type('application/json').send(pomodoroSessionToDto(row))
-    },
-  )
-
-  app.get(
-    '/pomodoro/stats',
-    {
-      config: { permission: { action: 'read', subject: ownerSubject } },
-      schema: { response: { 200: pomodoroStatsSchema } },
-    },
-    async (req) => {
-      const row = await repo.getPomodoroStats(req.actor!.userId, ctxFrom(req))
-      return pomodoroStatsToDto(row)
     },
   )
 }

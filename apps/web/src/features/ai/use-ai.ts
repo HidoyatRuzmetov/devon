@@ -103,19 +103,6 @@ export function useSearchBackendQuery() {
   })
 }
 
-export function useAskMutation() {
-  const csrf = useCsrfToken()
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (vars: { question: string; locale: 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en' }) =>
-      api.askDepartment(vars.question, vars.locale, csrf),
-    onSettled: () => {
-      void qc.invalidateQueries({ queryKey: KEYS.settings })
-      void qc.invalidateQueries({ queryKey: KEYS.usage })
-    },
-  })
-}
-
 export function useRebuildIndexMutation() {
   const csrf = useCsrfToken()
   const qc = useQueryClient()

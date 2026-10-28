@@ -17,7 +17,6 @@ export const AI_FEATURE_IDS = [
   'catch_up',
   'draft_event',
   'summarize_thread',
-  'nl_analytics',
   'translate',
   'draft_reply',
   'draft_page',
@@ -31,6 +30,7 @@ export type AiFeatureId = z.infer<typeof aiFeatureSchema>
 
 export const AI_TRACE_FEATURE_IDS = [
   ...AI_FEATURE_IDS,
+  'nl_analytics',
   'weekly_summary',
   'what_did_i_miss',
 ] as const
@@ -64,7 +64,6 @@ export const FEATURE_KEY_SEGMENT: Record<AiTraceFeatureId, string> = {
   catch_up: 'catchUp',
   draft_event: 'draftEvent',
   summarize_thread: 'summarizeThread',
-  nl_analytics: 'nlAnalytics',
   translate: 'translate',
   draft_reply: 'draftReply',
   draft_page: 'draftPage',
@@ -72,6 +71,7 @@ export const FEATURE_KEY_SEGMENT: Record<AiTraceFeatureId, string> = {
   suggest_assignee: 'suggestAssignee',
   duplicate_check: 'duplicateCheck',
   semantic_ask: 'semanticAsk',
+  nl_analytics: 'nlAnalytics',
   weekly_summary: 'weeklySummary',
   what_did_i_miss: 'whatDidIMiss',
 }
@@ -237,14 +237,6 @@ export const searchResponseSchema = z.object({
   hits: z.array(searchHitSchema),
   backend: z.enum(['embeddings', 'fts']),
 })
-
-export const askResponseSchema = z.object({
-  data: z.record(z.string(), z.unknown()),
-  meta: runMetaSchema,
-  sources: z.array(searchHitSchema),
-  backend: z.enum(['embeddings', 'fts']),
-})
-export type AskResponse = z.infer<typeof askResponseSchema>
 
 /**
  * The head's cached department briefing (v1.1 recapture #23). The tile reads this; it never runs

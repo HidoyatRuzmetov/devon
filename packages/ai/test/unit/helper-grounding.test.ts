@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { planSprintSpec } from '../../src/prompts/plan-sprint.js'
 import { draftReplySpec } from '../../src/prompts/draft-reply.js'
 import { quickAddParseSpec } from '../../src/prompts/quick-add-parse.js'
-import { nlAnalyticsSpec } from '../../src/prompts/nl-analytics.js'
 import { catchUpSpec } from '../../src/prompts/catch-up.js'
 import { draftEventOutputSchema, draftEventSpec } from '../../src/prompts/draft-event.js'
 import { runFeature } from '../../src/features.js'
@@ -141,22 +140,7 @@ describe('helper-specific grounding', () => {
         expect(result.output.dueDate).toBe(text.includes('2025') ? '2025-09-17' : '2026-09-17')
     }
   })
-  it('quotes full-name person selectors and preserves overdue grouping', () => {
-    const input = nlAnalyticsSpec.inputSchema.parse({
-      locale: 'en',
-      today: '2026-10-08',
-      query: 'Who has the most overdue tasks? Nodira',
-      knownMembers: [{ name: 'Nodira Karimova', handle: 'Nodira Karimova' }],
-      dateRange: { since: '2026-10-01', until: '2026-10-08' },
-    })
-    const output = nlAnalyticsSpec.simulate(input)
-    expect(output.metric).toBe('openVsOverdue')
-    expect(output.filterText).toContain('assignee:"@Nodira Karimova"')
-    expect(nlAnalyticsSpec.validateOutput!(input, output)).toMatchObject({
-      ok: true,
-      output: { filterText: output.filterText },
-    })
-  })
+
   it('uses translation target and byte-preserved tokens instead of reader locale', async () => {
     const config = loadAiConfig({})
     const english = {

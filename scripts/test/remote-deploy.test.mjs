@@ -19,6 +19,11 @@ function deploy(scenario, { previousManifest = true, dotenv } = {}) {
   const root = posix(dir)
   mkdirSync(join(dir, 'bin'))
   mkdirSync(join(dir, 'infra'))
+  mkdirSync(join(dir, 'infra/backup'))
+  writeFileSync(
+    join(dir, 'infra/backup/verify.sh'),
+    '#!/usr/bin/env bash\nprintf \"restore-verified\\n\" >> \"$TEST_ROOT/calls\"\n[ \"$SCENARIO\" != contract-verify-failed ]\n',
+  )
   writeFileSync(
     join(dir, '.env'),
     dotenv ??
@@ -62,10 +67,12 @@ case "$name" in
       if [ "$SCENARIO" = pull-failed ]; then exit 42; fi
     elif [[ "$*" == *' postgres valkey clamav centrifugo' ]]; then
       if [ "$SCENARIO" = data-tier-failed ]; then exit 43; fi
+    elif [[ "$*" == *'cli-contract-status.ts'* ]]; then
+      case "$SCENARIO" in contract-*) echo required ;; *) echo none ;; esac
     elif [[ "$*" == *' run '* ]]; then
-      [ "$SCENARIO" != migration-failed ]
+      [ "$SCENARIO" != migration-failed ] && [ "$SCENARIO" != contract-migration-failed ]
     elif [[ "$*" == *' api web caddy' ]]; then
-      [ "$SCENARIO" != rollout-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ]
+      [ "$SCENARIO" != rollout-failed ] && [ "$SCENARIO" != contract-rollout-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ]
     elif [[ "$*" == *'--force-recreate'* ]]; then
       cat "$TEST_ROOT/infra/Caddyfile" > "$TEST_ROOT/proxy-loaded"
       [ "$SCENARIO" != proxy-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ]
@@ -217,5 +224,35 @@ for (const variable of ['MIGRATION_DATABASE_URL', 'DEVON_PUBLIC_URL']) {
     assert.doesNotMatch(result.calls, /systemctl|docker pull|cli-migrate/)
     assert.equal(result.manifest, 'previous manifest')
     assert.equal(result.state, previous)
+  })
+}
+
+test('pending contract migration quiesces writes, takes a fresh backup and verifies restore before migration', () => {
+  const result = deploy('contract-success')
+  assert.equal(result.status, 0, result.output)
+  const stop = result.calls.indexOf('stop api worker')
+  const freshBackup = result.calls.indexOf('systemctl start', stop)
+  assert.ok(stop > 0 && freshBackup > stop)
+  assert.ok(result.calls.indexOf('restore-verified') > freshBackup)
+  assert.ok(result.calls.indexOf('cli-migrate.ts') > result.calls.indexOf('restore-verified'))
+})
+
+test('failed restore proof resumes the old application before any contract migration', () => {
+  const result = deploy('contract-verify-failed')
+  assert.notEqual(result.status, 0)
+  assert.doesNotMatch(result.calls, /cli-migrate.ts/)
+  assert.match(result.calls, /api web caddy image=old-api/)
+  assert.equal(result.manifest, 'previous manifest')
+})
+
+for (const scenario of ['contract-migration-failed', 'contract-rollout-failed']) {
+  test(`${scenario} holds application stopped instead of running incompatible old images`, () => {
+    const result = deploy(scenario)
+    assert.notEqual(result.status, 0)
+    assert.match(result.calls, /stop api worker image=new-api/)
+    assert.doesNotMatch(result.calls, /api web caddy image=old-api/)
+    assert.equal(result.state, previous)
+    assert.equal(result.manifest, 'candidate manifest')
+    assert.match(result.output, /application held stopped/)
   })
 }

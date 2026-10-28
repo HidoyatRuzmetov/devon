@@ -63,4 +63,15 @@ describe('private AI events stay outside shared realtime channels', () => {
       expect.objectContaining({ type: 'work.card.updated' }),
     )
   })
+  it.each(['created', 'updated', 'deleted'])(
+    'publishes a private calendar %s only to its owner, without content',
+    async (action) => {
+      expect(await emit(`personal.calendar.${action}`)).toEqual({ ok: true })
+      expect(broadcast).not.toHaveBeenCalled()
+      expect(publish).toHaveBeenCalledWith(`personal#${userId}`, {
+        type: `personal.calendar.${action}`,
+        payload: {},
+      })
+    },
+  )
 })

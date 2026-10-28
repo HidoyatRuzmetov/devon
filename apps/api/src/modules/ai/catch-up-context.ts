@@ -1,5 +1,5 @@
-import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
+import { sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { AiInputValidationError } from './errors.js'
 import { tashkentDate, tashkentToday } from './live-context.js'
@@ -35,10 +35,8 @@ export async function prepareCatchUpContext(
       ? sql`c.user_id=${selected}`
       : sql`c.project_id=${selected} and c.department_id=${departmentId}`
     const active = personal ? sql`c.done_at is null` : sql`c.status='active'`
-    const due = personal ? sql`s.ends_at` : sql`c.due_at`
-    const joins = personal
-      ? sql`left join app.personal_sprints s on s.id=c.sprint_id`
-      : sql`left join app.users u on u.id=c.assignee_user_id`
+    const due = personal ? sql`null::timestamptz` : sql`c.due_at`
+    const joins = personal ? sql`` : sql`left join app.users u on u.id=c.assignee_user_id`
     const rows = await tx.raw<{
       id: string
       title: string

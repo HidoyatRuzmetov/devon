@@ -1,11 +1,7 @@
 import { SettingsSection } from './settings-section.js'
 // Account settings share one shell. Each URL selects a focused pane, with related forms grouped
 // continuously inside it. Legacy entry points redirect here without losing their query state.
-import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { QRCodeSVG } from 'qrcode.react'
-import { LogOut, Monitor, Smartphone, Tablet } from 'lucide-react'
-import { useT, useLocale, formatDate, formatRelativeTime } from '@devon/i18n'
+import { formatDate, formatRelativeTime, useLocale, useT } from '@devon/i18n'
 import {
   Badge,
   Button,
@@ -21,8 +17,13 @@ import {
   StateView,
   toast,
 } from '@devon/ui'
-import { avatarUrl } from '../../lib/avatar.js'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { LogOut, Monitor, Smartphone, Tablet } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
+import * as React from 'react'
 import { ApiError } from '../../lib/api-client.js'
+import { avatarUrl } from '../../lib/avatar.js'
+import { navigate, useRoutePath } from '../../lib/router.js'
 import { useLogoutMutation, useMeQuery } from '../../lib/session.js'
 import {
   avatarErrorKey,
@@ -42,15 +43,14 @@ import {
   type AvatarUploadStage,
   type SessionView,
 } from './api.js'
-import { MyFieldsSection } from '../fields/components/my-fields-section.js'
+import { AppearanceSection } from './appearance-section.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { describeUserAgent } from './device-label.js'
 import { ProfessionalProfileSection } from './professional-profile-section.js'
 import { ProfileSection } from './profile-section.js'
-import { AppearanceSection } from './appearance-section.js'
 import { SettingsNavigation } from './settings-navigation.js'
-import { navigate, useRoutePath } from '../../lib/router.js'
 
+const AiSettingsScreen = React.lazy(() => import('../ai/ai-settings-screen.js'))
 const PreferencesScreen = React.lazy(() => import('../inbox/preferences-screen.js'))
 const TelegramScreen = React.lazy(() => import('../inbox/telegram-screen.js'))
 const CalendarScreen = React.lazy(() => import('../calendar/calendar-screen.js'))
@@ -794,6 +794,13 @@ export default function AccountSettingsScreen() {
   const t = useT()
   const path = useRoutePath()
   const logout = useLogoutMutation()
+  const me = useMeQuery()
+  const adminRestricted =
+    me.data?.user?.role === 'super_admin' &&
+    !['/account', '/account/security', '/account/delete'].includes(path)
+  React.useEffect(() => {
+    if (adminRestricted) navigate('/account', { replace: true })
+  }, [adminRestricted])
   React.useEffect(() => {
     const target = settingsPathForHash(window.location.hash)
     if (path === '/account' && target) {
@@ -806,7 +813,7 @@ export default function AccountSettingsScreen() {
     }
   }, [path])
   let pane: React.ReactNode
-  switch (path) {
+  switch (adminRestricted ? '/account' : path) {
     case '/account/professional':
       pane = <ProfessionalProfileSection />
       break
@@ -821,6 +828,9 @@ export default function AccountSettingsScreen() {
       break
     case '/account/department':
       pane = <DepartmentDetailScreen embedded />
+      break
+    case '/account/ai':
+      pane = <AiSettingsScreen />
       break
     case '/account/security':
       pane = (
@@ -840,7 +850,6 @@ export default function AccountSettingsScreen() {
           <ProfileSection />
           <PhotoSection />
           <AppearanceSection />
-          <MyFieldsSection />
         </>
       )
   }

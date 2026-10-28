@@ -33,6 +33,16 @@ const TARGET_DIRS = [
 
 // { file: relative path from repo root (POSIX separators), url: the exact literal }
 const ALLOWLIST = [
+  { file: 'apps/api/src/modules/admin/health-probes.ts', url: 'https://api.telegram.org' }, // Official Telegram Bot API, fixed by the service protocol
+  { file: 'apps/api/src/modules/calendar/caldav.ts', url: 'http://calendarserver.org' }, // CalDAV XML namespace identifier, never dereferenced
+  { file: 'apps/api/src/modules/calendar/caldav.ts', url: 'http://apple.com' }, // iCalendar XML namespace identifier, never dereferenced
+  { file: 'apps/api/src/modules/calendar/links.ts', url: 'https://calendar.google.com' }, // Google Calendar public event composer
+  { file: 'apps/api/src/modules/calendar/links.ts', url: 'https://calendar.yahoo.com' }, // Yahoo Calendar public event composer
+  { file: 'apps/api/src/modules/departments/unit-colour.ts', url: 'https://bottosson.github.io' }, // Oklab algorithm source in a documentation comment
+  { file: 'apps/web/src/features/ai/chat-source-href.ts', url: 'https://workportal.invalid' }, // Reserved parsing origin; external links are rejected
+  { file: 'apps/web/src/features/inbox/telegram-screen.tsx', url: 'https://t.me' }, // Telegram official bot deep links
+  { file: 'apps/web/src/lib/auth-return.ts', url: 'https://workportal.invalid' }, // Reserved parsing origin for local return URL validation
+  { file: 'packages/contracts/src/invitation-key.ts', url: 'https://workportal.invalid' }, // Reserved parsing origin; no network request
   { file: 'packages/ai/src/config.ts', url: 'https://api-llm.gpu.uz' }, // decision #1: GLM endpoint default, env-overridable
   { file: 'apps/api/src/modules/admin/repo.ts', url: 'https://api-llm.gpu.uz' }, // masked display of the configured AI endpoint on the health page
   { file: 'packages/contracts/src/problem.ts', url: 'https://devon.local' }, // RFC 9457 `type` URI namespace, never dereferenced
@@ -71,7 +81,11 @@ let violations = []
 for (const dir of TARGET_DIRS) {
   const absDir = join(ROOT, dir)
   let files
-  try { files = walk(absDir) } catch { continue }
+  try {
+    files = walk(absDir)
+  } catch {
+    continue
+  }
   for (const file of files) {
     const rel = relative(ROOT, file).split('\\').join('/')
     const text = readFileSync(file, 'utf8')
@@ -89,9 +103,15 @@ for (const dir of TARGET_DIRS) {
 }
 
 if (violations.length > 0) {
-  console.error('[arch:urls] FAILED -- hardcoded URL(s) not in tools/arch/no-hardcoded-urls.mjs\'s ALLOWLIST:\n')
+  console.error(
+    "[arch:urls] FAILED -- hardcoded URL(s) not in tools/arch/no-hardcoded-urls.mjs's ALLOWLIST:\n",
+  )
   for (const v of violations) console.error(`  ${v}`)
-  console.error('\nMove it to config/env, or add it to ALLOWLIST with a reviewed justification (HARDENING H28.1).')
+  console.error(
+    '\nMove it to config/env, or add it to ALLOWLIST with a reviewed justification (HARDENING H28.1).',
+  )
   process.exit(1)
 }
-console.log('[arch:urls] PASS -- every hardcoded URL in application source is on the reviewed allowlist (or is a dev-only localhost default).')
+console.log(
+  '[arch:urls] PASS -- every hardcoded URL in application source is on the reviewed allowlist (or is a dev-only localhost default).',
+)

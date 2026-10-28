@@ -5,6 +5,9 @@
 import { eq, inArray } from 'drizzle-orm'
 import * as schema from '../../schema/notifications.js'
 import { DEMO_DEPARTMENT, DEMO_USERS } from '../fixtures.js'
+import { demoId } from '../ids.js'
+import type { SeedModuleContext } from '../module-loader.js'
+import { asUser } from '../scope.js'
 import {
   ALL_WORK_MEMBER_IDS,
   NEWCOMER_INDEX,
@@ -12,9 +15,6 @@ import {
   standaloneCardId,
   standaloneCardTitle,
 } from '../work-fixtures.js'
-import { demoId } from '../ids.js'
-import { asUser } from '../scope.js'
-import type { SeedModuleContext } from '../module-loader.js'
 
 // `order: 900` -- these rows now point at cards (`work.ts`, 90), projects (`projects.ts`, 100),
 // events (`events.ts`, 400) and pages (`pages.ts`, 600) that have to exist first. `app.notifications`
@@ -221,23 +221,6 @@ const NOTIFICATIONS: DemoNotification[] = [
     readAt: D('2026-09-04T09:40:00+05:00'),
   },
   {
-    name: 'head.field.filled',
-    userId: HEAD.id,
-    reason: 'updated',
-    type: 'fields.value.filled',
-    subjectType: 'person',
-    subjectId: ALL_WORK_MEMBER_IDS[12]!,
-    title: {
-      'uz-Latn': 'Sanjar Tursunov «Taʼlim» maydonini toʻldirdi',
-      'uz-Cyrl': 'Санжар Турсунов «Таълим» майдонини тўлдирди',
-      ru: 'Санжар Турсунов заполнил поле «Образование»',
-      en: 'Sanjar Tursunov filled in "Education"',
-    },
-    deepLink: `/people/${ALL_WORK_MEMBER_IDS[12]!}`,
-    createdAt: D('2026-09-03T12:10:00+05:00'),
-    readAt: D('2026-09-03T12:30:00+05:00'),
-  },
-  {
     name: 'head.updated.event',
     userId: HEAD.id,
     reason: 'updated',
@@ -343,22 +326,6 @@ const NOTIFICATIONS: DemoNotification[] = [
     deepLink: '/pages',
     createdAt: D('2026-08-31T09:05:00+05:00'),
     readAt: D('2026-08-31T09:30:00+05:00'),
-  },
-  {
-    name: 'newcomer.field.request',
-    userId: ALL_WORK_MEMBER_IDS[NEWCOMER_INDEX]!,
-    reason: 'updated',
-    type: 'fields.value.requested',
-    subjectType: 'person',
-    subjectId: ALL_WORK_MEMBER_IDS[NEWCOMER_INDEX]!,
-    title: {
-      'uz-Latn': 'Anvar Aliyev «Taʼlim» maydonini toʻldirishingizni soʻradi',
-      'uz-Cyrl': 'Анвар Алиев «Таълим» майдонини тўлдиришингизни сўради',
-      ru: 'Анвар Алиев просит заполнить поле «Образование»',
-      en: 'Anvar Aliyev asks you to fill in "Education"',
-    },
-    deepLink: '/account',
-    createdAt: D('2026-09-05T09:00:00+05:00'),
   },
   {
     name: 'newcomer.assigned.accounts',

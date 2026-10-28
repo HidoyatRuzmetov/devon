@@ -1,15 +1,23 @@
 // Telegram module (TECH-SPEC §7): personal linking (`/start <code>` + QR), department group
 // connection, webhook route + local-dev polling fallback, commands and inline-button actions
 // (`bot.ts`). Mounted at `/api/v1/telegram` (MODULE-GUIDE.md "API modules").
+import type { FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { Update } from 'grammy/types'
-import { z } from 'zod'
 import QRCode from 'qrcode'
-import type { FastifyRequest } from 'fastify'
+import { z } from 'zod'
 import type { Config } from '../../config.js'
+import { isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
+import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { AuditCtx } from '../../types.js'
+import { registerBotHandlers } from './bot.js'
+import { setupCounts } from './miniapp-repo.js'
+import { setupChecklistSchema } from './miniapp-schemas.js'
+import miniappRoutes from './miniapp.js'
+import { startTelegramPolling } from './polling.js'
+import { miniappUrl } from './public-url.js'
 import {
   disconnectGroup,
   getLinkStatus,
@@ -20,24 +28,6 @@ import {
   setGroupKinds,
   unlink,
 } from './repo.js'
-import { isHeadOf } from '../../lib/actor.js'
-import { sendProblem } from '../../lib/problem-reply.js'
-import { registerBotHandlers } from './bot.js'
-import { tb, type BotLocale } from './templates.js'
-import { secretsEqual, TELEGRAM_SECRET_HEADER, UpdateReplayWindow } from './webhook-guard.js'
-import { webhookOptions } from './webhook-options.js'
-import { startTelegramPolling } from './polling.js'
-import {
-  botUsername as resolvedBotUsername,
-  configureTelegram,
-  getBot,
-  isTelegramAvailable,
-  isTelegramConfigured,
-  publicUrl,
-} from './transport.js'
-import miniappRoutes, { miniappUrl } from './miniapp.js'
-import { setupCounts } from './miniapp-repo.js'
-import { setupChecklistSchema } from './miniapp-schemas.js'
 import {
   groupConnectCodeSchema,
   groupListSchema,
@@ -47,6 +37,17 @@ import {
   putGroupKindsSchema,
   webhookParamsSchema,
 } from './schemas.js'
+import { tb, type BotLocale } from './templates.js'
+import {
+  configureTelegram,
+  getBot,
+  isTelegramAvailable,
+  isTelegramConfigured,
+  publicUrl,
+  botUsername as resolvedBotUsername,
+} from './transport.js'
+import { secretsEqual, TELEGRAM_SECRET_HEADER, UpdateReplayWindow } from './webhook-guard.js'
+import { webhookOptions } from './webhook-options.js'
 
 function auditCtxFromReq(req: FastifyRequest): AuditCtx {
   return {

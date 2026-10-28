@@ -1,11 +1,10 @@
-import * as React from 'react'
-import { useIsMutating, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import { toast } from '@devon/ui'
-import { useMeQuery } from '../../lib/session.js'
+import { useIsMutating, useMutation, useQueryClient } from '@tanstack/react-query'
+import * as React from 'react'
 import type { Me } from '../../lib/api-schemas.js'
+import { useMeQuery } from '../../lib/session.js'
 import * as api from './api.js'
-import type { PomodoroSettings, PatchPomodoroSettingsInput } from './types.js'
 import {
   advanceCycle,
   attachSessionId,
@@ -21,13 +20,14 @@ import {
   stopToIdle,
   type PomodoroPhase,
 } from './pomodoro-engine.js'
+import type { PatchPomodoroSettingsInput, PomodoroSettings } from './types.js'
 
 type Phase = Exclude<PomodoroPhase, 'idle'>
 type Start = {
   owner: string
   phase: Phase
   settings: PomodoroSettings
-  taskId: string | null
+
   startedAt: string
 }
 type End = {
@@ -35,7 +35,7 @@ type End = {
   id: string
   phase: Phase
   settings: PomodoroSettings
-  taskId: string | null
+
   endedAt: string
   completed: boolean
   next?: Phase
@@ -52,16 +52,10 @@ export function usePomodoroControls() {
   React.useEffect(() => scopePomodoroState(owner), [owner])
   const owns = (id: string) =>
     qc.getQueryData<Me | null>(['me'])?.user.id === id && getPomodoroState().userId === id
-  const refresh = (id: string) => {
-    if (!owns(id)) return
-    void qc.invalidateQueries({ queryKey: ['personal', 'pomodoro', 'sessions'] })
-    void qc.invalidateQueries({ queryKey: ['personal', 'pomodoro', 'stats'] })
-  }
   const acceptStart = (input: Start, sessionId: string) => {
     if (!owns(input.owner)) return
-    startPhase(input.phase, input.settings, input.taskId, Date.parse(input.startedAt))
+    startPhase(input.phase, input.settings, Date.parse(input.startedAt))
     attachSessionId(sessionId)
-    refresh(input.owner)
   }
   const create = useMutation({
     mutationKey: ['personal', 'pomodoro', 'session-write'],
@@ -70,7 +64,6 @@ export function usePomodoroControls() {
         {
           kind: input.phase,
           startedAt: input.startedAt,
-          taskId: input.phase === 'focus' ? input.taskId : null,
         },
         csrf,
       ),
@@ -84,7 +77,6 @@ export function usePomodoroControls() {
         const recorded = rows.find(
           (row) =>
             row.kind === input.phase &&
-            row.taskId === (input.phase === 'focus' ? input.taskId : null) &&
             Date.parse(row.startedAt) === Date.parse(input.startedAt) &&
             row.endedAt === null,
         )
@@ -101,7 +93,7 @@ export function usePomodoroControls() {
       if (owns(input.owner)) setPomodoroBusy(false)
     },
   })
-  function start(phase: Phase, settings: PomodoroSettings, taskId: string | null = null) {
+  function start(phase: Phase, settings: PomodoroSettings) {
     const state = getPomodoroState()
     if (!owner || !owns(owner) || state.busy || state.phase !== 'idle') return
     setPomodoroBusy(true)
@@ -110,7 +102,7 @@ export function usePomodoroControls() {
       owner,
       phase,
       settings,
-      taskId,
+
       startedAt: new Date().toISOString(),
     })
   }
@@ -148,7 +140,6 @@ export function usePomodoroControls() {
         )
       }
       stopToIdle()
-      refresh(input.owner)
     },
     onError: (_error, input) => {
       if (owns(input.owner)) toast.error(t('toast.saveError'))
@@ -156,15 +147,15 @@ export function usePomodoroControls() {
     onSettled: (_row, error, input) => {
       if (!owns(input.owner)) return
       setPomodoroBusy(false)
-      if (!error && input.next) start(input.next, input.settings, input.taskId)
+      if (!error && input.next) start(input.next, input.settings)
     },
   })
-  function finish(completed: boolean, settings: PomodoroSettings, taskId: string | null = null) {
+  function finish(completed: boolean, settings: PomodoroSettings) {
     const state = getPomodoroState()
     if (!owner || !owns(owner) || state.busy || state.phase === 'idle' || !state.sessionId) return
     const receipt = preparePomodoroEnd(completed)
     setPomodoroBusy(true)
-    end.mutate({ owner, id: state.sessionId, phase: state.phase, settings, taskId, ...receipt })
+    end.mutate({ owner, id: state.sessionId, phase: state.phase, settings, ...receipt })
   }
   return { start, finish }
 }

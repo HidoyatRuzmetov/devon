@@ -105,7 +105,6 @@ export type AiFeature =
   | 'catch_up'
   | 'draft_event'
   | 'summarize_thread'
-  | 'nl_analytics'
   | 'translate'
   | 'draft_reply'
   | 'draft_page'
@@ -122,7 +121,6 @@ export const AI_FEATURES: readonly AiFeature[] = [
   'catch_up',
   'draft_event',
   'summarize_thread',
-  'nl_analytics',
   'translate',
   'draft_reply',
   'draft_page',

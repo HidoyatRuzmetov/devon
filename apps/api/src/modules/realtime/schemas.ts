@@ -56,50 +56,6 @@ export const signalBodySchema = z.object({
 
 export const signalResponseSchema = z.object({ delivered: z.boolean() })
 
-export const shareCanvasBodySchema = z.object({
-  canvasId: z.string().uuid(),
-  scope: z.enum(['project', 'event']),
-  targetId: z.string().uuid(),
-  allowEdit: z.boolean().default(true),
-})
-
-export const sharedCanvasSchema = z.object({
-  id: z.string(),
-  departmentId: z.string(),
-  sourceCanvasId: z.string(),
-  ownerUserId: z.string(),
-  scope: z.enum(['project', 'event']),
-  targetId: z.string(),
-  /** The project's or event's own title -- what "shared to X" actually names. `''` if the target has
-   * been deleted since. */
-  targetTitle: z.string(),
-  title: z.string(),
-  scene: z.unknown(),
-  stickies: z.unknown(),
-  allowEdit: z.boolean(),
-  updatedAt: z.string(),
-  version: z.number().int(),
-  /** Echoed back so the client never has to guess what it may do (v1.1 MODULE-GUIDE "the answer is
-   * echoed back on the DTO as canEdit/canManage"). */
-  canEdit: z.boolean(),
-  canManage: z.boolean(),
-  channel: z.string(),
-})
-
-export const sharedCanvasListSchema = z.object({
-  items: z.array(
-    sharedCanvasSchema.omit({ scene: true, stickies: true, channel: true, canEdit: true }),
-  ),
-})
-
-export const updateCanvasDocBodySchema = z.object({
-  scene: z.unknown(),
-  stickies: z.unknown(),
-  /** The client's own view of the version it edited; a mismatch is reported, never silently
-   * overwritten (the canvas is collaborative, so "somebody else changed this" is a real answer). */
-  baseVersion: z.number().int().nonnegative().optional(),
-})
-
 export const pushKeySchema = z.object({
   enabled: z.boolean(),
   publicKey: z.string(),

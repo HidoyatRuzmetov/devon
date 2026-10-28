@@ -2,28 +2,26 @@
 //
 // The point of putting a focus timer in a Telegram Mini App is that the phone is where the
 // distraction lives. So: the same `app.pomodoro_sessions` rows the personal workspace on the web
-// writes (start here, see it in the web's Pomodoro stats and focus minutes), the same settings, and
+// writes for timer recovery, the same settings, and
 // one thing the web cannot do -- when the block ends, the **bot** sends the message, so it arrives
 // even if the sheet was closed two minutes in.
 //
 // I-1 throughout: every row here is the viewer's own, owner-only, and the bot message names the phase
 // and the length, never a task title.
-import * as React from 'react'
-import { Pause, Play, RotateCcw } from 'lucide-react'
 import { useT } from '@devon/i18n'
-import { Button, ProgressRing, cn, toast } from '@devon/ui'
+import { Button, ProgressRing, toast } from '@devon/ui'
+import { Pause, Play, RotateCcw } from 'lucide-react'
+import * as React from 'react'
+import { ListSkeleton, QueryState, ScreenBody, ScreenHeader } from '../components/screen.js'
 import {
   endPomodoroSession,
   getPomodoroSettings,
-  getPomodoroStats,
   sendFocusAlert,
   startPomodoroSession,
   type PomodoroSession,
 } from '../lib/api.js'
-import { useQuery } from '../lib/use-query.js'
 import { tg } from '../lib/telegram.js'
-import { ListSkeleton, QueryState, ScreenBody, ScreenHeader } from '../components/screen.js'
-import { SectionLabel } from '../components/bits.js'
+import { useQuery } from '../lib/use-query.js'
 
 type Phase = 'focus' | 'short_break' | 'long_break'
 
@@ -43,7 +41,6 @@ const PHASE_TONE: Record<Phase, string> = {
 export function FocusScreen(): React.ReactElement {
   const t = useT()
   const settings = useQuery(() => getPomodoroSettings(), [])
-  const stats = useQuery(() => getPomodoroStats(), [])
 
   const [phase, setPhase] = React.useState<Phase>('focus')
   const [running, setRunning] = React.useState(false)
@@ -78,9 +75,9 @@ export function FocusScreen(): React.ReactElement {
       setSession(null)
       setRemaining(minutesFor(phase) * 60)
       if (!open) return
-      endPomodoroSession(open.id, new Date().toISOString(), completed)
-        .then(() => stats.refetch())
-        .catch(() => toast.error(t('miniapp.focus.saveFailed')))
+      endPomodoroSession(open.id, new Date().toISOString(), completed).catch(() =>
+        toast.error(t('miniapp.focus.saveFailed')),
+      )
       if (!completed) return
       tg.haptic.success()
       // The bot is the thing that reaches the person when the sheet is closed. A failure here is
@@ -93,7 +90,7 @@ export function FocusScreen(): React.ReactElement {
         })
         .catch(() => undefined)
     },
-    [session, phase, minutesFor, stats, t],
+    [session, phase, minutesFor, t],
   )
 
   // One interval, driven by an absolute end timestamp rather than a decrementing counter: a webview
@@ -216,28 +213,6 @@ export function FocusScreen(): React.ReactElement {
           <p className="text-muted-foreground text-center text-[12px] leading-4">
             {t('miniapp.focus.botNote')}
           </p>
-        </div>
-
-        <SectionLabel>{t('miniapp.focus.stats')}</SectionLabel>
-        <div className="grid grid-cols-2 gap-2">
-          {(
-            [
-              ['miniapp.focus.today', stats.data?.today.focusMinutes ?? 0],
-              ['miniapp.focus.week', stats.data?.week.focusMinutes ?? 0],
-            ] as const
-          ).map(([labelKey, minutes]) => (
-            <div
-              key={labelKey}
-              className={cn('border-border bg-card shadow-1 rounded-md border px-3 py-3')}
-            >
-              <p className="text-muted-foreground text-[11px] tracking-[0.08em] uppercase">
-                {t(labelKey)}
-              </p>
-              <p className="font-display text-[24px] leading-8 tabular-nums">
-                {t('miniapp.focus.minutes', { count: Math.round(minutes) })}
-              </p>
-            </div>
-          ))}
         </div>
       </ScreenBody>
     </>

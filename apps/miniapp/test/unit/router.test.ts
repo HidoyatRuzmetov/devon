@@ -26,7 +26,6 @@ describe('the shared route list', () => {
     expect([...MINIAPP_ROUTE_KEYS].sort()).toEqual([
       'board',
       'events',
-      'fields',
       'focus',
       'inbox',
       'setup',
@@ -70,7 +69,7 @@ describe('parseHash', () => {
 describe('routeFromStartParam', () => {
   it('opens the tab a bot button named', () => {
     expect(routeFromStartParam('inbox')).toEqual({ name: 'inbox' })
-    expect(routeFromStartParam('fields')).toEqual({ name: 'fields' })
+    expect(routeFromStartParam('focus')).toEqual({ name: 'focus' })
   })
 
   it('opens a specific card or event from a notification deep link', () => {
@@ -79,7 +78,7 @@ describe('routeFromStartParam', () => {
   })
 
   it('answers null for anything it does not recognise, so the sheet keeps its own hash', () => {
-    for (const value of [null, '', 'nonsense', 'card', 'card_', '../../etc/passwd']) {
+    for (const value of [null, '', 'fields', 'nonsense', 'card', 'card_', '../../etc/passwd']) {
       expect(routeFromStartParam(value)).toBeNull()
     }
   })

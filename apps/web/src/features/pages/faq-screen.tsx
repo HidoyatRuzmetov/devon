@@ -11,7 +11,7 @@ const GROUPS = [
 
 const NEXT_STEPS = {
   start: { href: '/work/mine', label: 'work.view.mine' },
-  head: { href: '/work/workload', label: 'work.workload.title' },
+  head: { href: '/analytics', label: 'checkins.title' },
   admin: { href: '/admin', label: 'admin.console.title' },
   find: { href: '/work', label: 'work.title' },
   projects: { href: '/projects', label: 'projects.title' },
@@ -19,7 +19,7 @@ const NEXT_STEPS = {
   files: { href: '/work', label: 'work.title' },
   profile: { href: '/account', label: 'accounts.settings.title' },
   telegram: { href: '/account/telegram', label: 'telegram.title' },
-  ai: { href: '/ai', label: 'ai.title' },
+  ai: { href: '/assistant', label: 'assistantWorkspace.title' },
 } as const
 
 /** Bundled help stays available even when the department has no pages yet. */

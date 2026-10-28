@@ -1,3 +1,5 @@
+import { useT } from '@devon/i18n'
+import { cn } from '@devon/ui'
 import {
   Bell,
   Building2,
@@ -5,12 +7,12 @@ import {
   Fingerprint,
   Send,
   ShieldCheck,
+  Sparkles,
   Trash2,
   UserRound,
 } from 'lucide-react'
-import { useT } from '@devon/i18n'
-import { cn } from '@devon/ui'
 import { navigate, RouterLink } from '../../lib/router.js'
+import { useSession } from '../../lib/session.js'
 
 export const SETTINGS_GROUPS = [
   {
@@ -27,6 +29,7 @@ export const SETTINGS_GROUPS = [
       { path: '/account/telegram', labelKey: 'telegram.title', icon: Send },
       { path: '/account/calendar', labelKey: 'calendar.title', icon: CalendarDays },
       { path: '/account/department', labelKey: 'settings.department', icon: Building2 },
+      { path: '/account/ai', labelKey: 'ai.title', icon: Sparkles },
     ],
   },
   {
@@ -41,6 +44,15 @@ export const SETTINGS_GROUPS = [
 /** Routed sections retain back/forward and deep links. Mobile gets a native grouped picker. */
 export function SettingsNavigation({ path }: { path: string }) {
   const t = useT()
+  const session = useSession()
+  const isAdmin = session.user?.role === 'super_admin'
+  const groups = SETTINGS_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter(
+      (item) =>
+        !isAdmin || ['/account', '/account/security', '/account/delete'].includes(item.path),
+    ),
+  })).filter((group) => group.items.length)
   return (
     <>
       <label className="flex flex-col gap-2 text-small lg:hidden">
@@ -50,7 +62,7 @@ export function SettingsNavigation({ path }: { path: string }) {
           onChange={(event) => navigate(event.target.value)}
           className="min-h-11 w-full rounded-md border border-border bg-card px-3 text-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {SETTINGS_GROUPS.map((group) => (
+          {groups.map((group) => (
             <optgroup key={group.labelKey} label={t(group.labelKey)}>
               {group.items.map((item) => (
                 <option key={item.path} value={item.path}>
@@ -65,7 +77,7 @@ export function SettingsNavigation({ path }: { path: string }) {
         aria-label={t('accounts.settings.subnavAria')}
         className="sticky top-4 hidden w-56 shrink-0 flex-col gap-6 lg:flex"
       >
-        {SETTINGS_GROUPS.map((group) => (
+        {groups.map((group) => (
           <div key={group.labelKey} className="flex flex-col gap-1.5">
             <p className="px-3 text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
               {t(group.labelKey)}

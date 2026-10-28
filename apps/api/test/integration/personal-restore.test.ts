@@ -1,8 +1,8 @@
+import { personalDeleteReceiptSchema } from '@devon/contracts'
 import { randomUUID } from 'node:crypto'
 import { Client } from 'pg'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { personalDeleteReceiptSchema } from '@devon/contracts'
-import { restoreTask, restoreNote, restoreCanvas } from '../../src/modules/personal/repo.js'
+import { restoreTask } from '../../src/modules/personal/repo.js'
 import type { AuditCtx } from '../../src/types.js'
 import { cookieHeader, parseCookies } from '../checks/http.js'
 import {
@@ -14,9 +14,9 @@ import {
   stopHarness,
   superuserQuery,
   type Db,
+  type SeededUser,
   type Server,
   type Session,
-  type SeededUser,
 } from './harness.js'
 
 let db: Db
@@ -28,7 +28,7 @@ let departmentId: string
 let ownerSession: Session
 let headSession: Session
 let adminSession: Session
-const kinds = ['tasks', 'notes', 'canvases'] as const
+const kinds = ['tasks'] as const
 type Kind = (typeof kinds)[number]
 type ItemSnapshot = { id: string; version: number; title: string; createdAt: string }
 type DeletedRow = {
@@ -47,7 +47,7 @@ type AuditRow = {
   department_id: string | null
   after: unknown
 }
-const table = { tasks: 'personal_tasks', notes: 'personal_notes', canvases: 'personal_canvases' }
+const table = { tasks: 'personal_tasks' }
 
 beforeAll(async () => {
   ;({ db, server } = await startHarness())
@@ -207,41 +207,6 @@ describe('personal persisted deletion and operation-bound Undo', () => {
     expect(listed.some((row) => row.id === historical.id || row.id === foreign)).toBe(false)
   })
 
-  it('round trips exact note/canvas data and versions, and refuses an old token after a later deletion', async () => {
-    for (const kind of ['notes', 'canvases'] as const) {
-      const extra =
-        kind === 'notes'
-          ? { body: { text: 'Private retained body' }, pinned: true }
-          : {
-              scene: {
-                elements: [{ id: 'shape1', text: 'Private scene' }],
-                appState: { zoom: 1.2 },
-              },
-              stickies: [{ id: 's1', x: 1, y: 2, color: 'blue', text: 'Private sticky' }],
-            }
-      const item = await create(kind, ownerSession, extra)
-      const receipt = await remove(kind, item.id)
-      expect((await itemState(kind, item.id))[0]).toMatchObject({ deleted: true, version: 2 })
-      const response = await restore(kind, item.id, receipt.restoreToken)
-      expect(response.status).toBe(200)
-      expect(await response.json()).toMatchObject({
-        ...extra,
-        id: item.id,
-        title: item.title,
-        version: 3,
-        createdAt: item.createdAt,
-      })
-      const nextReceipt = await remove(kind, item.id)
-      expect(nextReceipt.restoreToken).not.toBe(receipt.restoreToken)
-      const before = await itemState(kind, item.id)
-      const history = await audit([item.id])
-      expect((await restore(kind, item.id, receipt.restoreToken)).status).toBe(404)
-      expect(await itemState(kind, item.id)).toEqual(before)
-      expect(await audit([item.id])).toEqual(history)
-      expect((await restore(kind, item.id, nextReceipt.restoreToken)).status).toBe(200)
-    }
-  })
-
   it('keeps legacy DELETE204 and requires valid CSRF/UUID inputs with no persistence on refused writes', async () => {
     for (const kind of kinds) {
       const item = await create(kind)
@@ -277,7 +242,7 @@ describe('personal persisted deletion and operation-bound Undo', () => {
       cookie: lensCookie,
       headers: { ...adminSession.headers, cookie: lensCookie },
     }
-    const restorers = { tasks: restoreTask, notes: restoreNote, canvases: restoreCanvas }
+    const restorers = { tasks: restoreTask }
     for (const kind of kinds) {
       const own = await create(kind)
       const receipt = await remove(kind, own.id)
@@ -387,40 +352,6 @@ describe('personal persisted deletion and operation-bound Undo', () => {
     }
   })
 
-  it.each(['notes', 'canvases'] as const)(
-    'allows exactly one concurrent %s restore and commits its audit with the state transition',
-    async (kind) => {
-      const item = await create(kind)
-      const receipt = await remove(kind, item.id)
-      const blocker = new Client({ connectionString: db.superuserUrl })
-      await blocker.connect()
-      await blocker.query('begin')
-      await blocker.query(`select id from app.${table[kind]} where id=$1 for update`, [item.id])
-      const blockerPid = (await blocker.query<{ pid: number }>('select pg_backend_pid() as pid'))
-        .rows[0]!.pid
-      try {
-        const first = restore(kind, item.id, receipt.restoreToken)
-        await blockedBy(blockerPid)
-        const second = restore(kind, item.id, receipt.restoreToken)
-        // Prove both requests reached the DB: the second can wait behind the first tuple waiter.
-        await blockedBy(blockerPid, 2)
-        await blocker.query('commit')
-        expect([(await first).status, (await second).status].sort()).toEqual([200, 404])
-        expect((await itemState(kind, item.id))[0]).toMatchObject({
-          deleted: false,
-          version: 3,
-          deleted_operation_id: null,
-        })
-        expect(
-          (await audit([item.id])).filter((row) => String(row.action).endsWith('.restored')),
-        ).toHaveLength(1)
-      } finally {
-        await blocker.query('rollback')
-        await blocker.end()
-      }
-    },
-  )
-
   it('rolls back restored subtree when its audit fails, and refuses revoked sessions without changing owner-only state', async () => {
     const root = await create('tasks')
     const child = await create('tasks', ownerSession, { parentId: root.id })
@@ -447,33 +378,24 @@ describe('personal persisted deletion and operation-bound Undo', () => {
     expect((await restore('tasks', root.id, receipt.restoreToken)).status).toBe(200)
     const revoked = await seedBareUser(db)
     const session = await loginAs(server.baseUrl, revoked.login)
-    const item = await create('notes', session)
-    const revokedReceipt = await remove('notes', item.id, session)
-    const revokedBefore = await itemState('notes', item.id)
+    const item = await create('tasks', session)
+    const revokedReceipt = await remove('tasks', item.id, session)
+    const revokedBefore = await itemState('tasks', item.id)
     const revokedAudit = await audit([item.id])
     await superuserQuery(
       db,
       "update app.sessions set revoked_at=now(),revoked_reason='qa' where user_id=$1",
       [revoked.id],
     )
-    expect((await restore('notes', item.id, revokedReceipt.restoreToken, session)).status).toBe(401)
-    expect(await itemState('notes', item.id)).toEqual(revokedBefore)
+    expect((await restore('tasks', item.id, revokedReceipt.restoreToken, session)).status).toBe(401)
+    expect(await itemState('tasks', item.id)).toEqual(revokedBefore)
     expect(await audit([item.id])).toEqual(revokedAudit)
   })
 
   it('inserts directly after a nested anchor even when integer sorts and timestamps tie, without shifting other groups', async () => {
-    const sprintResponse = await request(ownerSession, 'sprints', 'POST', {
-      kind: 'week',
-      startsAt: '2026-10-05T00:00:00.000Z',
-      endsAt: '2026-10-12T00:00:00.000Z',
-    })
-    expect(sprintResponse.status).toBe(201)
-    const sprint = (await sprintResponse.json()) as { id: string }
-    const parent = await create('tasks', ownerSession, { sprintId: sprint.id, sort: 99 })
+    const parent = await create('tasks', ownerSession, { sort: 99 })
     const siblings = await Promise.all(
-      [0, 1, 2].map(() =>
-        create('tasks', ownerSession, { parentId: parent.id, sprintId: sprint.id, sort: 7 }),
-      ),
+      [0, 1, 2].map(() => create('tasks', ownerSession, { parentId: parent.id, sort: 7 })),
     )
     const siblingIds = siblings.map((item) => item.id)
     await superuserQuery(
@@ -484,7 +406,7 @@ describe('personal persisted deletion and operation-bound Undo', () => {
     const priorOrder = siblingIds.sort()
     const anchorId = priorOrder[1]!
     const unrelated = await create('tasks', ownerSession, { sort: 55 })
-    const rootGroup = await create('tasks', ownerSession, { sprintId: sprint.id, sort: 77 })
+    const rootGroup = await create('tasks', ownerSession, { sort: 77 })
     const untouched = await rows('tasks', [parent.id, unrelated.id, rootGroup.id])
     const response = await request(ownerSession, 'tasks', 'POST', {
       title: 'New nested sibling',
@@ -494,14 +416,13 @@ describe('personal persisted deletion and operation-bound Undo', () => {
     const inserted = (await response.json()) as { id: string; sort: number }
     expect(inserted).toMatchObject({
       parentId: parent.id,
-      sprintId: sprint.id,
       sort: 2,
       version: 1,
     })
     const ordered = await superuserQuery<{ id: string; sort: number }>(
       db,
-      'select id,sort from app.personal_tasks where user_id=$1 and parent_id=$2 and sprint_id=$3 and deleted_at is null order by sort,created_at,id',
-      [owner.id, parent.id, sprint.id],
+      'select id,sort from app.personal_tasks where user_id=$1 and parent_id=$2 and deleted_at is null order by sort,created_at,id',
+      [owner.id, parent.id],
     )
     expect(ordered.map((item) => item.id)).toEqual([
       priorOrder[0],
@@ -512,12 +433,10 @@ describe('personal persisted deletion and operation-bound Undo', () => {
     expect(ordered.map((item) => item.sort)).toEqual([0, 1, 2, 3])
     expect(await rows('tasks', [parent.id, unrelated.id, rootGroup.id])).toEqual(untouched)
     const listing = await request(ownerSession, 'tasks')
-    const listed = (await listing.json()) as { id: string; parentId: string; sprintId: string }[]
-    expect(
-      listed
-        .filter((item) => item.parentId === parent.id && item.sprintId === sprint.id)
-        .map((item) => item.id),
-    ).toEqual(ordered.map((item) => item.id))
+    const listed = (await listing.json()) as { id: string; parentId: string }[]
+    expect(listed.filter((item) => item.parentId === parent.id).map((item) => item.id)).toEqual(
+      ordered.map((item) => item.id),
+    )
     expect((await audit([inserted.id])).map((item) => item.action)).toEqual([
       'personal.task.created',
     ])
@@ -540,21 +459,11 @@ describe('personal persisted deletion and operation-bound Undo', () => {
       foreign.id,
       brokenParent.id,
     ])
-    const sprintResponse = await request(ownerSession, 'sprints', 'POST', {
-      kind: 'day',
-      startsAt: '2026-10-08T00:00:00.000Z',
-      endsAt: '2026-10-09T00:00:00.000Z',
-    })
-    const sprint = (await sprintResponse.json()) as { id: string }
-    const brokenSprint = await create('tasks', ownerSession, { sprintId: sprint.id })
-    await superuserQuery(db, 'update app.personal_sprints set deleted_at=now() where id=$1', [
-      sprint.id,
-    ])
     async function allEffects() {
       return {
         tasks: await superuserQuery(
           db,
-          'select id,parent_id,sprint_id,sort,version,deleted_operation_id from app.personal_tasks order by id',
+          'select id,parent_id,sort,version,deleted_operation_id from app.personal_tasks order by id',
         ),
         audit: await superuserQuery(db, 'select id from audit.events order by seq'),
       }
@@ -565,9 +474,7 @@ describe('personal persisted deletion and operation-bound Undo', () => {
       { afterTaskId: foreign.id },
       { afterTaskId: deleted.id },
       { afterTaskId: brokenParent.id },
-      { afterTaskId: brokenSprint.id },
       { afterTaskId: anchor.id, parentId: null },
-      { afterTaskId: anchor.id, sprintId: null },
       { afterTaskId: anchor.id, sort: 0 },
       { afterTaskId: 'invalid' },
     ]
@@ -665,68 +572,6 @@ describe('personal persisted deletion and operation-bound Undo', () => {
             (row) => row.deleted && row.deleted_operation_id === receipt.restoreToken,
           ),
         ).toBe(true)
-      } finally {
-        await blocker.query('rollback')
-        await blocker.end()
-      }
-    },
-  )
-
-  it.each(['rollover-first', 'insert-first'] as const)(
-    'derives the committed anchor period across a rollover: %s',
-    async (order) => {
-      const response = await request(ownerSession, 'sprints', 'POST', {
-        kind: 'week',
-        startsAt: '2026-10-05T00:00:00.000Z',
-        endsAt: '2026-10-12T00:00:00.000Z',
-      })
-      expect(response.status).toBe(201)
-      const sprint = (await response.json()) as { id: string }
-      const parent = await create('tasks', ownerSession, { sprintId: sprint.id })
-      const anchor = await create('tasks', ownerSession, {
-        parentId: parent.id,
-        sprintId: sprint.id,
-      })
-      const blocker = new Client({ connectionString: db.superuserUrl })
-      await blocker.connect()
-      await blocker.query('begin')
-      await blocker.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [
-        `personal.tasks:${owner.id}`,
-      ])
-      const blockerPid = (await blocker.query<{ pid: number }>('select pg_backend_pid() as pid'))
-        .rows[0]!.pid
-      const insert = () =>
-        request(ownerSession, 'tasks', 'POST', {
-          title: 'New period sibling',
-          afterTaskId: anchor.id,
-        })
-      const rollover = () =>
-        request(ownerSession, `sprints/${sprint.id}/rollover`, 'POST', {
-          startsAt: '2026-10-12T00:00:00.000Z',
-          endsAt: '2026-10-19T00:00:00.000Z',
-        })
-      try {
-        const first = order === 'rollover-first' ? rollover() : insert()
-        await blockedBy(blockerPid)
-        const second = order === 'rollover-first' ? insert() : rollover()
-        await blockedBy(blockerPid, 2)
-        await blocker.query('commit')
-        const [firstResponse, secondResponse] = await Promise.all([first, second])
-        const rolled = order === 'rollover-first' ? firstResponse : secondResponse
-        const inserted = order === 'rollover-first' ? secondResponse : firstResponse
-        expect(rolled.status).toBe(200)
-        expect(inserted.status).toBe(201)
-        const newPeriod = ((await rolled.json()) as { sprint: { id: string } }).sprint.id
-        const newItem = (await inserted.json()) as { id: string }
-        const persisted = await superuserQuery<{
-          id: string
-          sprint_id: string | null
-          parent_id: string | null
-        }>(db, 'select id,sprint_id,parent_id from app.personal_tasks where id=any($1::uuid[])', [
-          [parent.id, anchor.id, newItem.id],
-        ])
-        expect(persisted.every((row) => row.sprint_id === newPeriod)).toBe(true)
-        expect(persisted.find((row) => row.id === newItem.id)?.parent_id).toBe(parent.id)
       } finally {
         await blocker.query('rollback')
         await blocker.end()

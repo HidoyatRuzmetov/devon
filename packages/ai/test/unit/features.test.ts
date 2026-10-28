@@ -37,7 +37,7 @@ const SAMPLE_INPUT: Record<AiFeature, Record<string, unknown>> = {
   },
   plan_sprint: {
     locale: 'uz-Latn',
-    scope: 'personal',
+    scope: 'project',
     periodKind: 'day',
     now: '2026-09-12T09:00:00+05:00',
     periodEndsAt: '2026-09-12T18:00:00+05:00',
@@ -126,14 +126,7 @@ const SAMPLE_INPUT: Record<AiFeature, Record<string, unknown>> = {
       },
     ],
   },
-  nl_analytics: {
-    locale: 'uz-Latn',
-    query: 'Bu oy Data boʻlimining muddati oʻtgan kartochkalari',
-    today: '2026-09-12',
-    knownUnits: ['Data boʻlimi'],
-    knownMembers: [{ name: 'Nodira Karimova', handle: 'nodira' }],
-    dateRange: { since: '2026-08-12', until: '2026-09-12' },
-  },
+
   translate: {
     locale: 'uz-Latn',
     targetLocale: 'ru',

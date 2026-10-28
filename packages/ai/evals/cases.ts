@@ -338,7 +338,7 @@ export const EVAL_CASES: EvalCase[] = [
   ...(() => {
     const base = {
       locale: 'uz-Latn',
-      scope: 'personal',
+      scope: 'project',
       periodKind: 'day',
       now: '2026-09-12T09:00:00+05:00',
       periodEndsAt: '2026-09-12T18:00:00+05:00',
@@ -364,7 +364,7 @@ export const EVAL_CASES: EvalCase[] = [
     }
     return [
       {
-        id: 'plan.personal.day.faithful',
+        id: 'plan.project.day.faithful',
         feature: 'plan_sprint' as const,
         determinism: true,
         input: { ...base, capacityMin: 420, items },
@@ -378,7 +378,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.day.due-first',
+        id: 'plan.project.day.due-first',
         feature: 'plan_sprint' as const,
         input: { ...base, capacityMin: 420, items },
         check: (out: unknown) => {
@@ -389,7 +389,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.blocked',
+        id: 'plan.project.blocked',
         feature: 'plan_sprint' as const,
         input: {
           ...base,
@@ -407,7 +407,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.capacity',
+        id: 'plan.project.capacity',
         feature: 'plan_sprint' as const,
         input: { ...base, capacityMin: 120, items },
         check: (out: unknown) => {
@@ -420,7 +420,7 @@ export const EVAL_CASES: EvalCase[] = [
         },
       },
       {
-        id: 'plan.personal.fits',
+        id: 'plan.project.fits',
         feature: 'plan_sprint' as const,
         input: {
           ...base,
@@ -1035,141 +1035,6 @@ export const EVAL_CASES: EvalCase[] = [
         feature: 'summarize_thread' as const,
         input: base,
         check: (out: unknown) => orthography(out),
-      },
-    ]
-  })(),
-
-  // -------------------------------------------------------------- F8 nl_analytics (7 cases)
-  ...(() => {
-    type Ask = {
-      filterText: string
-      metric: string | null
-      groupBy: string
-      unmappedTerms: string[]
-      confidence: string
-      restatement: string
-    }
-    const base = {
-      locale: 'uz-Latn',
-      today: TODAY,
-      knownUnits: ['Data boʻlimi', 'Kadrlar boʻlimi'],
-      knownLabels: ['EGDI', 'hisobot'],
-      knownProjects: ['EGDI paketi'],
-      knownMembers: [
-        { name: 'Nodira Karimova', handle: 'nodira' },
-        { name: 'Anvar Aliyev', handle: 'anvar' },
-      ],
-      dateRange: { since: '2026-08-12', until: TODAY },
-    }
-    const tokens = (filterText: string): Array<[string, string]> => {
-      const re = /([A-Za-z]+):"([^"]*)"|([A-Za-z]+):(\S+)/g
-      const out: Array<[string, string]> = []
-      let m: RegExpExecArray | null
-      while ((m = re.exec(filterText))) {
-        const key = (m[1] ?? m[3])!.toLowerCase()
-        out.push([key, (m[2] ?? m[4])!])
-      }
-      return out
-    }
-    return [
-      {
-        id: 'analytics.uz-latn.overdue-unit',
-        feature: 'nl_analytics' as const,
-        determinism: true,
-        input: { ...base, query: 'Data boʻlimining muddati oʻtgan kartochkalari' },
-        check: (out: unknown) => {
-          const unit = tokens((out as Ask).filterText).find(([key]) => key === 'unit')
-          return unit?.[1] === 'Data boʻlimi'
-            ? null
-            : `expected a unit clause naming "Data boʻlimi", got ${String(unit?.[1])}`
-        },
-      },
-      {
-        id: 'analytics.uz-latn.this-month',
-        feature: 'nl_analytics' as const,
-        input: { ...base, query: 'Bu oy muddati oʻtgan kartochkalar' },
-        check: (out: unknown) => {
-          const due = tokens((out as Ask).filterText).filter(([key]) => key === 'due')
-          return due.length >= 2
-            ? null
-            : `expected two due: clauses bounding the month, got ${due.length}`
-        },
-      },
-      {
-        id: 'analytics.ru.who-most',
-        feature: 'nl_analytics' as const,
-        input: { ...base, locale: 'ru', query: 'Кто больше всех просрочил?' },
-        check: (out: unknown) => {
-          const o = out as Ask
-          if (o.metric !== 'openVsOverdue')
-            return `expected overdue metric openVsOverdue, got ${String(o.metric)}`
-          if (o.groupBy !== 'person') return `expected groupBy person, got ${o.groupBy}`
-          const clauses = tokens(o.filterText)
-          const statuses = clauses.filter(([key]) => key === 'status').map(([, value]) => value)
-          if (statuses.length !== 1 || statuses[0] !== 'active')
-            return `expected exactly status:active, got ${JSON.stringify(statuses)}`
-          const dates = clauses.filter(([key]) => key === 'due').map(([, value]) => value)
-          if (dates.length !== 1 || dates[0] !== `<${TODAY}`)
-            return `expected exactly due:<${TODAY}, got ${JSON.stringify(dates)}`
-          return o.unmappedTerms.length === 0
-            ? null
-            : `who-overdue is fully supported, got unmapped terms ${JSON.stringify(o.unmappedTerms)}`
-        },
-      },
-      {
-        id: 'analytics.any.no-invented-unit',
-        feature: 'nl_analytics' as const,
-        input: { ...base, query: 'Moliya boʻlimining vazifalari' },
-        check: (out: unknown, input: Record<string, unknown>) => {
-          const units = new Set((input['knownUnits'] as string[]).map((u) => u.toLowerCase()))
-          const bad = tokens((out as Ask).filterText).find(
-            ([key, value]) => key === 'unit' && !units.has(value.toLowerCase()),
-          )
-          return bad ? `invented the unit "${bad[1]}"` : null
-        },
-      },
-      {
-        id: 'analytics.any.assignee-handle',
-        feature: 'nl_analytics' as const,
-        input: { ...base, query: 'Nodiraning ochiq vazifalari' },
-        check: (out: unknown, input: Record<string, unknown>) => {
-          const handles = new Set(
-            (input['knownMembers'] as { handle: string }[]).map((m) => m.handle.toLowerCase()),
-          )
-          const bad = tokens((out as Ask).filterText).find(
-            ([key, value]) =>
-              key === 'assignee' &&
-              value !== '@me' &&
-              !handles.has(value.replace(/^@/, '').toLowerCase()),
-          )
-          return bad ? `used a handle nobody has: ${bad[1]}` : null
-        },
-      },
-      {
-        id: 'analytics.any.unmapped',
-        feature: 'nl_analytics' as const,
-        input: { ...base, query: 'Nodira qanchalik samarali ishlayapti?' },
-        check: (out: unknown) => {
-          const o = out as Ask
-          if (o.unmappedTerms.length === 0)
-            return '"samarali" was silently dropped instead of reported'
-          return o.confidence !== 'high'
-            ? null
-            : 'reported high confidence despite an unmapped term'
-        },
-      },
-      {
-        id: 'analytics.uz-latn.restatement-localised',
-        feature: 'nl_analytics' as const,
-        input: { ...base, query: 'Muddati oʻtgan kartochkalar' },
-        check: (out: unknown) => {
-          const o = out as Ask
-          // The restatement is the only human-facing field; the filter text is machine syntax.
-          return all(
-            orthography({ restatement: o.restatement }),
-            scriptOf({ r: o.restatement }, 'latin'),
-          )
-        },
       },
     ]
   })(),

@@ -1,4 +1,3 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   aiChatAttachmentSchema,
   aiConversationSchema,
@@ -6,8 +5,9 @@ import {
   type AiChatAttachment,
   type AiConversation,
 } from '@devon/contracts'
-import { z } from 'zod'
 import type { Locale } from '@devon/i18n'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { z } from 'zod'
 import { apiClient } from '../../lib/api-client.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
 
@@ -159,6 +159,63 @@ export function useConversationProposalMutation(action: 'execute' | 'discard') {
     onSettled: (_data, _error, input) => {
       // A lost acknowledgement must be reconciled before another click; the server owns the
       // idempotency guard and only the persisted executed state is shown as success.
+      void qc.invalidateQueries({ queryKey: [...scope.key, input.conversationId] })
+    },
+  })
+}
+
+export function useProposalBatchMutation() {
+  const scope = useConversationScope(),
+    qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: {
+      conversationId: string
+      messageId: string
+      proposals: { id: string; revision: number; selected: boolean }[]
+    }) =>
+      apiClient.post(
+        `${BASE}/${encodeURIComponent(input.conversationId)}/proposals/resolve`,
+        { messageId: input.messageId, proposals: input.proposals },
+        aiConversationSchema,
+        scope.csrf,
+      ),
+    onSuccess: (conversation) => qc.setQueryData([...scope.key, conversation.id], conversation),
+    onSettled: (_data, _error, input) => {
+      void qc.invalidateQueries({ queryKey: [...scope.key, input.conversationId] })
+      void qc.invalidateQueries({ queryKey: [...scope.key, 'list'] })
+      for (const key of [
+        'work',
+        'projects',
+        'pages',
+        'events',
+        'analytics',
+        'checkins',
+        'personal',
+        'structure',
+        'inbox',
+      ])
+        void qc.invalidateQueries({ queryKey: [key] })
+    },
+  })
+}
+export function useEditProposalMutation() {
+  const scope = useConversationScope(),
+    qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: {
+      conversationId: string
+      proposalId: string
+      revision: number
+      arguments: Record<string, unknown>
+    }) =>
+      apiClient.patch(
+        `${BASE}/${encodeURIComponent(input.conversationId)}/proposals/${encodeURIComponent(input.proposalId)}`,
+        { revision: input.revision, arguments: input.arguments },
+        aiConversationSchema,
+        scope.csrf,
+      ),
+    onSuccess: (conversation) => qc.setQueryData([...scope.key, conversation.id], conversation),
+    onSettled: (_data, _error, input) => {
       void qc.invalidateQueries({ queryKey: [...scope.key, input.conversationId] })
     },
   })

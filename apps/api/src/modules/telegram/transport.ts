@@ -8,15 +8,18 @@
 // `getBot()` returns `null`, never throws, and the web settings screen reads `isTelegramConfigured()`
 // to render that hint (`GET /api/v1/telegram/status`, `index.ts`).
 import { Bot, InlineKeyboard } from 'grammy'
+import type { MessageEntity } from 'grammy/types'
 import type { Config } from '../../config.js'
-import type { NotificationRow } from '../notifications/repo.js'
-import { absoluteDeepLink, buildTelegramPointer } from './pointer.js'
-import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
-import { getLinkStatus, getTelegramLinkLocale } from './repo.js'
-import { addMiniappButton, routeForReason } from './miniapp-buttons.js'
-import { telegram as telegramBreaker } from '../../lib/resilience/registry.js'
 import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
+import { telegram as telegramBreaker } from '../../lib/resilience/registry.js'
 import { withTimeout } from '../../lib/resilience/timeout.js'
+import type { NotificationRow } from '../notifications/repo.js'
+import { addMiniappButton, routeForReason } from './miniapp-buttons.js'
+import { absoluteDeepLink, buildTelegramPointer } from './pointer.js'
+import { configurePublicUrl, publicUrl } from './public-url.js'
+import { getLinkStatus, getTelegramLinkLocale } from './repo.js'
+import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
+export { publicUrl } from './public-url.js'
 
 let cachedBot: Bot | null = null
 let cachedToken: string | null = null
@@ -32,6 +35,7 @@ let telegramConfig: Pick<
 > | null = null
 
 export function configureTelegram(config: Config): void {
+  configurePublicUrl(config.DEVON_PUBLIC_URL)
   telegramConfig = {
     // A copied local .env must neither consume production updates nor send demo notifications
     // through the production bot. Tests inject an in-memory bot and never run boot wiring.
@@ -56,10 +60,6 @@ export function isTelegramConfigured(): boolean {
 export function botUsername(): string | null {
   if (cachedBot?.isInited()) return cachedBot.botInfo.username
   return telegramConfig?.TELEGRAM_BOT_USERNAME ?? null
-}
-
-export function publicUrl(): string {
-  return telegramConfig?.DEVON_PUBLIC_URL ?? 'http://localhost:5173'
 }
 
 /** Lazily constructs (and caches) the grammY `Bot` -- `null` when no token is configured. The
@@ -258,6 +258,35 @@ export async function sendPlainMessage(chatId: string, text: string): Promise<Se
   try {
     const sent = await telegramBreaker.execute(() =>
       withTimeout(bot.api.sendMessage(chatId, text), 8000, 'telegram sendMessage'),
+    )
+    return { ok: true, messageId: sent.message_id }
+  } catch (err) {
+    return { ok: false, error: sendErrorMessage(err) }
+  }
+}
+
+/** Mentions use explicit Telegram user entities, never hidden overlapping links. */
+export async function sendMentionMessage(
+  chatId: string,
+  text: string,
+  entities: MessageEntity[],
+  replyTo: number,
+  threadId?: number,
+): Promise<SendResult> {
+  const bot = getBot()
+  if (!bot) return { ok: false, error: 'telegram_not_configured' }
+  try {
+    const sent = await telegramBreaker.execute(() =>
+      withTimeout(
+        bot.api.sendMessage(chatId, text, {
+          entities,
+          reply_parameters: { message_id: replyTo, allow_sending_without_reply: true },
+          ...(threadId ? { message_thread_id: threadId } : {}),
+          link_preview_options: { is_disabled: true },
+        }),
+        8000,
+        'telegram group mention',
+      ),
     )
     return { ok: true, messageId: sent.message_id }
   } catch (err) {

@@ -3,17 +3,17 @@
 // import only from here, never from `./permissions.js` or any other `src/*` path directly.
 export { isPlainHttpUrl } from './http-url.js'
 export { normalizeInvitationKey } from './invitation-key.js'
-export { WORK_TITLE_MAX } from './work-limits.js'
 export {
   can,
-  type Role,
-  type Membership,
-  type Actor,
   type Action,
-  type Subject,
-  type DenyReason,
+  type Actor,
   type Decision,
+  type DenyReason,
+  type Membership,
+  type Role,
+  type Subject,
 } from './permissions.js'
+export { WORK_TITLE_MAX } from './work-limits.js'
 
 export {
   APP_ACTIONS,
@@ -44,64 +44,12 @@ export {
 } from './features.js'
 
 export {
-  INDICATORS,
-  INDICATOR_KEYS,
-  getIndicator,
-  indicatorsVisibleTo,
-  isIndicatorKey,
-  type IndicatorFormat,
-  type IndicatorKey,
-  type IndicatorSource,
-  type IndicatorSpec,
-  type IndicatorType,
-  type IndicatorValue,
-  type PersonIndicators,
-} from './indicators.js'
-
-export {
-  FIELD_CAPS,
-  FIELD_EMPTY_WORDS,
-  FIELD_KEY_RE,
-  FIELD_LONG_TEXT_MAX,
-  FIELD_REMINDER_DEFAULT_DAYS,
-  FIELD_REMINDER_MAX_DAYS,
-  FIELD_REMINDER_MIN_DAYS,
-  FIELD_TEXT_MAX,
-  FIELD_TYPES,
-  blockedLabelLocale,
-  isBlockedFieldLabel,
-  isFieldEmptyWord,
-  isFieldType,
-  isFieldValueMissing,
-  isOptionType,
-  isValidFieldKey,
-  normalizeFieldLabel,
-  suggestFieldKey,
-  validateFieldValue,
-  type FieldValueCheck,
-  type FieldValueError,
-  type CustomFieldsPort,
-  type FieldAppliesTo,
-  type FieldDef,
-  type FieldOption,
-  type FieldRequest,
-  type FieldRequestProgress,
-  type FieldType,
-  type FieldValue,
-  type FieldValueRecord,
-  type FieldVisibility,
-} from './custom-fields.js'
-
-export {
   MINIAPP_INIT_DATA_HEADER,
   MINIAPP_ROUTES,
   MINIAPP_ROUTE_KEYS,
   isMiniappRouteKey,
   type MiniappBoardPeek,
   type MiniappCard,
-  type MiniappField,
-  type MiniappFields,
-  type MiniappFieldValue,
   type MiniappFocusAlert,
   type MiniappIdentity,
   type MiniappPerson,
@@ -113,11 +61,11 @@ export {
 } from './miniapp.js'
 
 export {
-  problem,
   PROBLEM_CODES,
+  problem,
   problemSchema,
-  type ProblemCode,
   type Problem,
+  type ProblemCode,
   type ProblemOptions,
 } from './problem.js'
 
@@ -131,78 +79,46 @@ export {
 } from './field-tiers.js'
 
 export {
-  isSafeUrl,
-  richTextDocSchema,
-  richTextNodeSchema,
   RICH_TEXT_MARK_TYPES,
   RICH_TEXT_MAX_BYTES,
   RICH_TEXT_NODE_TYPES,
   SAFE_URL_SCHEMES,
+  isSafeUrl,
+  richTextDocSchema,
+  richTextNodeSchema,
   type RichTextNode,
 } from './rich-text.js'
 
 export {
-  parseFilterQuery,
-  serializeFilterQuery,
-  resolveDateWord,
-  matchesFilterQuery,
   cardMatchesFilterText,
+  matchesFilterQuery,
+  parseFilterQuery,
+  resolveDateWord,
+  serializeFilterQuery,
   type CardFilterStatus,
   type CompareOp,
   type FilterClause,
+  type FilterContext,
   type FilterQuery,
   type FilterableCard,
-  type FilterContext,
 } from './filter-grammar.js'
 
-export {
-  DEFAULT_PEOPLE_COLUMNS,
-  DEFAULT_PEOPLE_VIEW_CONFIG,
-  PEOPLE_VIEW_CAPS,
-  PEOPLE_VIEW_URL_PARAM,
-  decodePeopleViewConfig,
-  encodePeopleViewConfig,
-  normalizePeopleViewConfig,
-  peopleColumnFilterSchema,
-  peopleFilterOpSchema,
-  peopleViewConfigSchema,
-  peopleViewDensitySchema,
-  peopleViewGroupBySchema,
-  peopleViewSchema,
-  peopleViewSortSchema,
-  samePeopleViewConfig,
-  type PeopleColumnFilter,
-  type PeopleFilterOp,
-  type PeopleView,
-  type PeopleViewConfig,
-  type PeopleViewDensity,
-  type PeopleViewGroupBy,
-  type PeopleViewSort,
-} from './people-views.js'
 // v1.1 SPEC §7 / EPIC-017 (work-plus): estimates, recurrence, dependencies, templates, goals and
 // automation rules -- the work rules the client has to understand as well as the server.
 export {
-  ACTIONS_FOR_TRIGGER,
-  AUTOMATION_ACTION_KINDS,
-  AUTOMATION_MAX_CHAIN_DEPTH,
-  AUTOMATION_MAX_RULES,
-  AUTOMATION_TRIGGERS,
-  DEFAULT_WEEKLY_CAPACITY_HOURS,
+  personalDeleteReceiptSchema,
+  personalRestoreBodySchema,
+  personalTaskVersionChangeSchema,
+  personalTaskVersionsQuerySchema,
+  type PersonalDeleteReceipt,
+  type PersonalRestoreBody,
+  type PersonalTaskVersionChange,
+} from './personal.js'
+export {
   HOURS_PER_WORKING_DAY,
   MAX_ESTIMATE_MINUTES,
   MAX_TIME_LOG_MINUTES,
-  automationActionKindSchema,
-  automationActionSchema,
-  automationWritableActionSchema,
-  automationRuleBodySchema,
-  automationRunStatusSchema,
-  automationTriggerConfigSchema,
-  automationTriggerSchema,
   cardTemplatePayloadSchema,
-  goalMetricSchema,
-  goalProgress,
-  isActionAllowedForTrigger,
-  isCeilingMetric,
   minutesToHours,
   nextOccurrence,
   parseEstimateMinutes,
@@ -214,15 +130,8 @@ export {
   workTemplateKindSchema,
   workTemplateScopeSchema,
   wouldCreateDependencyCycle,
-  type AutomationAction,
-  type AutomationActionKind,
-  type AutomationRuleBody,
-  type AutomationRunStatus,
-  type AutomationTrigger,
-  type AutomationTriggerConfig,
   type CardTemplatePayload,
   type DependencyEdge,
-  type GoalMetric,
   type ProjectTemplatePayload,
   type RecurrenceFreq,
   type RecurrenceMode,
@@ -230,21 +139,17 @@ export {
   type WorkTemplateKind,
   type WorkTemplateScope,
 } from './work-plus.js'
-export {
-  personalDeleteReceiptSchema,
-  personalRestoreBodySchema,
-  personalTaskVersionChangeSchema,
-  personalTaskVersionsQuerySchema,
-  type PersonalDeleteReceipt,
-  type PersonalRestoreBody,
-  type PersonalTaskVersionChange,
-} from './personal.js'
 
+export * from './ai-chat.js'
+export * from './checkins.js'
 export {
-  professionalProfileSchema,
   professionalProfileRecordSchema,
-  professionalProfileWriteSchema,
+  professionalProfileSchema,
   professionalProfileWriteRecordSchema,
+  professionalProfileWriteSchema,
   type ProfessionalProfile,
 } from './professional-profile.js'
-export * from './ai-chat.js'
+
+export * from './personal-calendar.js'
+
+export { aiActionBindingSchema } from './ai-chat.js'

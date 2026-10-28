@@ -228,35 +228,6 @@ describe('card deletion and audit retention', () => {
     expect((await request(`/cards/${card.id}/restore`, head, 'POST', {})).status).toBe(404)
   })
 
-  it('retains automation run history without exposing a deleted card title or link', async () => {
-    const card = await createCard()
-    const ruleId = randomUUID()
-    const runId = randomUUID()
-    await sql(
-      `insert into app.automation_rules (id, department_id, name, trigger, created_by_user_id)
-       select $1, department_id, 'Deletion regression', 'card_created', created_by_user_id
-       from app.cards where id = $2`,
-      [ruleId, card.id],
-    )
-    await sql(
-      `insert into app.automation_runs (id, department_id, rule_id, card_id, status)
-       select $1, department_id, $2, id, 'skipped' from app.cards where id = $3`,
-      [runId, ruleId, card.id],
-    )
-    const readRun = async () => {
-      const response = await request(`/automations/runs?ruleId=${ruleId}`, head)
-      expect(response.status).toBe(200)
-      return (await response.json()) as {
-        items: { id: string; cardId: string | null; cardTitle: string | null }[]
-      }
-    }
-    expect((await readRun()).items[0]?.cardTitle).toBe('Retained deletion evidence')
-    expect((await request(`/cards/${card.id}`, owner, 'DELETE')).status).toBe(204)
-    expect((await readRun()).items[0]).toMatchObject({ id: runId, cardId: null, cardTitle: null })
-    expect((await request(`/cards/${card.id}/undo-delete`, owner, 'POST', {})).status).toBe(204)
-    expect((await readRun()).items[0]?.cardId).toBe(card.id)
-  })
-
   it('cannot mutate a colleague’s checklist by supplying an owned card in the URL', async () => {
     const [mine, theirs] = await Promise.all([createCard(), createCard(colleague)])
     const response = await request(`/cards/${theirs.id}/checklist`, colleague, 'POST', {

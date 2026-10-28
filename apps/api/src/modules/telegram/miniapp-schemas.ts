@@ -27,7 +27,6 @@ export const miniappIdentitySchema = z.object({
   unreadCount: z.number().int(),
   /** SPEC §5's `fields` module is optional until its own package merges; the Mini App hides the
    * "Maydonlar" tab when this is false rather than showing a broken screen. */
-  fieldsAvailable: z.boolean(),
 })
 export type MiniappIdentity = z.infer<typeof miniappIdentitySchema>
 
@@ -72,48 +71,6 @@ export const boardPeekSchema = z.object({
   departmentOpenCards: z.number().int(),
   departmentOverdueCards: z.number().int(),
 })
-
-/** `FieldValue` from `@devon/contracts` -- declared as a real union rather than `z.unknown()` so the
- * response serializer keeps the value instead of stripping an untyped key. */
-export const fieldValueSchema = z.union([
-  z.string().max(2000),
-  z.number(),
-  z.boolean(),
-  z.array(z.string().max(200)).max(50),
-  z.null(),
-])
-
-export const miniFieldSchema = z.object({
-  defId: z.string(),
-  key: z.string(),
-  label: z.record(z.string(), z.string()),
-  description: z.record(z.string(), z.string()).nullable(),
-  type: z.string(),
-  options: z.array(
-    z.object({
-      id: z.string(),
-      label: z.record(z.string(), z.string()),
-      colorToken: z.string(),
-    }),
-  ),
-  required: z.boolean(),
-  selfEditable: z.boolean(),
-  value: fieldValueSchema,
-  requested: z.boolean(),
-})
-
-export const miniFieldsSchema = z.object({
-  available: z.boolean(),
-  items: z.array(miniFieldSchema),
-})
-
-export const setFieldBodySchema = z
-  .object({
-    // A custom field's value is `string | number | boolean | string[] | null` (contracts'
-    // `FieldValue`); anything else is refused here rather than written into a jsonb column.
-    value: fieldValueSchema,
-  })
-  .strict()
 
 export const focusAlertBodySchema = z
   .object({

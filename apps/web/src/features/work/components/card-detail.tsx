@@ -3,8 +3,36 @@ import { avatarUrl } from '../../../lib/avatar.js'
 // Shared task document for the routed drawer and full page. Primary status actions stay in the
 // header; assignee/priority/deadline precede the actual work. Secondary metadata is disclosed on
 // demand, and AI output always remains a preview until accepted.
-import * as React from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { formatDate, useLocale, useT, type Locale } from '@devon/i18n'
+import {
+  Avatar,
+  AvatarStack,
+  Badge,
+  Button,
+  Celebrate,
+  Chip,
+  cn,
+  Collapsible,
+  DatePicker,
+  FlashOnChange,
+  IconButton,
+  initialsFromName,
+  Input,
+  labelChipColors,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  RISE_PX,
+  Select,
+  Shake,
+  Skeleton,
+  SparkleButton,
+  StateView,
+  toast,
+  toastWithUndo,
+  useCelebrate,
+  useReducedMotion,
+} from '@devon/ui'
 import {
   Archive,
   Check,
@@ -24,41 +52,12 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
+import { AnimatePresence, motion } from 'motion/react'
+import * as React from 'react'
 import { useCardSignals, useSignalWhile } from '../../../lib/realtime/index.js'
-import {
-  Avatar,
-  AvatarStack,
-  Badge,
-  Button,
-  Celebrate,
-  Chip,
-  Collapsible,
-  cn,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  DatePicker,
-  FlashOnChange,
-  IconButton,
-  initialsFromName,
-  Input,
-  labelChipColors,
-  RISE_PX,
-  Select,
-  Shake,
-  Skeleton,
-  SparkleButton,
-  StateView,
-  toast,
-  toastWithUndo,
-  useCelebrate,
-  useReducedMotion,
-} from '@devon/ui'
 import { navigate, replaceSearchParam } from '../../../lib/router.js'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useIsDarkTheme } from '../../../lib/theme.js'
-import { useRunAiFeatureMutation, useAiSettingsQuery } from '../../ai/use-ai.js'
 import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import {
   AssigneeSuggestionsPreview,
@@ -69,39 +68,41 @@ import {
   TranslatePreview,
 } from '../../ai/components/previews.js'
 import {
-  TranslateTargetPicker,
   defaultTranslateTarget,
+  TranslateTargetPicker,
 } from '../../ai/components/translate-target.js'
-import { useSummaryQuery } from '../../analytics/use-analytics.js'
 import {
   parseFeatureOutput,
   type DeadlineRiskOutput,
   type DraftReplyOutput,
-  type SuggestAssigneeOutput,
   type SubtaskBreakdownOutput,
+  type SuggestAssigneeOutput,
   type SummarizeThreadOutput,
   type TranslateOutput,
 } from '../../ai/outputs.js'
 import type { AiFeatureId, RunMeta } from '../../ai/types.js'
-import { useProjectsQuery } from '../../projects/hooks.js'
+import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { useCheckinChange, useCheckins } from '../../analytics/checkins-api.js'
 import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
+import { useProjectsQuery } from '../../projects/hooks.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
 import { CardAttachments } from './card-attachments.js'
 import { CardLinkLabel } from './card-link-label.js'
-import { ArchivedCardBadge } from './archived-card-badge.js'
 import { ChecklistRow } from './checklist-row.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
-import { CardCustomFields } from '../../fields/index.js'
+import type { CardPriority, MemberSummary } from '../api.js'
+import { useAddFocusMutation, useFocusListQuery, useRemoveFocusMutation } from '../hooks-plus.js'
 import {
   nextDoneStatus,
   useAddChecklistItemMutation,
   useAddCommentMutation,
-  useEditCommentMutation,
-  useDeleteCommentMutation,
   useCardQuery,
   useCreateLabelMutation,
-  useDeleteChecklistItemMutation,
   useDeleteCardMutation,
+  useDeleteChecklistItemMutation,
+  useDeleteCommentMutation,
+  useEditCommentMutation,
   useLabelsQuery,
   useMembers,
   usePatchCardMutation,
@@ -110,12 +111,10 @@ import {
   useToggleWatcherMutation,
   useUnfurlMutation,
 } from '../hooks.js'
+import { fullName, PRIORITY_LABEL_KEY, RISK_BADGE_TONE, RISK_LABEL_KEY } from '../lib/format.js'
 import { resolveQuickAddAssignee } from '../lib/quick-add.js'
-import { PRIORITY_LABEL_KEY, RISK_BADGE_TONE, RISK_LABEL_KEY, fullName } from '../lib/format.js'
-import { useAddFocusMutation, useFocusListQuery, useRemoveFocusMutation } from '../hooks-plus.js'
-import { MemberPicker } from './member-picker.js'
 import { CardPlusSections } from './card-plus-sections.js'
-import type { CardPriority, MemberSummary } from '../api.js'
+import { MemberPicker } from './member-picker.js'
 
 const PRIORITIES: readonly CardPriority[] = ['none', 'low', 'medium', 'high', 'urgent']
 
@@ -271,7 +270,6 @@ export function CardDetailContent({
   } | null>(null)
   // The load numbers the suggestion is allowed to reason over -- the department's own aggregates,
   // fetched only when a head actually opens this sheet with the helper enabled.
-  const loadSummary = useSummaryQuery({})
 
   if (query.isPending) {
     return (
@@ -536,16 +534,12 @@ export function CardDetailContent({
   function runSuggestAssignee() {
     if (!card) return
     setAssigneeSuggestions(null)
-    const loadByName = new Map(
-      (loadSummary.data?.loadPerPerson ?? []).map((person) => [person.userId, person] as const),
-    )
     const candidates = members.map((member) => {
-      const load = loadByName.get(member.userId)
       return {
         userId: member.userId,
         fullName: fullName(member),
-        openCount: load?.openCount ?? 0,
-        overdueCount: load?.overdueCount ?? 0,
+        openCount: 0,
+        overdueCount: 0,
         recentLabels: [],
         away: false,
       }
@@ -1185,13 +1179,6 @@ export function CardDetailContent({
                 ) : null}
               </div>
             </Field>
-
-            <CardCustomFields
-              cardId={card.id}
-              ownerUserIds={[card.giverUserId, card.assigneeUserId, card.createdByUserId].filter(
-                (id): id is string => Boolean(id),
-              )}
-            />
           </div>
         </DetailDisclosure>
         <DetailDisclosure
@@ -1427,6 +1414,7 @@ function Checklist({
   canEdit: boolean
   card: {
     id: string
+    assigneeUserId: string | null
     title: string
     description: { text: string } | null
     /** So the step sizes can be judged against the time actually left (AI-AUDIT F2). */
@@ -1445,6 +1433,9 @@ function Checklist({
   const addItem = useAddChecklistItemMutation(card.id)
   const patchItem = usePatchChecklistItemMutation(card.id)
   const deleteItem = useDeleteChecklistItemMutation(card.id)
+  const checkins = useCheckins()
+  const changeCheckin = useCheckinChange()
+  const cycle = checkins.data?.cycles.find((c) => c.id === checkins.data?.currentCycleId)
   const topLevel = card.checklist.filter((i) => i.parentItemId === null)
   const childrenOf = (id: string) => card.checklist.filter((i) => i.parentItemId === id)
   const done = card.checklist.filter((i) => i.doneAt !== null).length
@@ -1522,6 +1513,25 @@ function Checklist({
           onSave={(text) => patchItem.mutateAsync({ itemId: item.id, patch: { text } })}
           onToggle={(done) => patchItem.mutate({ itemId: item.id, patch: { done } })}
           onDelete={() => deleteItem.mutate(item.id)}
+          checkin={
+            checkins.data?.members.some((member) => member.userId === card.assigneeUserId)
+              ? {
+                  selected: !!checkins.data?.entries.some((e) => e.checklistItemId === item.id),
+                  disabled:
+                    !cycle ||
+                    !!cycle.checkoutLockedAt ||
+                    changeCheckin.isPending ||
+                    (!!cycle.checkinLockedAt &&
+                      !!checkins.data?.entries.some((e) => e.checklistItemId === item.id)),
+                  toggle: () => {
+                    const entry = checkins.data?.entries.find((e) => e.checklistItemId === item.id)
+                    if (entry) changeCheckin.mutate({ kind: 'remove', id: entry.id })
+                    else if (cycle)
+                      changeCheckin.mutate({ kind: 'add', cycleId: cycle.id, itemId: item.id })
+                  },
+                }
+              : undefined
+          }
         />
         {childrenOf(item.id).length ? (
           <div className="pl-4">{childrenOf(item.id).map(renderItem)}</div>

@@ -1,42 +1,20 @@
-// The AI screen (`/ai`). One route, three tabs, two products (SPEC §3.1, §8).
-//
-// v1.0's version is the screen AI-AUDIT §0.5 called "gray", and it was right: a budget ring, a number
-// input, ten identical toggle rows with no description of what any of them did, and a third tab that
-// was a raw-JSON playground whose Accept button copied `JSON.stringify(result)` to the clipboard.
-// `featureDescriptionKey()` already existed, already had four locales, and was called from nowhere.
-//
-// This version answers the three questions a person actually arrives with:
-//
-//   * **Yordamchilar** — what each helper does, *where in the product it appears*, and a concrete
-//     example of what it turns in and turns out. Every row, for everyone. The head additionally gets
-//     the switch and this month's spend for that one helper (AI-AUDIT §5 fix 15), so "this is
-//     expensive" becomes an action on one row instead of switching AI off entirely.
-//   * **Soʻrash** — the Ask box (EPIC-016), with the raw retrieval under it.
-//   * **Foydalanish** — who ran what, when, at what price, including the blocked attempts v1.1
-//     started recording (G-5). A member sees their own runs; a head sees the department's.
-//
-// The Yordamchi raw-JSON tab is gone (AI-AUDIT §4, D-3) along with `assistant-panel.tsx` and
-// `feature-forms.ts`. Every helper is reached where the work is, which is the entire point of them.
-import * as React from 'react'
-import { AnimatePresence, motion } from 'motion/react'
 import {
-  useT,
-  useLocale,
   formatDate,
+  formatNumber,
   formatTime,
   formatUzs,
-  formatNumber,
+  useLocale,
+  useT,
   type Locale,
 } from '@devon/i18n'
 import {
   Badge,
   Button,
   Celebrate,
-  PageHeader,
-  ProgressRing,
   Popover,
   PopoverContent,
   PopoverTrigger,
+  ProgressRing,
   Stagger,
   StaggerItem,
   StateView,
@@ -50,25 +28,27 @@ import {
   useCelebrate,
   useReducedMotion,
 } from '@devon/ui'
-import { BarChart3, Database, Gauge, Sparkles } from 'lucide-react'
+import { ArrowLeft, BarChart3, Database, Gauge, Sparkles } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import * as React from 'react'
+import { RouterLink, useSearchParams } from '../../lib/router.js'
 import { useDepartment, useSession } from '../../lib/session.js'
-import { AskPanel } from './ask-panel.js'
-import { useAiSettingsQuery, useAiUsageQuery, usePatchAiSettingsMutation } from './use-ai.js'
 import {
   AI_FEATURE_IDS,
   HEAD_ONLY_FEATURES,
+  displayTraceFeature,
   featureDescriptionKey,
   featureExampleKey,
   featureLabelKey,
   featureWhereKey,
-  displayTraceFeature,
   type AiFeatureId,
-  type AiTraceFeatureId,
   type AiSettings,
+  type AiTraceFeatureId,
   type Trace,
 } from './types.js'
+import { useAiSettingsQuery, useAiUsageQuery, usePatchAiSettingsMutation } from './use-ai.js'
 
-type TabId = 'helpers' | 'ask' | 'usage'
+type TabId = 'helpers' | 'usage'
 
 const TABS: {
   id: TabId
@@ -76,7 +56,6 @@ const TABS: {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
 }[] = [
   { id: 'helpers', labelKey: 'ai.tabs.helpers', icon: Gauge },
-  { id: 'ask', labelKey: 'ai.tabs.ask', icon: Sparkles },
   { id: 'usage', labelKey: 'ai.tabs.usage', icon: BarChart3 },
 ]
 
@@ -763,14 +742,13 @@ function UsageTab() {
 export default function AiSettingsScreen() {
   const t = useT()
   const { isLoading, isAuthenticated } = useSession()
-  // `?tab=ask` -- the palette's "Soʻrash" command deep-links straight to the Ask box rather than
-  // dropping the person on the catalogue to find it (AI-AUDIT §5 fix 18). Read once, as the initial
-  // state: the tab is the user's afterwards, and re-syncing it from the URL on every render would
-  // fight them every time they click another tab.
-  const [tab, setTab] = React.useState<TabId>(() => {
-    const requested = new URLSearchParams(window.location.search).get('tab')
-    return requested === 'ask' || requested === 'usage' ? requested : 'helpers'
-  })
+  const search = useSearchParams()
+  const previous = search.get('conversation')
+  const back =
+    previous && /^[0-9a-f-]{36}$/i.test(previous)
+      ? `/assistant?conversation=${encodeURIComponent(previous)}`
+      : '/assistant'
+  const [tab, setTab] = React.useState<TabId>('helpers')
 
   if (isLoading) return <StateView kind="loading" titleKey="state.loading" />
   if (!isAuthenticated) {
@@ -779,27 +757,26 @@ export default function AiSettingsScreen() {
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)} className="flex flex-col gap-6">
-      <PageHeader
-        eyebrow={t('ai.eyebrow')}
-        title={t('ai.title')}
-        description={t('ai.description')}
-        tabs={
-          <TabsList>
-            {TABS.map(({ id, labelKey, icon: Icon }) => (
-              <TabsTrigger key={id} value={id}>
-                <Icon className="size-4" aria-hidden="true" />
-                {t(labelKey)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        }
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <TabsList aria-label={t('ai.title')}>
+          {TABS.map(({ id, labelKey, icon: Icon }) => (
+            <TabsTrigger key={id} value={id}>
+              <Icon className="size-4" aria-hidden="true" />
+              {t(labelKey)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <RouterLink
+          href={back}
+          className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-small text-primary transition-colors hover:bg-primary/5"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {t('assistantBatch.backToChat')}
+        </RouterLink>
+      </div>
 
       <TabsContent value="helpers">
         <HelpersTab />
-      </TabsContent>
-      <TabsContent value="ask">
-        <AskPanel />
       </TabsContent>
       <TabsContent value="usage">
         <UsageTab />

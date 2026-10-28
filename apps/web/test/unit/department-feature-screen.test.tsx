@@ -1,6 +1,6 @@
+import { setLocale } from '@devon/i18n'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { setLocale } from '@devon/i18n'
 import { DepartmentFeatureScreen } from '../../src/lib/department-feature-screen.js'
 
 const state = vi.hoisted(() => ({
@@ -15,7 +15,7 @@ const state = vi.hoisted(() => ({
 }))
 vi.mock('../../src/lib/features.js', () => ({
   useFeatures: () => ({
-    features: { workload: state.enabled },
+    features: { templates: state.enabled },
     isLoading: state.loading,
     isError: state.error,
     retry: state.retry,
@@ -28,11 +28,11 @@ vi.mock('../../src/lib/session.js', () => ({
 vi.mock('../../src/lib/router.js', () => ({ navigate: state.navigate }))
 function PrivateScreen() {
   state.mount()
-  return <div>Private workload</div>
+  return <div>Private templates</div>
 }
 function show() {
   return render(
-    <DepartmentFeatureScreen feature="workload" action="work.workload.read">
+    <DepartmentFeatureScreen feature="templates" action="work.template.read">
       <PrivateScreen />
     </DepartmentFeatureScreen>,
   )
@@ -53,7 +53,7 @@ describe('department feature screen', () => {
     show()
     expect(screen.getByText('This feature is turned off')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button'))
-    expect(state.navigate).toHaveBeenCalledWith('/department?tab=general#features')
+    expect(state.navigate).toHaveBeenCalledWith('/account/department?tab=general#features')
     expect(state.mount).not.toHaveBeenCalled()
   })
   it('does not offer settings to a member', () => {
@@ -84,6 +84,6 @@ describe('department feature screen', () => {
   it('mounts the feature only once it is enabled and permitted', () => {
     state.enabled = true
     show()
-    expect(screen.getByText('Private workload')).toBeInTheDocument()
+    expect(screen.getByText('Private templates')).toBeInTheDocument()
   })
 })

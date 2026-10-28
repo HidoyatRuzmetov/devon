@@ -1,12 +1,10 @@
-import * as React from 'react'
-import { motion } from 'motion/react'
 import {
   AI_CHAT_MESSAGE_MAX,
   type AiChatAttachment,
   type AiChatMessage,
   type AiChatProposal,
 } from '@devon/contracts'
-import { useT, useLocale, formatDate } from '@devon/i18n'
+import { formatDate, useLocale, useT } from '@devon/i18n'
 import {
   Button,
   Dialog,
@@ -17,19 +15,19 @@ import {
   StateView,
   Textarea,
   cn,
-  useReducedMotion,
   tweenPage,
+  useReducedMotion,
 } from '@devon/ui'
 import {
   ArrowDown,
   ArrowUp,
   ArrowUpRight,
+  File,
   History,
   Link2,
   LoaderCircle,
-  Plus,
   Paperclip,
-  File,
+  Plus,
   RefreshCw,
   Search,
   Settings2,
@@ -37,12 +35,20 @@ import {
   Square,
   TriangleAlert,
 } from 'lucide-react'
-import { RouterLink, replaceSearchParam, useSearchParams } from '../../lib/router.js'
-import { useOnline } from '../../lib/use-online.js'
-import { useMediaQuery } from '../../lib/use-media-query.js'
-import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
-import { useDepartment, useMeQuery } from '../../lib/session.js'
+import { motion } from 'motion/react'
+import * as React from 'react'
 import { useIsHead } from '../../lib/can.js'
+import { RouterLink, replaceSearchParam, useSearchParams } from '../../lib/router.js'
+import { useDepartment, useMeQuery } from '../../lib/session.js'
+import { useMediaQuery } from '../../lib/use-media-query.js'
+import { useOnline } from '../../lib/use-online.js'
+import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
+import { chatFailure } from './chat-failure.js'
+import { chatSourceHref } from './chat-source-href.js'
+import { AnswerMarkdown } from './components/answer-markdown.js'
+import { ChatFileQueue, useChatFiles } from './components/chat-files.js'
+import { ChatProposalBatch } from './components/chat-proposal.js'
+import { CatchUpPreview } from './components/previews.js'
 import {
   useCancelConversationMessageMutation,
   useConversationQuery,
@@ -50,14 +56,8 @@ import {
   useCreateConversationMutation,
   useSendConversationMessageMutation,
 } from './conversations.js'
-import { AnswerMarkdown } from './components/answer-markdown.js'
-import { chatSourceHref } from './chat-source-href.js'
-import { chatFailure } from './chat-failure.js'
-import { CatchUpPreview } from './components/previews.js'
 import { parseFeatureOutput, type CatchUpOutput } from './outputs.js'
 import { useBriefingQuery, useRefreshBriefingMutation } from './use-ai.js'
-import { ChatProposal } from './components/chat-proposal.js'
-import { ChatFileQueue, useChatFiles } from './components/chat-files.js'
 
 const drill = (path: string) => `${path}${path.includes('?') ? '&' : '?'}from=assistant`
 const conversationId = (value: string | null) =>
@@ -145,17 +145,17 @@ function Message({
           ))}
         </div>
       ) : null}
-      {message.proposals?.map((proposal) => (
-        <ChatProposal
-          key={proposal.id}
-          proposal={proposal}
+      {message.proposals?.length ? (
+        <ChatProposalBatch
+          proposals={message.proposals}
+          messageId={message.id}
           conversationId={conversationId}
           sources={message.sources}
           attachments={attachments}
           onEdit={onEditProposal}
           disabled={busy}
         />
-      ))}
+      ) : null}
       {message.sources.length ? (
         <div
           className="mt-3 flex flex-wrap items-center gap-1.5"
@@ -503,7 +503,9 @@ export function AssistantWorkspace({
         ) : null}
       </div>
       <RouterLink
-        href="/ai"
+        href={
+          selectedId ? `/account/ai?conversation=${encodeURIComponent(selectedId)}` : '/account/ai'
+        }
         className="flex min-h-11 shrink-0 items-center gap-2 rounded-md px-2 text-small text-muted-foreground transition-colors hover:bg-primary/5 hover:text-foreground"
       >
         <Settings2 className="size-4" aria-hidden="true" />

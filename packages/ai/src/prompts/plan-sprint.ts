@@ -34,7 +34,7 @@ export const planItemSchema = z.object({
 export const planSprintInputSchema = z.object({
   locale: localeSchema,
   /** AI-AUDIT D-5: the two callers stop lying to the feature about what they are planning. */
-  scope: z.enum(['personal', 'project']),
+  scope: z.literal('project'),
   periodKind: z.enum(['3h', 'day', 'week', 'custom']),
   now: isoDateTimeSchema,
   periodEndsAt: isoDateTimeSchema,

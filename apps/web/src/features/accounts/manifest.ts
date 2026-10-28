@@ -1,5 +1,5 @@
-import * as React from 'react'
 import { UserCog } from 'lucide-react'
+import * as React from 'react'
 import type { FeatureManifest } from '../types.js'
 
 const RegisterScreen = React.lazy(() => import('./register-screen.js'))
@@ -16,6 +16,7 @@ const manifest: FeatureManifest = {
       'telegram',
       'calendar',
       'department',
+      'ai',
       'security',
       'delete',
     ].map((section) => ({

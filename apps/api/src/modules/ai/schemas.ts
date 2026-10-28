@@ -14,7 +14,6 @@ export const AI_FEATURE_IDS = [
   'catch_up',
   'draft_event',
   'summarize_thread',
-  'nl_analytics',
   'translate',
   'draft_reply',
   'draft_page',
@@ -34,6 +33,7 @@ export type AiFeatureId = z.infer<typeof aiFeatureSchema>
  */
 export const AI_TRACE_FEATURE_IDS = [
   ...AI_FEATURE_IDS,
+  'nl_analytics',
   'weekly_summary',
   'what_did_i_miss',
 ] as const
@@ -236,24 +236,6 @@ export type SearchHitDto = z.infer<typeof searchHitSchema>
 
 export const searchResponseSchema = z.object({
   hits: z.array(searchHitSchema),
-  backend: z.enum(['embeddings', 'fts']),
-})
-
-export const askBodySchema = z
-  .object({
-    question: z.string().min(3).max(500),
-    locale: z.enum(['uz-Latn', 'uz-Cyrl', 'ru', 'en']),
-  })
-  .strict()
-
-export type AskResponse = z.infer<typeof askResponseSchema>
-export const askResponseSchema = z.object({
-  /** `@devon/ai`'s `semantic_ask` output, re-validated client-side against the same Zod schema. */
-  data: z.record(z.string(), z.unknown()),
-  meta: runMetaSchema,
-  /** The retrieved sources the answer was allowed to cite, so the client can render real links
-   * instead of trusting an id the model produced. */
-  sources: z.array(searchHitSchema),
   backend: z.enum(['embeddings', 'fts']),
 })
 

@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 import { authedPatch, authedPost, login, newFlowContext } from './flow-api.js'
 
 // Explicit synthetic example credentials; values stay identical to the original fixtures.
@@ -120,14 +120,6 @@ test('@qa a moved task branch uses its atomic revisions for a queued child edit'
   try {
     await login(context, { login: 'demo.xodim', password: qaExampleCredential1 })
     expect((await authedPatch(context, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
-    const periodRes = await authedPost(context, '/api/v1/personal/sprints', {
-      kind: 'day',
-      goal: `Move destination ${randomUUID()}`,
-      startsAt: new Date().toISOString(),
-      endsAt: new Date(Date.now() + 3600000).toISOString(),
-    })
-    expect(periodRes.status()).toBe(201)
-    const period = await periodRes.json()
     const rootRes = await authedPost(context, '/api/v1/personal/tasks', {
       title: `Move root ${randomUUID()}`,
     })
@@ -141,7 +133,6 @@ test('@qa a moved task branch uses its atomic revisions for a queued child edit'
     const child = await childRes.json()
     const targetRes = await authedPost(context, '/api/v1/personal/tasks', {
       title: `Destination task ${randomUUID()}`,
-      sprintId: period.id,
     })
     expect(targetRes.status()).toBe(201)
     const target = await targetRes.json()
@@ -188,11 +179,8 @@ test('@qa a moved task branch uses its atomic revisions for a queued child edit'
       ]),
     })
     const rows = await (await context.request.get('/api/v1/personal/tasks')).json()
-    expect(rows.find((row: { id: string }) => row.id === root.id)).toMatchObject({
-      sprintId: period.id,
-    })
+    expect(rows.some((row: { id: string }) => row.id === root.id)).toBe(true)
     expect(rows.find((row: { id: string }) => row.id === child.id)).toMatchObject({
-      sprintId: period.id,
       doneAt: expect.any(String),
     })
     await page.reload()

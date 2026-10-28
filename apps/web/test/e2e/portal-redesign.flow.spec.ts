@@ -363,7 +363,9 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
     name: 'People board',
     exact: true,
   })
-  await expect(board).toBeVisible()
+  // Dev CI transforms the route's module graph on first entry. Match the fixture's
+  // navigation allowance; all subsequent geometry/interaction assertions remain unchanged.
+  await expect(board).toBeVisible({ timeout: 15_000 })
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   const boardTab = page
     .getByRole('navigation', { name: 'Cards', exact: true })
@@ -570,7 +572,7 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
   })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/work')
-  await expect(board).toBeVisible()
+  await expect(board).toBeVisible({ timeout: 15_000 })
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true)

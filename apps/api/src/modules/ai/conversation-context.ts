@@ -1,8 +1,10 @@
-import { sql } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
 import type { AiChatSource } from '@devon/contracts'
-import { refreshIndex, searchText } from './search-repo.js'
+import { withContext, type RequestContext } from '@devon/db'
+import { sql } from 'drizzle-orm'
+import { maintainCycles } from '../checkins/repo.js'
+import { titleRelevance } from './context-relevance.js'
 import { conversationFiles } from './conversation-files.js'
+import { refreshIndex, searchText } from './search-repo.js'
 
 type SnapshotRow = {
   ref: string
@@ -18,6 +20,7 @@ export type DepartmentChatContext = {
   recordsIncluded: number
   limited: boolean
   snapshot: unknown[]
+  directory?: unknown[]
   evidence: unknown[]
   sources: AiChatSource[]
   totals: unknown
@@ -143,6 +146,7 @@ export async function conversationContext(
   priorityRefs: string[] = [],
   conversationId?: string,
   attachmentIds: string[] = [],
+  searchQueries: string[] = [question],
 ): Promise<DepartmentChatContext> {
   const departmentId = ctx.departmentId!
   const revision = await withContext(
@@ -185,7 +189,7 @@ export async function conversationContext(
           case when c.status='active' then 4 else 7 end
         from app.cards c left join (
           select card_id,count(*)::int as total,count(*) filter(where done_at is not null)::int as done,
-            jsonb_agg(jsonb_build_object('id',id,'text',text,'done',done_at is not null)) as items
+            jsonb_agg(jsonb_build_object('id',id,'text',text,'done',done_at is not null,'parentItemId',parent_item_id) order by order_key,id) as items
           from app.card_checklist_items where department_id=${departmentId} and deleted_at is null group by card_id
         ) i on i.card_id=c.id where c.department_id=${departmentId} and c.deleted_at is null
         union all
@@ -202,7 +206,14 @@ export async function conversationContext(
         ),
     withContext(ctx, async (tx) => {
       await refreshIndex(tx, departmentId)
-      return searchText(tx, departmentId, question, 12)
+      const found = new Map<string, Awaited<ReturnType<typeof searchText>>[number]>()
+      // Queries are independent concepts, not one AND-query containing every word from every title.
+      for (const query of searchQueries.slice(0, 5)) {
+        // nosemgrep: query-in-loop -- bounded adaptive search phrases within the existing context transaction
+        for (const hit of await searchText(tx, departmentId, query, 12))
+          found.set(`${hit.subject_type}:${hit.subject_id}`, hit)
+      }
+      return [...found.values()]
     }),
     withContext(ctx, (tx) =>
       tx.raw(sql`select
@@ -235,18 +246,31 @@ export async function conversationContext(
   // Private records are read in the current user's RLS scope and never enter the shared index.
   const personal = await withContext(ctx, (tx) =>
     tx.raw<SnapshotRow>(sql`with records as (
-    select 'note:'||id as ref,title,'/personal'::text as href,jsonb_build_object('kind','private_note','body',body,'version',version) as facts,0 as total
-    from app.personal_notes where user_id=${ctx.userId} and deleted_at is null
-    union all select 'personal_task:'||id,title,'/personal',jsonb_build_object('kind','private_task','doneAt',done_at,'notes',notes,'sprintId',sprint_id,'parentId',parent_id,'version',version),0
+    select 'personal_task:'||id as ref,title,'/personal?tab=tasks'::text as href,
+      jsonb_build_object('kind','private_task','doneAt',done_at,'notes',notes,'parentId',parent_id,'version',version) as facts,0 as total
     from app.personal_tasks where user_id=${ctx.userId} and deleted_at is null
-    union all select 'canvas:'||id,title,'/personal',jsonb_build_object('kind','private_canvas','stickies',stickies,'scene',scene,'version',version),0
-    from app.personal_canvases where user_id=${ctx.userId} and deleted_at is null
-    union all select 'personal_sprint:'||id,coalesce(nullif(goal,''),kind::text||' sprint'),'/personal',
-      jsonb_build_object('kind','private_sprint','sprintKind',kind,'startsAt',starts_at,'endsAt',ends_at,'goal',goal,'status',status,'version',version),0
-    from app.personal_sprints where user_id=${ctx.userId} and deleted_at is null
+    union all select 'personal_calendar:'||id,title,'/personal?tab=calendar&entry='||id||'&month='||to_char(starts_at at time zone 'Asia/Tashkent','YYYY-MM'),
+      jsonb_build_object('kind','private_calendar','notes',notes,'startsAt',starts_at,'endsAt',ends_at,'allDay',all_day,'remindAt',remind_at,'version',version),0
+    from app.personal_calendar_entries where user_id=${ctx.userId} and deleted_at is null
     ) select ref,title,href,facts,count(*) over()::int as total from records
       order by case when ref=any(${sql.param(priorityRefs)}::text[]) then 0 else 1 end,ref limit 1000`),
   )
+  // Cycle agreement and checklist status change independently of indexed documents.
+  const checkins = await withContext(ctx, async (tx) => {
+    await maintainCycles(tx, ctx)
+    return tx.raw<SnapshotRow>(sql`with records as (
+    select 'checkin_cycle:'||c.id as ref,c.starts_on::text||' – '||c.ends_on::text as title,'/analytics?cycle='||c.id as href,
+      jsonb_build_object('kind','checkin_cycle','cycleId',c.id,'startsOn',c.starts_on,'endsOn',c.ends_on,
+        'checkinLockedAt',c.checkin_locked_at,'checkoutLockedAt',c.checkout_locked_at) as facts,c.starts_on as period
+      from app.checkin_cycles c
+    union all select 'checkin_entry:'||e.id,e.text,'/analytics?cycle='||c.id||'&member='||e.member_user_id,
+      jsonb_build_object('kind','checkin_entry','entryId',e.id,'cycleId',c.id,'memberUserId',e.member_user_id,
+        'cardId',e.card_id,'cardTitle',e.card_title,'checklistItemId',e.checklist_item_id,'state',e.state,'version',e.version,
+        'checkinLockedAt',c.checkin_locked_at,'checkoutLockedAt',c.checkout_locked_at),c.starts_on
+      from app.checkin_entries e join app.checkin_cycles c on c.id=e.cycle_id where e.removed_at is null
+    ) select ref,title,href,facts,count(*) over()::integer as total from records
+      order by case when ref=any(${sql.param(priorityRefs)}::text[]) then 0 else 1 end,period desc,ref limit 2000`)
+  })
   const snapshot: unknown[] = []
   const sources: AiChatSource[] = []
   let bytes = 0
@@ -262,10 +286,10 @@ export async function conversationContext(
     event_item: 20000,
     poll: 40000,
     page: 120000,
-    note: 80000,
     personal_task: 40000,
-    personal_sprint: 20000,
-    canvas: 30000,
+    personal_calendar: 40000,
+    checkin_cycle: 20000,
+    checkin_entry: 60000,
   }
   const priority = new Set([
     ...priorityRefs,
@@ -275,9 +299,25 @@ export async function conversationContext(
     priority.has(row.ref) ||
     (typeof record(row.facts)?.['eventId'] === 'string' &&
       priority.has(`event:${record(row.facts)!['eventId']}`))
-  const ordered = [...people, ...rows, ...personal, ...logistics].sort(
-    (a, b) => Number(prioritized(b)) - Number(prioritized(a)),
+  const allRows = [...people, ...rows, ...personal, ...logistics, ...checkins]
+  const ordered = [...allRows].sort(
+    (a, b) =>
+      Number(prioritized(b)) - Number(prioritized(a)) ||
+      titleRelevance(b.title, question) - titleRelevance(a.title, question),
   )
+  // Keep a cheap discoverable directory even when rich document bodies exceed the content budget.
+  // Otherwise a long unrelated card can make another card impossible for the model to request.
+  const directory = allRows.map((row) => ({
+    ref: row.ref,
+    title: row.title,
+    facts: {
+      status: record(row.facts)?.['status'],
+      assigneeId: record(row.facts)?.['assigneeId'],
+      projectId: record(row.facts)?.['projectId'],
+      dueAt: record(row.facts)?.['dueAt'],
+    },
+  }))
+  sources.push(...allRows.map(({ ref, title, href }) => ({ ref, title, href })))
   let childSourcesLimited = false
   for (const row of ordered) {
     const item = { ref: row.ref, title: row.title, facts: row.facts }
@@ -291,7 +331,6 @@ export async function conversationContext(
     bytes += length
     categoryBytes.set(category, (categoryBytes.get(category) ?? 0) + length)
     snapshot.push(item)
-    sources.push({ ref: row.ref, title: row.title, href: row.href })
     const children = childSources(row)
     const remaining = Math.max(0, 5000 - sources.length)
     sources.push(...children.slice(0, remaining))
@@ -317,7 +356,8 @@ export async function conversationContext(
     (rows[0]?.total ?? 0) +
     (people[0]?.total ?? 0) +
     (personal[0]?.total ?? 0) +
-    (logistics[0]?.total ?? 0)
+    (logistics[0]?.total ?? 0) +
+    (checkins[0]?.total ?? 0)
   const files = await conversationFiles(ctx, conversationId, attachmentIds)
   sources.push(...files.sources)
   sources.push({
@@ -331,6 +371,7 @@ export async function conversationContext(
     recordsIncluded: snapshot.length,
     limited: recordsTotal > snapshot.length || files.limited || childSourcesLimited,
     snapshot,
+    directory,
     evidence: [...evidence, ...files.evidence],
     sources: [...new Map(sources.map((source) => [source.ref, source])).values()],
     totals: { ref: `department:${departmentId}`, ...(totals[0] as object) },

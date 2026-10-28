@@ -1,11 +1,11 @@
-import * as React from 'react'
+import { professionalProfileSchema } from '@devon/contracts'
 import { useT } from '@devon/i18n'
 import { Avatar, Button, Sheet, SheetContent, cn, initialsFromName } from '@devon/ui'
 import {
   Award,
+  BookUser,
   BriefcaseBusiness,
   ChevronRight,
-  BookUser,
   ExternalLink,
   GraduationCap,
   Heart,
@@ -19,9 +19,8 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { professionalProfileSchema } from '@devon/contracts'
+import * as React from 'react'
 import { avatarUrl } from '../../lib/avatar.js'
-import { RouterLink } from '../../lib/router.js'
 import { unitColorClass } from '../../lib/unit-palette.js'
 import type { Member, Unit } from './api.js'
 
@@ -59,14 +58,12 @@ export function MemberCard({
   member,
   unit,
   compact = false,
-  profileHref,
   onAssign,
   unitColour,
 }: {
   member: Member
   unit?: Unit | null
   compact?: boolean
-  profileHref?: string | undefined
   onAssign?: (() => void) | undefined
   unitColour?: string
 }) {
@@ -383,17 +380,8 @@ export function MemberCard({
               ) : null}
             </div>
           </div>
-          {profileHref || onAssign ? (
+          {onAssign ? (
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-card p-4">
-              {profileHref ? (
-                <RouterLink
-                  href={profileHref}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-small text-primary hover:bg-accent"
-                >
-                  <span>{t('structure.people.hoverCard.openProfile')}</span>
-                  <ChevronRight className="size-4" aria-hidden="true" />
-                </RouterLink>
-              ) : null}
               {onAssign ? (
                 <Button
                   variant="secondary"

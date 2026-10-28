@@ -93,16 +93,7 @@ function toMessage(data: unknown): RealtimeMessage | null {
   }
 }
 
-/**
- * Turn one publication into the message every screen sees.
- *
- * `info` is present only for a publication a *browser* sent (Centrifugo attaches the publishing
- * connection's own authenticated identity to it and omits it for server-API publishes). That is what
- * makes the one client-publishable namespace -- `canvas:`, for live cursors -- safe: the publisher's
- * user id and name are stamped by the broker from the connection token, never carried in the body,
- * so a participant cannot put a colleague's name on a cursor even though they can publish. The two
- * fields are merged into the payload here, once, rather than in every consumer.
- */
+/** Deliver a broker publication, preserving its authenticated sender when supplied. */
 function deliver(channel: string, data: unknown, info?: ClientInfo): void {
   const entry = channels.get(channel)
   if (!entry) return
@@ -342,26 +333,6 @@ export function subscribePresence(channel: string, handler: PresenceHandler): ()
       if (entry.sub) centrifuge?.removeSubscription(entry.sub)
       channels.delete(channel)
     }
-  }
-}
-
-/**
- * The one thing a browser is allowed to publish: a cursor or a sticky-note nudge on a canvas its
- * owner shared (`canvas:` is the only namespace with `allow_publish_for_subscriber`). Everything
- * else goes through the API so the actor cannot be forged -- and even here Centrifugo stamps the
- * publication with the connection's own `info`, so a participant cannot pretend to be a colleague.
- */
-export async function publishToCanvas(
-  channel: string,
-  data: Record<string, unknown>,
-): Promise<void> {
-  if (!channel.startsWith('canvas:')) return
-  const entry = await ensureChannel(channel)
-  if (!entry.sub || entry.sub.state !== 'subscribed') return
-  try {
-    await entry.sub.publish(data)
-  } catch {
-    // A cursor that does not arrive is a cursor nobody misses.
   }
 }
 

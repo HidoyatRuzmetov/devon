@@ -1,5 +1,5 @@
-import { Home, ShieldCheck } from 'lucide-react'
 import type { NavEntry, NavGroup } from '@devon/ui'
+import { Home, ShieldCheck } from 'lucide-react'
 import { getFeatureSidebarEntries } from '../features/registry.js'
 
 /** design.md §7: the sidebar (and the command palette's "Oʻtish" group) render from this registry.
@@ -88,24 +88,6 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     entryIds: ['pages', 'analytics'],
     collapsible: true,
   },
-  /**
-   * v1.1 SPEC §3.1 -- **Boshqaruv**: the boshqarma boshlig'i's half of the product. This is the
-   * structural answer to CTO finding #2 ("the head's product is the member's product with more
-   * buttons"): the head does not get extra buttons scattered through the working screens, they get a
-   * group of their own, and a xodim never sees that the group exists.
-   *
-   * Every entry in it declares a head-only action, so the group disappears for a member through the
-   * same `can()` the server's route uses -- `Sidebar` renders nothing for a group whose entries all
-   * resolved away. The ids listed here that no manifest claims yet (`workload`, `goals`, `fields`,
-   * `automations`) are the destinations SPEC §7 builds; naming them now means those packages add one
-   * sidebar entry to their own manifest and land in the right group with no edit to this file.
-   */
-  {
-    id: 'manage-head',
-    labelKey: 'shell.nav.group.manageHead',
-    entryIds: ['people-table', 'workload', 'goals', 'fields', 'automations'],
-    collapsible: true,
-  },
   {
     id: 'administration',
     entryIds: ['department-requests', 'admin'],
@@ -121,7 +103,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
  * This is only the first-run default: the moment anyone toggles a group the whole set is persisted
  * per user and this is never consulted again.
  */
-export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = ['team', 'knowledge', 'manage-head']
+export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = ['team', 'knowledge']
 
 /** The five areas the bottom tab bar carries at 390 px (UI-OVERHAUL.md §2: "bottom tab bar for the
  * five most used areas"). Everything else stays one tap away behind ☰, which opens the full sidebar
@@ -141,13 +123,7 @@ export const MOBILE_TAB_IDS: readonly string[] = ['home', 'work', 'personal', 'e
  * most on a phone. A head whose department has the workload feature switched off simply gets the
  * entry resolved away and the bar renders four tabs, which is what `mobileTabEntries` already does.
  */
-export const MOBILE_TAB_IDS_HEAD: readonly string[] = [
-  'home',
-  'people-table',
-  'workload',
-  'work',
-  'assistant',
-]
+export const MOBILE_TAB_IDS_HEAD: readonly string[] = ['home', 'work', 'assistant']
 
 /** Shorter labels for those five tabs. A tab is about 78 px wide at 390 px, and "Bildirishnomalar"
  * is not 78 px of anything -- but the shell may not ellipsize (DESIGN.md §3.5), and that rule's own
@@ -161,7 +137,6 @@ export const MOBILE_TAB_SHORT_LABEL_KEYS: Readonly<Record<string, string>> = {
   assistant: 'assistantWorkspace.title',
   // SEV2 #28: two more fixed 390 px slots needing short keys. "Xodimlar jadvali" and "Yuklama" are
   // the full names, and they stay as the tabs' accessible names (DESIGN.md §5).
-  'people-table': 'shell.nav.short.peopleTable',
   workload: 'shell.nav.short.workload',
 }
 

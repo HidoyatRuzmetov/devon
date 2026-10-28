@@ -1,0 +1,47 @@
+{
+  "assistantBatch": {
+    "review": "O‘zgarishlarni tekshirish",
+    "select": "Kiritish: {title}",
+    "selected": "{total} tadan {selected} ta tanlandi",
+    "confirm": "Tanlanganlarni tasdiqlash",
+    "discardAll": "Barchasini bekor qilish",
+    "unselected": "Tanlanmagan o‘zgarishlar bekor qilinadi.",
+    "details": "Tafsilotlar",
+    "hideDetails": "Tafsilotlarni yashirish",
+    "save": "O‘zgarishlarni saqlash",
+    "cancel": "Bekor qilish",
+    "askChange": "Yordamchidan qayta ishlashni so‘rash",
+    "editError": "Saqlanmadi. Qiymatlarni tekshiring yoki taklif o‘zgargan bo‘lsa sahifani yangilang.",
+    "openResult": "Natijani ochish",
+    "change": "O‘zgarish",
+    "checklistCount": "{count} ta ro‘yxat bandi",
+    "backToChat": "Yordamchiga qaytish",
+    "dependsOn": "Bogʻliq: {title}",
+    "dependencyFailed": "Kerakli oldingi oʻzgarish bajarilmagani uchun qoʻllanmadi.",
+    "kinds": {
+      "card_withChecklist": "Vazifa va bandlar",
+      "card_assignMany": "A’zolarga vazifa berish",
+      "checkin_add": "Check-inga qo‘shish",
+      "checkin_update": "Natijani tahrirlash",
+      "checkin_remove": "Check-indan chiqarish",
+      "checkin_lock": "Bosqichni yopish",
+      "personal_calendar_create": "Shaxsiy taqvimga qo‘shish",
+      "personal_calendar_update": "Taqvim yozuvini tahrirlash",
+      "personal_calendar_delete": "Taqvim yozuvini o‘chirish"
+    },
+    "fields": {
+      "existingCardId": "Mavjud vazifa",
+      "create": "Yangi vazifa",
+      "checklist": "Bandlar",
+      "recipientUserIds": "Qabul qiluvchilar",
+      "cycleId": "Davr",
+      "entryId": "Natija",
+      "state": "Holat",
+      "phase": "Bosqich",
+      "remindAt": "Eslatma",
+      "allDay": "Kun bo‘yi",
+      "parentKey": "Asosiy band",
+      "key": "Band havolasi"
+    }
+  }
+}

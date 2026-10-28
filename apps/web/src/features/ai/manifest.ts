@@ -1,15 +1,13 @@
+import { MessageSquareText, Sparkles } from 'lucide-react'
 import * as React from 'react'
-import { MessageSquareText, Search, Sparkles } from 'lucide-react'
 import type { FeatureManifest } from '../types.js'
 
-const AiSettingsScreenLazy = React.lazy(() => import('./ai-settings-screen.js'))
 const AssistantScreen = React.lazy(() => import('./assistant-screen.js'))
 
 const manifest: FeatureManifest = {
   name: 'ai',
   routes: [
     { path: '/assistant', component: AssistantScreen, titleKey: 'assistantWorkspace.title' },
-    { path: '/ai', component: AiSettingsScreenLazy, titleKey: 'ai.title' },
   ],
   // SPEC §3.1: `/ai` is the helper catalogue for a member and the budget/flags/spend console for the
   // head -- one route, two products, gated field by field on the server (D2). The entry itself stays
@@ -28,9 +26,8 @@ const manifest: FeatureManifest = {
   // and the one that finds something across the whole department, so both get a command of their
   // own, deep-linking to the tab rather than dropping the person on the screen's first tab to hunt.
   commands: [
-    { id: 'ai.open', labelKey: 'ai.title', path: '/ai', icon: Sparkles },
+    { id: 'ai.open', labelKey: 'ai.title', path: '/account/ai', icon: Sparkles },
     { id: 'ai.ask', labelKey: 'ai.command.ask', path: '/assistant', icon: MessageSquareText },
-    { id: 'ai.search', labelKey: 'ai.command.search', path: '/ai?tab=ask', icon: Search },
   ],
 }
 

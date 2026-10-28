@@ -14,9 +14,9 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query'
 import * as api from './api-plus.js'
-import { finishWorkWrite, patchCardInCaches, useCsrfToken } from './hooks.js'
 import type { Board, Card, CardDetail } from './api.js'
 import { fetchDependencyCandidates } from './dependency-candidates.js'
+import { finishWorkWrite, patchCardInCaches, useCsrfToken } from './hooks.js'
 
 // Key prefixes. `['work', ...]` throughout, so `hooks.ts`'s own invalidations and these never
 // collide but can still be cleared together when a department switch invalidates everything.
@@ -27,10 +27,6 @@ const TIME_LOG_KEY = (cardId: string) => ['work', 'time-log', cardId] as const
 const REMINDERS_KEY = (cardId: string) => ['work', 'reminders', cardId] as const
 const TEMPLATES_KEY = (kind?: string) => ['work', 'templates', kind ?? 'all'] as const
 const FOCUS_KEY = ['work', 'focus'] as const
-const CAPACITY_KEY = ['work', 'capacity'] as const
-const WORKLOAD_KEY = (query: api.WorkloadQuery) => ['work', 'workload', query] as const
-const MY_WORKLOAD_KEY = (query: api.WorkloadQuery) => ['work', 'workload-mine', query] as const
-const GOALS_KEY = ['work', 'goals'] as const
 
 const BOARD_KEY = ['work', 'board'] as const
 const CARDS_KEY = ['work', 'cards'] as const
@@ -401,101 +397,5 @@ export function useReorderFocusMutation() {
         patchCardInCaches(qc, pin.cardId, { focusPosition: pin.position })
     },
     onSettled: () => finishWorkWrite(qc),
-  })
-}
-
-// --- A4 capacity and workload -------------------------------------------------------------------------------
-
-export function useCapacityQuery(enabled = true): UseQueryResult<api.CapacityRow[], Error> {
-  return useQuery({
-    queryKey: CAPACITY_KEY,
-    queryFn: api.fetchCapacity,
-    enabled,
-  })
-}
-
-export function usePutCapacityMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: ({ userId, weeklyHours }: { userId: string; weeklyHours: number }) =>
-      api.putCapacity(userId, weeklyHours, csrf),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: CAPACITY_KEY })
-      void qc.invalidateQueries({ queryKey: ['work', 'workload'] })
-      void qc.invalidateQueries({ queryKey: ['work', 'workload-mine'] })
-    },
-  })
-}
-
-export function useWorkloadQuery(
-  query: api.WorkloadQuery,
-  enabled = true,
-): UseQueryResult<api.Workload, Error> {
-  return useQuery({
-    queryKey: WORKLOAD_KEY(query),
-    queryFn: () => api.fetchWorkload(query),
-    enabled,
-  })
-}
-
-/** SPEC §2.2: a member has no workload *grid*, but does get their own row -- this endpoint is the
- * one they are allowed to call, and the server refuses any other user id for them. */
-export function useMyWorkloadQuery(
-  query: api.WorkloadQuery = {},
-  enabled = true,
-): UseQueryResult<api.Workload, Error> {
-  return useQuery({
-    queryKey: MY_WORKLOAD_KEY(query),
-    queryFn: () => api.fetchMyWorkload(query),
-    enabled,
-  })
-}
-
-export function useMoveWorkloadMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (input: { cardId: string; toUserId: string | null; toWeekStart: string }) =>
-      api.moveWorkloadCard(input, csrf),
-    onSuccess: (_data, input) => {
-      void qc.invalidateQueries({ queryKey: ['work', 'workload'] })
-      void qc.invalidateQueries({ queryKey: ['work', 'workload-mine'] })
-      invalidateCardSurfaces(qc, input.cardId)
-    },
-  })
-}
-
-// --- A11 goals -------------------------------------------------------------------------------------------
-
-export function useGoalsQuery(enabled = true): UseQueryResult<api.Goal[], Error> {
-  return useQuery({ queryKey: GOALS_KEY, queryFn: api.fetchGoals, enabled })
-}
-
-export function useCreateGoalMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (input: api.CreateGoalInput) => api.createGoal(input, csrf),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: GOALS_KEY }),
-  })
-}
-
-export function usePatchGoalMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof api.patchGoal>[1] }) =>
-      api.patchGoal(id, patch, csrf),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: GOALS_KEY }),
-  })
-}
-
-export function useDeleteGoalMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (id: string) => api.deleteGoal(id, csrf),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: GOALS_KEY }),
   })
 }

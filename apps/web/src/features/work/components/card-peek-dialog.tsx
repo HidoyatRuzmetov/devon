@@ -60,6 +60,4 @@ export function CardPeekDialog() {
   )
 }
 
-export function openCardPeek(cardId: string): void {
-  replaceSearchParam('card', cardId)
-}
+export { openCardPeek } from '../lib/open-card-peek.js'

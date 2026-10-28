@@ -41,30 +41,27 @@
 //
 // With `TELEGRAM_BOT_TOKEN` set and the bot's menu button pointing at `/miniapp/`, the identical
 // build runs the `source: "telegram"` path end to end against the real bot.
-import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyRequest } from 'fastify'
-import { z } from 'zod'
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { buildActor, departmentRoleOf } from '../../lib/actor.js'
+import { CSRF_COOKIE_NAME, csrfCookieOptions, sessionCookieOptions } from '../../lib/cookies.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
-import { CSRF_COOKIE_NAME, csrfCookieOptions, sessionCookieOptions } from '../../lib/cookies.js'
-import { buildActor, departmentRoleOf } from '../../lib/actor.js'
 import type { AuditCtx } from '../../types.js'
 import { listNotifications } from '../notifications/repo.js'
-import { getLinkStatus, resolveUserByChatId } from './repo.js'
-import { isTelegramConfigured, publicUrl, sendPlainMessage } from './transport.js'
-import { tb, isBotLocale, DEFAULT_BOT_LOCALE, type BotLocale } from './templates.js'
 import { verifyInitData, type VerifiedInitData } from './miniapp-initdata.js'
-import { boardPeek, fieldsAvailable, listMyPersonFields, setMyPersonField } from './miniapp-repo.js'
+import { boardPeek } from './miniapp-repo.js'
 import {
   boardPeekSchema,
   focusAlertBodySchema,
   focusAlertResultSchema,
-  miniFieldsSchema,
   miniappIdentitySchema,
   miniappSessionSchema,
-  setFieldBodySchema,
 } from './miniapp-schemas.js'
+import { getLinkStatus, resolveUserByChatId } from './repo.js'
+import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
+import { isTelegramConfigured, sendPlainMessage } from './transport.js'
 
 /** The header the Mini App puts its `initData` in. A custom header, never a cookie or a query
  * parameter: a cross-site page cannot set one without a CORS preflight this API never grants, which
@@ -82,10 +79,6 @@ declare module 'fastify' {
      * cookie -- the two identities are kept apart on purpose (see `resolveSessionIdentity`). */
     miniappInit: { init: VerifiedInitData; userId: string } | null
   }
-}
-
-export function miniappUrl(): string {
-  return `${publicUrl().replace(/\/+$/, '')}/miniapp/`
 }
 
 function auditCtxFromReq(req: FastifyRequest): AuditCtx {
@@ -176,10 +169,9 @@ const miniappRoutes: FastifyPluginAsyncZod = async (app) => {
     const active =
       memberships.find((m) => m.departmentId === activeDepartmentId(req)) ?? memberships[0] ?? null
 
-    const [unread, link, hasFields] = await Promise.all([
+    const [unread, link] = await Promise.all([
       listNotifications(userId, { status: 'unread', limit: 1 }),
       getLinkStatus(userId),
-      active ? fieldsAvailable(dbContext(req)) : Promise.resolve(false),
     ])
 
     return {
@@ -199,7 +191,6 @@ const miniappRoutes: FastifyPluginAsyncZod = async (app) => {
       source,
       startParam,
       unreadCount: unread.unreadCount,
-      fieldsAvailable: hasFields,
     }
   }
 
@@ -307,70 +298,6 @@ const miniappRoutes: FastifyPluginAsyncZod = async (app) => {
         departmentRoleOf(req.actor, departmentId) === 'head',
       )
       return reply.send(peek)
-    },
-  )
-
-  // --- 4. My person fields (SPEC §5 notify-to-fill lands here) ---------------------------------------
-
-  app.get(
-    '/fields',
-    {
-      config: {
-        permission: {
-          action: 'read',
-          subject: (r) => ({
-            kind: 'owned' as const,
-            departmentId: activeDepartmentId(r),
-            ownerUserIds: [r.actor?.userId ?? ''],
-          }),
-        },
-      },
-      schema: { response: { 200: miniFieldsSchema } },
-    },
-    async (req, reply) => {
-      const result = await listMyPersonFields(
-        dbContext(req),
-        activeDepartmentId(req),
-        req.actor!.userId,
-      )
-      return reply.send(result.available ? result : { available: false, items: [] })
-    },
-  )
-
-  app.put(
-    '/fields/:defId',
-    {
-      config: {
-        permission: {
-          action: 'update',
-          subject: (r) => ({
-            kind: 'owned' as const,
-            departmentId: activeDepartmentId(r),
-            ownerUserIds: [r.actor?.userId ?? ''],
-          }),
-        },
-      },
-      schema: {
-        params: z.object({ defId: z.string().uuid() }),
-        body: setFieldBodySchema,
-        response: { 200: miniFieldsSchema },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = activeDepartmentId(req)
-      const outcome = await setMyPersonField(
-        dbContext(req),
-        departmentId,
-        req.actor!.userId,
-        req.params.defId,
-        req.body.value,
-      )
-      if (outcome === 'unavailable') return sendProblem(reply, 'not_found')
-      if (outcome === 'not_found') return sendProblem(reply, 'not_found')
-      if (outcome === 'not_self_editable') return sendProblem(reply, 'forbidden')
-      const result = await listMyPersonFields(dbContext(req), departmentId, req.actor!.userId)
-      return reply.send(result.available ? result : { available: false, items: [] })
     },
   )
 

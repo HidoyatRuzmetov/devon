@@ -1,0 +1,32 @@
+{
+  "personalCalendar": {
+    "tab": "Personal calendar",
+    "add": "Add personal entry",
+    "edit": "Edit personal entry",
+    "titleField": "Title",
+    "allDay": "All day",
+    "start": "Starts",
+    "end": "Ends",
+    "notes": "Notes",
+    "reminder": "Telegram reminder (optional)",
+    "timezone": "Times are in Tashkent (UTC+5)",
+    "telegram": "Telegram connection",
+    "saved": "Calendar updated",
+    "error": "Could not save. Check the dates or reload if this entry has changed.",
+    "delete": "Delete",
+    "confirmDelete": "Confirm deletion",
+    "save": "Save",
+    "waitlist": "Waitlisted",
+    "previous": "Previous month",
+    "next": "Next month",
+    "today": "Today",
+    "kind": {
+      "personal": "Personal",
+      "event": "Signed-up event",
+      "card": "Card deadline"
+    },
+    "addOn": "Add an entry on {date}",
+    "more": "+{count} more",
+    "free": "No scheduled items"
+  }
+}

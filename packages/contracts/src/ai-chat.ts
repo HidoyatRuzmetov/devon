@@ -8,16 +8,30 @@ export const aiChatAttachmentSchema = z.object({
   size: z.number().nonnegative(),
   downloadPath: z.string().startsWith('/').optional(),
 })
+export const aiActionBindingSchema = z
+  .object({
+    path: z.string().min(1).max(100),
+    from: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/),
+  })
+  .strict()
 export const aiChatProposalSchema = z.object({
   id: z.uuid(),
   kind: z.string(),
+  key: z
+    .string()
+    .regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/)
+    .optional(),
+  bindings: z.array(aiActionBindingSchema).max(8).optional(),
   title: z.string(),
   summary: z.string(),
   arguments: z.record(z.string(), z.unknown()),
   status: z.enum(['pending', 'executing', 'executed', 'discarded', 'failed', 'expired']),
-  result: z.object({ href: z.string().startsWith('/'), label: z.string() }).optional(),
+  result: z
+    .object({ href: z.string().startsWith('/'), label: z.string(), entityId: z.uuid().optional() })
+    .optional(),
   error: z.string().optional(),
   startedAt: z.string().optional(),
+  revision: z.number().int().nonnegative().optional(),
 })
 export const aiChatSourceSchema = z.object({
   ref: z.string(),
@@ -74,6 +88,29 @@ export const sendAiChatMessageSchema = z
   })
   .strict()
 export const cancelAiChatMessageSchema = z.object({ messageId: z.uuid() }).strict()
+export const resolveAiProposalBatchSchema = z
+  .object({
+    messageId: z.uuid(),
+    proposals: z
+      .array(
+        z
+          .object({ id: z.uuid(), revision: z.number().int().nonnegative(), selected: z.boolean() })
+          .strict(),
+      )
+      .min(1)
+      .max(50),
+  })
+  .strict()
+  .refine(
+    (v) => new Set(v.proposals.map((p) => p.id)).size === v.proposals.length,
+    'duplicate proposal',
+  )
+export const editAiProposalSchema = z
+  .object({
+    revision: z.number().int().nonnegative(),
+    arguments: z.record(z.string(), z.unknown()),
+  })
+  .strict()
 export type AiChatSource = z.infer<typeof aiChatSourceSchema>
 export type AiChatContext = z.infer<typeof aiChatContextSchema>
 export type AiChatMessage = z.infer<typeof aiChatMessageSchema>

@@ -5,15 +5,13 @@
 // "Filters": "chips with type-ahead, a '+ Filter' popover"). Each screen still owns its own URL
 // param, saved-view/saved-filter API and date-range chrome around this -- only the clause editor
 // itself is shared, since that is the actual UI/UX piece the two screens must agree on.
-import * as React from 'react'
-import { X } from 'lucide-react'
-import { useT } from '@devon/i18n'
 import {
   parseFilterQuery,
   serializeFilterQuery,
   type CompareOp,
   type FilterClause,
 } from '@devon/contracts'
+import { useT } from '@devon/i18n'
 import {
   cn,
   comboboxScore,
@@ -23,8 +21,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@devon/ui'
-import { useBoardQuery } from '../hooks.js'
+import { X } from 'lucide-react'
+import * as React from 'react'
 import { useProjectsQuery } from '../../projects/hooks.js'
+import { useBoardQuery } from '../hooks.js'
 import { fullName } from '../lib/format.js'
 
 export type FieldKey = 'assignee' | 'giver' | 'status' | 'due' | 'project' | 'label'
@@ -102,13 +102,6 @@ export function clauseLabel(
       // the client -- board-screen.tsx's own comment), but a saved view/filter or a hand-typed
       // advanced query can already carry one, so it still needs a readable chip.
       return `${t('work.field.unit')}: ${clause.name}`
-    case 'field':
-      // v1.1 SPEC §5: `field:<key>:<value>`. The chip shows the key the head typed into the manager
-      // rather than the label, because the key is what this grammar round-trips -- the field's
-      // label is only known once `/fields` has loaded, and a chip must render before that.
-      return clause.empty
-        ? t('fields.filter.chipEmpty', { key: clause.key })
-        : t('fields.filter.chip', { key: clause.key, value: clause.value })
     case 'empty':
       // v1.1 critique SEV2 #3: `due:boʻsh` / `estimate:boʻsh`, the two clauses the workload view's
       // header warning links with. Same "unfilled" vocabulary as a custom field's own empty form.

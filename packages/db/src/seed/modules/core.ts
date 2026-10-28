@@ -10,6 +10,7 @@
 // `reset()` has removed the rows that point at these users/department.
 import { sql } from 'drizzle-orm'
 import * as schema from '../../schema/index.js'
+import { demoDaysFromNow } from '../clock.js'
 import {
   DEMO_DEPARTMENT,
   DEMO_MEMBERSHIPS,
@@ -17,7 +18,6 @@ import {
   DEMO_USERS,
   demoPasswordHash,
 } from '../fixtures.js'
-import { demoDaysFromNow } from '../clock.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
 /** The two personas have been here since long before the quarter the demo shows. Without this they
@@ -29,16 +29,11 @@ const FOUNDED_AT = demoDaysFromNow(-118) // ~4 months before the demo's "today"
 /** Every Imkoniyatlar switch key, on. Mirrors `FEATURE_KEYS` in `packages/contracts/src/
  * features.ts` -- see the comment at the call site for why it is mirrored rather than imported. */
 const DEMO_FEATURES: Readonly<Record<string, boolean>> = Object.freeze({
-  custom_fields: true,
-  person_fields: true,
   estimates: true,
-  workload: true,
   dependencies: true,
   recurring: true,
   templates: true,
-  goals: true,
   focus_list: true,
-  automations: true,
   reminders: true,
 })
 

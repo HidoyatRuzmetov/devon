@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { returnContextParams } from '../../src/lib/return-context.js'
+import { returnContextParams, returnDestination } from '../../src/lib/return-context.js'
 
 describe('drill-in return context', () => {
   const id = 'bfbf5d9b-1ae7-4a2c-9da8-415639821045'
@@ -22,5 +22,22 @@ describe('drill-in return context', () => {
     expect(
       returnContextParams(new URLSearchParams(`from=https://example.com&conversation=${id}`)).size,
     ).toBe(0)
+  })
+  it('returns to the selected calendar month or member cycle without accepting arbitrary destinations', () => {
+    expect(returnDestination(new URLSearchParams('from=personal&month=2026-11'))).toBe(
+      '/personal?tab=calendar&month=2026-11',
+    )
+    expect(
+      returnDestination(
+        new URLSearchParams(`from=analytics&cycle=${id}&member=${id}&month=2026-11`),
+      ),
+    ).toBe(`/analytics?cycle=${id}&member=${id}`)
+    expect(returnDestination(new URLSearchParams('from=personal&month=2026-99'))).toBe(
+      '/personal?tab=calendar',
+    )
+    expect(returnDestination(new URLSearchParams('from=https://evil.invalid'))).toBe('/')
+    expect(returnDestination(new URLSearchParams(`from=assistant&conversation=${id}`))).toBe(
+      `/assistant?conversation=${id}`,
+    )
   })
 })

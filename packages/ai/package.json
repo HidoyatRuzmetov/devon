@@ -16,7 +16,6 @@
     "evals": "tsx evals/run.ts"
   },
   "dependencies": {
-    "@devon/contracts": "workspace:*",
     "zod": "4.6.6"
   },
   "devDependencies": {

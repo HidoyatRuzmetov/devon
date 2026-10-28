@@ -1,0 +1,309 @@
+.pomodoro-studio {
+  --timer-accent: light-dark(#ae4734, #f0a58f);
+  --timer-leaf: light-dark(#426c54, #9bbfa4);
+  --timer-wash: light-dark(#f8eee2, #302722);
+}
+.pomodoro-studio[data-phase='short_break'],
+.pomodoro-studio[data-phase='long_break'] {
+  --timer-accent: light-dark(#356b65, #94c8bc);
+  --timer-wash: light-dark(#e9f0e5, #202e2b);
+}
+.pomodoro-stage {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: min(760px, calc(100dvh - 15rem));
+  padding: 1.5rem 2rem 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1.75rem;
+  overflow: hidden;
+  background: var(--timer-wash);
+  transition: background-color 800ms ease;
+}
+.pomodoro-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 76% 20%, light-dark(#fffdf5b3, #ffffff05), transparent 65%),
+    radial-gradient(ellipse at 10% 100%, light-dark(#e4c59a33, #00000030), transparent 70%);
+}
+.pomodoro-toolbar {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.pomodoro-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--color-card) 70%, transparent);
+}
+.pomodoro-modes button {
+  min-height: 2.5rem;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: var(--text-small);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
+}
+.pomodoro-modes button[aria-pressed='true'] {
+  color: var(--timer-accent);
+  background: var(--color-card);
+  box-shadow: 0 2px 6px #00000009;
+  font-weight: 600;
+}
+.pomodoro-modes button:disabled {
+  cursor: default;
+}
+.pomodoro-modes button:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+.pomodoro-centerpiece {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 4rem);
+  width: min(100%, 1030px);
+  flex: 1;
+  margin: 1rem auto;
+}
+.pomodoro-dial {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  text-align: center;
+}
+.pomodoro-clock-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+.pomodoro-phase {
+  color: var(--timer-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+.pomodoro-clock {
+  font-size: clamp(6rem, 10.5vw, 10.5rem);
+  line-height: 1;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.065em;
+  padding-right: 0.065em;
+  color: var(--color-foreground);
+}
+.pomodoro-caption {
+  font-size: var(--text-body);
+  text-align: center;
+  max-width: 26ch;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+}
+.pomodoro-time-track {
+  height: 3px;
+  width: 64%;
+  margin: 2rem auto 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--timer-accent) 12%, transparent);
+}
+.pomodoro-time-track span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  background: var(--timer-accent);
+  transition: transform 1s linear;
+}
+.pomodoro-character-scene {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  aspect-ratio: 1;
+  width: min(100%, 480px);
+  justify-self: center;
+  isolation: isolate;
+}
+.pomodoro-character-halo {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background: radial-gradient(circle, light-dark(#fff9ebc0, #ffffff08), transparent 72%);
+  transform: scale(1.2);
+}
+.pomodoro-character-platform {
+  position: absolute;
+  bottom: 0;
+  left: 9%;
+  width: 82%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, light-dark(#73543229, #00000060), transparent 68%);
+  filter: blur(6px);
+}
+.pomodoro-character-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+.pomodoro-character-layer[data-active='true'] {
+  opacity: 1;
+}
+.pomodoro-character-sprite {
+  width: 100%;
+  height: 100%;
+  background-size: 600% 400%;
+  background-repeat: no-repeat;
+}
+.pomodoro-character-layer[data-active='true'] .pomodoro-character-sprite {
+  animation: var(--tomato-frames) 2.6s steps(1, end) both;
+}
+.pomodoro-character-layer[data-active='false'] .pomodoro-character-sprite {
+  background-position: 100% 100%;
+}
+.pomodoro-character-scene[data-motion='off'] .pomodoro-character-sprite {
+  animation-play-state: paused;
+}
+.pomodoro-character-layer[data-active='true'] {
+  animation: pomodoro-character-arrive 220ms ease-out both;
+}
+@keyframes pomodoro-character-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.pomodoro-particle {
+  position: absolute;
+  opacity: 0;
+  border-radius: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--timer-leaf);
+  left: 13%;
+  top: 25%;
+}
+.pomodoro-particle:nth-last-child(2) {
+  left: 83%;
+  top: 35%;
+  width: 5px;
+  height: 5px;
+}
+.pomodoro-particle:last-child {
+  left: 58%;
+  top: 6%;
+  width: 4px;
+  height: 4px;
+}
+.pomodoro-character-scene[data-mode='complete'][data-motion='on'] .pomodoro-particle {
+  animation: pomodoro-celebrate 1.8s ease-out both;
+}
+.pomodoro-main-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+}
+.pomodoro-main-controls > button:first-child {
+  min-width: 12rem;
+  min-height: 3.5rem;
+  border-radius: 1.1rem;
+  background: var(--timer-accent);
+  color: var(--color-card);
+  border-color: transparent;
+  box-shadow: 0 5px 18px color-mix(in oklab, var(--timer-accent) 16%, transparent);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+.pomodoro-main-controls > button:first-child:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px color-mix(in oklab, var(--timer-accent) 22%, transparent);
+}
+@keyframes pomodoro-celebrate {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.5);
+  }
+  25% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-38px) scale(0.3);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pomodoro-studio * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+@media (max-width: 1100px) {
+  .pomodoro-clock {
+    font-size: clamp(5.5rem, 10vw, 8rem);
+  }
+  .pomodoro-centerpiece {
+    gap: 0.5rem;
+  }
+}
+@media (max-width: 700px) {
+  .pomodoro-stage {
+    padding: 1rem 0.75rem 1.5rem;
+    min-height: 0;
+    gap: 0.8rem;
+  }
+  .pomodoro-toolbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .pomodoro-modes button {
+    padding: 0.5rem 0.65rem;
+    min-height: 2.75rem;
+  }
+  .pomodoro-centerpiece {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+  }
+  .pomodoro-character-scene {
+    width: clamp(160px, 22dvh, 200px);
+  }
+  .pomodoro-clock-face {
+    gap: 0.65rem;
+  }
+  .pomodoro-clock {
+    font-size: clamp(5.5rem, 24vw, 7.5rem);
+  }
+  .pomodoro-caption {
+    font-size: var(--text-small);
+  }
+  .pomodoro-time-track {
+    margin: 1rem auto 0.35rem;
+  }
+}
