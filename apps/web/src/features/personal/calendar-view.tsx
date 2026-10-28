@@ -33,6 +33,7 @@ import { z } from 'zod'
 import { apiClient } from '../../lib/api-client.js'
 import { RouterLink, navigate, replaceSearchParam, useSearchParams } from '../../lib/router.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
+import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
 
 const TZ = 5 * 3600000,
   DAY = 86400000
@@ -226,11 +227,22 @@ export function PersonalCalendarView() {
     requested && /^\d{4}-(0[1-9]|1[0-2])$/.test(requested) ? requested : today.slice(0, 7)
   const start = new Date(month + '-01T00:00:00Z'),
     first = new Date(start.getTime() - ((start.getUTCDay() + 6) % 7) * DAY)
-  const days = Array.from({ length: 42 }, (_, i) =>
+  const monthLength = new Date(
+    Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0),
+  ).getUTCDate()
+  const weekCount = Math.ceil((((start.getUTCDay() + 6) % 7) + monthLength) / 7)
+  const days = Array.from({ length: weekCount * 7 }, (_, i) =>
     new Date(first.getTime() + i * DAY).toISOString().slice(0, 10),
   )
   const from = days[0]!,
-    to = new Date(first.getTime() + 42 * DAY).toISOString().slice(0, 10)
+    to = new Date(first.getTime() + weekCount * 7 * DAY).toISOString().slice(0, 10)
+  const [calendarRef, calendarHeight] = useViewportBoundedHeight<HTMLDivElement>(360)
+  // Reserve the date and overflow action before allocating entry rows. Dense days open in a
+  // dialog, so neither their content nor a six-week month can stretch the calendar grid.
+  const entrySlots = Math.max(
+    1,
+    Math.min(4, Math.floor((((calendarHeight ?? 600) - 36) / weekCount - 44) / 32)),
+  )
   const query = useQuery({
     queryKey: ['personal', 'calendar', me.data?.user?.id, departmentId, from, to],
     queryFn: () =>
@@ -277,7 +289,7 @@ export function PersonalCalendarView() {
           a.id.localeCompare(b.id),
       )
   }
-  function itemRow(item: PersonalCalendarItem) {
+  function itemRow(item: PersonalCalendarItem, compact = false) {
     const Icon = item.kind === 'task' && item.status === 'archived' ? Archive : icons[item.kind]
     return (
       <button
@@ -286,7 +298,8 @@ export function PersonalCalendarView() {
         onClick={() => open(item)}
         title={item.title}
         className={cn(
-          'flex min-h-8 w-full items-start gap-1.5 rounded-sm border px-2 py-1.5 text-left text-caption transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'flex w-full items-start gap-1.5 rounded-sm border px-2 text-left text-caption transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          compact ? 'h-7 min-h-7 items-center py-0.5' : 'min-h-8 py-1.5',
           tones[item.kind],
         )}
       >
@@ -294,13 +307,13 @@ export function PersonalCalendarView() {
         <span className="min-w-0 flex-1">
           <span
             className={cn(
-              'line-clamp-2 [overflow-wrap:anywhere]',
+              compact ? 'block truncate' : 'line-clamp-2 [overflow-wrap:anywhere]',
               item.kind === 'task' && item.status === 'done' && 'line-through',
             )}
           >
             {item.title}
           </span>
-          {!item.allDay ? (
+          {!compact && !item.allDay ? (
             <span className="mt-0.5 block opacity-75">
               {new Intl.DateTimeFormat(locale, {
                 hour: '2-digit',
@@ -309,10 +322,10 @@ export function PersonalCalendarView() {
               }).format(new Date(item.startsAt))}
             </span>
           ) : null}
-          {item.kind === 'task' && item.status === 'archived' ? (
+          {!compact && item.kind === 'task' && item.status === 'archived' ? (
             <span className="block font-medium">{t('work.status.archived')}</span>
           ) : null}
-          {item.status === 'waitlist' ? (
+          {!compact && item.status === 'waitlist' ? (
             <span className="block font-medium">{t('personalCalendar.waitlist')}</span>
           ) : null}
         </span>
@@ -370,7 +383,11 @@ export function PersonalCalendarView() {
         <StateView kind="loading" titleKey="state.loading" />
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-lg border border-border md:block">
+          <div
+            ref={calendarRef}
+            style={{ height: calendarHeight }}
+            className="personal-calendar-month hidden flex-col overflow-hidden rounded-lg border border-border md:flex"
+          >
             <div className="grid grid-cols-7 border-b border-border bg-muted/40">
               {days.slice(0, 7).map((day) => (
                 <div key={day} className="px-3 py-2 text-caption font-medium text-muted-foreground">
@@ -380,14 +397,18 @@ export function PersonalCalendarView() {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-px bg-border">
+            <div
+              style={{ gridTemplateRows: `repeat(${weekCount}, minmax(0, 1fr))` }}
+              className="grid min-h-0 flex-1 grid-cols-7 gap-px bg-border"
+            >
               {days.map((day) => {
                 const items = entries(day)
+                const visibleEntries = items.length > entrySlots ? entrySlots - 1 : entrySlots
                 return (
                   <div
                     key={day}
                     className={cn(
-                      'flex h-48 min-w-0 flex-col gap-1.5 bg-card p-2',
+                      'group relative isolate flex min-h-0 min-w-0 flex-col gap-1 bg-card p-1.5',
                       day.slice(0, 7) !== month && 'bg-muted/50',
                     )}
                   >
@@ -395,7 +416,7 @@ export function PersonalCalendarView() {
                       type="button"
                       aria-label={t('personalCalendar.addOn', { date: dateLabel(day) })}
                       onClick={() => setEditor({ item: null, date: day })}
-                      className="group flex min-h-7 w-full items-center justify-between rounded-sm px-1 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="absolute inset-0 z-0 flex items-start justify-between rounded-none p-2 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                     >
                       <span
                         className={cn(
@@ -409,16 +430,16 @@ export function PersonalCalendarView() {
                       </span>
                       <Plus className="size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
                     </button>
-                    <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-                      {items.slice(0, 3).map(itemRow)}
+                    <div className="pointer-events-none relative z-10 mt-7 flex flex-col gap-1 [&>button]:pointer-events-auto">
+                      {items.slice(0, visibleEntries).map((item) => itemRow(item, true))}
                     </div>
-                    {items.length > 3 ? (
+                    {items.length > visibleEntries ? (
                       <button
                         type="button"
                         onClick={() => setExpandedDay(day)}
-                        className="min-h-7 text-left text-caption font-medium text-primary"
+                        className="relative z-10 mt-auto min-h-6 text-left text-caption font-medium text-primary"
                       >
-                        {t('personalCalendar.more', { count: items.length - 3 })}
+                        {t('personalCalendar.more', { count: items.length - visibleEntries })}
                       </button>
                     ) : null}
                   </div>
@@ -468,7 +489,7 @@ export function PersonalCalendarView() {
                 </IconButton>
               </div>
               <div className="flex flex-col gap-2">
-                {entries(mobileDay).map(itemRow)}
+                {entries(mobileDay).map((item) => itemRow(item))}
                 {!entries(mobileDay).length ? (
                   <p className="py-3 text-small text-muted-foreground">
                     {t('personalCalendar.free')}
@@ -494,7 +515,7 @@ export function PersonalCalendarView() {
       >
         <DialogContent title={expandedDay ? dateLabel(expandedDay) : ''}>
           <div className="mt-4 flex max-h-[60dvh] flex-col gap-2 overflow-y-auto">
-            {expandedDay ? entries(expandedDay).map(itemRow) : null}
+            {expandedDay ? entries(expandedDay).map((item) => itemRow(item)) : null}
           </div>
         </DialogContent>
       </Dialog>

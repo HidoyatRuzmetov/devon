@@ -1,0 +1,15 @@
+{
+  "projectCollaboration": {
+    "plan": "Reja",
+    "discussion": "Muhokama",
+    "files": "Fayllar",
+    "messages": "Loyiha xabarlari",
+    "empty": "Muhokamani boshlang",
+    "emptyHint": "Loyiha jamoasi bilan yangiliklar, savollar va qarorlarni ulashing.",
+    "placeholder": "Xabar yozing…",
+    "mention": "Hamkasbni eslatish",
+    "composeHint": "@ — eslatish · Ctrl/⌘ + Enter — yuborish",
+    "send": "Xabar yuborish",
+    "formerMember": "Sobiq aʼzo"
+  }
+}

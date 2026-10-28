@@ -505,7 +505,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {route === '/' ? <HubAmbientWash className="-z-10 h-full" /> : null}
           <PaletteProvider onOpen={() => changePaletteOpen(true)}>
-            <PageContainer>
+            <PageContainer
+              width={route === '/personal' || route === '/analytics' ? 'full' : 'default'}
+            >
               {route !== '/' &&
               route !== '/assistant' &&
               ['overview', 'assistant', 'analytics', 'personal'].includes(

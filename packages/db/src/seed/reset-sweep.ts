@@ -66,6 +66,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.focus_pins', ownerColumn: 'user_id' },
   { table: 'app.card_activity' },
   { table: 'app.card_comments' },
+  { table: 'app.project_comments' },
   { table: 'app.card_checklist_items' },
   { table: 'app.ai_file_text' },
   { table: 'app.attachments' },

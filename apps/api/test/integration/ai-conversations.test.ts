@@ -661,6 +661,63 @@ describe('private persistent work conversations', () => {
       ),
     ).toHaveLength(0)
   })
+  it('keeps project discussion and file evidence current across edits, deletions and cached reads', async () => {
+    const project = randomUUID(),
+      comment = randomUUID(),
+      file = randomUUID()
+    await superuserQuery(
+      db,
+      `insert into app.projects(id,department_id,title,owner_user_id) values($1,$2,'Evidence project',$3)`,
+      [project, departmentId, owner],
+    )
+    await superuserQuery(
+      db,
+      `insert into app.project_comments(id,department_id,project_id,author_user_id,body) values($1,$2,$3,$4,'{"text":"Project decision original"}')`,
+      [comment, departmentId, project, owner],
+    )
+    const get = vi.fn(async () => Buffer.from('Project attachment delivery evidence'))
+    configureConversationFiles({ get } as unknown as ObjectStore)
+    await superuserQuery(
+      db,
+      `insert into app.attachments(id,department_id,subject_type,subject_id,key,name,mime,size,uploaded_by_user_id,scan_status)
+      values($1,$2,'project',$3,'project-evidence','evidence.txt','text/plain',36,$4,'clean')`,
+      [file, departmentId, project, owner],
+    )
+    const first = JSON.stringify(
+      await conversationContext(ctx, 'Evidence project', [`project:${project}`]),
+    )
+    expect(first).toContain('Project decision original')
+    expect(first).toContain('Project attachment delivery evidence')
+    expect(first).toContain(`/projects/view?id=${project}&tab=files`)
+    await conversationContext(ctx, 'Evidence project', [`project:${project}`])
+    expect(get).toHaveBeenCalledTimes(1)
+    await superuserQuery(
+      db,
+      `update app.project_comments set body='{"text":"Project decision revised"}' where id=$1`,
+      [comment],
+    )
+    const revised = JSON.stringify(
+      await conversationContext(ctx, 'Evidence project', [`project:${project}`]),
+    )
+    expect(revised).toContain('Project decision revised')
+    expect(revised).not.toContain('Project decision original')
+    await superuserQuery(db, 'update app.project_comments set deleted_at=now() where id=$1', [
+      comment,
+    ])
+    expect(
+      JSON.stringify(await conversationContext(ctx, 'Evidence project', [`project:${project}`])),
+    ).not.toContain('Project decision revised')
+    await superuserQuery(db, 'update app.projects set deleted_at=now() where id=$1', [project])
+    expect(JSON.stringify(await conversationContext(ctx, 'Evidence project'))).not.toContain(
+      'Project attachment delivery evidence',
+    )
+    expect(
+      await withContext(ctx, (tx) =>
+        tx.raw(sql`select attachment_id from app.ai_file_text where attachment_id=${file}`),
+      ),
+    ).toHaveLength(0)
+    configureConversationFiles({ get: async () => null } as unknown as ObjectStore)
+  })
   it('extracts permitted file text once and rechecks file and parent deletion before every cached read', async () => {
     const ownConversation = await create()
     const memberCtx = {

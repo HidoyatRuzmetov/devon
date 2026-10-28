@@ -8,7 +8,7 @@ export type Attachment = {
   size: number
   createdAt: string
 }
-export type AttachmentSubject = 'card' | 'page' | 'ai_conversation'
+export type AttachmentSubject = 'card' | 'page' | 'ai_conversation' | 'project'
 type Row = {
   id: string
   name: string
@@ -31,7 +31,7 @@ export async function createPending(
   ctx: RequestContext,
   cardId: string,
   input: { id: string; name: string; mime: string; size: number; key: string },
-  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project' = 'card',
 ) {
   return withContext(ctx, async (tx) => {
     await tx.raw(sql`insert into app.attachments (id, department_id, subject_type, subject_id, key, name, mime, size, uploaded_by_user_id)
@@ -49,7 +49,7 @@ export async function createPending(
 export async function list(
   ctx: RequestContext,
   cardId: string,
-  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project' = 'card',
 ) {
   return withContext(ctx, async (tx) =>
     (
@@ -64,7 +64,7 @@ export async function get(
   ctx: RequestContext,
   cardId: string,
   id: string,
-  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project' = 'card',
 ) {
   return withContext(
     ctx,
@@ -81,7 +81,7 @@ export async function finalize(
   cardId: string,
   id: string,
   key: string,
-  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project' = 'card',
 ): Promise<Attachment | null> {
   return withContext(ctx, async (tx) => {
     // Lock the upload as well as the card: expiry sweep and concurrent finalisations cannot race.
@@ -96,7 +96,7 @@ export async function finalize(
       subjectType === 'ai_conversation'
         ? sql`select id from app.ai_conversations where id=${cardId}
       and department_id=${ctx.departmentId} and owner_user_id=${ctx.userId} for update`
-        : sql`select id from ${subjectType === 'card' ? sql`app.cards` : sql`app.pages`} where id = ${cardId}
+        : sql`select id from ${subjectType === 'card' ? sql`app.cards` : subjectType === 'project' ? sql`app.projects` : sql`app.pages`} where id = ${cardId}
       and department_id = ${ctx.departmentId} and deleted_at is null for update`,
     )
     if (!cards[0]) return null
@@ -121,7 +121,13 @@ export async function finalize(
         departmentId: ctx.departmentId,
         payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
       })
-    else
+    else if (subjectType === 'project')
+      tx.emit({
+        type: 'projects.project.updated',
+        departmentId: ctx.departmentId,
+        payload: { projectId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
+    else if (subjectType === 'page')
       tx.emit({
         type: 'pages.page.updated',
         departmentId: ctx.departmentId,
@@ -139,7 +145,7 @@ export async function remove(
   ctx: RequestContext,
   cardId: string,
   id: string,
-  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project' = 'card',
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
@@ -161,7 +167,13 @@ export async function remove(
         departmentId: ctx.departmentId,
         payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
       })
-    else
+    else if (subjectType === 'project')
+      tx.emit({
+        type: 'projects.project.updated',
+        departmentId: ctx.departmentId,
+        payload: { projectId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
+    else if (subjectType === 'page')
       tx.emit({
         type: 'pages.page.updated',
         departmentId: ctx.departmentId,
@@ -179,7 +191,7 @@ export async function undoRemove(
   ctx: RequestContext,
   cardId: string,
   id: string,
-  subjectType: 'card' | 'page' | 'ai_conversation' = 'card',
+  subjectType: 'card' | 'page' | 'ai_conversation' | 'project' = 'card',
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
@@ -202,7 +214,13 @@ export async function undoRemove(
         departmentId: ctx.departmentId,
         payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
       })
-    else
+    else if (subjectType === 'project')
+      tx.emit({
+        type: 'projects.project.updated',
+        departmentId: ctx.departmentId,
+        payload: { projectId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
+    else if (subjectType === 'page')
       tx.emit({
         type: 'pages.page.updated',
         departmentId: ctx.departmentId,

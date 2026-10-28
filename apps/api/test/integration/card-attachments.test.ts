@@ -415,3 +415,53 @@ describe('task files', () => {
     expect((await request(path(`/${retry.uploadId}/download`))).status).toBe(404)
   })
 })
+
+it('project files use quarantine, safe downloads, approval, undo and department visibility', async () => {
+  scan = 'clean'
+  const me = (await (await request('/me')).json()) as { user: { id: string } }
+  const createdProject = await request('/projects', 'POST', {
+    title: 'Shared evidence',
+    ownerUserId: me.user.id,
+    members: [me.user.id],
+  })
+  expect(createdProject.status, await createdProject.clone().text()).toBe(201)
+  const project = (await createdProject.json()) as { id: string }
+  const base = `/projects/${project.id}/attachments`
+  const bytes = Buffer.from('<html><script>alert("never execute")</script></html>')
+  expect((await request(base, 'GET', undefined, foreign)).status).toBe(404)
+  expect(
+    (await request(base + '/upload-url', 'POST', { name: 'large.zip', size: 101 * 1024 * 1024 }))
+      .status,
+  ).toBe(202)
+  const requested = await request(base + '/upload-url', 'POST', {
+    name: 'evidence.html',
+    size: bytes.length,
+  })
+  expect(requested.status, await requested.clone().text()).toBe(201)
+  const upload = (await requested.json()) as Upload
+  expect((await request(base)).status).toBe(200)
+  expect(await (await request(base)).json()).toEqual([])
+  expect(
+    (
+      await fetch(baseUrl + upload.url, {
+        method: 'PUT',
+        headers: { cookie: auth.cookie, ...upload.headers },
+        body: bytes,
+      })
+    ).status,
+  ).toBe(204)
+  expect((await request(`${base}/${upload.uploadId}/finalize`, 'POST', {})).status).toBe(200)
+  const download = await request(`${base}/${upload.uploadId}/download`)
+  expect(download.status).toBe(200)
+  expect(download.headers.get('content-disposition')).toMatch(/^attachment;/)
+  expect(await download.text()).toBe(bytes.toString())
+  expect(
+    (await request(`${base}/${upload.uploadId}/download`, 'GET', undefined, foreign)).status,
+  ).toBe(404)
+  expect((await request(`${base}/${upload.uploadId}`, 'DELETE')).status).toBe(204)
+  expect(await (await request(base)).json()).toEqual([])
+  expect((await request(`${base}/${upload.uploadId}/undo-delete`, 'POST', {})).status).toBe(204)
+  expect(((await (await request(base)).json()) as unknown[]).length).toBe(1)
+  expect((await request(`/projects/${project.id}`, 'DELETE')).status).toBe(204)
+  expect((await request(`${base}/${upload.uploadId}/download`)).status).toBe(404)
+})

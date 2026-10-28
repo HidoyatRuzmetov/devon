@@ -15,5 +15,7 @@ test('all 360 generated frames have transparent boundaries and current playback 
   for (const sheet of report) {
     assert.equal(sheet.frames, 24, sheet.name)
     assert.equal(sheet.cutPixels, 0, sheet.name)
+    assert.equal(sheet.bodySize, 150, `${sheet.name}: consistent character scale`)
+    assert.ok(sheet.anchorError < 0.001, `${sheet.name}: stable center and baseline`)
   }
 })

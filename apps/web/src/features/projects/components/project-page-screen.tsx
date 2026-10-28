@@ -48,6 +48,8 @@ import { openCardPeek, CardPeekDialog } from '../../work/components/card-peek-di
 import { useCreateCardMutation, useMembers, usePatchCardMutation } from '../../work/hooks.js'
 import { fullName, isCardCompleted } from '../../work/lib/format.js'
 import { ArchivedCardBadge } from '../../work/components/archived-card-badge.js'
+import { CardAttachments } from '../../work/components/card-attachments.js'
+import { ProjectDiscussion } from './project-discussion.js'
 import {
   useAddMilestoneMutation,
   usePatchMilestoneMutation,
@@ -357,7 +359,7 @@ export default function ProjectPageScreen() {
 
   return (
     <>
-      <div className="mx-auto flex max-w-220 flex-col gap-6 pb-12">
+      <div className="mx-auto flex max-w-260 flex-col gap-5">
         {/* DESIGN.md §9.1: PageContainer -> PageHeader is the only way a screen starts; this screen's
             header is too specialised (progress ring, colour dot, member stack) to fit PageHeader's
             title/description/actions shape, but it was still missing the one PageHeader gives every
@@ -370,11 +372,6 @@ export default function ProjectPageScreen() {
           {t('projects.title')}
         </RouterLink>
         <header className="flex flex-col gap-3">
-          {canEdit ? (
-            <div className="self-end">
-              <EditProjectDialog project={project} />
-            </div>
-          ) : null}
           <div className="flex items-start gap-3">
             <ProgressRing
               value={percent}
@@ -385,7 +382,7 @@ export default function ProjectPageScreen() {
             >
               {percent}
             </ProgressRing>
-            <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <h1 className="break-words font-display text-h3 text-foreground sm:text-h2">
                 {project.title}
               </h1>
@@ -403,6 +400,11 @@ export default function ProjectPageScreen() {
                 </p>
               ) : null}
             </div>
+            {canEdit ? (
+              <div className="shrink-0">
+                <EditProjectDialog project={project} />
+              </div>
+            ) : null}
           </div>
           <p className="text-caption text-muted-foreground">{t('projectLifecycle.progressHint')}</p>
           {project.members.length > 0 ? (
@@ -423,315 +425,344 @@ export default function ProjectPageScreen() {
           ) : null}
         </header>
 
-        {/* N-4: "what changed on this project since Friday", where the question is actually asked --
+        <Tabs
+          value={
+            ['discussion', 'files'].includes(search.get('tab') ?? '') ? search.get('tab')! : 'plan'
+          }
+          onValueChange={(tab) => {
+            const next = new URLSearchParams(search)
+            next.set('tab', tab)
+            navigate(`/projects/view?${next}`, { replace: true })
+          }}
+          className="flex flex-col gap-4"
+        >
+          <TabsList aria-label={t('projects.title')}>
+            <TabsTrigger value="plan">{t('projectCollaboration.plan')}</TabsTrigger>
+            <TabsTrigger value="discussion">{t('projectCollaboration.discussion')}</TabsTrigger>
+            <TabsTrigger value="files">{t('projectCollaboration.files')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="plan" className="flex flex-col gap-6">
+            {/* N-4: "what changed on this project since Friday", where the question is actually asked --
             the project header, not a settings screen. Head or member: a project's own progress is
             not managerial information, it is the work. */}
-        {catchUpEnabled ? (
-          <section className="flex flex-col gap-2">
-            <SparkleButton
-              aria-label={t('projects.ai.catchUp')}
-              label={t('projects.ai.catchUp')}
-              size="sm"
-              className="self-start"
-              loading={catchUpAi.isPending}
-              onClick={runCatchUp}
-            />
-            {catchUpAi.isPending || catchUp || catchUpAi.isError ? (
-              <AiResultPanel
-                title={t('projects.ai.catchUpPreviewTitle')}
-                status={catchUpAi.isPending ? 'pending' : catchUpAi.isError ? 'error' : 'ready'}
-                errorMessage={t('work.quickAdd.aiError')}
-                {...(catchUp ? { meta: catchUp.meta } : {})}
-                // Nothing to accept: a briefing is something you read, and every risk it names is
-                // already a link to the card it is about.
-                readOnly
-                onDiscard={() => {
-                  setCatchUp(null)
-                  catchUpAi.reset()
-                }}
-                onRetry={runCatchUp}
-              >
-                {catchUp ? (
-                  <CatchUpPreview
-                    output={catchUp.output}
-                    cardTitle={(id) => cards.find((c) => c.id === id)?.title ?? null}
-                  />
-                ) : null}
-              </AiResultPanel>
-            ) : null}
-          </section>
-        ) : null}
-
-        <section className="flex flex-col gap-2">
-          <h2 className="text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-            {t('projects.field.milestones')}
-          </h2>
-          <Stagger as="ol" className="flex flex-col gap-1.5 border-l-2 border-border pl-3">
-            {[...project.milestones]
-              .sort((a, b) => (a.dueOn ?? '').localeCompare(b.dueOn ?? ''))
-              .map((m) => (
-                <StaggerItem key={m.id} as="li">
-                  <div className="relative flex items-start gap-2">
-                    <span
-                      className={
-                        m.doneAt
-                          ? 'absolute -left-[19px] top-1.5 size-2.5 rounded-full bg-success max-md:top-4'
-                          : 'absolute -left-[19px] top-1.5 size-2.5 rounded-full bg-border max-md:top-4'
-                      }
-                      aria-hidden="true"
-                    />
-                    <Checkbox
-                      id={`project-milestone-${m.id}`}
-                      disabled={!canEdit || patchMilestone.isPending}
-                      checked={m.doneAt !== null}
-                      onCheckedChange={(v) => {
-                        patchMilestone.mutate(
-                          {
-                            milestoneId: m.id,
-                            patch: { done: v === true },
-                          },
-                          {
-                            onSuccess: () => {
-                              if (v === true)
-                                toast(
-                                  t('projects.milestone.completedToast', {
-                                    title: m.title,
-                                  }),
-                                )
-                            },
-                          },
-                        )
-                        // round2 SEV2 "milestone completion has no celebration": the checkbox's own
-                        // `celebrate` already bursts on check -- this toast is the same "named
-                        // moment" acknowledgement `personal.sprints.complete.toast` gives a
-                        // completed sprint, so a milestone reads as just as real a finish line.
-                      }}
-                      celebrate
-                      size="sm"
-                      aria-label={m.title}
-                    />
-                    <div className="min-w-0 flex-1 py-0.5 max-md:py-3">
-                      <label
-                        htmlFor={`project-milestone-${m.id}`}
-                        className={cn(
-                          'block break-words text-small text-foreground',
-                          canEdit && 'cursor-pointer',
-                        )}
-                      >
-                        <Strikethrough done={m.doneAt !== null}>{m.title}</Strikethrough>
-                      </label>
-                      {m.dueOn ? (
-                        <time
-                          dateTime={m.dueOn}
-                          className="mt-1 flex items-center gap-1 text-caption text-muted-foreground"
-                        >
-                          <CalendarClock className="size-3.5 shrink-0" aria-hidden="true" />
-                          {formatDate(new Date(m.dueOn), locale)}
-                        </time>
-                      ) : null}
-                    </div>
-                    {canEdit ? (
-                      <MilestoneActions
-                        projectId={project.id}
-                        milestone={m}
-                        onDeleted={() => milestoneAddRef.current?.focus()}
+            {catchUpEnabled ? (
+              <section className="flex flex-col gap-2">
+                <SparkleButton
+                  aria-label={t('projects.ai.catchUp')}
+                  label={t('projects.ai.catchUp')}
+                  size="sm"
+                  className="self-start"
+                  loading={catchUpAi.isPending}
+                  onClick={runCatchUp}
+                />
+                {catchUpAi.isPending || catchUp || catchUpAi.isError ? (
+                  <AiResultPanel
+                    title={t('projects.ai.catchUpPreviewTitle')}
+                    status={catchUpAi.isPending ? 'pending' : catchUpAi.isError ? 'error' : 'ready'}
+                    errorMessage={t('work.quickAdd.aiError')}
+                    {...(catchUp ? { meta: catchUp.meta } : {})}
+                    // Nothing to accept: a briefing is something you read, and every risk it names is
+                    // already a link to the card it is about.
+                    readOnly
+                    onDiscard={() => {
+                      setCatchUp(null)
+                      catchUpAi.reset()
+                    }}
+                    onRetry={runCatchUp}
+                  >
+                    {catchUp ? (
+                      <CatchUpPreview
+                        output={catchUp.output}
+                        cardTitle={(id) => cards.find((c) => c.id === id)?.title ?? null}
                       />
                     ) : null}
-                  </div>
-                </StaggerItem>
-              ))}
-          </Stagger>
-          {canEdit ? (
-            <div className="flex gap-2 pl-3">
-              <Input
-                ref={milestoneAddRef}
-                className="min-w-0"
-                value={newMilestone}
-                maxLength={WORK_TITLE_MAX}
-                title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
-                onChange={(e) => setNewMilestone(e.target.value)}
-                placeholder={t('projects.milestone.addPlaceholder')}
-                aria-label={t('projects.milestone.addPlaceholder')}
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={!newMilestone.trim() || addMilestone.isPending}
-                onClick={() => {
-                  if (newMilestone.trim()) {
-                    addMilestone.mutate(
-                      { title: newMilestone.trim() },
-                      { onSuccess: () => setNewMilestone('') },
-                    )
-                  }
-                }}
-              >
-                {t('work.action.save')}
-              </Button>
-            </div>
-          ) : null}
-        </section>
-
-        <Tabs defaultValue="subjective" className="flex flex-col gap-3">
-          <TabsList aria-label={t('projects.field.title')}>
-            <TabsTrigger value="subjective" count={assignments.length}>
-              {t('projects.field.subjective')}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="subjective" className="flex flex-col gap-3">
-            {canEdit && planEnabled && activeAssignments.length > 0 ? (
-              <SparkleButton
-                aria-label={t('projects.ai.plan')}
-                label={t('projects.ai.plan')}
-                size="sm"
-                loading={planAi.isPending}
-                onClick={runPlanAi}
-              />
+                  </AiResultPanel>
+                ) : null}
+              </section>
             ) : null}
-            {planAi.isPending || plan || planAi.isError ? (
-              <AiResultPanel
-                title={t('projects.ai.planPreviewTitle')}
-                status={planAi.isPending ? 'pending' : planAi.isError ? 'error' : 'ready'}
-                errorMessage={t('work.quickAdd.aiError')}
-                acceptLabel={t('projects.ai.applyPlan')}
-                editLabel={t('work.ai.edit')}
-                {...(plan ? { meta: plan.meta } : {})}
-                readOnly={activeAssignments.some((c) => c.canEdit === false)}
-                onAccept={() => void acceptPlan()}
-                // Edit opens the focus card so the person can adjust it before the plan lands --
-                // v1.0's Edit discarded the answer, which is what Discard already did.
-                onEdit={() => {
-                  if (plan?.output.focusId) openCardPeek(plan.output.focusId)
-                }}
-                onDiscard={() => {
-                  setPlan(null)
-                  planAi.reset()
-                }}
-                onRetry={runPlanAi}
-              >
-                {plan ? (
-                  <PlanPreview
-                    output={plan.output}
-                    itemTitle={(id) => cards.find((c) => c.id === id)?.title ?? null}
+
+            <section className="flex flex-col gap-2">
+              <h2 className="text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                {t('projects.field.milestones')}
+              </h2>
+              <Stagger as="ol" className="flex flex-col gap-1.5 border-l-2 border-border pl-3">
+                {[...project.milestones]
+                  .sort((a, b) => (a.dueOn ?? '').localeCompare(b.dueOn ?? ''))
+                  .map((m) => (
+                    <StaggerItem key={m.id} as="li">
+                      <div className="relative flex items-start gap-2">
+                        <span
+                          className={
+                            m.doneAt
+                              ? 'absolute -left-[19px] top-1.5 size-2.5 rounded-full bg-success max-md:top-4'
+                              : 'absolute -left-[19px] top-1.5 size-2.5 rounded-full bg-border max-md:top-4'
+                          }
+                          aria-hidden="true"
+                        />
+                        <Checkbox
+                          id={`project-milestone-${m.id}`}
+                          disabled={!canEdit || patchMilestone.isPending}
+                          checked={m.doneAt !== null}
+                          onCheckedChange={(v) => {
+                            patchMilestone.mutate(
+                              {
+                                milestoneId: m.id,
+                                patch: { done: v === true },
+                              },
+                              {
+                                onSuccess: () => {
+                                  if (v === true)
+                                    toast(
+                                      t('projects.milestone.completedToast', {
+                                        title: m.title,
+                                      }),
+                                    )
+                                },
+                              },
+                            )
+                            // round2 SEV2 "milestone completion has no celebration": the checkbox's own
+                            // `celebrate` already bursts on check -- this toast is the same "named
+                            // moment" acknowledgement `personal.sprints.complete.toast` gives a
+                            // completed sprint, so a milestone reads as just as real a finish line.
+                          }}
+                          celebrate
+                          size="sm"
+                          aria-label={m.title}
+                        />
+                        <div className="min-w-0 flex-1 py-0.5 max-md:py-3">
+                          <label
+                            htmlFor={`project-milestone-${m.id}`}
+                            className={cn(
+                              'block break-words text-small text-foreground',
+                              canEdit && 'cursor-pointer',
+                            )}
+                          >
+                            <Strikethrough done={m.doneAt !== null}>{m.title}</Strikethrough>
+                          </label>
+                          {m.dueOn ? (
+                            <time
+                              dateTime={m.dueOn}
+                              className="mt-1 flex items-center gap-1 text-caption text-muted-foreground"
+                            >
+                              <CalendarClock className="size-3.5 shrink-0" aria-hidden="true" />
+                              {formatDate(new Date(m.dueOn), locale)}
+                            </time>
+                          ) : null}
+                        </div>
+                        {canEdit ? (
+                          <MilestoneActions
+                            projectId={project.id}
+                            milestone={m}
+                            onDeleted={() => milestoneAddRef.current?.focus()}
+                          />
+                        ) : null}
+                      </div>
+                    </StaggerItem>
+                  ))}
+              </Stagger>
+              {canEdit ? (
+                <div className="flex gap-2 pl-3">
+                  <Input
+                    ref={milestoneAddRef}
+                    className="min-w-0"
+                    value={newMilestone}
+                    maxLength={WORK_TITLE_MAX}
+                    title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
+                    onChange={(e) => setNewMilestone(e.target.value)}
+                    placeholder={t('projects.milestone.addPlaceholder')}
+                    aria-label={t('projects.milestone.addPlaceholder')}
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={!newMilestone.trim() || addMilestone.isPending}
+                    onClick={() => {
+                      if (newMilestone.trim()) {
+                        addMilestone.mutate(
+                          { title: newMilestone.trim() },
+                          { onSuccess: () => setNewMilestone('') },
+                        )
+                      }
+                    }}
+                  >
+                    {t('work.action.save')}
+                  </Button>
+                </div>
+              ) : null}
+            </section>
+
+            <Tabs defaultValue="subjective" className="flex flex-col gap-3">
+              <TabsList aria-label={t('projects.field.title')}>
+                <TabsTrigger value="subjective" count={assignments.length}>
+                  {t('projects.field.subjective')}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="subjective" className="flex flex-col gap-3">
+                {canEdit && planEnabled && activeAssignments.length > 0 ? (
+                  <SparkleButton
+                    aria-label={t('projects.ai.plan')}
+                    label={t('projects.ai.plan')}
+                    size="sm"
+                    loading={planAi.isPending}
+                    onClick={runPlanAi}
                   />
                 ) : null}
-              </AiResultPanel>
-            ) : null}
+                {planAi.isPending || plan || planAi.isError ? (
+                  <AiResultPanel
+                    title={t('projects.ai.planPreviewTitle')}
+                    status={planAi.isPending ? 'pending' : planAi.isError ? 'error' : 'ready'}
+                    errorMessage={t('work.quickAdd.aiError')}
+                    acceptLabel={t('projects.ai.applyPlan')}
+                    editLabel={t('work.ai.edit')}
+                    {...(plan ? { meta: plan.meta } : {})}
+                    readOnly={activeAssignments.some((c) => c.canEdit === false)}
+                    onAccept={() => void acceptPlan()}
+                    // Edit opens the focus card so the person can adjust it before the plan lands --
+                    // v1.0's Edit discarded the answer, which is what Discard already did.
+                    onEdit={() => {
+                      if (plan?.output.focusId) openCardPeek(plan.output.focusId)
+                    }}
+                    onDiscard={() => {
+                      setPlan(null)
+                      planAi.reset()
+                    }}
+                    onRetry={runPlanAi}
+                  >
+                    {plan ? (
+                      <PlanPreview
+                        output={plan.output}
+                        itemTitle={(id) => cards.find((c) => c.id === id)?.title ?? null}
+                      />
+                    ) : null}
+                  </AiResultPanel>
+                ) : null}
 
-            {cardsQuery.isPending ? <Skeleton className="h-20 w-full" /> : null}
-            {cardsQuery.isError ? (
-              <StateView
-                kind="error"
-                titleKey="state.error.title"
-                action={{
-                  labelKey: 'state.error.action',
-                  onAction: () => void cardsQuery.refetch(),
-                }}
-              />
-            ) : null}
-            {assignments.some(
-              (c) => !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
-            ) ? (
-              <div className="rounded-md border border-border p-2">
-                <h3 className="text-small font-medium">{t('work.board.unassigned')}</h3>
-                {assignments
-                  .filter(
-                    (c) => !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
-                  )
-                  .map((card) => (
-                    <TaskRow key={card.id} card={card} />
-                  ))}
-              </div>
-            ) : null}
-            {[
-              ...new Set([
-                ...project.members,
-                ...assignments
-                  .map((c) => c.assigneeUserId)
-                  .filter((id): id is string => Boolean(id)),
-              ]),
-            ].map((memberId) => {
-              const member = members.find((m) => m.userId === memberId)
-              if (!member) return null
-              const memberTasks = assignments.filter((c) => c.assigneeUserId === memberId)
-              return (
-                <div
-                  key={memberId}
-                  className="flex flex-col gap-1 rounded-md border border-border p-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <Avatar
-                      size="sm"
-                      src={avatarUrl(member.avatarKey, 64)}
-                      alt={fullName(member)}
-                      initials={initialsFromName(member.givenName, member.familyName)}
-                      hueSeed={memberId}
-                    />
-                    <span className="text-small font-medium text-foreground">
-                      {fullName(member)}
-                    </span>
-                    <span className="text-caption text-muted-foreground">
-                      {memberTasks.filter(isCardCompleted).length}/{memberTasks.length}
-                    </span>
+                {cardsQuery.isPending ? <Skeleton className="h-20 w-full" /> : null}
+                {cardsQuery.isError ? (
+                  <StateView
+                    kind="error"
+                    titleKey="state.error.title"
+                    action={{
+                      labelKey: 'state.error.action',
+                      onAction: () => void cardsQuery.refetch(),
+                    }}
+                  />
+                ) : null}
+                {assignments.some(
+                  (c) => !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
+                ) ? (
+                  <div className="rounded-md border border-border p-2">
+                    <h3 className="text-small font-medium">{t('work.board.unassigned')}</h3>
+                    {assignments
+                      .filter(
+                        (c) =>
+                          !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
+                      )
+                      .map((card) => (
+                        <TaskRow key={card.id} card={card} />
+                      ))}
                   </div>
-                  {memberTasks.map((card) => (
-                    <TaskRow key={card.id} card={card} />
-                  ))}
-                  {canEdit ? (
-                    <SubjectiveAddRow
-                      projectId={project.id}
-                      assigneeUserId={memberId}
-                      giverUserId={project.ownerUserId}
-                    />
-                  ) : null}
-                </div>
-              )
-            })}
+                ) : null}
+                {[
+                  ...new Set([
+                    ...project.members,
+                    ...assignments
+                      .map((c) => c.assigneeUserId)
+                      .filter((id): id is string => Boolean(id)),
+                  ]),
+                ].map((memberId) => {
+                  const member = members.find((m) => m.userId === memberId)
+                  if (!member) return null
+                  const memberTasks = assignments.filter((c) => c.assigneeUserId === memberId)
+                  return (
+                    <div
+                      key={memberId}
+                      className="flex flex-col gap-1 rounded-md border border-border p-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          size="sm"
+                          src={avatarUrl(member.avatarKey, 64)}
+                          alt={fullName(member)}
+                          initials={initialsFromName(member.givenName, member.familyName)}
+                          hueSeed={memberId}
+                        />
+                        <span className="text-small font-medium text-foreground">
+                          {fullName(member)}
+                        </span>
+                        <span className="text-caption text-muted-foreground">
+                          {memberTasks.filter(isCardCompleted).length}/{memberTasks.length}
+                        </span>
+                      </div>
+                      {memberTasks.map((card) => (
+                        <TaskRow key={card.id} card={card} />
+                      ))}
+                      {canEdit ? (
+                        <SubjectiveAddRow
+                          projectId={project.id}
+                          assigneeUserId={memberId}
+                          giverUserId={project.ownerUserId}
+                        />
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+          <TabsContent value="discussion">
+            <ProjectDiscussion projectId={project.id} />
+          </TabsContent>
+          <TabsContent value="files">
+            <div className="rounded-lg border border-border bg-card p-5">
+              <CardAttachments cardId={project.id} subjectType="project" canEdit={canEdit} />
+            </div>
           </TabsContent>
         </Tabs>
-
-        <footer className="flex flex-col items-start gap-3 border-t border-border pt-4 sm:flex-row">
-          {canDelete ? (
-            <div className="flex flex-col gap-1">
+        {search.get('tab') !== 'discussion' && search.get('tab') !== 'files' ? (
+          <footer className="flex flex-col items-start gap-3 border-t border-border pt-4 sm:flex-row">
+            {canDelete ? (
+              <div className="flex flex-col gap-1">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={deleteProject.isPending}
+                  onClick={() => void removeProject()}
+                >
+                  {t('projectLifecycle.delete')}
+                </Button>
+                <p className="text-caption text-muted-foreground">
+                  {t('projectLifecycle.deleteHint')}
+                </p>
+              </div>
+            ) : null}
+            {canEdit && project.status !== 'archived' ? (
               <Button
                 size="sm"
                 variant="secondary"
-                disabled={deleteProject.isPending}
-                onClick={() => void removeProject()}
-              >
-                {t('projectLifecycle.delete')}
-              </Button>
-              <p className="text-caption text-muted-foreground">
-                {t('projectLifecycle.deleteHint')}
-              </p>
-            </div>
-          ) : null}
-          {canEdit && project.status !== 'archived' ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                const previousStatus = project.status
-                patchProject.mutate(
-                  { status: 'archived' },
-                  {
-                    onSuccess: () =>
-                      toastWithUndo({
-                        message: t('projects.action.archived', {
-                          title: project.title,
+                onClick={() => {
+                  const previousStatus = project.status
+                  patchProject.mutate(
+                    { status: 'archived' },
+                    {
+                      onSuccess: () =>
+                        toastWithUndo({
+                          message: t('projects.action.archived', {
+                            title: project.title,
+                          }),
+                          undoLabel: t('action.undo'),
+                          onUndo: () => patchProject.mutate({ status: previousStatus }),
                         }),
-                        undoLabel: t('action.undo'),
-                        onUndo: () => patchProject.mutate({ status: previousStatus }),
-                      }),
-                  },
-                )
-              }}
-            >
-              {t('projects.action.archive')}
-            </Button>
-          ) : null}
-        </footer>
+                    },
+                  )
+                }}
+              >
+                {t('projects.action.archive')}
+              </Button>
+            ) : null}
+          </footer>
+        ) : null}
       </div>
       <CardPeekDialog />
     </>

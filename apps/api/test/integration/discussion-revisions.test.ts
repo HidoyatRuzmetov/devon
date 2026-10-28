@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { reconcileCommentNotifications } from '../../src/modules/notifications/repo.js'
+import {
+  reconcileCommentNotifications,
+  reconcileProjectCommentNotifications,
+} from '../../src/modules/notifications/repo.js'
 import { resolveEvent } from '../../src/modules/notifications/sources.js'
 import {
   startHarness,
@@ -54,6 +57,95 @@ async function create(path: string, body: unknown) {
 }
 
 describe('comment revisions and historical event operations', () => {
+  it('reconciles project mentions and handles delayed notifications after edits and deletion', async () => {
+    const project = await create('/projects', {
+      title: 'Project discussion',
+      ownerUserId: ownerId,
+      members: [ownerId, retainedId],
+    })
+    const base = `/projects/${project.id}/comments`
+    const comment = await create(base, { text: 'Please review', mentions: [colleagueId] })
+    const link = `/projects/view?id=${project.id}&tab=discussion#comment-${comment.id}`
+    const removedNotice = randomUUID(),
+      retainedNotice = randomUUID()
+    await Promise.all(
+      [
+        [removedNotice, colleagueId],
+        [retainedNotice, retainedId],
+      ].map(([id, userId]) =>
+        superuserQuery(
+          db,
+          `insert into app.notifications(id,user_id,department_id,type,reason,subject_type,subject_id,title,deep_link)
+        values($1,$2,$3,'projects.project.commented','mentioned','project',$4,'{"en":"Comment"}'::jsonb,$5)`,
+          [id, userId, departmentId, project.id, link],
+        ),
+      ),
+    )
+    expect(
+      (
+        await request(owner, `${base}/${comment.id}`, 'PATCH', {
+          text: 'Corrected project decision',
+          mentions: [],
+          editedAt: null,
+        })
+      ).status,
+    ).toBe(204)
+    const event = (
+      await superuserQuery(
+        db,
+        `select payload from app.outbox_events where type='projects.comment.updated' and payload->>'commentId'=$1`,
+        [comment.id],
+      )
+    )[0]!
+    await reconcileProjectCommentNotifications(
+      departmentId,
+      event['payload'] as Record<string, unknown>,
+    )
+    const notices = await superuserQuery(
+      db,
+      `select id,archived_at is not null as archived,body->>'en' as body from app.notifications where id=any($1::uuid[])`,
+      [[removedNotice, retainedNotice]],
+    )
+    expect(notices.find((n) => n['id'] === removedNotice)?.['archived']).toBe(true)
+    expect(notices.find((n) => n['id'] === retainedNotice)).toMatchObject({
+      archived: false,
+      body: 'Corrected project decision',
+    })
+    const delayed = await resolveEvent({
+      eventType: 'projects.project.commented',
+      source: 'project_comment',
+      departmentId,
+      payload: {
+        projectId: project.id,
+        commentId: comment.id,
+        mentions: [colleagueId],
+        actorUserId: ownerId,
+      },
+    })
+    expect(delayed?.byRule.mentioned).toEqual([])
+    expect((await request(owner, `${base}/${comment.id}`, 'DELETE')).status).toBe(204)
+    await reconcileProjectCommentNotifications(
+      departmentId,
+      event['payload'] as Record<string, unknown>,
+    )
+    expect(
+      (
+        await superuserQuery(
+          db,
+          'select archived_at is not null as archived from app.notifications where id=$1',
+          [retainedNotice],
+        )
+      )[0]?.['archived'],
+    ).toBe(true)
+    expect(
+      await resolveEvent({
+        eventType: 'projects.project.commented',
+        source: 'project_comment',
+        departmentId,
+        payload: { projectId: project.id, commentId: comment.id, actorUserId: ownerId },
+      }),
+    ).toBeNull()
+  })
   it('edits only an owned comment, rejects stale writes, and retires only its notifications', async () => {
     const card = await create('/cards', { title: 'Comment lifecycle', assigneeUserId: ownerId })
     const comment = await create(`/cards/${card.id}/comments`, {

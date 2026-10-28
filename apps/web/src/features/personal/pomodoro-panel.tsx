@@ -12,6 +12,7 @@ import {
 } from '@devon/ui'
 import { Pause, Play, Settings2, Sparkles, Square, Volume2, VolumeX } from 'lucide-react'
 import * as React from 'react'
+import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
 import { usePomodoroControls, useSavePomodoroSettings } from './pomodoro-controls.js'
 import { PomodoroCharacter } from './pomodoro-character.js'
 import {
@@ -189,6 +190,7 @@ function SettingsSheet({ settings }: { settings: PomodoroSettings }) {
 }
 
 export function PomodoroPanel() {
+  const [stageRef, stageHeight] = useViewportBoundedHeight<HTMLElement>(320)
   const t = useT()
   const settingsQuery = usePomodoroSettingsQuery()
   const patchSettings = useSavePomodoroSettings()
@@ -250,7 +252,12 @@ export function PomodoroPanel() {
 
   return (
     <div className="pomodoro-studio" data-phase={activePhase} data-running={running && !paused}>
-      <section className="pomodoro-stage" aria-label={t('personal.tabs.pomodoro')}>
+      <section
+        ref={stageRef}
+        className="pomodoro-stage"
+        style={{ '--stage-height': `${stageHeight ?? 600}px` } as React.CSSProperties}
+        aria-label={t('personal.tabs.pomodoro')}
+      >
         <div className="pomodoro-toolbar">
           <div className="pomodoro-modes" role="group" aria-label={t('pomodoroStudio.mode')}>
             {(['focus', 'short_break', 'long_break'] as const).map((phase) => (

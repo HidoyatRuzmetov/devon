@@ -19,6 +19,7 @@ import {
   Check,
   Circle,
   CircleAlert,
+  ListChecks,
   ExternalLink,
   LockKeyhole,
   Minus,
@@ -30,7 +31,9 @@ import { avatarUrl } from '../../lib/avatar.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
 import { useDepartment, useSession } from '../../lib/session.js'
 import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
+import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
 import { useCheckinChange, useCheckins } from './checkins-api.js'
+import { progressPeriods } from './progress-periods.js'
 import './checkins.css'
 
 function name(member: CheckinMember) {
@@ -218,82 +221,94 @@ function PersonCheckin({ data, member }: { data: CheckinBoard; member: CheckinMe
         </div>
         <MemberAvatar member={member} large />
       </header>
-      <div className="checkin-cycle-note">
-        <p className="text-small text-muted-foreground">
-          {t(
-            closed ? 'checkins.closedHint' : locked ? 'checkins.agreedHint' : 'checkins.draftHint',
-          )}
-        </p>
-        {department?.role === 'head' && !closed ? (
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={change.isPending || (locked && localDay < cycle.endsOn)}
-            onClick={() => setLockReview(true)}
-          >
-            <LockKeyhole className="size-4" />
-            {t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}
-          </Button>
-        ) : null}
-      </div>
+      {locked || department?.role === 'head' ? (
+        <div className="checkin-cycle-note">
+          <p className="text-small text-muted-foreground">
+            {t(
+              closed
+                ? 'checkins.closedHint'
+                : locked
+                  ? 'checkins.agreedHint'
+                  : 'checkins.draftHint',
+            )}
+          </p>
+          {department?.role === 'head' && !closed ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={change.isPending || (locked && localDay < cycle.endsOn)}
+              onClick={() => setLockReview(true)}
+            >
+              <LockKeyhole className="size-4" />
+              {t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {entries.length ? (
-        <div className="checkin-task-columns">
-          {[...groups].map(([cardId, items]) => {
-            const first = items[0]!
-            return (
-              <section key={cardId} className="checkin-task-group">
-                <header className="checkin-task-header">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      {first.projectTitle ? (
-                        <>
-                          <h2 className="checkin-project-title">{first.projectTitle}</h2>
-                          <h3 className="checkin-task-title is-project-task">{first.cardTitle}</h3>
-                        </>
-                      ) : (
-                        <>
-                          <p className="checkin-task-kind">{t('checkins.individual')}</p>
-                          <h2 className="checkin-task-title">{first.cardTitle}</h2>
-                        </>
-                      )}
+        <div className="checkin-task-scroll">
+          <div className="checkin-task-columns">
+            {[...groups].map(([cardId, items]) => {
+              const first = items[0]!
+              return (
+                <section key={cardId} className="checkin-task-group">
+                  <header className="checkin-task-header">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        {first.projectTitle ? (
+                          <>
+                            <h2 className="checkin-project-title">{first.projectTitle}</h2>
+                            <h3 className="checkin-task-title is-project-task">
+                              {first.cardTitle}
+                            </h3>
+                          </>
+                        ) : (
+                          <>
+                            <p className="checkin-task-kind">{t('checkins.individual')}</p>
+                            <h2 className="checkin-task-title">{first.cardTitle}</h2>
+                          </>
+                        )}
+                      </div>
+                      {first.sourceAvailable ? (
+                        <IconButton
+                          className="checkin-action"
+                          aria-label={t('checkins.openTask')}
+                          tooltip={t('checkins.openTask')}
+                          onClick={() =>
+                            navigate(
+                              `/work/card?id=${cardId}&from=analytics&cycle=${cycle.id}&member=${member.userId}`,
+                            )
+                          }
+                        >
+                          <ExternalLink />
+                        </IconButton>
+                      ) : null}
                     </div>
-                    {first.sourceAvailable ? (
-                      <IconButton
-                        className="checkin-action"
-                        aria-label={t('checkins.openTask')}
-                        tooltip={t('checkins.openTask')}
-                        onClick={() =>
-                          navigate(
-                            `/work/card?id=${cardId}&from=analytics&cycle=${cycle.id}&member=${member.userId}`,
-                          )
-                        }
-                      >
-                        <ExternalLink />
-                      </IconButton>
-                    ) : null}
-                  </div>
-                </header>
-                <ul className="checkin-deliverables">
-                  {items.map((entry) => (
-                    <Deliverable
-                      key={entry.id}
-                      entry={entry}
-                      closed={closed}
-                      canRemove={!locked && !closed}
-                    />
-                  ))}
-                </ul>
-              </section>
-            )
-          })}
+                  </header>
+                  <ul className="checkin-deliverables">
+                    {items.map((entry) => (
+                      <Deliverable
+                        key={entry.id}
+                        entry={entry}
+                        closed={closed}
+                        canRemove={!locked && !closed}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              )
+            })}
+          </div>
         </div>
       ) : (
-        <StateView
-          kind="empty"
-          titleKey="checkins.empty"
-          bodyKey="checkins.emptyHint"
-          action={{ labelKey: 'checkins.openCards', onAction: () => navigate('/work') }}
-        />
+        <div className="checkin-empty">
+          <ListChecks aria-hidden="true" className="size-8 text-primary" />
+          <h2>{t('checkins.empty')}</h2>
+          <p>{t('checkins.draftHint')}</p>
+          <Button size="sm" onClick={() => navigate('/work')}>
+            {t('checkins.openCards')}
+          </Button>
+        </div>
       )}
     </section>
   )
@@ -318,6 +333,13 @@ function Progress({
 }) {
   const t = useT()
   const palette = createUnitPalette(data.units)
+  const periods = React.useMemo(() => progressPeriods(data.cycles), [data.cycles])
+  const selectedColumn = React.useRef<HTMLTableCellElement>(null)
+  React.useEffect(() => {
+    const column = selectedColumn.current
+    const scroller = column?.closest('.checkin-progress-scroll')
+    if (column && scroller) scroller.scrollLeft = Math.max(0, column.offsetLeft - 280)
+  }, [data.selectedCycleId])
   const values = new Map(data.progress.map((p) => [`${p.cycleId}:${p.memberUserId}`, p]))
   return (
     <section className="checkin-progress">
@@ -328,22 +350,39 @@ function Progress({
         role="region"
         aria-label={t('checkins.progress')}
       >
-        <table>
+        <table
+          style={{
+            width: `calc(var(--progress-person-width) + ${periods.length} * var(--progress-period-width))`,
+          }}
+        >
+          <colgroup>
+            <col className="checkin-person-col" />
+            {periods.map((p) => (
+              <col key={p.id} className="checkin-period-col" />
+            ))}
+          </colgroup>
           <caption className="sr-only">{t('checkins.progressHint')}</caption>
           <thead>
             <tr>
               <th scope="col">{t('checkins.people')}</th>
-              {data.cycles.map((c) => (
-                <th scope="col" key={c.id}>
+              {periods.map((c) => (
+                <th
+                  scope="col"
+                  key={c.id}
+                  ref={c.id === data.selectedCycleId ? selectedColumn : undefined}
+                  data-current={c.id === data.selectedCycleId}
+                >
                   {periodLabel(c.startsOn, c.endsOn)}
                   <span className="mt-1 block text-caption font-normal text-muted-foreground">
-                    {t(
-                      c.checkoutLockedAt
-                        ? 'checkins.closed'
-                        : c.checkinLockedAt
-                          ? 'checkins.agreed'
-                          : 'checkins.draft',
-                    )}
+                    {c.cycle
+                      ? t(
+                          c.cycle.checkoutLockedAt
+                            ? 'checkins.closed'
+                            : c.cycle.checkinLockedAt
+                              ? 'checkins.agreed'
+                              : 'checkins.draft',
+                        )
+                      : '\u00a0'}
                   </span>
                 </th>
               ))}
@@ -363,7 +402,9 @@ function Progress({
                       />
                       {m.unitName ?? t('checkins.unassigned')}
                     </th>
-                    <td colSpan={data.cycles.length} />
+                    {periods.map((c) => (
+                      <td key={c.id} />
+                    ))}
                   </tr>
                 ) : null}
                 <tr>
@@ -373,43 +414,50 @@ function Progress({
                       <span>{name(m)}</span>
                     </div>
                   </th>
-                  {data.cycles.map((c) => {
+                  {periods.map((c) => {
                     const value = values.get(`${c.id}:${m.userId}`),
                       done = value?.done ?? 0,
                       total = value?.total ?? 0
                     return (
                       <td key={c.id}>
-                        <button
-                          type="button"
-                          className="checkin-progress-cell"
-                          style={{ backgroundColor: progressColour(done, total) }}
-                          onClick={() => onOpen(c.id, m.userId)}
-                          aria-label={t('checkins.progressCell', {
-                            name: name(m),
-                            period: periodLabel(c.startsOn, c.endsOn),
-                            done,
-                            total,
-                          })}
-                        >
-                          {total ? (
-                            <>
-                              <span className="font-semibold tabular-nums">
-                                {done}
-                                <span className="font-normal text-muted-foreground">
-                                  {' '}
-                                  / {total}
+                        {c.cycle ? (
+                          <button
+                            type="button"
+                            className="checkin-progress-cell"
+                            style={{ backgroundColor: progressColour(done, total) }}
+                            onClick={() => onOpen(c.id, m.userId)}
+                            aria-label={t('checkins.progressCell', {
+                              name: name(m),
+                              period: periodLabel(c.startsOn, c.endsOn),
+                              done,
+                              total,
+                            })}
+                          >
+                            {total ? (
+                              <>
+                                <span className="font-semibold tabular-nums">
+                                  {done}
+                                  <span className="font-normal text-muted-foreground">
+                                    {' '}
+                                    / {total}
+                                  </span>
                                 </span>
+                                <span className="text-caption tabular-nums">
+                                  {Math.round((done / total) * 100)}%
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground" title={t('checkins.noItems')}>
+                                —
                               </span>
-                              <span className="text-caption tabular-nums">
-                                {Math.round((done / total) * 100)}%
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-muted-foreground" title={t('checkins.noItems')}>
-                              —
-                            </span>
-                          )}
-                        </button>
+                            )}
+                          </button>
+                        ) : (
+                          <span
+                            className="checkin-progress-future"
+                            aria-label={t('checkins.noItems')}
+                          />
+                        )}
                       </td>
                     )
                   })}
@@ -432,6 +480,7 @@ function Progress({
 }
 
 export default function CheckinScreen() {
+  const [viewportRef, viewportHeight] = useViewportBoundedHeight<HTMLDivElement>(360)
   const t = useT(),
     locale = useLocale(),
     search = useSearchParams(),
@@ -500,7 +549,12 @@ export default function CheckinScreen() {
           ))}
         </select>
       </div>
-      <TabsContent value={view}>
+      <TabsContent
+        value={view}
+        ref={viewportRef}
+        className="checkins-content"
+        style={{ '--checkins-height': `${viewportHeight ?? 640}px` } as React.CSSProperties}
+      >
         {view === 'progress' ? (
           <Progress
             data={data}

@@ -406,7 +406,10 @@
           "work.time_log_removed": "удалил запись времени",
           "work.time_logged": "записал рабочее время",
           "admin.user.deleted_identity_restored": "исправил имя удалённой учётной записи в истории",
-          "admin.user.deleted": "удалил аккаунт"
+          "admin.user.deleted": "удалил аккаунт",
+          "projects.comment_added": "оставил комментарий к проекту",
+          "projects.comment_edited": "изменил комментарий к проекту",
+          "projects.comment_deleted": "удалил комментарий к проекту"
         },
         "subjectType": {
           "session": "Сеанс",

@@ -1,0 +1,15 @@
+{
+  "projectCollaboration": {
+    "plan": "Plan",
+    "discussion": "Discussion",
+    "files": "Files",
+    "messages": "Project messages",
+    "empty": "Start the conversation",
+    "emptyHint": "Share updates, questions and decisions with your project team.",
+    "placeholder": "Write a message…",
+    "mention": "Mention a colleague",
+    "composeHint": "@ to mention · Ctrl/⌘ + Enter to send",
+    "send": "Send message",
+    "formerMember": "Former member"
+  }
+}

@@ -785,7 +785,10 @@
           "work.time_log_removed": "vaqt qaydini oʻchirdi",
           "work.time_logged": "ish vaqtini qayd etdi",
           "admin.user.deleted_identity_restored": "oʻchirilgan hisobning tarixdagi ismini tuzatdi",
-          "admin.user.deleted": "hisobni oʻchirdi"
+          "admin.user.deleted": "hisobni oʻchirdi",
+          "projects.comment_added": "loyihaga izoh qoldirdi",
+          "projects.comment_edited": "loyiha izohini tahrirladi",
+          "projects.comment_deleted": "loyiha izohini oʻchirdi"
         },
         "subjectType": {
           "session": "Qurilma",
@@ -4181,6 +4184,19 @@
     "convert": "Guruh yaratish",
     "convertHint": "Hamkasblarni tanlang. Bu kartochka yangi guruh loyihasida joriy ijrochining shaxsiy kartochkasi boʻladi. Izohlar, nazorat roʻyxati va fayllar saqlanadi. Loyiha va ishtirokchilarni keyin ham tahrirlash mumkin.",
     "converted": "Guruh loyihasi yaratildi"
+  },
+  "projectCollaboration": {
+    "plan": "Reja",
+    "discussion": "Muhokama",
+    "files": "Fayllar",
+    "messages": "Loyiha xabarlari",
+    "empty": "Muhokamani boshlang",
+    "emptyHint": "Loyiha jamoasi bilan yangiliklar, savollar va qarorlarni ulashing.",
+    "placeholder": "Xabar yozing…",
+    "mention": "Hamkasbni eslatish",
+    "composeHint": "@ — eslatish · Ctrl/⌘ + Enter — yuborish",
+    "send": "Xabar yuborish",
+    "formerMember": "Sobiq aʼzo"
   },
   "projectLifecycle": {
     "editMilestone": "Bosqichni tahrirlash",

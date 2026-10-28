@@ -125,6 +125,13 @@ test('@flow deliverables, Progress, private calendar and timer work on desktop a
     })
     await page.getByRole('tab', { name: 'Progress', exact: true }).click()
     await expect(page.getByRole('button', { name: /Test Member.*1 of 20 done/ })).toBeVisible()
+    await expect(page.locator('.checkin-progress thead th')).toHaveCount(14)
+    await expect(page.locator('.checkin-progress-future')).toHaveCount(12)
+    expect(
+      await page
+        .locator('.checkin-progress-scroll')
+        .evaluate((el) => el.scrollWidth > el.clientWidth),
+    ).toBe(true)
     await page.screenshot({
       path: info.outputPath('progress-desktop.png'),
       fullPage: true,
@@ -183,19 +190,20 @@ test('@flow deliverables, Progress, private calendar and timer work on desktop a
       fullPage: true,
       animations: 'disabled',
     })
+    const dayCell = page.getByRole('button', { name: 'Add an entry on April 6, 2027', exact: true })
+    const cell = await dayCell.boundingBox()
+    await dayCell.click({ position: { x: cell!.width / 2, y: cell!.height - 12 } })
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.getByRole('dialog').press('Escape')
     await page.getByRole('tab', { name: 'Pomodoro', exact: true }).click()
     const timer = page.getByRole('timer')
     await expect(timer).toHaveText('25:00')
-    await page.locator('.pomodoro-character-sprite').evaluateAll(async (sprites) => {
-      await Promise.all(
-        sprites.map((sprite) => {
-          const url = getComputedStyle(sprite).backgroundImage.slice(5, -2)
-          const image = new Image()
-          image.src = url
-          return image.decode()
-        }),
-      )
-    })
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 2),
+    ).toBe(true)
+    await expect(
+      page.locator('.pomodoro-character-layer[data-active="true"] canvas'),
+    ).toHaveAttribute('data-ready', 'true')
     expect(
       (
         await new AxeBuilder({ page })
@@ -216,6 +224,9 @@ test('@flow deliverables, Progress, private calendar and timer work on desktop a
     await page.setViewportSize({ width: 390, height: 844 })
     const resume = page.getByRole('button', { name: 'Resume', exact: true })
     await resume.scrollIntoViewIfNeeded()
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 2),
+    ).toBe(true)
     await page.screenshot({
       path: info.outputPath('pomodoro-mobile.png'),
       fullPage: true,

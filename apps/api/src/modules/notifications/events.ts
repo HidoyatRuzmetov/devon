@@ -17,7 +17,7 @@
 // genuine infrastructure failure (Postgres down) still throws from `resolveEvent` and is retried.
 import type { FastifyBaseLogger } from 'fastify'
 import { subscribe, type EventHandler, type OutboxEventRecord } from '@devon/db'
-import { reconcileCommentNotifications } from './repo.js'
+import { reconcileCommentNotifications, reconcileProjectCommentNotifications } from './repo.js'
 import { notifyUser } from './notify.js'
 import { NOTIFICATION_REGISTRY, specFor, type NotificationSpec } from './registry.js'
 import { resolveEvent, type ResolvedEvent } from './sources.js'
@@ -38,6 +38,17 @@ export function recipientsFor(spec: NotificationSpec, resolved: ResolvedEvent): 
 }
 
 async function handle(log: FastifyBaseLogger, event: OutboxEventRecord): Promise<void> {
+  if (event.type === 'projects.comment.updated' || event.type === 'projects.comment.deleted') {
+    if (!event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) return
+    const payload = event.payload as Record<string, unknown>
+    await reconcileProjectCommentNotifications(event.departmentId, payload)
+    if (event.type === 'projects.comment.deleted') return
+    return handle(log, {
+      ...event,
+      type: 'projects.project.commented',
+      payload: { ...payload, revisionOnly: true },
+    })
+  }
   if (event.type === 'work.comment.updated' || event.type === 'work.comment.deleted') {
     if (!event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) return
     const payload = event.payload as Record<string, unknown>

@@ -785,7 +785,10 @@
           "work.time_log_removed": "вақт қайдини ўчирди",
           "work.time_logged": "иш вақтини қайд этди",
           "admin.user.deleted_identity_restored": "ўчирилган ҳисобнинг тарихдаги исмини тузатди",
-          "admin.user.deleted": "ҳисобни ўчирди"
+          "admin.user.deleted": "ҳисобни ўчирди",
+          "projects.comment_added": "лойиҳага изоҳ қолдирди",
+          "projects.comment_edited": "лойиҳа изоҳини таҳрирлади",
+          "projects.comment_deleted": "лойиҳа изоҳини ўчирди"
         },
         "subjectType": {
           "session": "Қурилма",
@@ -4181,6 +4184,19 @@
     "convert": "Гуруҳ яратиш",
     "convertHint": "Ҳамкасбларни танланг. Бу карточка янги гуруҳ лойиҳасида жорий ижрочининг шахсий карточкаси бўлади. Изоҳлар, назорат рўйхати ва файллар сақланади. Лойиҳа ва иштирокчиларни кейин ҳам таҳрирлаш мумкин.",
     "converted": "Гуруҳ лойиҳаси яратилди"
+  },
+  "projectCollaboration": {
+    "plan": "Режа",
+    "discussion": "Муҳокама",
+    "files": "Файллар",
+    "messages": "Лойиҳа хабарлари",
+    "empty": "Муҳокамани бошланг",
+    "emptyHint": "Лойиҳа жамоаси билан янгиликлар, саволлар ва қарорларни улашинг.",
+    "placeholder": "Хабар ёзинг…",
+    "mention": "Ҳамкасбни эслатиш",
+    "composeHint": "@ — эслатиш · Ctrl/⌘ + Enter — юбориш",
+    "send": "Хабар юбориш",
+    "formerMember": "Собиқ аъзо"
   },
   "projectLifecycle": {
     "editMilestone": "Босқични таҳрирлаш",

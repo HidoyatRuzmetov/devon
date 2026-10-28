@@ -2,7 +2,8 @@ import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { useT } from '@devon/i18n'
-import { Button, Input, toast, toastWithUndo } from '@devon/ui'
+import { Button, IconButton, toast, toastWithUndo } from '@devon/ui'
+import { Download, File, Paperclip, Trash2 } from 'lucide-react'
 import { ApiError, apiClient } from '../../../lib/api-client.js'
 import { useMeQuery } from '../../../lib/session.js'
 
@@ -27,13 +28,18 @@ export function CardAttachments({
 }: {
   cardId: string
   canEdit: boolean
-  subjectType?: 'card' | 'page'
+  subjectType?: 'card' | 'page' | 'project'
 }) {
   const t = useT()
   const csrf = useMeQuery().data?.csrfToken ?? ''
   const qc = useQueryClient()
-  const base = `/api/v1/${subjectType === 'card' ? 'cards' : 'pages'}/${encodeURIComponent(cardId)}/attachments`
-  const key = [subjectType === 'card' ? 'work' : 'pages', 'attachments', cardId]
+  const fileInput = React.useRef<HTMLInputElement>(null)
+  const base = `/api/v1/${subjectType === 'card' ? 'cards' : subjectType === 'project' ? 'projects' : 'pages'}/${encodeURIComponent(cardId)}/attachments`
+  const key = [
+    subjectType === 'card' ? 'work' : subjectType === 'project' ? 'projects' : 'pages',
+    'attachments',
+    cardId,
+  ]
   const list = useQuery({
     queryKey: key,
     queryFn: () => apiClient.get(base, z.array(attachmentSchema)),
@@ -142,7 +148,25 @@ export function CardAttachments({
   const retryUpload = error?.status === 503 && pendingUpload
   return (
     <section className="flex flex-col gap-3" aria-label={t('attachments.title')}>
-      <h3 className="text-small font-semibold">{t('attachments.title')}</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-small font-semibold">
+          {t('attachments.title')}
+          {list.data?.length ? (
+            <span className="ml-2 text-muted-foreground">{list.data.length}</span>
+          ) : null}
+        </h3>
+        {canEdit ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={upload.isPending}
+            onClick={() => fileInput.current?.click()}
+          >
+            <Paperclip className="size-4" />
+            {t('attachments.add')}
+          </Button>
+        ) : null}
+      </div>
       {list.isPending ? (
         <p className="text-small text-muted-foreground">{t('state.loading')}</p>
       ) : null}
@@ -156,27 +180,36 @@ export function CardAttachments({
       ) : null}
       <ul className="flex flex-col gap-2">
         {list.data?.map((file) => (
-          <li key={file.id} className="flex items-center gap-2 rounded-sm border border-border p-2">
+          <li
+            key={file.id}
+            className="group flex items-center gap-3 rounded-md border border-border bg-card p-2.5"
+          >
+            <File className="size-5 shrink-0 text-primary/70" aria-hidden="true" />
             <a
-              className="min-w-0 flex-1 truncate text-small text-primary underline"
+              className="flex min-w-0 flex-1 items-center gap-3 text-small font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
               href={`${base}/${encodeURIComponent(file.id)}/download`}
               download={file.name}
+              title={file.name}
+              aria-label={file.name}
             >
-              {file.name}
+              <span className="min-w-0 flex-1 truncate">{file.name}</span>
+              <span className="shrink-0 text-caption text-muted-foreground">
+                {file.size >= 1024 * 1024
+                  ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                  : `${Math.max(1, Math.round(file.size / 1024))} KB`}
+              </span>
+              <Download className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </a>
-            <span className="text-caption text-muted-foreground">
-              {Math.max(1, Math.round(file.size / 1024))} KB
-            </span>
             {canEdit ? (
-              <Button
-                size="sm"
-                variant="ghost"
+              <IconButton
+                className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
                 aria-label={t('attachments.removeName', { name: file.name })}
+                tooltip={t('attachments.removeName', { name: file.name })}
                 disabled={remove.isPending}
                 onClick={() => remove.mutate(file.id)}
               >
-                {t('work.action.delete')}
-              </Button>
+                <Trash2 className="size-4" />
+              </IconButton>
             ) : null}
           </li>
         ))}
@@ -189,9 +222,12 @@ export function CardAttachments({
         ))}
       </div>
       {canEdit ? (
-        <label className="flex flex-col gap-2 text-small">
-          {t('attachments.add')}
-          <Input
+        <div>
+          <input
+            ref={fileInput}
+            className="sr-only"
+            tabIndex={-1}
+            aria-label={t('attachments.add')}
             type="file"
             disabled={upload.isPending}
             onChange={(e) => {
@@ -201,7 +237,7 @@ export function CardAttachments({
             }}
           />
           <span className="text-caption text-muted-foreground">{t('portal.files.hint')}</span>
-        </label>
+        </div>
       ) : null}
       {approvalRequested ? (
         <p role="status" className="text-small text-info">
