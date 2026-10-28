@@ -1,10 +1,12 @@
 # Pomodoro character artwork
 
-Original artwork generated with the built-in ImageGen tool on 28 October 2026. Fifteen 24-frame, 6 × 4 transparent sprite sheets (360 frames): concentrating, reading, writing, tea, gardening, paper planes, puzzles, juggling, dancing, balancing, bubbles, peekaboo, napping, stretching, and completion. The twelve additional prompts are in [pomodoro-activity-prompts.md](pomodoro-activity-prompts.md).
+Original artwork generated with the built-in ImageGen tool on 28 October 2026. Fifteen 24-frame, 6 × 4 transparent sprite sheets (360 frames): concentrating, reading, writing, tea, gardening, origami, puzzles, juggling, dancing, balancing, bubbles, peekaboo, napping, stretching, and completion. The twelve additional prompts are in [pomodoro-activity-prompts.md](pomodoro-activity-prompts.md).
 
 Each story plays once over 2.5–3.1 seconds with a variable short rest. A shuffled repertoire exhausts each phase's activities before repeating; recent history persists across focus/break changes. Pausing plays one nap, completion has its own two-second celebration, and resuming returns to the varied repertoire. The timer runs independently. Hidden tabs, offscreen views, reduced-motion preferences and the animation toggle suspend decorative playback.
 
 Production assets: `apps/web/src/features/personal/assets/*-sprite.webp`, bundled with content-hashed URLs. Only the visible story, the next story and completion are initially downloaded; a new sheet is decoded before crossfading. Source PNGs are retained in this folder's `pomodoro-source` directory. Format conversion preserves alpha; no generated figure is repainted in code.
+
+Generated gutters are not assumed to be a perfect pixel grid. `node tools/assets/pomodoro-atlas.mjs` reads alpha boundaries and emits CSS texture coordinates and clipping rectangles, with one scale per sheet and a shared baseline per row. It never modifies the image pixels. `--check` validates every frame boundary and the committed CSS; the release script tests run this check. The selected origami animation keeps the paper in the character's hands, avoiding the crossing trajectories in the discarded airplane candidate.
 
 ## Prompts
 

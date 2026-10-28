@@ -1,6 +1,7 @@
 import { useReducedMotion } from '@devon/ui'
 import * as React from 'react'
 import { TomatoDirector, type TomatoActivity, type TomatoContext } from './lib/tomato-director.js'
+import './pomodoro-atlas.css'
 
 // Import URLs, not pixels: only the current/next activity and completion are downloaded.
 const sheets = import.meta.glob<string>('./assets/*-sprite.webp', {
@@ -156,7 +157,7 @@ export function PomodoroCharacter({
               onAnimationEnd={(event) => {
                 if (
                   entry.serial === activeScene.current.serial &&
-                  event.animationName === 'pomodoro-character-frames'
+                  event.animationName.startsWith('pomodoro-character-frames-')
                 )
                   setSettled(true)
               }}

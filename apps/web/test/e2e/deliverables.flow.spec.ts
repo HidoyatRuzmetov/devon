@@ -131,7 +131,7 @@ test('@flow deliverables, Progress, private calendar and timer work on desktop a
       animations: 'disabled',
     })
     await page.getByRole('button', { name: /Test Member.*1 of 20 done/ }).click()
-    await page.getByRole('button', { name: 'Open task', exact: true }).first().click()
+    await page.getByRole('button', { name: 'Open card', exact: true }).first().click()
     await expect(page).toHaveURL(/from=analytics/)
     await page.getByRole('link', { name: 'Check-in / out', exact: true }).first().click()
     await expect(page.getByText('20 deliverables', { exact: true })).toBeVisible()

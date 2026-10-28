@@ -21,9 +21,9 @@ The tomato TAKES A TEA BREAK with a small sage ceramic cup. Frames1-4 picks cup 
 
 The tomato WATERS A LITTLE SPROUT. A tiny terracotta pot with two green leaves sits beside it and a miniature sage watering can is in its hand. Frames1-4 looks fondly at sprout,5-10 tips can and a few water drops fall into pot,11-15 leaves gently unfurl upward and tomato leans in,16-20 tomato delightedly pats the pot,21-24 sets can down and returns upright. Modest playful animation, no huge instant tree.
 
-### plane
+### origami
 
-The tomato FOLDS AND LAUNCHES A PAPER AIRPLANE. Frames1-4 holds a small cream paper square,5-10 carefully folds it into a simple plane,11-14 draws arm back with playful determination,15-18 releases plane in a short upward arc within cell safe margins,19-21 follows it with eyes as it leaves frame area without clipping the tomato,22-24 returns to happy neutral pose with empty hands.
+The tomato folds a little paper boat, entirely held between its hands in front of its belly. Frames1-4 holds tiny square cream paper,5-10 carefully folds edges,11-16 unfolds the center into a miniature paper boat,17-20 holds it proudly under the face,21-24 rests it in its lap with a pleased smile. The paper never leaves its hands or lap, never flies or exits a cell. No motion trails, numbers or text. Clear transparent gutters between all24frames.
 
 ### puzzle
 

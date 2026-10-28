@@ -22,8 +22,8 @@
     "today": "Today",
     "kind": {
       "personal": "Personal",
-      "task": "Task deadline",
-      "event": "Signed-up event"
+      "event": "Signed-up event",
+      "card": "Card deadline"
     },
     "addOn": "Add an entry on {date}",
     "more": "+{count} more",

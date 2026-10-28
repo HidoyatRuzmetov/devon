@@ -139,7 +139,7 @@
   grid-row: 1;
   position: relative;
   aspect-ratio: 1;
-  width: min(100%, 420px);
+  width: min(100%, 480px);
   justify-self: center;
   isolation: isolate;
 }
@@ -176,7 +176,7 @@
   background-repeat: no-repeat;
 }
 .pomodoro-character-layer[data-active='true'] .pomodoro-character-sprite {
-  animation: pomodoro-character-frames 2.6s steps(1, end) both;
+  animation: var(--tomato-frames) 2.6s steps(1, end) both;
 }
 .pomodoro-character-layer[data-active='false'] .pomodoro-character-sprite {
   background-position: 100% 100%;
@@ -292,7 +292,7 @@
     margin: 0;
   }
   .pomodoro-character-scene {
-    width: clamp(144px, 18dvh, 180px);
+    width: clamp(160px, 22dvh, 200px);
   }
   .pomodoro-clock-face {
     gap: 0.65rem;
@@ -305,83 +305,5 @@
   }
   .pomodoro-time-track {
     margin: 1rem auto 0.35rem;
-  }
-}
-
-@keyframes pomodoro-character-frames {
-  0% {
-    background-position: 0% 0%;
-  }
-  4.166666666666666% {
-    background-position: 20% 0%;
-  }
-  8.333333333333332% {
-    background-position: 40% 0%;
-  }
-  12.5% {
-    background-position: 60% 0%;
-  }
-  16.666666666666664% {
-    background-position: 80% 0%;
-  }
-  20.833333333333336% {
-    background-position: 100% 0%;
-  }
-  25% {
-    background-position: 0% 33.33333333333333%;
-  }
-  29.166666666666668% {
-    background-position: 20% 33.33333333333333%;
-  }
-  33.33333333333333% {
-    background-position: 40% 33.33333333333333%;
-  }
-  37.5% {
-    background-position: 60% 33.33333333333333%;
-  }
-  41.66666666666667% {
-    background-position: 80% 33.33333333333333%;
-  }
-  45.83333333333333% {
-    background-position: 100% 33.33333333333333%;
-  }
-  50% {
-    background-position: 0% 66.66666666666666%;
-  }
-  54.166666666666664% {
-    background-position: 20% 66.66666666666666%;
-  }
-  58.333333333333336% {
-    background-position: 40% 66.66666666666666%;
-  }
-  62.5% {
-    background-position: 60% 66.66666666666666%;
-  }
-  66.66666666666666% {
-    background-position: 80% 66.66666666666666%;
-  }
-  70.83333333333334% {
-    background-position: 100% 66.66666666666666%;
-  }
-  75% {
-    background-position: 0% 100%;
-  }
-  79.16666666666666% {
-    background-position: 20% 100%;
-  }
-  83.33333333333334% {
-    background-position: 40% 100%;
-  }
-  87.5% {
-    background-position: 60% 100%;
-  }
-  91.66666666666666% {
-    background-position: 80% 100%;
-  }
-  95.83333333333334% {
-    background-position: 100% 100%;
-  }
-  100% {
-    background-position: 100% 100%;
   }
 }

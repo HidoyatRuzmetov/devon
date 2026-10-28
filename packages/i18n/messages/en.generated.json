@@ -1488,8 +1488,8 @@
     "dependsOn": "Uses: {title}",
     "dependencyFailed": "Not applied because a required earlier change was not completed.",
     "kinds": {
-      "card_withChecklist": "Task and checklist",
-      "card_assignMany": "Assign task to members",
+      "card_withChecklist": "Card and checklist",
+      "card_assignMany": "Assign card to members",
       "checkin_add": "Add to check-in",
       "checkin_update": "Update deliverable",
       "checkin_remove": "Remove from check-in",
@@ -1499,8 +1499,8 @@
       "personal_calendar_delete": "Delete personal calendar entry"
     },
     "fields": {
-      "existingCardId": "Existing task",
-      "create": "New task",
+      "existingCardId": "Existing card",
+      "create": "New card",
       "checklist": "Checklist",
       "recipientUserIds": "Recipients",
       "cycleId": "Cycle",
@@ -2374,9 +2374,9 @@
     "draft": "Check-in open",
     "agreed": "Check-in agreed",
     "closed": "Checkout locked",
-    "draftHint": "Choose deliverables with + beside a task’s checklist item.",
+    "draftHint": "Choose deliverables with + beside a card’s checklist item.",
     "agreedHint": "You can add deliverables and update progress. Agreed items cannot be removed.",
-    "closedHint": "This checkout is a saved record. Later task changes do not alter it.",
+    "closedHint": "This checkout is a saved record. Later card changes do not alter it.",
     "total": "{count} deliverables",
     "doneCount": "{count} done",
     "lockCheckin": "Agree check-in",
@@ -2385,8 +2385,8 @@
     "emptyHint": "Add checklist items from Cards to this cycle.",
     "openCards": "Open Cards",
     "noMembers": "No members yet",
-    "individual": "Individual task",
-    "openTask": "Open task",
+    "individual": "Individual card",
+    "openTask": "Open card",
     "edit": "Edit deliverable",
     "save": "Save",
     "cancel": "Cancel",
@@ -4049,8 +4049,8 @@
     "today": "Today",
     "kind": {
       "personal": "Personal",
-      "task": "Task deadline",
-      "event": "Signed-up event"
+      "event": "Signed-up event",
+      "card": "Card deadline"
     },
     "addOn": "Add an entry on {date}",
     "more": "+{count} more",

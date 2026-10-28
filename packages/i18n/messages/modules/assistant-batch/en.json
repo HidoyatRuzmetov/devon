@@ -19,8 +19,8 @@
     "dependsOn": "Uses: {title}",
     "dependencyFailed": "Not applied because a required earlier change was not completed.",
     "kinds": {
-      "card_withChecklist": "Task and checklist",
-      "card_assignMany": "Assign task to members",
+      "card_withChecklist": "Card and checklist",
+      "card_assignMany": "Assign card to members",
       "checkin_add": "Add to check-in",
       "checkin_update": "Update deliverable",
       "checkin_remove": "Remove from check-in",
@@ -30,8 +30,8 @@
       "personal_calendar_delete": "Delete personal calendar entry"
     },
     "fields": {
-      "existingCardId": "Existing task",
-      "create": "New task",
+      "existingCardId": "Existing card",
+      "create": "New card",
       "checklist": "Checklist",
       "recipientUserIds": "Recipients",
       "cycleId": "Cycle",

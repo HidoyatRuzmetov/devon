@@ -355,7 +355,7 @@ export function PersonalCalendarView() {
           return (
             <span key={kind} className="inline-flex items-center gap-1.5">
               <Icon className="size-3.5" />
-              {t(`personalCalendar.kind.${kind}`)}
+              {t(`personalCalendar.kind.${kind === 'task' ? 'card' : kind}`)}
             </span>
           )
         })}

@@ -22,8 +22,8 @@
     "today": "Bugun",
     "kind": {
       "personal": "Shaxsiy",
-      "task": "Vazifa muddati",
-      "event": "Yozilgan tadbir"
+      "event": "Yozilgan tadbir",
+      "card": "Vazifa muddati"
     },
     "addOn": "{date} kuniga yozuv qo‘shish",
     "more": "Yana {count} ta",
