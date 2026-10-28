@@ -81,6 +81,11 @@ test('@flow project conversion/edit preserve original card and persist members/s
     await expect.soft(conversion).toBeVisible()
     releaseConversion()
     await expect(page).toHaveURL(/\/projects\/view\?id=/)
+    // SPA navigation changes the URL before Vite finishes loading the next route's modules.
+    // Removing interception during that handoff can strand Chromium's in-flight module requests.
+    // Wait for the actual destination (also verifies keyboard edit access), then stop intercepting.
+    const edit = page.getByRole('button', { name: 'Edit project', exact: true })
+    await expect(edit).toBeVisible()
     await page.unroute('**/api/v1/projects/from-card')
     const id = new URL(page.url()).searchParams.get('id')!
     const read = async () =>
@@ -106,7 +111,6 @@ test('@flow project conversion/edit preserve original card and persist members/s
     }
     expect(detail.projectId).toBe(id)
     expect(detail.checklist.map((item) => item.text)).toContain('Preserved checklist')
-    const edit = page.getByRole('button', { name: 'Edit project', exact: true })
     await edit.focus()
     await edit.press('Enter')
     const dialog = page.getByRole('dialog', { name: 'Edit project', exact: true })
