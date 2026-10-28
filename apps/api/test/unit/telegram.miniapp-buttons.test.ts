@@ -9,11 +9,12 @@
 //     hold that conditional in place.
 //  2. A button that opens a screen the Mini App no longer has. The route list is shared through
 //     `@devon/contracts`, and `miniappHref` is checked against it here rather than against a string.
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MINIAPP_ROUTES, MINIAPP_ROUTE_KEYS } from '@devon/contracts'
+import { InlineKeyboard } from 'grammy'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { InlineKeyboard } from 'grammy'
-import { MINIAPP_ROUTES, MINIAPP_ROUTE_KEYS } from '@devon/contracts'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { Config } from '../../src/config.js'
 import {
   addMiniappButton,
   miniappHref,
@@ -22,7 +23,6 @@ import {
 } from '../../src/modules/telegram/miniapp-buttons.js'
 import { tb, type BotLocale } from '../../src/modules/telegram/templates.js'
 import { configureTelegram } from '../../src/modules/telegram/transport.js'
-import type { Config } from '../../src/config.js'
 
 const BOT_LOCALES = ['uz-Latn', 'uz-Cyrl', 'ru', 'en'] as const satisfies readonly BotLocale[]
 
@@ -67,14 +67,14 @@ describe('miniappMenuKeyboard', () => {
     const keyboard = miniappMenuKeyboard('uz-Latn')
     expect(keyboard).not.toBeNull()
     const rows = buttons(keyboard!)
-    expect(rows).toHaveLength(6)
+    expect(rows).toHaveLength(5)
     for (const button of rows) {
       expect(button.web_app?.url.startsWith('https://devon.example.uz/miniapp/#')).toBe(true)
       expect(button.text.trim()).not.toBe('')
     }
     // Every URL is a distinct screen -- a keyboard of six buttons that all open "Bugun" is the
     // failure mode a length assertion alone would miss.
-    expect(new Set(rows.map((b) => b.web_app?.url)).size).toBe(6)
+    expect(new Set(rows.map((b) => b.web_app?.url)).size).toBe(5)
   })
 
   it('answers null on a non-HTTPS instance instead of building a message Telegram would reject', () => {
@@ -94,7 +94,6 @@ describe('miniappMenuKeyboard', () => {
         tb(locale, 'miniapp.open_board'),
         tb(locale, 'miniapp.open_events'),
         tb(locale, 'miniapp.open_focus'),
-        tb(locale, 'miniapp.open_fields'),
       ])
     }
   })

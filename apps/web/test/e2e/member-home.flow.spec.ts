@@ -312,8 +312,8 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     expect(await created.json()).toMatchObject({ assigneeUserId: me.user.id, priority: 'urgent' })
     await expect(quickAdd).toHaveCount(0)
     // Private to-dos have notes, not scheduling fields: the preview and persisted data agree.
-    await page.goto('/personal')
-    const privateComposer = page.getByPlaceholder('Add a to-do for today')
+    await page.goto('/personal?tab=tasks')
+    const privateComposer = page.getByPlaceholder('Add a to-do')
     await privateComposer.fill('Prepare private notes by Friday, urgent')
     await page.getByRole('button', { name: 'Refine to-do with AI', exact: true }).click()
     await expect(page.getByText('Saved in notes', { exact: true })).toBeVisible()

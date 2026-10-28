@@ -69,7 +69,6 @@ export type SubjectSource =
   | 'department_request'
   | 'unit_role'
   | 'account'
-  | 'field_request'
 
 /** Everything a text builder or a deep link may use. Flat on purpose: a builder is a pure function of
  * this record, so every entry in the table below can be exercised in a unit test with a literal. */
@@ -169,38 +168,6 @@ function byActor(f: EventFacts, text: LocalizedText): LocalizedText | null {
   }
 }
 
-/** A custom field's own label, per locale. Four separate `extra` keys rather than one nested object,
- * because `EventFacts.extra` is flat by design (a builder must stay a pure function of a record a
- * unit test can write as a literal). A head may name a column in their own locale only, so each
- * locale falls back through the others and finally to the machine key -- a half-translated
- * definition still reads as a sentence rather than as an empty gap. */
-function fieldLabel(f: EventFacts): LocalizedText {
-  const uzLatn = str(f, 'labelUzLatn')
-  const uzCyrl = str(f, 'labelUzCyrl')
-  const ru = str(f, 'labelRu')
-  const en = str(f, 'labelEn')
-  const any = uzLatn || uzCyrl || ru || en || str(f, 'key')
-  return {
-    'uz-Latn': uzLatn || any,
-    'uz-Cyrl': uzCyrl || any,
-    ru: ru || any,
-    en: en || any,
-  }
-}
-
-/** `withName`, but the name itself differs per locale -- the one place in this table where the
- * subject's own title is translatable, because a custom field's label genuinely is. */
-function withLocalizedName(text: LocalizedText, name: LocalizedText): LocalizedText {
-  const join = (locale: keyof LocalizedText) =>
-    name[locale].trim() ? `${text[locale]}: ${name[locale].trim()}` : text[locale]
-  return {
-    'uz-Latn': join('uz-Latn'),
-    'uz-Cyrl': join('uz-Cyrl'),
-    ru: join('ru'),
-    en: join('en'),
-  }
-}
-
 function str(f: EventFacts, key: string): string {
   const v = f.extra[key]
   return typeof v === 'string' ? v : v == null ? '' : String(v)
@@ -213,6 +180,11 @@ function str(f: EventFacts, key: string): string {
  * the emit sites statically and asserts this key set equals that name set.
  */
 export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Object.freeze({
+  'checkins.updated': { notify: false, why: 'Cycle updates use the dedicated reminder worker.' },
+  'personal.calendar.changed': {
+    notify: false,
+    why: 'Owner-only changes; explicit reminders use their own worker.',
+  },
   'ai.conversation.created': PRIVATE_AI_CONVERSATION,
   'ai.conversation.requested': PRIVATE_AI_CONVERSATION,
   'ai.conversation.started': PRIVATE_AI_CONVERSATION,
@@ -317,30 +289,6 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   'departments.membership.changed': {
     notify: false,
     why: 'Membership invalidation refreshes access and directories; the specific membership decision events supply notifications.',
-  },
-  'automations.rule.created': {
-    notify: false,
-    why: 'Rule management refreshes the head’s rule list without adding inbox noise.',
-  },
-  'automations.rule.updated': {
-    notify: false,
-    why: 'Rule edits refresh the head’s rule list without adding inbox noise.',
-  },
-  'automations.rule.deleted': {
-    notify: false,
-    why: 'Removing a rule refreshes the head’s rule list without notifying colleagues.',
-  },
-  'automations.rules.paused': {
-    notify: false,
-    why: 'The department kill switch refreshes rules without adding inbox noise.',
-  },
-  'automations.rules.resumed': {
-    notify: false,
-    why: 'Resuming department rules refreshes the list without adding inbox noise.',
-  },
-  'automations.run.recorded': {
-    notify: false,
-    why: 'Run log invalidation uses realtime without adding inbox noise.',
   },
   'accounts.profile.updated': {
     notify: false,
@@ -575,50 +523,6 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
         `Вам назначена роль «${str(f, 'role')}».`,
         `You were given the “${str(f, 'role')}” role.`,
       ),
-  },
-
-  // --- person fields ------------------------------------------------------------------------------
-  // SPEC §11: "the head is notified of ... field-fill completions (batched)". `digest` is the reason
-  // that batching rides on -- a boshqarma of thirty filling a requested field on the same afternoon
-  // must reach the head as one daily line, not thirty interruptions. The Mini App's "Mening
-  // maʼlumotlarim" screen (SPEC §9) and the web person page both emit this same event.
-  'fields.value.filled': {
-    notify: true,
-    reason: 'digest',
-    // `membership` resolves `payload.userId` into the person the value is about, which is exactly
-    // who the head wants named; the field itself is deliberately not in the text (a requested field
-    // can be a private detail -- I-1).
-    source: 'membership',
-    subjectType: 'person',
-    recipients: ['head'],
-    deepLink: (f) => (f.subjectId ? `/people/${f.subjectId}` : '/people/table'),
-    title: (f) =>
-      withName(
-        plain(
-          'Maydon toʻldirildi',
-          'Майдон тўлдирилди',
-          'Поле заполнено',
-          'A requested field was filled in',
-        ),
-        f.subjectTitle,
-      ),
-    body: () =>
-      plain(
-        'Soʻralgan maʼlumot kiritildi. Xodimlar jadvalida koʻrishingiz mumkin.',
-        'Сўралган маълумот киритилди. Ходимлар жадвалида кўришингиз мумкин.',
-        'Запрошенные данные внесены. Их видно в таблице сотрудников.',
-        'The details you asked for are in. You can see them in the people table.',
-      ),
-  },
-
-  // --- people (v1.1 SPEC §4.3) ----------------------------------------------------------------------
-  'people.view.created': {
-    notify: false,
-    why: 'Arranging your own copy of the people table is a preference, not news. The other heads discover a shared view in the tab strip, where it belongs.',
-  },
-  'people.table.exported': {
-    notify: false,
-    why: 'The export is deliberately audited rather than notified: the department needs an accountable record of a staff spreadsheet leaving the product, and the head who pressed the button does not need an inbox row telling them they pressed it.',
   },
 
   // --- work ---------------------------------------------------------------------------------------
@@ -1020,57 +924,6 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       ),
   },
 
-  // --- custom fields (v1.1 SPEC §5) -----------------------------------------------------------------
-  'fields.definition.created': {
-    notify: false,
-    why: 'A new column on the people table is the head arranging their own management view; telling the whole boshqarma about it is noise. The moment it becomes news for a colleague is when they are asked to fill it -- `fields.request.created`.',
-  },
-  'fields.definition.updated': { notify: false, why: 'See fields.definition.created.' },
-  'fields.definition.archived': { notify: false, why: 'See fields.definition.created.' },
-  'fields.definition.reordered': { notify: false, why: 'See fields.definition.created.' },
-  'fields.value.set': {
-    notify: false,
-    why: 'SPEC §5: filling a field resolves the request and, when the head asked to hear about it, is reported in the daily digest -- "a daily batch, not per fill". One inbox row per colleague per answer would make the head mute the inbox on the first day.',
-  },
-
-  'fields.request.created': {
-    notify: true,
-    reason: 'field_request',
-    source: 'field_request',
-    subjectType: 'field_def',
-    recipients: ['target_user'],
-    // The deep link is the member's own profile, anchored at the fields section -- never the head's
-    // manager screen, which a xodim may not open at all.
-    deepLink: () => '/account#fields',
-    title: (f) =>
-      withLocalizedName(
-        str(f, 'reminder') === 'true'
-          ? plain(
-              'Eslatma: maʼlumot toʻldirilmagan',
-              'Эслатма: маълумот тўлдирилмаган',
-              'Напоминание: поле не заполнено',
-              'Reminder: a field is still empty',
-            )
-          : plain(
-              'Maʼlumotingizni toʻldiring',
-              'Маълумотингизни тўлдиринг',
-              'Заполните данные о себе',
-              'Please fill in your details',
-            ),
-        fieldLabel(f),
-      ),
-    body: (f) =>
-      byActor(
-        f,
-        plain(
-          'bu maydonni toʻldirishingizni soʻradi. Bir daqiqalik ish.',
-          'бу майдонни тўлдиришингизни сўради. Бир дақиқалик иш.',
-          'просит заполнить это поле. Это займёт минуту.',
-          'asked you to fill this in. It takes a minute.',
-        ),
-      ),
-  },
-
   // --- notifications (this module's own bookkeeping) ------------------------------------------------
   'notifications.notification.created': {
     notify: false,
@@ -1090,14 +943,6 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   // outbox rows and turns them into a publication on the right Centrifugo channel, which is where
   // the person is already looking; an inbox row on top of that would be the notification-about-a-
   // notification this table already refuses one line above.
-  'realtime.canvas.shared': {
-    notify: false,
-    why: 'The canvas appears on the project or event page the moment it is shared, live, for everyone already looking at it -- and the owner shares it *while talking to* those people. An inbox row would arrive after the conversation it belongs to.',
-  },
-  'realtime.canvas.share_revoked': {
-    notify: false,
-    why: 'Watchers are told on the channel itself (`realtime.channel.closed`) and the board simply closes; telling them again in the inbox would make taking a canvas back feel like an accusation.',
-  },
   'calendar.feed.created': {
     notify: false,
     why: 'A person creating their own calendar subscription is looking at the screen that confirms it; it is audited, and the inbox is for what other people did.',

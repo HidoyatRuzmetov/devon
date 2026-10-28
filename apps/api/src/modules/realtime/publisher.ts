@@ -158,15 +158,6 @@ export async function presence(channel: string): Promise<PresenceEntry[] | null>
   }
 }
 
-/** Tells everyone watching a channel that it is over. Used when a canvas share is revoked: the
- * watchers leave immediately instead of at their next reload, and their subscription token is
- * refused the moment it expires (`CENTRIFUGO_TOKEN_TTL_SECONDS`, ten minutes) because the share row
- * is gone by then. Deliberately a publication rather than Centrifugo's own `unsubscribe` API, which
- * needs a user id per call and would be one HTTP round trip per watcher. */
-export async function publishChannelClosed(channel: string, reason: string): Promise<boolean> {
-  return publish(channel, { type: 'realtime.channel.closed', payload: { reason } })
-}
-
 export function realtimeBreakerSnapshot() {
   return breaker.snapshot()
 }

@@ -21,9 +21,7 @@
     "@devon/contracts": "workspace:*",
     "@devon/i18n": "workspace:*",
     "@devon/ui": "workspace:*",
-    "@number-flow/react": "0.6.2",
     "@tanstack/react-query": "5.102.8",
-    "@tanstack/react-table": "8.21.3",
     "@tanstack/react-virtual": "3.14.11",
     "@tiptap/core": "3.31.3",
     "@tiptap/extension-mention": "3.31.3",
@@ -37,13 +35,11 @@
     "@tiptap/suggestion": "3.31.3",
     "centrifuge": "5.7.4",
     "fractional-indexing": "4.0.0",
-    "html-to-image": "1.11.13",
     "lucide-react": "1.41.0",
     "motion": "13.2.0",
     "qrcode.react": "4.2.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "recharts": "3.10.1",
     "zod": "4.6.6"
   },
   "devDependencies": {

@@ -1,17 +1,20 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { InputFile } from 'grammy'
 import { X509Certificate } from 'node:crypto'
-import { readFile, mkdtemp, writeFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { InputFile } from 'grammy'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { webhookOptions } from '../../src/modules/telegram/webhook-options.js'
 
 const certificatePath = fileURLToPath(new URL('../fixtures/telegram-public.crt', import.meta.url))
 describe('Telegram custom webhook certificate', () => {
   afterEach(() => vi.restoreAllMocks())
   it('uses the existing public-CA registration when no custom certificate is configured', async () => {
-    expect(await webhookOptions('dummy-secret')).toEqual({ secret_token: 'dummy-secret' })
+    expect(await webhookOptions('dummy-secret')).toEqual({
+      secret_token: 'dummy-secret',
+      allowed_updates: ['message', 'callback_query', 'my_chat_member', 'chat_member'],
+    })
   })
   it('uploads a valid public certificate as InputFile rather than a file path string', async () => {
     const cert = new X509Certificate(await readFile(certificatePath))

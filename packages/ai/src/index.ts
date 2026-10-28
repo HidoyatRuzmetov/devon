@@ -141,15 +141,6 @@ export {
   type SummarizeThreadOutput,
 } from './prompts/summarize-thread.js'
 export {
-  nlAnalyticsInputSchema,
-  nlAnalyticsOutputSchema,
-  analyticsMetricSchema,
-  ANALYTICS_METRICS,
-  type NlAnalyticsInput,
-  type NlAnalyticsOutput,
-  type AnalyticsMetric,
-} from './prompts/nl-analytics.js'
-export {
   translateInputSchema,
   translateOutputSchema,
   isLocalTransliterationPair,

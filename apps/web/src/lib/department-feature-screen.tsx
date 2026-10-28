@@ -1,11 +1,11 @@
-import type * as React from 'react'
 import { FEATURES, type AppActionId, type FeatureKey } from '@devon/contracts'
 import { useT } from '@devon/i18n'
 import { PageHeader, RouteSkeleton, StateView } from '@devon/ui'
+import type * as React from 'react'
 import { useCan } from './can.js'
 import { useFeatures } from './features.js'
-import { useDepartment } from './session.js'
 import { navigate } from './router.js'
+import { useDepartment } from './session.js'
 
 /** A disabled department capability is a settings decision, not a broken API request. */
 export function DepartmentFeatureScreen({
@@ -49,7 +49,7 @@ export function DepartmentFeatureScreen({
           ? {
               action: {
                 labelKey: 'departments.features.title',
-                onAction: () => navigate('/department?tab=general#features'),
+                onAction: () => navigate('/account/department?tab=general#features'),
               },
             }
           : {})}

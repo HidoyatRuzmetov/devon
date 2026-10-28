@@ -1,23 +1,20 @@
+import { returnDestination } from '../lib/return-context.js'
 // The full shell for every signed-in route (design.md §3, spec.md §3-§5), rebuilt to
 // UI-OVERHAUL.md §2 row 1: a Linear/Huly-style full-height sidebar with grouped entries, counts, a
 // department switcher on top and a user block at the foot; a top bar over the content column
 // carrying quick-add, search/⌘K, the inbox bell, the theme toggle, the locale switcher and the
 // avatar menu; a bottom tab bar instead of the sidebar at 390 px. `/login`, `/register`, `/setup`
 // and `/join` use the lighter `AuthShell` instead.
-import * as React from 'react'
-import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { useT, useLocale, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
-import { avatarUrl } from '../lib/avatar.js'
-import { usePageHead } from '../lib/page-meta.js'
+import { LOCALES, LOCALE_LABEL, useLocale, useT, type Locale } from '@devon/i18n'
 import {
   Avatar,
   AvatarMenu,
   BottomTabBar,
   DemoChip,
   DepartmentSwitcher,
+  HubAmbientWash,
   IconButton,
   InboxBell,
-  HubAmbientWash,
   LocaleMenu,
   OfflineBanner,
   PageContainer,
@@ -31,13 +28,26 @@ import {
   SidebarUserBlock,
   StateView,
   ThemeToggle,
-  TopBar,
   Toaster,
+  TopBar,
   initialsFromName,
   resolveNavEntries,
   toast,
   type ThemeToggleValue,
 } from '@devon/ui'
+import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import * as React from 'react'
+import { ViewAsBanner, useIsViewingAs } from '../features/admin/view-as-banner.js'
+import { getFeatureQuickAddEntries, useFeatureSidebarCounts } from '../features/registry.js'
+import { avatarUrl } from '../lib/avatar.js'
+import { useNavCan } from '../lib/can.js'
+import {
+  SIDEBAR_COLLAPSED_STORAGE_KEY,
+  SIDEBAR_GROUPS_STORAGE_KEY,
+  WORDMARK,
+} from '../lib/constants.js'
+import { usePageHead } from '../lib/page-meta.js'
+import { RouterLink, navigate, useRoutePath, useSearchParams } from '../lib/router.js'
 import {
   useDepartment,
   useInstanceQuery,
@@ -45,18 +55,10 @@ import {
   useLogoutMutation,
   useMeQuery,
 } from '../lib/session.js'
-import { useNavCan } from '../lib/can.js'
-import { useOnline } from '../lib/use-online.js'
-import { useIsViewingAs, ViewAsBanner } from '../features/admin/view-as-banner.js'
+import { setThemePreference, useThemePreference, type ThemePreference } from '../lib/theme.js'
 import { useMediaQuery } from '../lib/use-media-query.js'
-import { useThemePreference, setThemePreference, type ThemePreference } from '../lib/theme.js'
-import { navigate, RouterLink, useRoutePath, useSearchParams } from '../lib/router.js'
-import {
-  WORDMARK,
-  SIDEBAR_COLLAPSED_STORAGE_KEY,
-  SIDEBAR_GROUPS_STORAGE_KEY,
-} from '../lib/constants.js'
-import { getFeatureQuickAddEntries, useFeatureSidebarCounts } from '../features/registry.js'
+import { useOnline } from '../lib/use-online.js'
+import { CommandPaletteController } from './command-palette-controller.js'
 import {
   DEFAULT_COLLAPSED_GROUPS_HEAD,
   MOBILE_TAB_SHORT_LABEL_KEYS,
@@ -64,7 +66,6 @@ import {
   NAV_GROUPS,
   mobileTabEntries,
 } from './nav.js'
-import { CommandPaletteController } from './command-palette-controller.js'
 import { PaletteProvider } from './palette-context.js'
 import { useShellShortcuts } from './use-shell-shortcuts.js'
 
@@ -98,13 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const route = useRoutePath()
   const search = useSearchParams()
   const returnConversation = search.get('conversation')
-  const overviewHref =
-    returnConversation &&
-    /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(returnConversation)
-      ? `/assistant?conversation=${returnConversation}`
-      : search.get('from') === 'assistant'
-        ? '/assistant'
-        : '/'
+  const overviewHref = returnDestination(search)
   React.useLayoutEffect(() => {
     // A new screen must not inherit the previous screen's document offset.
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -513,15 +508,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <PageContainer>
               {route !== '/' &&
               route !== '/assistant' &&
-              ['overview', 'assistant'].includes(search.get('from') ?? '') ? (
+              ['overview', 'assistant', 'analytics', 'personal'].includes(
+                search.get('from') ?? '',
+              ) ? (
                 <RouterLink
                   href={overviewHref}
                   className="mb-3 inline-flex text-small text-primary"
                 >
                   {t(
-                    search.get('from') === 'assistant' || returnConversation
-                      ? 'assistantWorkspace.back'
-                      : 'portal.overview.back',
+                    search.get('from') === 'analytics'
+                      ? 'checkins.title'
+                      : search.get('from') === 'personal'
+                        ? 'personalCalendar.tab'
+                        : search.get('from') === 'assistant' || returnConversation
+                          ? 'assistantWorkspace.back'
+                          : 'portal.overview.back',
                   )}
                 </RouterLink>
               ) : null}

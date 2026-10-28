@@ -1,18 +1,17 @@
+import { type RequestContext } from '@devon/db'
 import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { afterAll, beforeAll, expect, it } from 'vitest'
-import { withContext, type RequestContext } from '@devon/db'
-import { startHarness, stopHarness, seedDepartment, seedMember, superuserQuery } from './harness.js'
+import { listMembers as listSettingsMembers } from '../../src/modules/departments/repo.js'
+import { listMembers } from '../../src/modules/structure/repo.js'
 import {
   addChecklistItem,
-  patchChecklistItem,
   deleteChecklistItem,
   getActivity,
   getMembers,
+  patchChecklistItem,
 } from '../../src/modules/work/repo.js'
-import { listMembers } from '../../src/modules/structure/repo.js'
-import { listMembers as listSettingsMembers } from '../../src/modules/departments/repo.js'
-import { activeMemberIds, nameRows } from '../../src/modules/people/repo.js'
+import { seedDepartment, seedMember, startHarness, stopHarness, superuserQuery } from './harness.js'
 
 let harness: Awaited<ReturnType<typeof startHarness>>
 let ctx: RequestContext, departmentId: string, headId: string, memberId: string
@@ -61,12 +60,6 @@ it('sorts only department settings members by joining date; board, directory and
     headId,
   ])
   expect((await getMembers(ctx, departmentId)).map((m) => m.userId)).toEqual([headId, memberId])
-  expect(await activeMemberIds(ctx, departmentId)).toEqual([headId, memberId])
-  expect(
-    (await withContext(ctx, (tx) => nameRows(tx, departmentId, [memberId, headId]))).map(
-      (m) => m.userId,
-    ),
-  ).toEqual([headId, memberId])
   expect(
     (
       await listMembers(

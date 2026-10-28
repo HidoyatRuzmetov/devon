@@ -1,0 +1,10 @@
+{
+  "pomodoroStudio": {
+    "animation": "Character animation",
+    "mode": "Timer mode",
+    "start": "Start",
+    "paused": "Paused. Resume when you’re ready.",
+    "focusHint": "One thing at a time.",
+    "breakHint": "Step away. Come back refreshed."
+  }
+}

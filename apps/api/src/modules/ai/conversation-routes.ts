@@ -1,23 +1,25 @@
-import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import type { FastifyRequest } from 'fastify'
-import { subscribe, type RequestContext } from '@devon/db'
-import { z } from 'zod'
 import {
   aiConversationSchema,
   aiConversationsSchema,
-  createAiConversationSchema,
-  sendAiChatMessageSchema,
   cancelAiChatMessageSchema,
+  createAiConversationSchema,
+  editAiProposalSchema,
+  resolveAiProposalBatchSchema,
+  sendAiChatMessageSchema,
   type Subject,
 } from '@devon/contracts'
+import { subscribe, type RequestContext } from '@devon/db'
+import type { FastifyRequest } from 'fastify'
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import { contextDepartmentRole } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
-import { contextDepartmentRole } from '../../lib/actor.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
-import * as conversations from './conversations.js'
-import { enqueueConversation, startConversationJobs } from './conversation-jobs.js'
-import { resolveProposal } from './conversation-actions.js'
+import { editProposal, resolveProposal, resolveProposalBatch } from './conversation-actions.js'
 import { configureConversationFiles } from './conversation-files.js'
+import { enqueueConversation, startConversationJobs } from './conversation-jobs.js'
+import * as conversations from './conversations.js'
 
 const subject = (req: FastifyRequest): Subject => ({
   kind: 'department_child',
@@ -38,6 +40,39 @@ function context(req: FastifyRequest): RequestContext {
   }
 }
 const routes: FastifyPluginAsyncZod = async (app) => {
+  app.post(
+    '/conversations/:id/proposals/resolve',
+    {
+      config: {
+        permission: { action: 'update', subject },
+        rateLimit: { max: 10, timeWindow: '1 minute' },
+      },
+      schema: {
+        params,
+        body: resolveAiProposalBatchSchema,
+        response: { 200: aiConversationSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      return resolveProposalBatch(app, req, req.params.id, req.body)
+    },
+  )
+  app.patch(
+    '/conversations/:id/proposals/:proposalId',
+    {
+      config: { permission: { action: 'update', subject } },
+      schema: {
+        params: z.object({ id: z.uuid(), proposalId: z.uuid() }),
+        body: editAiProposalSchema,
+        response: { 200: aiConversationSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      return editProposal(context(req), req.params.id, req.params.proposalId, req.body)
+    },
+  )
   for (const resolution of ['execute', 'discard'] as const) {
     app.post(
       `/conversations/:id/proposals/:proposalId/${resolution}`,

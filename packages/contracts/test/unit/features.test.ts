@@ -38,16 +38,16 @@ describe('resolveFeatures', () => {
 
   it('lets a stored override win', () => {
     expect(resolveFeatures({ estimates: true }).estimates).toBe(true)
-    expect(resolveFeatures({ estimates: true }).workload).toBe(false)
+    expect(resolveFeatures({ estimates: true }).templates).toBe(false)
   })
 
   it('ignores a key the product no longer has, and a value that is not a boolean', () => {
     // A switch removed from the registry must not linger as a truthy value nobody can see, and a
     // string must never be coerced into a capability being on.
-    const resolved = resolveFeatures({ gantt_charts: true, estimates: 'yes', workload: 1 })
+    const resolved = resolveFeatures({ gantt_charts: true, estimates: 'yes', templates: 1 })
     expect('gantt_charts' in resolved).toBe(false)
     expect(resolved.estimates).toBe(false)
-    expect(resolved.workload).toBe(false)
+    expect(resolved.templates).toBe(false)
   })
 
   it('survives every shape a jsonb column can actually hand back', () => {

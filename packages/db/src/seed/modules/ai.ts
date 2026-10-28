@@ -34,7 +34,6 @@ const DEMO_FLAGS: Record<string, boolean> = {
   catch_up: true,
   draft_event: true,
   summarize_thread: true,
-  nl_analytics: true,
   translate: true,
   draft_reply: true,
   board_risk_digest: true,

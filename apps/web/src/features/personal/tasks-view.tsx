@@ -1,50 +1,40 @@
-// Nested tasks with checkboxes, drag reorder and keyboard (TECH-SPEC §3.3), grouped by sprint (plus
-// an "Inbox" bucket for tasks with no sprint). Drag-and-drop is native HTML5 DnD -- no extra
-// dependency -- and keyboard (Alt+Right/Left indent/outdent, Enter to add a sibling, Cmd/Ctrl+Enter to
-// mark done, Backspace on an empty title to delete, arrow keys to move focus) covers the same
-// operations without a mouse.
-//
-// AI wiring (UI-OVERHAUL.md's brief for this area, TECH-SPEC §8): quick-add parsing cleans up a
-// free-typed line before it becomes a to-do, and subtask breakdown turns one to-do into a checklist --
-// both go through the AI result panel's Accept/Edit/Discard, never applying themselves.
-import * as React from 'react'
-import { useT, useLocale } from '@devon/i18n'
-import { Plus } from 'lucide-react'
+import { useLocale, useT } from '@devon/i18n'
 import {
   Card,
+  EmptyPersonalIllustration,
   Input,
   Reveal,
+  SparkleButton,
   Stagger,
   StaggerItem,
   StateView,
-  SparkleButton,
-  EmptyPersonalIllustration,
   Textarea,
   toast,
 } from '@devon/ui'
-import { useAiFeatureEnabled, useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { Plus } from 'lucide-react'
+import * as React from 'react'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { SubtasksPreview } from '../ai/components/previews.js'
-import { PersonalQuickAddPreview, personalQuickAddNotes } from './lib/personal-quick-add-preview.js'
 import {
   parseFeatureOutput,
   type QuickAddOutput,
   type SubtaskBreakdownOutput,
 } from '../ai/outputs.js'
 import type { RunMeta } from '../ai/types.js'
+import { useAiFeatureEnabled, useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { aiErrorMessageKey } from './lib/ai-helpers.js'
+import { PersonalQuickAddPreview, personalQuickAddNotes } from './lib/personal-quick-add-preview.js'
 import { todayInTashkent } from './lib/use-quick-add-ai.js'
 import { TaskRow } from './task-row.js'
 import { buildTree, flattenTree, isSelfOrDescendant, type TaskNode } from './task-tree.js'
-import { aiErrorMessageKey } from './lib/ai-helpers.js'
+import type { Task } from './types.js'
 import {
   useCreateTaskMutation,
   useDeleteTaskMutation,
   usePatchTaskMutation,
   useReorderTasksMutation,
-  useSprintsQuery,
   useTasksQuery,
 } from './use-personal.js'
-import type { Task } from './types.js'
 
 type QuickAddAiState =
   | { sectionKey: string; status: 'pending' }
@@ -66,7 +56,6 @@ export function TasksView() {
   const t = useT()
   const locale = useLocale()
   const tasksQuery = useTasksQuery()
-  const sprintsQuery = useSprintsQuery()
   const createTask = useCreateTaskMutation()
   const patchTask = usePatchTaskMutation()
   const deleteTaskMutation = useDeleteTaskMutation()
@@ -100,7 +89,7 @@ export function TasksView() {
     return () => cancelAnimationFrame(frame)
   }, [focusRequest, tasksQuery.data])
 
-  if (tasksQuery.isPending || sprintsQuery.isPending) {
+  if (tasksQuery.isPending) {
     return <StateView kind="loading" titleKey="state.loading" />
   }
   if (tasksQuery.isError) {
@@ -115,22 +104,10 @@ export function TasksView() {
   }
 
   const allTasks = tasksQuery.data
-  const sprints = sprintsQuery.data ?? []
-  const activeSprints = sprints.filter((s) => s.status === 'active')
+  const sections = [{ key: 'tasks', title: t('personal.tabs.tasks') }]
 
-  const sections: { key: string; sprintId: string | null; title: string }[] = [
-    { key: 'inbox', sprintId: null, title: t('personal.tasks.inbox') },
-    ...activeSprints.map((s) => ({
-      key: s.id,
-      sprintId: s.id,
-      title: s.goal || t(`personal.sprints.kind.${s.kind === '3h' ? 'threeHour' : s.kind}`),
-    })),
-  ]
-
-  function tasksInBucket(sprintId: string | null, parentId: string | null): Task[] {
-    return allTasks
-      .filter((tk) => tk.sprintId === sprintId && tk.parentId === parentId)
-      .sort((a, b) => a.sort - b.sort)
+  function tasksInBucket(parentId: string | null): Task[] {
+    return allTasks.filter((tk) => tk.parentId === parentId).sort((a, b) => a.sort - b.sort)
   }
 
   function scheduleDelete(node: TaskNode) {
@@ -138,11 +115,11 @@ export function TasksView() {
   }
 
   function indent(node: TaskNode) {
-    const siblings = tasksInBucket(node.sprintId, node.parentId)
+    const siblings = tasksInBucket(node.parentId)
     const idx = siblings.findIndex((s) => s.id === node.id)
     if (idx <= 0) return
     const newParent = siblings[idx - 1]!
-    const newSiblingChildren = tasksInBucket(node.sprintId, newParent.id)
+    const newSiblingChildren = tasksInBucket(newParent.id)
     const newSort = (newSiblingChildren.at(-1)?.sort ?? -1) + 1
     patchTask.mutate({
       id: node.id,
@@ -155,7 +132,7 @@ export function TasksView() {
     const parent = allTasks.find((tk) => tk.id === node.parentId)
     if (!parent) return
     const grandParentId = parent.parentId
-    const parentSiblings = tasksInBucket(parent.sprintId, grandParentId)
+    const parentSiblings = tasksInBucket(grandParentId)
     const parentIndex = parentSiblings.findIndex((s) => s.id === parent.id)
     const withoutNode = parentSiblings.filter((s) => s.id !== node.id)
     const orderedIds = [
@@ -165,9 +142,7 @@ export function TasksView() {
     ]
     reorderTasks.mutate({
       items: orderedIds.map((id, sort) =>
-        id === node.id
-          ? { id, sort, parentId: grandParentId, sprintId: parent.sprintId }
-          : { id, sort },
+        id === node.id ? { id, sort, parentId: grandParentId } : { id, sort },
       ),
     })
   }
@@ -179,7 +154,7 @@ export function TasksView() {
     if (isSelfOrDescendant(allTasks, dragId, target.id)) return
     const dragged = allTasks.find((tk) => tk.id === dragId)
     if (!dragged) return
-    const siblings = tasksInBucket(target.sprintId, target.parentId).filter((s) => s.id !== dragId)
+    const siblings = tasksInBucket(target.parentId).filter((s) => s.id !== dragId)
     const targetIndex = siblings.findIndex((s) => s.id === target.id)
     const orderedIds = [
       ...siblings.slice(0, targetIndex).map((s) => s.id),
@@ -188,9 +163,7 @@ export function TasksView() {
     ]
     reorderTasks.mutate({
       items: orderedIds.map((id, sort) =>
-        id === dragId
-          ? { id, sort, parentId: target.parentId, sprintId: target.sprintId }
-          : { id, sort },
+        id === dragId ? { id, sort, parentId: target.parentId } : { id, sort },
       ),
     })
   }
@@ -199,14 +172,14 @@ export function TasksView() {
     setFocusRequest({ id, select })
   }
 
-  function submitQuickAdd(sprintId: string | null) {
-    const sectionKey = sprintId ?? 'inbox'
+  function submitQuickAdd() {
+    const sectionKey = 'tasks'
     const submitted = quickAdd[sectionKey] ?? ''
     const title = submitted.trim()
     if (!title || createTask.isPending) return
-    const siblingCount = tasksInBucket(sprintId, null).length
+    const siblingCount = tasksInBucket(null).length
     createTask.mutate(
-      { title, sprintId, sort: siblingCount },
+      { title, sort: siblingCount },
       {
         onSuccess: () => {
           setQuickAdd((prev) =>
@@ -254,18 +227,17 @@ export function TasksView() {
     )
   }
 
-  function acceptQuickAddAi(sectionKey: string, sprintId: string | null) {
+  function acceptQuickAddAi(sectionKey: string) {
     if (
       createTask.isPending ||
       quickAddAi?.sectionKey !== sectionKey ||
       quickAddAi.status !== 'ready'
     )
       return
-    const siblingCount = tasksInBucket(sprintId, null).length
+    const siblingCount = tasksInBucket(null).length
     createTask.mutate(
       {
         title: quickAddAi.output.title,
-        sprintId,
         sort: siblingCount,
         notes: personalQuickAddNotes(quickAddAi.output, quickAdd[sectionKey] ?? '', t, locale),
       },
@@ -335,7 +307,7 @@ export function TasksView() {
       setSubtaskAi(null)
       return
     }
-    const baseSort = tasksInBucket(node.sprintId, node.id).length
+    const baseSort = tasksInBucket(node.id).length
     setSubtaskAi(null)
     // Each subtask's `sort` is precomputed from its index, not from the previous create's
     // response, so these writes are independent -- Promise.all, not a sequential loop (TECH-SPEC
@@ -344,7 +316,6 @@ export function TasksView() {
       lines.map((title, i) =>
         createTask.mutateAsync({
           title,
-          sprintId: node.sprintId,
           parentId: node.id,
           sort: baseSort + i,
         }),
@@ -355,11 +326,11 @@ export function TasksView() {
   return (
     <Stagger className="flex flex-col gap-6" animateKey={sections.map((s) => s.key).join(',')}>
       {sections.map((section) => {
-        const bucketTasks = allTasks.filter((tk) => tk.sprintId === section.sprintId)
+        const bucketTasks = allTasks
         const tree = buildTree(bucketTasks)
         const flat = flattenTree(tree)
         const openCount = bucketTasks.filter((tk) => tk.doneAt === null).length
-        const sectionKey = section.sprintId ?? 'inbox'
+        const sectionKey = section.key
         const quickAddAiForSection = quickAddAi?.sectionKey === sectionKey ? quickAddAi : null
 
         return (
@@ -407,9 +378,7 @@ export function TasksView() {
                         onDelete={scheduleDelete}
                         deletePending={deleteTaskMutation.isPending}
                         canIndent={
-                          tasksInBucket(node.sprintId, node.parentId).findIndex(
-                            (task) => task.id === node.id,
-                          ) > 0
+                          tasksInBucket(node.parentId).findIndex((task) => task.id === node.id) > 0
                         }
                         onEnter={(anchor) => {
                           if (createTask.isPending) return
@@ -475,7 +444,7 @@ export function TasksView() {
                 className="mt-1 flex items-center gap-1.5 px-1"
                 onSubmit={(e) => {
                   e.preventDefault()
-                  submitQuickAdd(section.sprintId)
+                  submitQuickAdd()
                 }}
               >
                 <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -518,7 +487,7 @@ export function TasksView() {
                     {...(quickAddAiForSection.status === 'ready'
                       ? { meta: quickAddAiForSection.meta }
                       : {})}
-                    onAccept={() => acceptQuickAddAi(sectionKey, section.sprintId)}
+                    onAccept={() => acceptQuickAddAi(sectionKey)}
                     onDiscard={() => {
                       quickAddGeneration.current++
                       setQuickAddAi(null)

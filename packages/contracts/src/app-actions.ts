@@ -25,9 +25,6 @@ export const FEATURE_AREAS = [
   'pages',
   'ai',
   'people',
-  'fields',
-  'goals',
-  'automations',
   'admin',
 ] as const
 
@@ -307,15 +304,9 @@ export const APP_ACTIONS = {
   },
   'work.estimate.edit': { area: 'work', action: 'update', subject: 'owned' },
   /** SPEC §2.2: the workload view is head-only. A member sees their own load on Home. */
-  'work.workload.read': {
-    area: 'work',
-    action: 'read',
-    subject: 'department_managed',
-  },
   /** Moving somebody else's card to another person or another week is a management act; the
    * workload grid's drag is the same reassignment `work.card.reassign` is, so it reduces to the
    * same `owned` rule and the head passes it for every card. */
-  'work.workload.assign': { area: 'work', action: 'update', subject: 'owned' },
   /** A member may set their own weekly capacity (SPEC §7 A4: "members may set their own capacity");
    * the head may set anyone's, which is why this is `owned` with the subject person as the owner
    * set rather than `department_managed`. */
@@ -429,12 +420,6 @@ export const APP_ACTIONS = {
     action: 'update',
     subject: 'personal',
   },
-  /** Aggregate focus minutes only -- never content, never a note, never a canvas (I-1). */
-  'personal.focus.readAggregate': {
-    area: 'personal',
-    action: 'read',
-    subject: 'department_managed',
-  },
 
   // --- inbox / telegram (audit §4.8) -------------------------------------------------------------
   'inbox.own.read': { area: 'inbox', action: 'read', subject: 'personal' },
@@ -488,38 +473,6 @@ export const APP_ACTIONS = {
     action: 'read',
     subject: 'department_child',
   },
-  /** SEV1 change: a per-person load chart in a ministry reads as a public reprimand. */
-  'analytics.perPerson.read': {
-    area: 'analytics',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'analytics.export': {
-    area: 'analytics',
-    action: 'read',
-    subject: 'department_child',
-  },
-  'analytics.export.perPerson': {
-    area: 'analytics',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'analytics.savedFilters.manage': {
-    area: 'analytics',
-    action: 'create',
-    subject: 'department_child',
-  },
-  'analytics.pins.manage': {
-    area: 'analytics',
-    action: 'create',
-    subject: 'department_child',
-  },
-  'analytics.narrative.read': {
-    area: 'analytics',
-    action: 'read',
-    subject: 'department_managed',
-  },
-
   // --- pages (audit §4.10) -----------------------------------------------------------------------
   'pages.read': { area: 'pages', action: 'read', subject: 'department_child' },
   'pages.create': {
@@ -586,91 +539,16 @@ export const APP_ACTIONS = {
     action: 'read',
     subject: 'department_child',
   },
-  'people.table.read': {
-    area: 'people',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'people.indicators.read': {
-    area: 'people',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'people.person.read': {
-    area: 'people',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'people.person.readOwn': {
-    area: 'people',
-    action: 'read',
-    subject: 'own_account',
-  },
   'people.assignTask': {
     area: 'people',
     action: 'create',
     subject: 'department_child',
   },
-  'people.export': {
-    area: 'people',
-    action: 'read',
-    subject: 'department_managed',
-  },
 
   // --- custom fields (SPEC §5) -------------------------------------------------------------------
-  'fields.definition.read': {
-    area: 'fields',
-    action: 'read',
-    subject: 'department_child',
-  },
-  'fields.definition.manage': {
-    area: 'fields',
-    action: 'update',
-    subject: 'department_managed',
-  },
-  'fields.notifyToFill': {
-    area: 'fields',
-    action: 'create',
-    subject: 'department_managed',
-  },
-  'fields.value.editOwn': {
-    area: 'fields',
-    action: 'update',
-    subject: 'own_account',
-  },
   /** "Where they studied" is HR-shaped data (audit §4.13). */
-  'fields.value.readOthers': {
-    area: 'fields',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'fields.value.editOnCard': {
-    area: 'fields',
-    action: 'update',
-    subject: 'owned',
-  },
 
   // --- goals and automations (SPEC §7) -----------------------------------------------------------
-  'goals.read': {
-    area: 'goals',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'goals.manage': {
-    area: 'goals',
-    action: 'update',
-    subject: 'department_managed',
-  },
-  'automations.read': {
-    area: 'automations',
-    action: 'read',
-    subject: 'department_managed',
-  },
-  'automations.manage': {
-    area: 'automations',
-    action: 'update',
-    subject: 'department_managed',
-  },
 
   // --- admin (audit §4.12) -----------------------------------------------------------------------
   'admin.console': { area: 'admin', action: 'administer', subject: 'instance' },

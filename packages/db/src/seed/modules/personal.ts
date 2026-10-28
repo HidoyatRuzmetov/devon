@@ -16,12 +16,12 @@
 // Every id this module writes is named exactly once, in the `*Id(...)` helpers below, so `seed()` and
 // `reset()` cannot drift apart.
 import { inArray } from 'drizzle-orm'
+import type { Tx } from '../../context.js'
 import * as schema from '../../schema/personal.js'
 import { DEMO_USERS } from '../fixtures.js'
 import { demoId } from '../ids.js'
-import { asUser } from '../scope.js'
 import type { SeedModuleContext } from '../module-loader.js'
-import type { Tx } from '../../context.js'
+import { asUser } from '../scope.js'
 
 export const order = 500
 
@@ -60,12 +60,7 @@ type TaskName = (typeof TASK_NAMES)[number]
 const HISTORY_DAYS = [-3, -2] as const
 const CYCLES_PER_DAY = 3
 
-const sprintId = (key: string, which: 'week-current' | 'day-last'): string =>
-  demoId(`personal.sprint.${key}.${which}`)
 const taskId = (key: string, name: TaskName): string => demoId(`personal.task.${key}.${name}`)
-const noteId = (key: string, which: 'ideas' | 'meeting'): string =>
-  demoId(`personal.note.${key}.${which}`)
-const canvasId = (key: string): string => demoId(`personal.canvas.${key}.planning`)
 const pomodoroId = (key: string, kind: 'focus' | 'break', day: number, cycle: number): string =>
   demoId(`personal.pomodoro.${key}.${kind}.${day}.${cycle}`)
 const pomodoroTodayId = (key: string): string => demoId(`personal.pomodoro.${key}.focus.today`)
@@ -84,40 +79,6 @@ function allPomodoroSessionIds(key: string): string[] {
 async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean }): Promise<number> {
   let rows = 0
 
-  // -- Sprints: one active "week" sprint (this week) with a goal, one completed "day" sprint from
-  // last week (rollover history) -- TECH-SPEC §3.3 "sprints (3h/day/week/custom) with a goal and
-  // rollover".
-  const weekSprintId = sprintId(user.key, 'week-current')
-  const lastDaySprintId = sprintId(user.key, 'day-last')
-
-  const insertedSprints = await tx.drizzle
-    .insert(schema.personalSprints)
-    .values([
-      {
-        id: weekSprintId,
-        userId: user.id,
-        kind: 'week',
-        startsAt: demoDate(0, 0, 0),
-        endsAt: demoDate(6, 23, 59),
-        goal: opts.headed
-          ? 'Boʻlim hisobotlarini yakunlash va jamoa yigʻilishiga tayyorgarlik'
-          : 'Uchinchi choraklik hisobotni yakunlash',
-        status: 'active',
-      },
-      {
-        id: lastDaySprintId,
-        userId: user.id,
-        kind: 'day',
-        startsAt: demoDate(-4, 9, 0),
-        endsAt: demoDate(-4, 18, 0),
-        goal: 'Elektron murojaatlarni koʻrib chiqish',
-        status: 'completed',
-      },
-    ])
-    .onConflictDoNothing()
-    .returning({ id: schema.personalSprints.id })
-  rows += insertedSprints.length
-
   // -- Nested tasks (checkboxes + drag order via `sort`; one subtree, one linked to a department
   // card, one rolled over from the completed sprint into the active one).
   const parentTaskId = taskId(user.key, 'report-parent')
@@ -129,7 +90,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       {
         id: parentTaskId,
         userId: user.id,
-        sprintId: weekSprintId,
+
         title: 'Choraklik hisobotni tayyorlash',
         sort: 0,
         estimateMin: 180,
@@ -137,7 +98,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       {
         id: taskId(user.key, 'report-child-1'),
         userId: user.id,
-        sprintId: weekSprintId,
+
         parentId: parentTaskId,
         title: 'Maʼlumotlarni boʻlimlardan yigʻish',
         doneAt: demoDate(1, 16, 0),
@@ -147,7 +108,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       {
         id: taskId(user.key, 'report-child-2'),
         userId: user.id,
-        sprintId: weekSprintId,
+
         parentId: parentTaskId,
         title: 'Grafik va jadvallarni tayyorlash',
         sort: 1,
@@ -156,7 +117,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       {
         id: taskId(user.key, 'linked-card'),
         userId: user.id,
-        sprintId: weekSprintId,
+
         title: 'Kartochka boʻyicha shaxsiy eslatma',
         notes: 'Boʻlim boshqarmasidagi umumiy kartaga bogʻliq shaxsiy qadam.',
         sort: 2,
@@ -166,7 +127,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       {
         id: soloTaskId,
         userId: user.id,
-        sprintId: weekSprintId,
+
         title: opts.headed ? 'Yigʻilish kun tartibini yuborish' : 'Elektron pochtani tozalash',
         sort: 3,
         estimateMin: 20,
@@ -174,7 +135,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       {
         id: taskId(user.key, 'done'),
         userId: user.id,
-        sprintId: weekSprintId,
+
         title: 'Haftalik rejani yozish',
         doneAt: demoDate(0, 10, 0),
         sort: 4,
@@ -183,7 +144,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       {
         id: taskId(user.key, 'rolled-over'),
         userId: user.id,
-        sprintId: lastDaySprintId,
+
         title: 'Arxivlanmagan murojaatlarni koʻrib chiqish',
         notes: 'Kunlik davrdan koʻchirildi.',
         sort: 0,
@@ -193,100 +154,6 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
     .onConflictDoNothing()
     .returning({ id: schema.personalTasks.id })
   rows += insertedTasks.length
-
-  // -- Notes.
-  const insertedNotes = await tx.drizzle
-    .insert(schema.personalNotes)
-    .values([
-      {
-        id: noteId(user.key, 'ideas'),
-        userId: user.id,
-        title: 'Gʻoyalar roʻyxati',
-        body: {
-          text: '- Hisobotlar shablonini soddalashtirish\n- Yangi xodimlar uchun qisqa qoʻllanma\n- Har oyda bir marta jamoa uchrashuvi',
-        },
-        pinned: true,
-      },
-      {
-        id: noteId(user.key, 'meeting'),
-        userId: user.id,
-        title: 'Yigʻilish qaydlari - 2026-09-02',
-        body: {
-          text: 'Muhokama qilindi: choraklik hisobot muddati, yangi murojaatlar tizimi, taʼtil jadvali.',
-        },
-        pinned: false,
-      },
-    ])
-    .onConflictDoNothing()
-    .returning({ id: schema.personalNotes.id })
-  rows += insertedNotes.length
-
-  // -- Canvas: a small scene (two rectangles + one arrow) plus a sticky-note overlay.
-  const insertedCanvases = await tx.drizzle
-    .insert(schema.personalCanvases)
-    .values([
-      {
-        id: canvasId(user.key),
-        userId: user.id,
-        title: 'Reja doskasi',
-        scene: {
-          elements: [
-            {
-              id: 'el-1',
-              type: 'rectangle',
-              x: 80,
-              y: 80,
-              w: 220,
-              h: 120,
-              color: '#2f6fed',
-              strokeWidth: 2,
-            },
-            {
-              id: 'el-2',
-              type: 'rectangle',
-              x: 420,
-              y: 80,
-              w: 220,
-              h: 120,
-              color: '#1f9d55',
-              strokeWidth: 2,
-            },
-            {
-              id: 'el-3',
-              type: 'arrow',
-              x: 300,
-              y: 140,
-              w: 120,
-              h: 0,
-              color: '#6b7280',
-              strokeWidth: 2,
-            },
-          ],
-          appState: { zoom: 1, panX: 0, panY: 0 },
-        },
-        stickies: [
-          {
-            id: 'sticky-1',
-            x: 100,
-            y: 260,
-            color: 'yellow',
-            text: opts.headed ? 'Boshliq bilan kelishish' : 'Tekshirish kerak',
-            rotation: -2,
-          },
-          {
-            id: 'sticky-2',
-            x: 360,
-            y: 260,
-            color: 'pink',
-            text: 'Muddat: juma',
-            rotation: 3,
-          },
-        ],
-      },
-    ])
-    .onConflictDoNothing()
-    .returning({ id: schema.personalCanvases.id })
-  rows += insertedCanvases.length
 
   // -- Pomodoro settings (defaults for the member, a slightly customised set for the head) + a
   // realistic session log/stats history across the last few working days.
@@ -330,7 +197,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       sessionRows.push({
         id: pomodoroId(user.key, 'focus', day, cycle),
         userId: user.id,
-        taskId: cycle === 0 ? parentTaskId : null,
+
         kind: 'focus',
         startedAt: focusStart,
         endedAt: focusEnd,
@@ -339,7 +206,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
       sessionRows.push({
         id: pomodoroId(user.key, 'break', day, cycle),
         userId: user.id,
-        taskId: null,
+
         kind: cycle === 2 ? 'long_break' : 'short_break',
         startedAt: focusEnd,
         endedAt: demoDate(day, hour, focusMin + shortBreakMin),
@@ -351,7 +218,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
   sessionRows.push({
     id: pomodoroTodayId(user.key),
     userId: user.id,
-    taskId: soloTaskId,
+
     kind: 'focus',
     startedAt: demoDate(0, 8, 30),
     endedAt: demoDate(0, 8, 47),
@@ -386,20 +253,6 @@ async function resetForUser(tx: Tx, user: UserFixture): Promise<number> {
     .returning({ userId: schema.pomodoroSettings.userId })
   rows += deletedSettings.length
 
-  const deletedCanvases = await tx.drizzle
-    .delete(schema.personalCanvases)
-    .where(inArray(schema.personalCanvases.id, [canvasId(user.key)]))
-    .returning({ id: schema.personalCanvases.id })
-  rows += deletedCanvases.length
-
-  const deletedNotes = await tx.drizzle
-    .delete(schema.personalNotes)
-    .where(
-      inArray(schema.personalNotes.id, [noteId(user.key, 'ideas'), noteId(user.key, 'meeting')]),
-    )
-    .returning({ id: schema.personalNotes.id })
-  rows += deletedNotes.length
-
   const deletedTasks = await tx.drizzle
     .delete(schema.personalTasks)
     .where(
@@ -410,17 +263,6 @@ async function resetForUser(tx: Tx, user: UserFixture): Promise<number> {
     )
     .returning({ id: schema.personalTasks.id })
   rows += deletedTasks.length
-
-  const deletedSprints = await tx.drizzle
-    .delete(schema.personalSprints)
-    .where(
-      inArray(schema.personalSprints.id, [
-        sprintId(user.key, 'week-current'),
-        sprintId(user.key, 'day-last'),
-      ]),
-    )
-    .returning({ id: schema.personalSprints.id })
-  rows += deletedSprints.length
 
   return rows
 }

@@ -1,7 +1,8 @@
-import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Checkbox, IconButton, Input, Strikethrough } from '@devon/ui'
-import { Check, Pencil, Trash2, X } from 'lucide-react'
+import { Check, Minus, Pencil, Plus, Trash2, X } from 'lucide-react'
+import * as React from 'react'
+import '../../analytics/checkins.css'
 
 type SaveResult = Promise<unknown>
 
@@ -11,12 +12,14 @@ export function ChecklistRow({
   onToggle,
   onSave,
   onDelete,
+  checkin,
 }: {
   item: { id: string; text: string; doneAt: string | null }
   canEdit: boolean
   onToggle: (done: boolean) => void
   onSave: (text: string) => SaveResult
   onDelete: () => void
+  checkin?: { selected: boolean; disabled: boolean; toggle: () => void } | undefined
 }) {
   const t = useT()
   const checkboxId = React.useId()
@@ -100,6 +103,7 @@ export function ChecklistRow({
           {canEdit ? (
             <>
               <IconButton
+                className="checkin-action checkin-action-edit"
                 aria-label={t('work.card.editChecklistItem')}
                 tooltip={t('work.card.editChecklistItem')}
                 onClick={() => {
@@ -110,12 +114,29 @@ export function ChecklistRow({
                 <Pencil className="size-3.5" />
               </IconButton>
               <IconButton
+                className="checkin-action checkin-action-delete"
                 aria-label={t('work.action.delete')}
                 tooltip={t('work.action.delete')}
                 onClick={onDelete}
               >
                 <Trash2 className="size-3.5" />
               </IconButton>
+              {checkin ? (
+                <IconButton
+                  className="checkin-action checkin-action-add"
+                  aria-label={t(checkin.selected ? 'checkins.remove' : 'checkins.add')}
+                  tooltip={t(checkin.selected ? 'checkins.remove' : 'checkins.add')}
+                  aria-pressed={checkin.selected}
+                  disabled={checkin.disabled}
+                  onClick={checkin.toggle}
+                >
+                  {checkin.selected ? (
+                    <Minus className="size-3.5" />
+                  ) : (
+                    <Plus className="size-3.5" />
+                  )}
+                </IconButton>
+              ) : null}
             </>
           ) : null}
         </>

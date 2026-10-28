@@ -1,0 +1,10 @@
+{
+  "pomodoroStudio": {
+    "animation": "Qahramon animatsiyasi",
+    "mode": "Taymer rejimi",
+    "start": "Boshlash",
+    "paused": "Pauza. Tayyor bo‘lsangiz, davom eting.",
+    "focusHint": "Bir vaqtda bir ish.",
+    "breakHint": "Dam oling. Yangi kuch bilan qayting."
+  }
+}

@@ -46,7 +46,8 @@ test('ordinary CI discovers every fresh flow/smoke file and no seeded dedicated 
     'register-department-join.flow.spec.ts',
     'board-move.flow.spec.ts',
     'group-project.flow.spec.ts',
-    'sprint-pomodoro.flow.spec.ts',
+    'personal-pomodoro.flow.spec.ts',
+    'deliverables.flow.spec.ts',
     'event-carpool-poll.flow.spec.ts',
     'admin-pause.flow.spec.ts',
     'accessibility.flow.spec.ts',
@@ -55,27 +56,7 @@ test('ordinary CI discovers every fresh flow/smoke file and no seeded dedicated 
     assert.ok(files(output).includes(required), `required CI flow missing: ${required}`)
 })
 
-test('dedicated canvas config retains renamed seeded cases in all three browser engines', () => {
-  const output = list('canvas-controls.config.ts')
-  assert.deepEqual(files(output), [
-    'canvas-controls.qa.spec.ts',
-    'platform-personal-canvas.qa.spec.ts',
-  ])
-  for (const engine of ['chromium', 'firefox', 'webkit']) {
-    assert.equal(
-      output
-        .split('\n')
-        .filter(
-          (line) => line.includes(`[${engine}]`) && line.includes('canvas-controls.qa.spec.ts:'),
-        ).length,
-      9,
-      `${engine}: all nine existing canvas cases must remain selected`,
-    )
-  }
-})
-
 test('dedicated broker configs still select their explicit seeded journeys', () => {
-  assert.deepEqual(files(list('management-qa.config.ts')), ['management-controls.qa.spec.ts'])
   const realtime = files(list('realtime-qa.config.ts'))
   assert.deepEqual(realtime, [
     'platform-realtime-scope.qa.spec.ts',

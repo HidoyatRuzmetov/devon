@@ -1,23 +1,23 @@
+import { MockProvider, type ChatCompletionRequest, type ChatCompletionResult } from '@devon/ai'
+import type { AiConversation } from '@devon/contracts'
+import { dispatch, withContext, type RequestContext } from '@devon/db'
+import { sql } from 'drizzle-orm'
 import { createHash, randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { sql } from 'drizzle-orm'
-import { withContext, dispatch, type RequestContext } from '@devon/db'
-import { MockProvider, type ChatCompletionResult, type ChatCompletionRequest } from '@devon/ai'
-import type { AiConversation } from '@devon/contracts'
-import { __setProviderForTests } from '../../src/modules/ai/service.js'
-import { __setConversationEnqueueForTests } from '../../src/modules/ai/conversation-jobs.js'
-import * as chat from '../../src/modules/ai/conversations.js'
+import type { ObjectStore } from '../../src/lib/storage/object-store.js'
 import { conversationContext } from '../../src/modules/ai/conversation-context.js'
 import { configureConversationFiles } from '../../src/modules/ai/conversation-files.js'
+import { __setConversationEnqueueForTests } from '../../src/modules/ai/conversation-jobs.js'
+import * as chat from '../../src/modules/ai/conversations.js'
 import { refreshIndex } from '../../src/modules/ai/search-repo.js'
-import type { ObjectStore } from '../../src/lib/storage/object-store.js'
+import { __setProviderForTests } from '../../src/modules/ai/service.js'
 import {
-  startHarness,
-  stopHarness,
+  loginAs,
   seedDepartment,
   seedMember,
+  startHarness,
+  stopHarness,
   superuserQuery,
-  loginAs,
   type Db,
   type Server,
   type Session,
@@ -161,7 +161,7 @@ beforeAll(async () => {
   )
   await superuserQuery(
     db,
-    `insert into app.personal_notes(id,user_id,title) values($1,$2,'SECRET PRIVATE NOTE')`,
+    `insert into app.personal_calendar_entries(id,user_id,title,starts_at,ends_at) values($1,$2,'SECRET PRIVATE APPOINTMENT',now(),now()+interval '1 hour')`,
     [randomUUID(), other],
   )
   await superuserQuery(
@@ -987,21 +987,21 @@ describe('private persistent work conversations', () => {
     await superuserQuery(db, `update app.events set deleted_at=null where id=$1`, [eventId])
   })
 
-  it('reads only current-user sprints with current versions and exposes readable nested action references', async () => {
-    const sprintId = randomUUID(),
-      otherSprintId = randomUUID(),
-      deletedSprintId = randomUUID()
+  it('reads only current-user calendar entries with current versions and exposes readable nested action references', async () => {
+    const entryId = randomUUID(),
+      otherEntryId = randomUUID(),
+      deletedEntryId = randomUUID()
     const checklistId = randomUUID(),
       commentId = randomUUID(),
       eventCommentId = randomUUID()
     await Promise.all([
       superuserQuery(
         db,
-        `insert into app.personal_sprints(id,user_id,kind,starts_at,ends_at,goal)
-        values($1,$2,'week',now(),now()+interval '1 week','Finish evidence review'),
-        ($3,$4,'day',now(),now()+interval '1 day','SECRET OTHER SPRINT'),
-        ($5,$2,'day',now(),now()+interval '1 day','DELETED OWN SPRINT')`,
-        [sprintId, owner, otherSprintId, other, deletedSprintId],
+        `insert into app.personal_calendar_entries(id,user_id,starts_at,ends_at,title)
+        values($1,$2,now(),now()+interval '1 hour','Finish evidence review'),
+        ($3,$4,now(),now()+interval '1 hour','SECRET OTHER APPOINTMENT'),
+        ($5,$2,now(),now()+interval '1 hour','DELETED OWN APPOINTMENT')`,
+        [entryId, owner, otherEntryId, other, deletedEntryId],
       ),
       superuserQuery(
         db,
@@ -1022,19 +1022,18 @@ describe('private persistent work conversations', () => {
         [eventCommentId, departmentId, eventId, owner],
       ),
     ])
-    await superuserQuery(db, `update app.personal_sprints set deleted_at=now() where id=$1`, [
-      deletedSprintId,
-    ])
+    await superuserQuery(
+      db,
+      `update app.personal_calendar_entries set deleted_at=now() where id=$1`,
+      [deletedEntryId],
+    )
     const initial = await conversationContext(ctx, 'evidence')
     expect(initial.snapshot).toContainEqual(
       expect.objectContaining({
-        ref: `personal_sprint:${sprintId}`,
+        ref: `personal_calendar:${entryId}`,
         title: 'Finish evidence review',
         facts: expect.objectContaining({
-          kind: 'private_sprint',
-          sprintKind: 'week',
-          goal: 'Finish evidence review',
-          status: 'active',
+          kind: 'private_calendar',
           version: 1,
           startsAt: expect.any(String),
           endsAt: expect.any(String),
@@ -1042,10 +1041,10 @@ describe('private persistent work conversations', () => {
       }),
     )
     for (const secret of [
-      'SECRET OTHER SPRINT',
-      'DELETED OWN SPRINT',
-      otherSprintId,
-      deletedSprintId,
+      'SECRET OTHER APPOINTMENT',
+      'DELETED OWN APPOINTMENT',
+      otherEntryId,
+      deletedEntryId,
     ])
       expect(JSON.stringify(initial)).not.toContain(secret)
     for (const [ref, text, href] of [
@@ -1066,22 +1065,25 @@ describe('private persistent work conversations', () => {
     )
     await superuserQuery(
       db,
-      `update app.personal_sprints set goal='Review finished',status='completed',version=2 where id=$1`,
-      [sprintId],
+      `update app.personal_calendar_entries set title='Review finished',version=2 where id=$1`,
+      [entryId],
     )
     const fresh = await conversationContext(ctx, 'evidence')
     expect(fresh.snapshot).toContainEqual(
       expect.objectContaining({
-        ref: `personal_sprint:${sprintId}`,
+        ref: `personal_calendar:${entryId}`,
         title: 'Review finished',
-        facts: expect.objectContaining({ status: 'completed', version: 2 }),
+        facts: expect.objectContaining({ version: 2 }),
       }),
     )
     const member = JSON.stringify(
-      await conversationContext({ ...ctx, userId: other, departmentRole: 'member' }, 'sprints'),
+      await conversationContext(
+        { ...ctx, userId: other, departmentRole: 'member' },
+        'calendar entries',
+      ),
     )
-    expect(member).toContain('SECRET OTHER SPRINT')
-    expect(member).not.toContain(sprintId)
+    expect(member).toContain('SECRET OTHER APPOINTMENT')
+    expect(member).not.toContain(entryId)
     await Promise.all([
       superuserQuery(db, `update app.card_checklist_items set deleted_at=now() where id=$1`, [
         checklistId,
@@ -1192,6 +1194,44 @@ describe('private persistent work conversations', () => {
       [owner],
     )
     expect(traces[0]!['count']).toBeGreaterThanOrEqual(2)
+  })
+
+  it('repairs a known wrong entity identity before presenting a proposal', async () => {
+    let calls = 0
+    const model = new MockProvider({
+      respond: () => {
+        calls++
+        const result = response('Review the requested deletion', [])
+        result.toolCalls[0]!.argumentsJson = JSON.stringify({
+          content: 'Review the requested deletion',
+          citations: [],
+          actions: [
+            {
+              kind: 'card.delete',
+              title: 'Delete audit card',
+              summary: 'Delete the requested card',
+              arguments: { id: calls === 1 ? projectId : cardId },
+            },
+          ],
+        })
+        return result
+      },
+    })
+    __setProviderForTests(model)
+    const conversation = await create()
+    const pending = await submit(conversation.id, 'Delete the audit card')
+    await chat.processConversation(pending.job!)
+    const saved = await chat.getConversation(ctx, conversation.id)
+    expect(model.calls).toHaveLength(2)
+    expect(model.calls[1]!.messages[0]!.content).toContain('invalid target identities')
+    expect(saved.messages.at(-1)?.proposals).toMatchObject([
+      { arguments: { id: cardId }, status: 'pending' },
+    ])
+    expect(
+      (await superuserQuery(db, 'select deleted_at from app.cards where id=$1', [cardId]))[0]![
+        'deleted_at'
+      ],
+    ).toBeNull()
   })
 
   it('falls back to the full schema after invalid compact proposals, without executing any change', async () => {

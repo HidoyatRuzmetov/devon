@@ -1,8 +1,8 @@
 // Feature manifest for the work module (MODULE-GUIDE.md "Web features"): routes, the sidebar entry,
 // and command-palette entries. Every screen component is `React.lazy` so a session that never opens
 // `/work` never pays for this feature's bundle.
+import { KanbanSquare } from 'lucide-react'
 import * as React from 'react'
-import { GaugeCircle, KanbanSquare, Target } from 'lucide-react'
 import { queryClient } from '../../lib/query-client.js'
 import type { FeatureManifest } from '../types.js'
 
@@ -15,45 +15,6 @@ const LegacyArchiveScreen = React.lazy(() => import('./components/legacy-archive
 const CardPageScreen = React.lazy(() => import('./components/card-page-screen.js'))
 // v1.1 SPEC §7: the three screens the work-plus features earned of their own.
 const TemplatesScreen = React.lazy(() => import('./components/templates-screen.js'))
-const WorkloadRoute = React.lazy(async () => {
-  const [{ default: WorkloadScreen }, { DepartmentFeatureScreen }] = await Promise.all([
-    import('./components/workload-screen.js'),
-    import('../../lib/department-feature-screen.js'),
-  ])
-  return {
-    default: function WorkloadRoute() {
-      return (
-        <DepartmentFeatureScreen
-          feature="workload"
-          action="work.workload.read"
-          deniedBodyKey="goalsControls.workloadDenied"
-        >
-          <WorkloadScreen />
-        </DepartmentFeatureScreen>
-      )
-    },
-  }
-})
-const GoalsRoute = React.lazy(async () => {
-  const [{ default: GoalsScreen }, { DepartmentFeatureScreen }] = await Promise.all([
-    import('./components/goals-screen.js'),
-    import('../../lib/department-feature-screen.js'),
-  ])
-  return {
-    default: function GoalsRoute() {
-      return (
-        <DepartmentFeatureScreen
-          feature="goals"
-          action="goals.read"
-          deniedBodyKey="work.goals.forbiddenBody"
-        >
-          <GoalsScreen />
-        </DepartmentFeatureScreen>
-      )
-    },
-  }
-})
-
 const manifest: FeatureManifest = {
   name: 'work',
   routes: [
@@ -68,9 +29,7 @@ const manifest: FeatureManifest = {
       titleKey: 'work.mine.completedAndArchived',
     },
     { path: '/work/card', component: CardPageScreen, titleKey: 'work.card.peekTitle' },
-    { path: '/work/workload', component: WorkloadRoute, titleKey: 'work.workload.title' },
     { path: '/work/templates', component: TemplatesScreen, titleKey: 'work.templates.title' },
-    { path: '/goals', component: GoalsRoute, titleKey: 'work.goals.title' },
   ],
   // H5.2 "prefetch on hover/focus": warms the board query before the click that navigates here.
   sidebar: [
@@ -85,23 +44,6 @@ const manifest: FeatureManifest = {
           .then(({ prefetchBoard }) => prefetchBoard(queryClient))
           .catch(() => {})
       },
-    },
-    // v1.1 SPEC §3.1: two of the six destinations `shell/nav.ts`'s `manage-head` group reserves ids
-    // for. Both declare a head-only action, so the entries -- and the group heading with them --
-    // simply do not exist for a xodim, resolved by the same `can()` the routes declare.
-    {
-      id: 'workload',
-      labelKey: 'work.workload.title',
-      icon: GaugeCircle,
-      route: '/work/workload',
-      action: 'work.workload.read',
-    },
-    {
-      id: 'goals',
-      labelKey: 'work.goals.title',
-      icon: Target,
-      route: '/goals',
-      action: 'goals.read',
     },
   ],
   commands: [

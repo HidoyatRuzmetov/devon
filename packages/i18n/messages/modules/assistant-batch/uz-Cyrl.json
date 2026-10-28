@@ -1,0 +1,47 @@
+{
+  "assistantBatch": {
+    "review": "Ўзгаришларни текшириш",
+    "select": "Киритиш: {title}",
+    "selected": "{total} тадан {selected} та танланди",
+    "confirm": "Танланганларни тасдиқлаш",
+    "discardAll": "Барчасини бекор қилиш",
+    "unselected": "Танланмаган ўзгаришлар бекор қилинади.",
+    "details": "Тафсилотлар",
+    "hideDetails": "Тафсилотларни яшириш",
+    "save": "Ўзгаришларни сақлаш",
+    "cancel": "Бекор қилиш",
+    "askChange": "Ёрдамчидан қайта ишлашни сўраш",
+    "editError": "Сақланмади. Қийматларни текширинг ёки таклиф ўзгарган бўлса саҳифани янгиланг.",
+    "openResult": "Натижани очиш",
+    "change": "Ўзгариш",
+    "checklistCount": "{count} та рўйхат банди",
+    "backToChat": "Ёрдамчига қайтиш",
+    "dependsOn": "Боғлиқ: {title}",
+    "dependencyFailed": "Керакли олдинги ўзгариш бажарилмагани учун қўлланмади.",
+    "kinds": {
+      "card_withChecklist": "Вазифа ва бандлар",
+      "card_assignMany": "Аъзоларга вазифа бериш",
+      "checkin_add": "Check-inга қўшиш",
+      "checkin_update": "Натижани таҳрирлаш",
+      "checkin_remove": "Check-inдан чиқариш",
+      "checkin_lock": "Босқични ёпиш",
+      "personal_calendar_create": "Шахсий тақвимга қўшиш",
+      "personal_calendar_update": "Тақвим ёзувини таҳрирлаш",
+      "personal_calendar_delete": "Тақвим ёзувини ўчириш"
+    },
+    "fields": {
+      "existingCardId": "Мавжуд вазифа",
+      "create": "Янги вазифа",
+      "checklist": "Бандлар",
+      "recipientUserIds": "Қабул қилувчилар",
+      "cycleId": "Давр",
+      "entryId": "Натижа",
+      "state": "Ҳолат",
+      "phase": "Босқич",
+      "remindAt": "Эслатма",
+      "allDay": "Кун бўйи",
+      "parentKey": "Асосий банд",
+      "key": "Банд ҳаволаси"
+    }
+  }
+}

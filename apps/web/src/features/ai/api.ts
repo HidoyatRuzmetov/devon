@@ -5,7 +5,6 @@ import {
   aiSettingsSchema,
   briefingResponseSchema,
   refreshBriefingResponseSchema,
-  askResponseSchema,
   reindexResponseSchema,
   runFeatureResponseSchema,
   searchBackendSchema,
@@ -13,10 +12,9 @@ import {
   usageListSchema,
   type AiFeatureId,
   type AiSettings,
-  type AskResponse,
   type BriefingResponse,
-  type RefreshBriefingResponse,
   type PatchAiSettingsInput,
+  type RefreshBriefingResponse,
   type RunFeatureResponse,
   type SearchBackend,
   type SearchHit,
@@ -68,14 +66,6 @@ export function searchDepartment(
 
 export function fetchSearchBackend(): Promise<SearchBackend> {
   return apiClient.get(`${BASE}/search/backend`, searchBackendSchema)
-}
-
-export function askDepartment(
-  question: string,
-  locale: 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en',
-  csrfToken: string,
-): Promise<AskResponse> {
-  return apiClient.post(`${BASE}/ask`, { question, locale }, askResponseSchema, csrfToken)
 }
 
 export function rebuildSearchIndex(

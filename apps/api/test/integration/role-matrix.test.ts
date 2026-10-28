@@ -55,20 +55,8 @@ const get = (path: string, session: Session) =>
 describe('head-only reads: a member gets 403, the head gets 200', () => {
   const headOnlyReads: { name: string; path: string }[] = [
     {
-      name: 'people indicators (SPEC §4.2)',
-      path: '/api/v1/people/indicators',
-    },
-    {
-      name: 'people indicator registry',
-      path: '/api/v1/people/indicators/registry',
-    },
-    {
       name: 'onboarding templates (D4c)',
       path: '/api/v1/pages/onboarding/templates',
-    },
-    {
-      name: 'per-person analytics CSV (D3b)',
-      path: '/api/v1/analytics/export.csv?chart=loadPerPerson',
     },
   ]
 
@@ -115,29 +103,14 @@ describe('list endpoints omit head-only fields for a member (D2, D3)', () => {
     for (const trace of asMember.traces) expect(trace.userId).toBe(memberUserId)
   })
 
-  it('analytics summary: a member sees only their own row on the person axis (D3a)', async () => {
-    const asMember = (await (await get('/api/v1/analytics/summary', member)).json()) as {
-      loadPerPerson: { userId: string }[]
-      loadPerUnit: unknown[]
-    }
-    for (const row of asMember.loadPerPerson) expect(row.userId).toBe(memberUserId)
-    // The unit-level aggregate is deliberately NOT narrowed: a bo'lim is a team, not a person.
-    expect(Array.isArray(asMember.loadPerUnit)).toBe(true)
-  })
-
-  it('the department aggregates a member may see are still there', async () => {
-    const asMember = (await (await get('/api/v1/analytics/summary', member)).json()) as Record<
-      string,
-      unknown
-    >
-    expect(asMember['throughput']).toBeDefined()
-    expect(asMember['onTimeRate']).toBeDefined()
-    expect(asMember['projectProgress']).toBeDefined()
-  })
-
-  it('a department-level CSV export a member may see still works', async () => {
-    const res = await get('/api/v1/analytics/export.csv?chart=throughput', member)
-    expect(res.status).toBe(200)
+  it('retired analytics endpoints are absent for both roles', async () => {
+    for (const actor of [member, head])
+      for (const path of [
+        '/api/v1/analytics/summary',
+        '/api/v1/analytics/export.csv',
+        '/api/v1/people/indicators',
+      ])
+        expect((await get(path, actor)).status).toBe(404)
   })
 })
 

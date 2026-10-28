@@ -11,11 +11,6 @@
 // (`FilterContext.resolveUserIds` / `resolveProjectIds` / ...), so the grammar itself stays a pure,
 // table-agnostic text-processing module, exactly like `permissions.ts`'s `can()`.
 //
-// The one intra-package import is `./custom-fields.js`, which is equally pure: v1.1 SPEC §5 puts
-// `field:<key>:<value>` into this grammar, and the key shape and the "empty" words belong next to the
-// field model rather than being retyped here.
-import { FIELD_KEY_RE, isFieldEmptyWord, type FieldValue } from './custom-fields.js'
-
 export type CardFilterStatus = 'active' | 'done' | 'archived'
 export type CompareOp = '<=' | '>=' | '<' | '>' | '='
 
@@ -27,11 +22,6 @@ export type FilterClause =
   | { kind: 'project'; name: string }
   | { kind: 'label'; name: string }
   | { kind: 'unit'; name: string }
-  /** v1.1 SPEC §5: `field:<key>:<value>` and `field:<key>:boʻsh`. `key` is a `FieldDef.key`
-   * (`custom-fields.ts`'s `FIELD_KEY_RE`), `value` is compared case-insensitively against the stored
-   * value -- an option id, a number, an ISO date, `ha`/`yoʻq` for a checkbox, or one member of a
-   * multi-select. `empty` is the "nobody has filled this in" form. */
-  | { kind: 'field'; key: string; value: string; empty: boolean }
   /** v1.1 critique SEV2 #3: `due:boʻsh` and `estimate:boʻsh` -- "the cards this grid cannot draw".
    * The workload view's header warning names two numbers ("37 ta kartada muddat yoʻq", "93 ta karta
    * baholanmagan") and both have to be clickable, which means the grammar needs a way to say "this
@@ -55,7 +45,6 @@ const KNOWN_KEYS = new Set([
   'project',
   'label',
   'unit',
-  'field',
   'estimate',
 ])
 const STATUS_VALUES = new Set<CardFilterStatus>(['active', 'done', 'archived'])
@@ -109,14 +98,14 @@ export function parseFilterQuery(input: string): FilterQuery {
         }
         case 'due':
           // `due:boʻsh` is "no due date at all", not a date comparison -- see the `empty` clause.
-          if (isFieldEmptyWord(value)) clauses.push({ kind: 'empty', field: 'due' })
+          if (isEmptyFilterWord(value)) clauses.push({ kind: 'empty', field: 'due' })
           else clauses.push({ kind: 'due', ...parseDueValue(value) })
           break
         case 'estimate':
           // The only `estimate:` form the grammar defines is "unestimated". A numeric comparison
           // would need units in four locales for a filter nobody has asked for; a typo falls through
           // to free text rather than being silently dropped, exactly like every other key here.
-          if (isFieldEmptyWord(value)) clauses.push({ kind: 'empty', field: 'estimate' })
+          if (isEmptyFilterWord(value)) clauses.push({ kind: 'empty', field: 'estimate' })
           else clauses.push({ kind: 'text', value: match[0] })
           break
         case 'project':
@@ -128,24 +117,6 @@ export function parseFilterQuery(input: string): FilterQuery {
         case 'unit':
           clauses.push({ kind: 'unit', name: value })
           break
-        case 'field': {
-          // `field:<key>:<rest>` -- split at the FIRST colon only, so an option label containing one
-          // (`field:stage:2:tayyor`) keeps its own colons instead of being silently truncated.
-          const colon = value.indexOf(':')
-          const key = (colon === -1 ? value : value.slice(0, colon)).toLowerCase()
-          const rest = colon === -1 ? '' : value.slice(colon + 1)
-          if (!FIELD_KEY_RE.test(key)) {
-            clauses.push({ kind: 'text', value: match[0] })
-            break
-          }
-          clauses.push({
-            kind: 'field',
-            key,
-            value: rest,
-            empty: rest.length === 0 || isFieldEmptyWord(rest),
-          })
-          break
-        }
       }
       continue
     }
@@ -183,10 +154,6 @@ export function serializeFilterQuery(clauses: readonly FilterClause[]): string {
           return `label:${quoteIfNeeded(c.name)}`
         case 'unit':
           return `unit:${quoteIfNeeded(c.name)}`
-        case 'field':
-          // The quotes go around `<key>:<value>`, not around the whole token, so the result still
-          // matches this grammar's own `key:"quoted value"` form when the value contains a space.
-          return `field:${quoteIfNeeded(`${c.key}:${c.empty && !c.value ? 'boʻsh' : c.value}`)}`
         case 'empty':
           return `${c.field}:boʻsh`
         case 'text':
@@ -274,7 +241,6 @@ export type FilterableCard = {
   /** v1.1 SPEC §5: this card's custom-field values, keyed by `FieldDef.key`. Absent on a caller that
    * has not loaded them -- every `field:` clause then simply matches nothing, which is the
    * fail-closed direction for a filter. */
-  fieldValues?: Readonly<Record<string, FieldValue>>
   /** Minutes. Absent on a caller that has not loaded estimates, in which case `estimate:boʻsh`
    * matches nothing -- the fail-closed direction for a filter. */
   estimateMin?: number | null
@@ -323,51 +289,6 @@ function personMatches(candidateUserId: string | null, token: string, ctx: Filte
   return ids.includes(candidateUserId)
 }
 
-/** Truthy words a checkbox answers to, in the four locales, so `field:onboarded:ha` works for a
- * person typing Uzbek and `field:onboarded:yes` for a person typing English. */
-const TRUE_WORDS = new Set(['true', '1', 'ha', 'ҳа', 'да', 'yes', 'bor', 'бор'])
-const FALSE_WORDS = new Set(['false', '0', "yo'q", 'yoʻq', 'йўқ', 'нет', 'no', 'yuq'])
-
-function fieldMatches(
-  value: FieldValue | undefined,
-  clause: Extract<FilterClause, { kind: 'field' }>,
-): boolean {
-  const missing =
-    value === undefined ||
-    value === null ||
-    (typeof value === 'string' && value.trim() === '') ||
-    (Array.isArray(value) && value.length === 0)
-  if (clause.empty) return missing
-  if (missing) return false
-
-  const needle = clause.value
-    .trim()
-    .toLowerCase()
-    .replace(/[ʻʼ‘’]/g, "'")
-
-  if (typeof value === 'boolean') {
-    if (TRUE_WORDS.has(needle)) return value
-    if (FALSE_WORDS.has(needle)) return !value
-    return false
-  }
-  if (Array.isArray(value)) {
-    return value.some(
-      (v) =>
-        String(v)
-          .toLowerCase()
-          .replace(/[ʻʼ‘’]/g, "'") === needle,
-    )
-  }
-  return (
-    String(value)
-      .toLowerCase()
-      .replace(/[ʻʼ‘’]/g, "'") === needle
-  )
-}
-
-/** Pure, synchronous evaluator -- no I/O, so it runs identically for an optimistic client-side update
- * and a unit test. AND semantics across every clause (including repeated free-text tokens), matching
- * how a filter bar accumulates tokens as someone types more of them. */
 export function matchesFilterQuery(
   card: FilterableCard,
   query: FilterQuery,
@@ -390,8 +311,6 @@ export function matchesFilterQuery(
         return (card.labelNames ?? []).some((l) => l.toLowerCase() === clause.name.toLowerCase())
       case 'unit':
         return (card.unitName ?? '').toLowerCase() === clause.name.toLowerCase()
-      case 'field':
-        return fieldMatches(card.fieldValues?.[clause.key], clause)
       case 'empty':
         return clause.field === 'due'
           ? card.dueAt === null || card.dueAt === undefined
@@ -414,4 +333,23 @@ export function cardMatchesFilterText(
   ctx: FilterContext = {},
 ): boolean {
   return matchesFilterQuery(card, parseFilterQuery(filterText), ctx)
+}
+
+const EMPTY_FILTER_WORDS: readonly string[] = [
+  'bosh',
+  "bo'sh",
+  'boʻsh',
+  'бўш',
+  'буш',
+  'пусто',
+  'empty',
+  'none',
+]
+
+function isEmptyFilterWord(value: string): boolean {
+  const v = value
+    .trim()
+    .toLowerCase()
+    .replace(/[ʻʼ‘’]/g, "'")
+  return EMPTY_FILTER_WORDS.some((w) => w.toLowerCase().replace(/[ʻʼ]/g, "'") === v)
 }

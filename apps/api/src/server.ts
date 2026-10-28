@@ -1,15 +1,17 @@
 // Process entry point. The only file in this package allowed to read `process.env` or open a real
 // database connection -- everything else takes `Config`/`Deps` as parameters (see `src/app.ts`).
 import { startEventsWorker } from '@devon/db'
-import { loadConfig } from './config.js'
 import { buildApp } from './app.js'
-import { createRepo } from './db/repo.js'
 import { printSetupUrlIfNeeded } from './bootstrap/print-setup-url.js'
-import { startEventReminderWorker } from './modules/events/reminder-worker.js'
-import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
-import { startScanRetryWorker } from './modules/accounts/scan-retry-worker.js'
-import { registerGracefulShutdown } from './plugins/shutdown.js'
+import { loadConfig } from './config.js'
+import { createRepo } from './db/repo.js'
 import { installFatalHandlers } from './lib/fatal.js'
+import { startScanRetryWorker } from './modules/accounts/scan-retry-worker.js'
+import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
+import { startCheckinWorker } from './modules/checkins/worker.js'
+import { startEventReminderWorker } from './modules/events/reminder-worker.js'
+import { startPersonalCalendarWorker } from './modules/personal/calendar-worker.js'
+import { registerGracefulShutdown } from './plugins/shutdown.js'
 
 async function main(): Promise<void> {
   const config = loadConfig(process.env)
@@ -28,6 +30,10 @@ async function main(): Promise<void> {
   const reminderWorker = startEventReminderWorker({
     onError: (err) => app.log.error(err, 'event reminder scan failed'),
   })
+  const personalCalendarWorker = startPersonalCalendarWorker((err) =>
+    app.log.error(err, 'personal calendar scheduler failed'),
+  )
+  const checkinWorker = startCheckinWorker((err) => app.log.error(err, 'check-in scheduler failed'))
   // EPIC-001 storage plugin: hourly retention sweep of abandoned presigned uploads (TECH-SPEC §6
   // `retention.sweep`), same start-here-only rule as the two workers above.
   const uploadSweeper = startUploadSweeper(app, {
@@ -42,6 +48,8 @@ async function main(): Promise<void> {
   app.addHook('onClose', async () => {
     outboxWorker.stop()
     reminderWorker.stop()
+    personalCalendarWorker.stop()
+    checkinWorker.stop()
     uploadSweeper.stop()
     scanRetryWorker.stop()
   })

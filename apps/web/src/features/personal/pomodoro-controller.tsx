@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { useMeQuery } from '../../lib/session.js'
-import { usePomodoroSettingsQuery } from './use-personal.js'
 import { usePomodoroControls } from './pomodoro-controls.js'
 import {
   remainingMs,
@@ -8,6 +7,7 @@ import {
   usePomodoroRemainingSec,
   usePomodoroState,
 } from './pomodoro-engine.js'
+import { usePomodoroSettingsQuery } from './use-personal.js'
 
 /** One automatic completion boundary stays mounted across routes, scoped to the current owner. */
 export function PomodoroController() {
@@ -31,7 +31,7 @@ function OwnedPomodoroController() {
     }
     if (handledEnd.current || state.busy || !state.sessionId || state.pendingEnd) return
     handledEnd.current = true
-    controls.finish(true, settings, state.taskId)
+    controls.finish(true, settings)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the receipt boundary reads current owner/state; ticks arm only one automatic end.
   }, [state, remainingSec, settings])
   return null

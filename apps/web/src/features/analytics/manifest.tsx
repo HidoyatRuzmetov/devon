@@ -1,8 +1,8 @@
-import * as React from 'react'
 import { BarChart3 } from 'lucide-react'
+import * as React from 'react'
 import type { FeatureManifest } from '../types.js'
 
-const AnalyticsScreen = React.lazy(() => import('./analytics-screen.js'))
+const AnalyticsScreen = React.lazy(() => import('./checkin-screen.js'))
 
 const manifest: FeatureManifest = {
   name: 'analytics',
@@ -10,21 +10,20 @@ const manifest: FeatureManifest = {
     {
       path: '/analytics',
       component: AnalyticsScreen,
-      titleKey: 'analytics.title',
+      titleKey: 'checkins.title',
     },
   ],
-  // SPEC §2.2: department and unit aggregates are for everyone; the person-axis charts inside are
-  // head-only and the screen hides them (`analytics-screen.tsx`), so the entry itself stays open.
+  // Shared deliverables are visible to every member; cycle agreement remains head-only.
   sidebar: [
     {
       id: 'analytics',
-      labelKey: 'analytics.title',
+      labelKey: 'checkins.title',
       icon: BarChart3,
       route: '/analytics',
       action: 'analytics.department.read',
     },
   ],
-  commands: [{ id: 'analytics.open', labelKey: 'analytics.title', path: '/analytics' }],
+  commands: [{ id: 'analytics.open', labelKey: 'checkins.title', path: '/analytics' }],
 }
 
 export default manifest

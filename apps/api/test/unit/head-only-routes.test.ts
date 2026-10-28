@@ -23,71 +23,12 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/departments/:id/join-requests/:userId/reject',
   'POST /api/v1/departments/:id/join-requests/:userId/undo',
   'POST /api/v1/departments/:id/members/:userId/reset-password',
-  'GET /api/v1/people/indicators',
-  'GET /api/v1/people/indicators/registry',
-  // v1.1 SPEC §4.3: the people table's saved views and its audited CSV export are the table itself,
-  // so they carry the table's gate.
-  'GET /api/v1/people/views',
-  'POST /api/v1/people/views',
-  'PATCH /api/v1/people/views/:id',
-  'DELETE /api/v1/people/views/:id',
-  'GET /api/v1/people/export.csv',
-  // The Telegram deep links behind the table's "message" row action: a colleague's chat handle is a
-  // management fact (PERMISSIONS-AUDIT §4.13), not something the directory hands every member.
-  'GET /api/v1/people/contacts',
-  // v1.1 SPEC §6: the person page. The subject *kind* below is what the boot-time probe resolves
-  // (`params: {}` -> not 'me' -> head-only), which is the honest default; the same declaration
-  // narrows to `{kind:'own_account'}` for the literal path `/people/me/...`, the one person page a
-  // xodim may open -- see `apps/api/src/modules/people/index.ts`'s `personSubject`.
-  'GET /api/v1/people/:userId/overview',
-  'GET /api/v1/people/:userId/cards',
-  'GET /api/v1/people/:userId/activity',
   'POST /api/v1/labels',
-  // v1.1 SPEC §5 -- custom fields. Defining a column on the people table, reordering it, archiving it
-  // and asking the whole boshqarma to fill it in are management acts; reading the definitions and
-  // writing an answer are not, and are deliberately absent from this list.
-  'POST /api/v1/fields/defs',
-  'PATCH /api/v1/fields/defs/:id',
-  'POST /api/v1/fields/defs/reorder',
-  'POST /api/v1/fields/defs/:id/archive',
-  'POST /api/v1/fields/defs/:id/restore',
-  'POST /api/v1/fields/defs/:id/notify',
-  'POST /api/v1/fields/notify',
-  // v1.1 critique SEV1 #1. `GET /fields/values` used to be `department_child` -- any active member,
-  // every action -- and a xodim could read all 27 colleagues' answers. The subject is now decided by
-  // the *shape of the query*: `subjectType=card` stays department-transparent, a query that names
-  // only the caller in `userIds` narrows to `{kind:'owned'}`, and everything else -- including the
-  // boot-time probe's empty request, which is what this line records -- is per-person analytics and
-  // therefore head-only (SPEC §2.1). Same honest-default pattern as `GET /people/:userId/overview`
-  // two dozen lines above.
-  'GET /api/v1/fields/values',
-  // v1.1 SPEC §7 (work-plus). The workload grid is head-only by decision (§2.2: "a member sees
-  // their own load on Home and on their own person page. No leaderboard anywhere") -- a member's
-  // own row comes from `GET /api/v1/work/workload/mine`, which is `department_child` and cannot be
-  // widened to anybody else.
-  'GET /api/v1/work/workload',
-  'POST /api/v1/work/workload/move',
-  // A11: a goal is management data -- what the department is being measured on, and by whom.
-  'GET /api/v1/goals',
-  'POST /api/v1/goals',
-  'PATCH /api/v1/goals/:id',
-  'DELETE /api/v1/goals/:id',
-  // EPIC-017: a xodim never learns that a rule exists; they only see its effect.
-  'GET /api/v1/automations',
-  'POST /api/v1/automations',
-  'PATCH /api/v1/automations/:id',
-  'DELETE /api/v1/automations/:id',
-  'GET /api/v1/automations/runs',
-  'POST /api/v1/automations/pause-all',
-  // EPIC-016: rebuilding the AI search index re-embeds the department's rows, so its only visible
-  // effect is on AI spend -- it belongs with the budget, which is the head's.
   'POST /api/v1/ai/search/reindex',
-  // v1.1 recapture #23: the department briefing reads the whole boshqarma's week -- who is late,
-  // who is overloaded -- which SPEC §2.2 makes a head's question. Reading the cached one is as
-  // managerial as asking for a new one, so both ends carry the same gate.
   'GET /api/v1/ai/briefing',
   'POST /api/v1/ai/briefing/refresh',
-  // Members and heads each have private chats; owner isolation is exercised in ai-conversations.
+  'POST /api/v1/cards/assign-many',
+  'POST /api/v1/checkins/cycles/:id/lock',
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud

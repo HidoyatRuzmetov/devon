@@ -1,31 +1,8 @@
-// The Pomodoro tab (TECH-SPEC §3.3, UI-OVERHAUL.md "Personal workspace": "Pomodoro ring with big
-// time and one button"): the big animated ring in the phase's own colour, one primary button, cycle
-// dots, a quick sound mute toggle, settings behind a sheet, then stats and the session log.
-//
-// The global controller detects automatic phase completion across routes. Both surfaces use the
-// shared controller, which persists the session receipt before advancing and owns the shared
-// pending boundary. The panel does not duplicate automatic completion effects.
-import * as React from 'react'
-import { useT, useLocale, formatDate, formatNumber } from '@devon/i18n'
+// A dedicated timer. The shared controller owns phase transitions and recovery receipts.
+import { useT } from '@devon/i18n'
 import {
-  Flame,
-  ListChecks,
-  Pause,
-  Play,
-  Settings2,
-  SkipForward,
-  Square,
-  Timer,
-  Volume2,
-  VolumeX,
-} from 'lucide-react'
-import {
-  Badge,
   Button,
   IconButton,
-  KpiTile,
-  ProgressRing,
-  Separator,
   Sheet,
   SheetContent,
   SheetTrigger,
@@ -33,22 +10,21 @@ import {
   cn,
   toast,
 } from '@devon/ui'
+import { Pause, Play, Settings2, Sparkles, Square, Volume2, VolumeX } from 'lucide-react'
+import * as React from 'react'
+import { usePomodoroControls, useSavePomodoroSettings } from './pomodoro-controls.js'
+import { PomodoroCharacter } from './pomodoro-character.js'
 import {
-  PHASE_RING_TONE,
   pause as pauseEngine,
   resume as resumeEngine,
   usePomodoroRemainingSec,
   usePomodoroState,
   type PomodoroPhase,
 } from './pomodoro-engine.js'
-import {
-  usePomodoroSessionsQuery,
-  usePomodoroSettingsQuery,
-  usePomodoroStatsQuery,
-} from './use-personal.js'
-import { usePomodoroControls, useSavePomodoroSettings } from './pomodoro-controls.js'
-import { groupSessionsByDay, relativeDayLabelKey, sessionDurationMin } from './lib/pomodoro-log.js'
-import type { PomodoroKind, PomodoroSession, PomodoroSettings } from './types.js'
+import type { PomodoroSettings } from './types.js'
+import { usePomodoroSettingsQuery } from './use-personal.js'
+
+import './pomodoro-studio.css'
 
 const SOUNDS: PomodoroSettings['sound'][] = ['chime', 'bell', 'digital', 'none']
 
@@ -64,11 +40,6 @@ function formatCountdown(ms: number): string {
   const m = Math.floor(totalSeconds / 60)
   const s = totalSeconds % 60
   return `${m}:${String(s).padStart(2, '0')}`
-}
-
-function formatClock(iso: string): string {
-  const d = new Date(iso)
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
 function SettingsSheet({ settings }: { settings: PomodoroSettings }) {
@@ -217,12 +188,9 @@ function SettingsSheet({ settings }: { settings: PomodoroSettings }) {
   )
 }
 
-export function PomodoroPanel({ activeTaskId }: { activeTaskId?: string | null }) {
+export function PomodoroPanel() {
   const t = useT()
-  const locale = useLocale()
   const settingsQuery = usePomodoroSettingsQuery()
-  const sessionsQuery = usePomodoroSessionsQuery()
-  const statsQuery = usePomodoroStatsQuery()
   const patchSettings = useSavePomodoroSettings()
   const controls = usePomodoroControls()
   const state = usePomodoroState()
@@ -230,6 +198,19 @@ export function PomodoroPanel({ activeTaskId }: { activeTaskId?: string | null }
   // object reference 4x/s, so the ring and the clock below would never re-render without this.
   const remainingSec = usePomodoroRemainingSec()
   const lastSoundRef = React.useRef<PomodoroSettings['sound']>('chime')
+  const [selectedPhase, setSelectedPhase] = React.useState<Exclude<PomodoroPhase, 'idle'>>('focus')
+  const [animate, setAnimate] = React.useState(true)
+  const [completed, setCompleted] = React.useState(false)
+  const previousCompletion = React.useRef(state.completedFocusId)
+  React.useEffect(() => {
+    const advanced =
+      !!state.completedFocusId && state.completedFocusId !== previousCompletion.current
+    previousCompletion.current = state.completedFocusId
+    if (!advanced) return
+    setCompleted(true)
+    const timeout = setTimeout(() => setCompleted(false), 2600)
+    return () => clearTimeout(timeout)
+  }, [state.completedFocusId])
 
   if (settingsQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (settingsQuery.isError) {
@@ -243,7 +224,6 @@ export function PomodoroPanel({ activeTaskId }: { activeTaskId?: string | null }
     )
   }
   const settings = settingsQuery.data
-  const stats = statsQuery.data
   if (settings.sound !== 'none') lastSoundRef.current = settings.sound
 
   const running = state.phase !== 'idle'
@@ -251,67 +231,108 @@ export function PomodoroPanel({ activeTaskId }: { activeTaskId?: string | null }
   const remaining = remainingSec * 1000
   const total = running ? state.durationMs : 0
   const ringValue = running && total > 0 ? 100 - (remaining / total) * 100 : 0
-  const displayMs = running ? remaining : settings.focusMin * 60_000
+  const activePhase = running ? state.phase : selectedPhase
+  const minutes =
+    selectedPhase === 'focus'
+      ? settings.focusMin
+      : selectedPhase === 'short_break'
+        ? settings.shortBreakMin
+        : settings.longBreakMin
+  const displayMs = running ? remaining : minutes * 60_000
 
   function start(kind: 'focus' | 'short_break' | 'long_break') {
-    controls.start(kind, settings, activeTaskId ?? null)
+    controls.start(kind, settings)
   }
 
   function skip() {
-    controls.finish(false, settings, state.taskId)
+    controls.finish(false, settings)
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col items-center gap-4 rounded-md border border-border bg-card py-10">
-        <div className="flex w-full items-center justify-end px-5">
-          <IconButton
-            disabled={patchSettings.isPending}
-            aria-label={t(
-              settings.sound === 'none'
-                ? 'personal.pomodoro.sound.muteOff'
-                : 'personal.pomodoro.sound.muteOn',
-            )}
-            onClick={() =>
-              patchSettings.mutate(
-                {
-                  sound: settings.sound === 'none' ? lastSoundRef.current : 'none',
-                },
-                { onError: () => toast.error(t('toast.saveError')) },
-              )
-            }
-          >
-            {settings.sound === 'none' ? (
-              <VolumeX className="size-4" aria-hidden="true" />
-            ) : (
-              <Volume2 className="size-4" aria-hidden="true" />
-            )}
-          </IconButton>
-          <SettingsSheet settings={settings} />
+    <div className="pomodoro-studio" data-phase={activePhase} data-running={running && !paused}>
+      <section className="pomodoro-stage" aria-label={t('personal.tabs.pomodoro')}>
+        <div className="pomodoro-toolbar">
+          <div className="pomodoro-modes" role="group" aria-label={t('pomodoroStudio.mode')}>
+            {(['focus', 'short_break', 'long_break'] as const).map((phase) => (
+              <button
+                key={phase}
+                type="button"
+                disabled={running || state.busy}
+                aria-pressed={activePhase === phase}
+                onClick={() => setSelectedPhase(phase)}
+              >
+                {t(PHASE_LABEL_KEY[phase])}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1">
+            <IconButton
+              aria-label={t('pomodoroStudio.animation')}
+              aria-pressed={animate}
+              onClick={() => setAnimate((value) => !value)}
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+            </IconButton>
+            <IconButton
+              disabled={patchSettings.isPending}
+              aria-label={t(
+                settings.sound === 'none'
+                  ? 'personal.pomodoro.sound.muteOff'
+                  : 'personal.pomodoro.sound.muteOn',
+              )}
+              onClick={() =>
+                patchSettings.mutate(
+                  {
+                    sound: settings.sound === 'none' ? lastSoundRef.current : 'none',
+                  },
+                  { onError: () => toast.error(t('toast.saveError')) },
+                )
+              }
+            >
+              {settings.sound === 'none' ? (
+                <VolumeX className="size-4" aria-hidden="true" />
+              ) : (
+                <Volume2 className="size-4" aria-hidden="true" />
+              )}
+            </IconButton>
+            <SettingsSheet settings={settings} />
+          </div>
         </div>
 
-        {/* DESIGN.md §10 "Pomodoro | Animated ring stroke, phase colour crossfade | 1 s per tick".
-            The default `settle` tween eased the arc over 220 ms and then held it still for 780 ms,
-            once a second, for twenty-five minutes -- a lurch, not a clock. `sweep="tick"` runs the
-            arc linearly over exactly the tick interval, so it reads as a second hand. The phase
-            colour crossfade comes from the ring itself. */}
-        <ProgressRing
-          value={ringValue}
-          size={220}
-          strokeWidth={10}
-          sweep={state.phase === 'idle' ? 'settle' : 'tick'}
-          label={t(PHASE_LABEL_KEY[state.phase])}
-          toneClassName={PHASE_RING_TONE[state.phase]}
-        >
-          <div className="flex flex-col items-center gap-1">
-            <span className="font-display text-h1 tabular-nums text-foreground">
-              {formatCountdown(displayMs)}
-            </span>
-            <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-              {t(PHASE_LABEL_KEY[state.phase])}
-            </span>
+        <div className="pomodoro-centerpiece">
+          <PomodoroCharacter
+            phase={activePhase}
+            paused={paused}
+            animate={animate}
+            completed={completed}
+          />
+          <div className="pomodoro-dial">
+            <div className="pomodoro-clock-face">
+              <span className="pomodoro-phase">{t(PHASE_LABEL_KEY[activePhase])}</span>
+              <span
+                className="pomodoro-clock"
+                role="timer"
+                aria-label={t(PHASE_LABEL_KEY[activePhase])}
+              >
+                {formatCountdown(displayMs)}
+              </span>
+              <span className="pomodoro-caption">
+                {t(
+                  paused
+                    ? 'pomodoroStudio.paused'
+                    : activePhase === 'focus'
+                      ? 'pomodoroStudio.focusHint'
+                      : 'pomodoroStudio.breakHint',
+                )}
+              </span>
+            </div>
+            <div className="pomodoro-time-track" aria-hidden="true">
+              <span
+                style={{ transform: `scaleX(${Math.min(100, Math.max(0, ringValue)) / 100})` }}
+              />
+            </div>
           </div>
-        </ProgressRing>
+        </div>
 
         <div className="flex items-center gap-1.5" aria-hidden="true">
           {Array.from({ length: settings.cyclesBeforeLong }).map((_, i) => (
@@ -327,16 +348,16 @@ export function PomodoroPanel({ activeTaskId }: { activeTaskId?: string | null }
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="pomodoro-main-controls">
           {!running ? (
             <Button
               size="lg"
               disabled={state.busy}
               loading={state.busy}
-              onClick={() => start('focus')}
+              onClick={() => start(selectedPhase)}
             >
               <Play className="size-5" aria-hidden="true" />
-              {t('personal.pomodoro.action.startFocus')}
+              {t('pomodoroStudio.start')}
             </Button>
           ) : (
             <>
@@ -355,14 +376,6 @@ export function PomodoroPanel({ activeTaskId }: { activeTaskId?: string | null }
                   {t('personal.pomodoro.action.pause')}
                 </Button>
               )}
-              <IconButton
-                aria-label={t('personal.pomodoro.action.skip')}
-                onClick={skip}
-                disabled={state.busy}
-                size="touch"
-              >
-                <SkipForward className="size-5" aria-hidden="true" />
-              </IconButton>
               <IconButton
                 aria-label={t('personal.pomodoro.action.stop')}
                 onClick={skip}
@@ -385,224 +398,8 @@ export function PomodoroPanel({ activeTaskId }: { activeTaskId?: string | null }
             </Button>
           </div>
         ) : null}
-
-        {!running ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={state.busy}
-            onClick={() => start('short_break')}
-          >
-            {t('personal.pomodoro.action.startShortBreak')}
-          </Button>
-        ) : null}
-      </div>
-
-      {statsQuery.isError ? (
-        <StateView
-          kind="error"
-          titleKey="state.error.title"
-          bodyKey="state.error.body"
-          action={{ labelKey: 'state.error.action', onAction: () => statsQuery.refetch() }}
-          compact
-        />
-      ) : null}
-      {stats ? (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
-          <KpiTile
-            label={t('personal.pomodoro.stats.todayFocus')}
-            value={stats.today.focusMinutes}
-            locale={locale}
-            suffix={` ${t('personal.pomodoro.stats.minutesShort')}`}
-          />
-          <KpiTile
-            label={t('personal.pomodoro.stats.todaySessions')}
-            value={stats.today.focusSessions}
-            locale={locale}
-          />
-          <KpiTile
-            label={t('personal.pomodoro.stats.weekFocus')}
-            value={stats.week.focusMinutes}
-            locale={locale}
-            suffix={` ${t('personal.pomodoro.stats.minutesShort')}`}
-          />
-          <KpiTile
-            label={t('personal.pomodoro.stats.weekSessions')}
-            value={stats.week.focusSessions}
-            locale={locale}
-          />
-        </div>
-      ) : null}
-
-      <Separator />
-
-      <SessionLog
-        sessions={sessionsQuery.data}
-        isPending={sessionsQuery.isPending}
-        isError={sessionsQuery.isError}
-        onRetry={() => sessionsQuery.refetch()}
-        locale={locale}
-      />
+      </section>
     </div>
-  )
-}
-
-const PHASE_KIND_LABEL_KEY: Record<PomodoroKind, string> = {
-  focus: 'personal.pomodoro.phase.focus',
-  short_break: 'personal.pomodoro.phase.shortBreak',
-  long_break: 'personal.pomodoro.phase.longBreak',
-}
-
-const DAY_GROUPS_COLLAPSED = 3
-
-/** Package report item 40: the flat 13-row list read as the same handful of clock times repeating
- * with no day separator ("09:00 - 09:30" on Monday looks identical to "09:00 - 09:30" on Tuesday).
- * Grouped by calendar day with a relative heading (Bugun/Kecha/date) instead, each row keeping its
- * focus-vs-break label and clock range but adding the session's actual duration, and the
- * completed/skipped indicator now a tinted pill (item 14) rather than plain coloured text. Only the
- * most recent `DAY_GROUPS_COLLAPSED` days show by default, consistent with the critique's own
- * "show only the last three days with a 'show more'". */
-function SessionLog({
-  sessions,
-  isPending,
-  isError,
-  onRetry,
-  locale,
-}: {
-  sessions: readonly PomodoroSession[] | undefined
-  isPending: boolean
-  isError: boolean
-  onRetry: () => void
-  locale: ReturnType<typeof useLocale>
-}) {
-  const t = useT()
-  const [expanded, setExpanded] = React.useState(false)
-
-  if (isError)
-    return (
-      <section className="flex flex-col gap-3">
-        <h3 className="text-h3 text-foreground">{t('personal.pomodoro.log.title')}</h3>
-        <StateView
-          kind="error"
-          titleKey="state.error.title"
-          bodyKey="state.error.body"
-          action={{ labelKey: 'state.error.action', onAction: onRetry }}
-          compact
-        />
-      </section>
-    )
-
-  if (isPending) {
-    return (
-      <section className="flex flex-col gap-3">
-        <h3 className="text-h3 text-foreground">{t('personal.pomodoro.log.title')}</h3>
-        <StateView kind="loading" titleKey="state.loading" />
-      </section>
-    )
-  }
-
-  if (!sessions || sessions.length === 0) {
-    return (
-      <section className="flex flex-col gap-3">
-        <h3 className="text-h3 text-foreground">{t('personal.pomodoro.log.title')}</h3>
-        <StateView
-          kind="empty"
-          titleKey="personal.pomodoro.log.empty.title"
-          bodyKey="personal.pomodoro.log.empty.body"
-        />
-      </section>
-    )
-  }
-
-  const groups = groupSessionsByDay(sessions.slice(0, 60))
-  const visibleGroups = expanded ? groups : groups.slice(0, DAY_GROUPS_COLLAPSED)
-  const hiddenCount = groups.length - visibleGroups.length
-
-  return (
-    <section className="flex flex-col gap-3">
-      <h3 className="text-h3 text-foreground">{t('personal.pomodoro.log.title')}</h3>
-      <div className="flex flex-col gap-4">
-        {visibleGroups.map((group) => {
-          const relKey = relativeDayLabelKey(group.date)
-          const heading =
-            relKey === 'today'
-              ? t('personal.pomodoro.log.today')
-              : relKey === 'yesterday'
-                ? t('personal.pomodoro.log.yesterday')
-                : formatDate(group.date, locale)
-          return (
-            <div key={group.key} className="flex flex-col gap-1.5">
-              <h4 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                {heading}
-              </h4>
-              <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-                {group.sessions.map((session) => {
-                  const durationMin = sessionDurationMin(session)
-                  return (
-                    <li
-                      key={session.id}
-                      className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2 text-small"
-                    >
-                      <span className="flex min-w-0 items-center gap-2 text-foreground">
-                        {session.kind === 'focus' ? (
-                          <Flame className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
-                        ) : (
-                          <Timer className="size-3.5 shrink-0 text-info" aria-hidden="true" />
-                        )}
-                        <span className="truncate">{t(PHASE_KIND_LABEL_KEY[session.kind])}</span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2 tabular-nums text-muted-foreground">
-                        <span>
-                          {formatClock(session.startedAt)}
-                          {session.endedAt ? ` – ${formatClock(session.endedAt)}` : ''}
-                        </span>
-                        {durationMin !== null ? (
-                          <span>
-                            {formatNumber(durationMin, locale)}{' '}
-                            {t('personal.pomodoro.stats.minutesShort')}
-                          </span>
-                        ) : null}
-                        {/* DESIGN.md §9.2: a tinted badge, not the solid fill Badge's own `success`
-                            tone would give -- a dense day-by-day log repeats this on every row. */}
-                        <Badge
-                          tone="neutral"
-                          className={cn(
-                            'gap-1',
-                            session.completed ? 'bg-success/10 text-success' : undefined,
-                          )}
-                        >
-                          {session.completed ? (
-                            <ListChecks className="size-3" aria-hidden="true" />
-                          ) : null}
-                          {t(
-                            session.endedAt === null
-                              ? 'personal.pomodoro.log.ongoing'
-                              : session.completed
-                                ? 'personal.pomodoro.log.completed'
-                                : 'personal.pomodoro.log.skipped',
-                          )}
-                        </Badge>
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )
-        })}
-      </div>
-      {hiddenCount > 0 ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="self-start"
-          onClick={() => setExpanded(true)}
-        >
-          {t('personal.pomodoro.log.showMore', { count: hiddenCount })}
-        </Button>
-      ) : null}
-    </section>
   )
 }
 

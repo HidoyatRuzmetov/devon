@@ -17,6 +17,8 @@ STATE_FILE="$ROOT/.deployed-images.env"
 # /var/lock is root-owned on Ubuntu. The deployment account owns /opt/devon, so keeping the lock
 # beside the release state makes concurrent-deploy protection work without broad sudo privileges.
 LOCK_FILE="$ROOT/.deploy.lock"
+CONTRACT_BOUNDARY=false
+QUIESCED=false
 
 case "$RELEASE_SHA" in
   *[!0-9a-f]*|'') echo "invalid release SHA" >&2; exit 64 ;;
@@ -37,6 +39,14 @@ restore_manifest_on_failure() {
   local previous="$ROOT/infra/.previous-docker-compose.prod.yml"
   local tmp="${manifest}.restore.$$"
   trap - EXIT
+  if [ "$code" -ne 0 ] && [ "$CONTRACT_BOUNDARY" = true ]; then
+    "${COMPOSE[@]}" stop api worker || true
+    echo "[deploy] contract migration boundary crossed: application held stopped; retain candidate manifest and verified backup. Repair the candidate or restore the verified database before starting older images." >&2
+    exit "$code"
+  fi
+  if [ "$code" -ne 0 ] && [ "$QUIESCED" = true ]; then
+    rollback_images || true
+  fi
   if [ "$code" -ne 0 ] && [ -f "$previous" ]; then
     if cp -- "$previous" "$tmp" && mv -f -- "$tmp" "$manifest"; then
       echo "[deploy] restored previous Compose manifest after deployment failure" >&2
@@ -135,6 +145,10 @@ wait_ready() {
 }
 
 rollback_images() {
+  if [ "$CONTRACT_BOUNDARY" = true ]; then
+    echo "[deploy] refusing image-only rollback across a contract migration" >&2
+    return 1
+  fi
   if [ -z "$PREVIOUS_API_IMAGE" ] || [ -z "$PREVIOUS_WEB_IMAGE" ]; then
     echo "[deploy] no previous image release exists for automatic rollback" >&2
     return 1
@@ -167,6 +181,22 @@ docker pull "$DEVON_WEB_IMAGE"
 echo "[deploy] ensuring the data and optional service tier is healthy"
 "${COMPOSE[@]}" up -d --no-build --wait --wait-timeout 600 \
   postgres valkey clamav centrifugo
+
+contract_status="$("${COMPOSE[@]}" run --rm --no-deps -e MIGRATION_DATABASE_URL api \
+  /repo/apps/api/node_modules/.bin/tsx /repo/packages/db/src/cli-contract-status.ts)"
+case "$contract_status" in
+  none) ;;
+  required)
+    echo "[deploy] stopping application writes before the contract-migration backup"
+    QUIESCED=true
+    "${COMPOSE[@]}" stop api worker
+    take_backup
+    # Runs a complete restore into a disposable database on the same isolated server network.
+    bash "$ROOT/infra/backup/verify.sh"
+    CONTRACT_BOUNDARY=true
+    ;;
+  *) echo "[deploy] unexpected contract migration status; refusing migration" >&2; exit 78 ;;
+esac
 
 echo "[deploy] applying expand/contract migrations before application rollout"
 "${COMPOSE[@]}" run --rm --no-deps -e MIGRATION_DATABASE_URL api \

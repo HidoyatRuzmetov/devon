@@ -9,8 +9,8 @@
 // model returned is shown, and everything shown is applied on Accept.** A preview that renders a
 // checklist the Accept path then discards is worse than not rendering it -- the person believes they
 // asked for something and got nothing.
-import * as React from 'react'
-import { Link } from '../../../lib/router.js'
+import { formatDate, formatNumber, useLocale, useT } from '@devon/i18n'
+import { Badge, Stagger, StaggerItem } from '@devon/ui'
 import {
   AlertTriangle,
   ArrowRight,
@@ -23,8 +23,8 @@ import {
   MessageSquareQuote,
   Users,
 } from 'lucide-react'
-import { Badge, Stagger, StaggerItem } from '@devon/ui'
-import { useT, useLocale, formatDate, formatNumber } from '@devon/i18n'
+import * as React from 'react'
+import { Link } from '../../../lib/router.js'
 import type {
   BoardRiskDigestOutput,
   CatchUpOutput,
@@ -32,17 +32,14 @@ import type {
   DraftEventOutput,
   DraftReplyOutput,
   DuplicateCheckOutput,
-  NlAnalyticsOutput,
   PlanSprintOutput,
   QuickAddOutput,
-  SemanticAskOutput,
   SubtaskBreakdownOutput,
   SuggestAssigneeOutput,
   SummarizeThreadOutput,
   TranslateOutput,
 } from '../outputs.js'
 import { ConfidenceChip, FieldRow, PreviewNote } from './ai-result-panel.js'
-import { parseRef, searchHitHref, type SearchHit } from '../types.js'
 
 function useDateText(): (iso: string | null) => string {
   const locale = useLocale()
@@ -543,66 +540,6 @@ export function ThreadDigestPreview({
   )
 }
 
-// --- F8 nl_analytics ----------------------------------------------------------------------------
-
-export function AnalyticsAnswerPreview({
-  output,
-  rows,
-  total,
-}: {
-  output: NlAnalyticsOutput
-  /** The numbers the filter actually produced, resolved by the host screen. */
-  rows?: { label: string; value: number }[]
-  total?: number
-}): React.JSX.Element {
-  const t = useT()
-  const locale = useLocale()
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-body text-foreground">{output.restatement}</p>
-
-      {total !== undefined ? (
-        <p className="text-h3 font-semibold tabular-nums text-foreground">
-          {formatNumber(total, locale)}
-        </p>
-      ) : null}
-
-      {rows && rows.length > 0 ? (
-        <ul className="flex flex-col divide-y divide-border">
-          {rows.slice(0, 8).map((row) => (
-            <li key={row.label} className="flex items-center justify-between gap-3 py-1.5">
-              <span className="min-w-0 truncate text-body text-foreground">{row.label}</span>
-              <span className="shrink-0 text-body tabular-nums text-foreground">
-                {formatNumber(row.value, locale)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      <div className="flex flex-col gap-1 rounded-sm border border-border bg-muted/30 px-3 py-2">
-        <span className="text-caption text-muted-foreground">
-          {t('ai.preview.analytics.filter')}
-        </span>
-        <code className="break-all font-mono text-caption text-foreground">
-          {output.filterText || t('ai.preview.analytics.noFilter')}
-        </code>
-        <span className="flex flex-wrap items-center gap-2 pt-1">
-          <Badge tone="neutral">{t(`ai.preview.analytics.chart.${output.chartType}`)}</Badge>
-          <Badge tone="neutral">{t(`ai.preview.analytics.groupBy.${output.groupBy}`)}</Badge>
-          <ConfidenceChip level={output.confidence} />
-        </span>
-      </div>
-
-      {output.unmappedTerms.length > 0 ? (
-        <PreviewNote>
-          {t('ai.preview.analytics.unmapped', { terms: output.unmappedTerms.join(', ') })}
-        </PreviewNote>
-      ) : null}
-    </div>
-  )
-}
-
 // --- F9 translate -------------------------------------------------------------------------------
 
 export function TranslatePreview({ output }: { output: TranslateOutput }): React.JSX.Element {
@@ -815,67 +752,5 @@ export function DuplicatePreview({
         </li>
       ))}
     </ul>
-  )
-}
-
-// --- EPIC-016 semantic_ask ----------------------------------------------------------------------
-
-export function AskAnswerPreview({
-  output,
-  sources,
-}: {
-  output: SemanticAskOutput
-  sources: SearchHit[]
-}): React.JSX.Element {
-  const t = useT()
-  const byRef = new Map(sources.map((hit) => [`${hit.subjectType}:${hit.subjectId}`, hit]))
-
-  if (!output.answered) {
-    return (
-      <div className="flex flex-col gap-2">
-        <PreviewNote>{t('ai.preview.ask.notFound')}</PreviewNote>
-        {output.followUp ? <p className="text-body text-foreground">{output.followUp}</p> : null}
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="whitespace-pre-wrap text-body text-foreground">{output.answer}</p>
-      {output.citations.length > 0 ? (
-        <section className="flex flex-col gap-1">
-          <h4 className="text-caption font-medium uppercase tracking-wide text-muted-foreground">
-            {t('ai.preview.ask.sources')}
-          </h4>
-          <ul className="flex flex-col gap-1">
-            {output.citations.map((ref) => {
-              const parsed = parseRef(ref)
-              const hit = byRef.get(ref)
-              if (!parsed) {
-                return (
-                  <li key={ref} className="text-caption text-muted-foreground">
-                    {ref}
-                  </li>
-                )
-              }
-              return (
-                <li key={ref}>
-                  <Link
-                    to={searchHitHref(parsed)}
-                    className="flex items-center gap-2 rounded-sm text-small text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Badge tone="neutral">{t(`ai.search.kind.${parsed.subjectType}`)}</Badge>
-                    <span className="min-w-0 truncate">
-                      {hit?.title || t('ai.preview.ask.openSource')}
-                    </span>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-      ) : null}
-      {output.followUp ? <PreviewNote>{output.followUp}</PreviewNote> : null}
-    </div>
   )
 }

@@ -57,8 +57,6 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.event_rsvps' },
   { table: 'app.events' },
   // Work: runs before rules, card children before cards, cards before projects.
-  { table: 'app.automation_runs' },
-  { table: 'app.automation_rules' },
   { table: 'app.card_dependencies' },
   // Owner-only on write (user_id); swept once per account -- see sweepDepartmentResidue.
   { table: 'app.card_reminders', ownerColumn: 'user_id' },
@@ -73,13 +71,8 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.attachments' },
   { table: 'app.cards' },
   { table: 'app.projects' },
-  { table: 'app.work_capacity' },
   { table: 'app.work_templates' },
-  { table: 'app.goals' },
   // Custom fields: requests and values both reference a definition.
-  { table: 'app.field_requests' },
-  { table: 'app.field_values' },
-  { table: 'app.field_defs' },
   { table: 'app.notification_department_settings' },
   // Pages and onboarding: a run references its template, a version references its page.
   { table: 'app.onboarding_runs' },
@@ -87,10 +80,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.page_versions' },
   { table: 'app.pages' },
   // Owner-only on write (owner_user_id); swept once per account -- see sweepDepartmentResidue.
-  { table: 'app.analytics_pinned_charts', ownerColumn: 'owner_user_id' },
   // Owner-only on write (owner_user_id); swept once per account -- see sweepDepartmentResidue.
-  { table: 'app.analytics_saved_filters', ownerColumn: 'owner_user_id' },
-  { table: 'app.analytics_daily' },
   { table: 'app.ai_conversations', ownerColumn: 'owner_user_id' },
   { table: 'app.ai_traces' },
   { table: 'app.ai_search_documents' },
@@ -98,14 +88,16 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.ai_department_settings' },
   // Owner-only on write (owner_user_id); swept once per account -- see sweepDepartmentResidue.
   { table: 'app.saved_views', ownerColumn: 'owner_user_id' },
-  { table: 'app.people_views' },
-  { table: 'app.shared_canvases' },
   { table: 'app.labels' },
   // Structure last of the department-owned set: a unit role references its unit, a unit its parent.
   { table: 'app.unit_roles' },
   { table: 'app.units' },
   // Memberships are the department's last child before the department itself, and the reason a
   // colleague who joined the demo department through the product does not block the reset.
+  { table: 'app.checkin_entries' },
+  { table: 'app.checkin_reminders' },
+  { table: 'app.checkin_cycles' },
+  { table: 'app.work_action_receipts' },
   { table: 'app.memberships' },
   // Triggers on every removed source row can recreate these derived journals. Clear them last.
   { table: 'app.ai_index_dirty' },
@@ -118,12 +110,10 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
  * same shape `personal.ts` and `notifications.ts` already use to *write* them.
  */
 export const USER_SWEEP_ORDER: readonly { table: string; column: string | null }[] = [
+  { table: 'app.personal_calendar_entries', column: 'user_id' },
   { table: 'app.pomodoro_sessions', column: 'user_id' },
   { table: 'app.pomodoro_settings', column: 'user_id' },
   { table: 'app.personal_tasks', column: 'user_id' },
-  { table: 'app.personal_sprints', column: 'user_id' },
-  { table: 'app.personal_notes', column: 'user_id' },
-  { table: 'app.personal_canvases', column: 'user_id' },
   // A delivery has no user column of its own; it is reachable only through its notification, which
   // this same user owns -- so the subquery is visible under exactly this GUC and no other.
   { table: 'app.notification_deliveries', column: null },

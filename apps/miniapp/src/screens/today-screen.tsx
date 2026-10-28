@@ -2,20 +2,11 @@
 // only, no head lens and no super-admin lens ever), plus the two shortcuts that only appear when
 // they mean something: "Maʼlumotlarim" once the department has person fields, and the head's
 // Telegram setup checklist.
-import * as React from 'react'
-import { ChevronRight, IdCard, Plus, Settings2 } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { Button, Input, cn, toast } from '@devon/ui'
-import {
-  createPersonalTask,
-  listPersonalTasks,
-  setPersonalTaskDone,
-  type PersonalTask,
-} from '../lib/api.js'
-import { useQuery } from '../lib/use-query.js'
-import { useIsHead, useSession } from '../lib/session.js'
-import { navigate } from '../lib/router.js'
-import { tg } from '../lib/telegram.js'
+import { ChevronRight, Plus, Settings2 } from 'lucide-react'
+import * as React from 'react'
+import { SectionLabel, rowSurface } from '../components/bits.js'
 import {
   ListSkeleton,
   QueryState,
@@ -23,8 +14,17 @@ import {
   ScreenHeader,
   ScreenList,
 } from '../components/screen.js'
-import { SectionLabel, rowSurface } from '../components/bits.js'
 import { TaskCheckRow } from '../components/task-check-row.js'
+import {
+  createPersonalTask,
+  listPersonalTasks,
+  setPersonalTaskDone,
+  type PersonalTask,
+} from '../lib/api.js'
+import { navigate } from '../lib/router.js'
+import { useIsHead, useSession } from '../lib/session.js'
+import { tg } from '../lib/telegram.js'
+import { useQuery } from '../lib/use-query.js'
 
 function greetingKey(now: Date): string {
   const hour = now.getHours()
@@ -154,21 +154,10 @@ export function TodayScreen(): React.ReactElement {
           </>
         )}
 
-        {session.fieldsAvailable || isHead ? (
+        {isHead ? (
           <>
             <SectionLabel>{t('miniapp.today.more')}</SectionLabel>
             <div className="flex flex-col gap-2">
-              {session.fieldsAvailable ? (
-                <button
-                  type="button"
-                  className={cn(rowSurface, 'flex items-center gap-3')}
-                  onClick={() => navigate({ name: 'fields' })}
-                >
-                  <IdCard className="text-muted-foreground size-5" aria-hidden />
-                  <span className="flex-1 text-[14px] leading-5">{t('miniapp.fields.title')}</span>
-                  <ChevronRight className="text-muted-foreground size-4" aria-hidden />
-                </button>
-              ) : null}
               {isHead ? (
                 <button
                   type="button"

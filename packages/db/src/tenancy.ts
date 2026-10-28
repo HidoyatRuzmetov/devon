@@ -33,12 +33,14 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.labels': 'department_owned',
   'app.saved_views': 'department_owned',
   // v1.1 SPEC §4.3: the head's saved people-table views (migration `0201_people_views.sql`).
-  'app.people_views': 'department_owned',
   'app.projects': 'department_owned',
-  'app.personal_sprints': 'user_owned',
+  'app.checkin_cycles': 'department_owned',
+  'app.checkin_entries': 'department_owned',
+  'app.checkin_reminders': 'department_owned',
+  'app.work_action_receipts': 'department_owned',
   'app.personal_tasks': 'user_owned',
-  'app.personal_notes': 'user_owned',
-  'app.personal_canvases': 'user_owned',
+  'app.personal_calendar_entries': 'user_owned',
+  'app.personal_calendar_reminders': 'global',
   'app.pomodoro_settings': 'user_owned',
   'app.pomodoro_sessions': 'user_owned',
   'app.notifications': 'user_owned',
@@ -50,6 +52,8 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.telegram_links': 'global',
   'app.telegram_group_connect_codes': 'global',
   'app.telegram_groups': 'global',
+  'app.telegram_group_members': 'global',
+  'app.telegram_group_mentions': 'global',
   'audit.events': 'audit',
   'audit.private_reads': 'audit',
   'audit.anchors': 'audit',
@@ -89,19 +93,12 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   // EPIC-010/011 analytics + pages/onboarding-lite (MODULE-GUIDE.md "DB: schema").
   // v1.1 SPEC §5 -- custom fields. A definition, a value and a fill request all belong to exactly one
   // boshqarma; person values hang off the *membership*, which is department-scoped by construction.
-  'app.field_defs': 'department_owned',
-  'app.field_values': 'department_owned',
-  'app.field_requests': 'department_owned',
-  'app.analytics_daily': 'department_owned',
-  'app.analytics_saved_filters': 'department_owned',
-  'app.analytics_pinned_charts': 'department_owned',
   'app.pages': 'department_owned',
   'app.page_versions': 'department_owned',
   'app.onboarding_templates': 'department_owned',
   'app.onboarding_runs': 'department_owned',
 
   // EPIC-018/EPIC-019 realtime + calendar + web push (v1.1 SPEC §10, migration 1800).
-  'app.shared_canvases': 'department_owned',
   'app.calendar_feeds': 'global',
   'app.push_subscriptions': 'user_owned',
   'app.push_vapid_keys': 'global',
@@ -113,12 +110,8 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.card_reminders': 'department_owned',
   'app.work_templates': 'department_owned',
   'app.focus_pins': 'department_owned',
-  'app.work_capacity': 'department_owned',
-  'app.goals': 'department_owned',
 
   // EPIC-017 automations (migration 1100).
-  'app.automation_rules': 'department_owned',
-  'app.automation_runs': 'department_owned',
 })
 
 /**
@@ -128,6 +121,8 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
  * reviewable, per ADR-002. `test/tenancy.registry.test.ts` fails if a `global` table has no entry here.
  */
 export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze({
+  'app.personal_calendar_reminders':
+    'Cross-owner timed delivery pointers only, with no private text. The worker enters the owner context and rechecks the entry, version, cancellation and verified Telegram link before sending.',
   'app.users':
     'Identity is instance-wide; department scoping happens through app.memberships (I-1).',
   'app.sessions':
@@ -167,6 +162,10 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'before any department context exists -- same bootstrap shape as app.telegram_links above. ' +
     'Per-department visibility is enforced by can() with a department_child subject on every route ' +
     'that reads or writes this table from an authenticated session.',
+  'app.telegram_group_members':
+    'Operational Telegram identities from connected groups; read only by authenticated bot updates, keyed by the resolved group ID. No portal route exposes this roster.',
+  'app.telegram_group_mentions':
+    'Inbound group-message replay receipts with no message text, scoped to the resolved connected group by the bot handler.',
   'app.telegram_group_connect_codes':
     'Bootstrap-only, mirrors app.telegram_link_codes: a group `/connect <code>` is consumed by an ' +
     'inbound webhook update before any department context exists for that request.',

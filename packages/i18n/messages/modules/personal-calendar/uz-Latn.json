@@ -1,0 +1,32 @@
+{
+  "personalCalendar": {
+    "tab": "Shaxsiy taqvim",
+    "add": "Shaxsiy yozuv qo‘shish",
+    "edit": "Yozuvni tahrirlash",
+    "titleField": "Sarlavha",
+    "allDay": "Kun bo‘yi",
+    "start": "Boshlanishi",
+    "end": "Tugashi",
+    "notes": "Izoh",
+    "reminder": "Telegram eslatmasi (ixtiyoriy)",
+    "timezone": "Toshkent vaqti (UTC+5)",
+    "telegram": "Telegram ulanishi",
+    "saved": "Taqvim yangilandi",
+    "error": "Saqlanmadi. Sanalarni tekshiring yoki o‘zgargan yozuvni qayta yuklang.",
+    "delete": "O‘chirish",
+    "confirmDelete": "O‘chirishni tasdiqlash",
+    "save": "Saqlash",
+    "waitlist": "Navbatda",
+    "previous": "Oldingi oy",
+    "next": "Keyingi oy",
+    "today": "Bugun",
+    "kind": {
+      "personal": "Shaxsiy",
+      "task": "Vazifa muddati",
+      "event": "Yozilgan tadbir"
+    },
+    "addOn": "{date} kuniga yozuv qo‘shish",
+    "more": "Yana {count} ta",
+    "free": "Rejalashtirilgan ish yo‘q"
+  }
+}

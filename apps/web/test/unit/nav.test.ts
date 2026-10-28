@@ -1,50 +1,19 @@
-import { describe, expect, it } from 'vitest'
 import { resolveNavEntries } from '@devon/ui'
+import { describe, expect, it } from 'vitest'
 import { NAV_ENTRIES } from '../../src/shell/nav.js'
 
 describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
-  // Core entries (`home`, `admin`) plus whatever `src/features/*/manifest.ts(x)` registers
-  // (MODULE-GUIDE.md "Web features"), flattened in alphabetical directory order
-  // (`registry.ts`'s `import.meta.glob` sort): accounts, ai, analytics, departments, events, inbox,
-  // pages, personal, projects, structure, work. Every one of those sidebar entries is visible to
-  // every signed-in role except `department-requests` (the super-admin approval queue) and the core
-  // `admin` entry, which stay `super_admin`-only -- 'personal' (EPIC-009), 'inbox' (EPIC-010), 'assistant'
-  // (EPIC-012), 'analytics' and 'pages' (EPIC-010/011) included: a personal workspace, a notification
-  // inbox, the AI assistant/settings screen, department-wide analytics and department pages all
-  // belong to whoever is signed in, never gated by role (a head-only action inside the `ai` screen,
-  // like editing the budget, is enforced by `can()` on the route, not by hiding the sidebar entry).
-  //
-  // v1.1: entries may also declare an `action` id, resolved through `ctx.can` (the app supplies it
-  // from `canAction`). A context with no `can` -- as in the first three cases below -- does no action
-  // gating at all, which is why the head-only entries still appear there; the dedicated block at the
-  // bottom of this file is where the real head/member split is asserted.
-  //
-  // v1.1 EPIC-019 adds `calendar` (the agenda, the secret ICS/CalDAV subscriptions and the web-push
-  // opt-in). It sorts between `analytics` and `departments` by directory name, and it is visible to
-  // every signed-in role for the same reason `personal` and `inbox` are: everything on it is the
-  // person's own, scoped by a `{kind:'personal'}` subject on every route behind it, so there is
-  // nothing for a role to gate.
-  //
-  // v1.1 integration: `automations`, and `work`'s own `workload` and `goals`, join the list.
-  // `shell/nav.ts`'s `manage-head` group had always reserved those three ids and no manifest claimed
-  // them, so three of the head's six Boshqaruv destinations were reachable only by typing a palette
-  // command from memory. Each declares a head-only action, which is why they appear here (no `can`
-  // in this context = no action gating) and are asserted absent for a xodim further down.
+  // Navigation retains shared work and people; management tools have been retired.
   const featureEntryIds = [
     'assistant',
     'analytics',
-    'automations',
     'events',
-    'fields',
     'pages',
-    'people-table',
     'personal',
     'projects',
     'structure',
     'people',
     'work',
-    'workload',
-    'goals',
   ]
 
   it('shows Home plus every role-visible feature entry to a member', () => {
@@ -64,19 +33,14 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'admin',
       'assistant',
       'analytics',
-      'automations',
       'department-requests',
       'events',
-      'fields',
       'pages',
-      'people-table',
       'personal',
       'projects',
       'structure',
       'people',
       'work',
-      'workload',
-      'goals',
     ])
   })
 
@@ -139,20 +103,17 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
     }
   })
 
-  it('a boshqarma boshligʻi sees both management destinations', () => {
+  it('heads also have no retired management destinations', () => {
     const ids = resolveNavEntries(NAV_ENTRIES, ctxFor('head')).map((e) => e.id)
-    expect(ids).toContain('people-table')
-    expect(ids).not.toContain('department-settings')
-    expect(ids).toContain('fields')
-    expect(ids).toContain('workload')
-    expect(ids).toContain('goals')
-    expect(ids).toContain('automations')
+    for (const id of ['people-table', 'fields', 'workload', 'goals', 'automations'])
+      expect(ids).not.toContain(id)
+    expect(ids).toContain('people')
   })
 
   it('the instance role is never what decides it (I-8b)', () => {
     // A head's `role` is `member`; a member's is too. Only `can`/`departmentRole` separates them.
     const head = resolveNavEntries(NAV_ENTRIES, ctxFor('head')).map((e) => e.id)
     const member = resolveNavEntries(NAV_ENTRIES, ctxFor('member')).map((e) => e.id)
-    expect(head.length).toBeGreaterThan(member.length)
+    expect(head).toEqual(member)
   })
 })

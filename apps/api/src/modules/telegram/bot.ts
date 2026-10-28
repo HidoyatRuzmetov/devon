@@ -5,6 +5,8 @@
 // both against the same bot at once).
 import type { Bot, Context } from 'grammy'
 import { z } from 'zod'
+import { EventConflictError, EventForbiddenError, EventNotFoundError } from '../events/errors.js'
+import { recordTelegramRsvp } from '../events/telegram-rsvp.js'
 import {
   archiveNotifications,
   getNotificationById,
@@ -14,6 +16,7 @@ import {
   snoozeNotification,
   systemAuditCtx,
 } from '../notifications/repo.js'
+import { miniappMenuKeyboard } from './miniapp-buttons.js'
 import {
   consumeGroupConnectCode,
   consumeLinkCode,
@@ -23,11 +26,10 @@ import {
   resolveUserByChatId,
   setMutedUntil,
 } from './repo.js'
-import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
-import { miniappMenuKeyboard } from './miniapp-buttons.js'
 import { muteBodySchema } from './schemas.js'
-import { recordTelegramRsvp } from '../events/telegram-rsvp.js'
-import { EventConflictError, EventForbiddenError, EventNotFoundError } from '../events/errors.js'
+import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
+
+import { registerGroupMentions } from './group-mentions.js'
 
 const callbackId = z.string().uuid()
 
@@ -95,6 +97,8 @@ export function registerBotHandlers(bot: Bot): void {
       await ctx.reply(message)
     }
   })
+
+  registerGroupMentions(bot)
 
   bot.command('start', async (ctx) => {
     const code = ctx.match?.toString().trim()

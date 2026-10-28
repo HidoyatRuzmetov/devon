@@ -183,13 +183,8 @@ describe('canAction() -- every action, every role', () => {
   })
 })
 
-describe('canAction() -- the four SEV1 leaks the audit found are closed', () => {
-  const leaks: AppActionId[] = [
-    'ai.budget.read',
-    'ai.usage.readAll',
-    'analytics.perPerson.read',
-    'analytics.export.perPerson',
-  ]
+describe('canAction() -- head-only AI budget and usage remain restricted', () => {
+  const leaks: AppActionId[] = ['ai.budget.read', 'ai.usage.readAll']
 
   it.each(leaks)('%s is denied to a member with not_head', (id) => {
     expect(canAction(member(), id, { departmentId: DEPT })).toEqual({
@@ -330,42 +325,9 @@ describe('canAction() -- personal workspace has no head exception (I-1)', () => 
       }),
     ).toEqual({ allowed: false, reason: 'not_owner' })
   })
-
-  it('but the head may see the aggregate focus minutes on a person page', () => {
-    expect(
-      allowsAction(head(), 'personal.focus.readAggregate', {
-        departmentId: DEPT,
-      }),
-    ).toBe(true)
-    expect(
-      allowsAction(member(), 'personal.focus.readAggregate', {
-        departmentId: DEPT,
-      }),
-    ).toBe(false)
-  })
 })
 
-describe("canAction() -- a member's own person page vs somebody else's", () => {
-  it('a member may read their own', () => {
-    expect(
-      allowsAction(member(), 'people.person.readOwn', {
-        subjectUserId: 'u-member',
-      }),
-    ).toBe(true)
-  })
-
-  it("a member may not read a colleague's", () => {
-    expect(
-      canAction(member(), 'people.person.readOwn', {
-        subjectUserId: 'u-other',
-      }),
-    ).toEqual({ allowed: false, reason: 'not_owner' })
-    expect(canAction(member(), 'people.person.read', { departmentId: DEPT })).toEqual({
-      allowed: false,
-      reason: 'not_head',
-    })
-  })
-
+describe('directory access', () => {
   it('a member keeps the plain directory', () => {
     expect(allowsAction(member(), 'people.directory.read', { departmentId: DEPT })).toBe(true)
   })

@@ -1,8 +1,9 @@
+import type { FastifyBaseLogger } from 'fastify'
+import type { Bot } from 'grammy'
 import { createHash } from 'node:crypto'
 import { setTimeout as pause } from 'node:timers/promises'
 import { Client } from 'pg'
-import type { Bot } from 'grammy'
-import type { FastifyBaseLogger } from 'fastify'
+import { TELEGRAM_UPDATES } from './webhook-options.js'
 
 let healthyAt = 0
 export function isTelegramPollingHealthy(): boolean {
@@ -60,7 +61,10 @@ export function startTelegramPolling(
           try {
             // Telegram offsets are sequential acknowledgements, not independent queries.
             // nosemgrep: query-in-loop
-            const updates = await bot.api.getUpdates({ offset, limit: 20, timeout: 5 }, apiSignal)
+            const updates = await bot.api.getUpdates(
+              { offset, limit: 20, timeout: 5, allowed_updates: [...TELEGRAM_UPDATES] },
+              apiSignal,
+            )
             healthyAt = Date.now()
             // Offset acknowledgement is ordered: later updates cannot overtake a failed command.
             for (const update of updates) {

@@ -146,32 +146,6 @@ export const summarizeThreadOutputSchema = z.object({
 })
 export type SummarizeThreadOutput = z.infer<typeof summarizeThreadOutputSchema>
 
-export const nlAnalyticsOutputSchema = z.object({
-  filterText: z.string(),
-  // `@devon/ai`'s `ANALYTICS_METRICS`, mirrored exactly. These are the names of the sections the
-  // analytics screen already computes -- not a generic metric vocabulary -- which is what makes
-  // "answer with the numbers" a lookup rather than a second aggregation. Guessing snake_case names
-  // here silently produced a preview with no numbers in it at all; found live.
-  metric: z
-    .enum([
-      'throughput',
-      'onTimeRate',
-      'openVsOverdue',
-      'loadPerPerson',
-      'loadPerUnit',
-      'projectProgress',
-      'eventsParticipation',
-      'pollTurnout',
-    ])
-    .nullable(),
-  groupBy: z.enum(['person', 'unit', 'project', 'label', 'status', 'none']),
-  chartType: z.enum(['bar', 'line', 'pie', 'table', 'burnup']),
-  unmappedTerms: z.array(z.string()),
-  confidence: confidenceSchema,
-  restatement: z.string(),
-})
-export type NlAnalyticsOutput = z.infer<typeof nlAnalyticsOutputSchema>
-
 export const translateOutputSchema = z.object({
   translatedText: z.string(),
   detectedSourceLocale: localeSchema.nullable(),
@@ -251,7 +225,6 @@ export const FEATURE_OUTPUT_SCHEMAS: Record<AiFeatureId, z.ZodTypeAny> = {
   catch_up: catchUpOutputSchema,
   draft_event: draftEventOutputSchema,
   summarize_thread: summarizeThreadOutputSchema,
-  nl_analytics: nlAnalyticsOutputSchema,
   translate: translateOutputSchema,
   draft_reply: draftReplyOutputSchema,
   draft_page: z.object({ markdown: z.string().min(1).max(20000) }),

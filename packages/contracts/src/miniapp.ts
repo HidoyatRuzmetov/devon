@@ -24,7 +24,6 @@ export const MINIAPP_ROUTES = {
   board: '#/board',
   events: '#/events',
   focus: '#/focus',
-  fields: '#/fields',
   setup: '#/setup',
 } as const
 
@@ -60,7 +59,6 @@ export type MiniappIdentity = {
   /** `?startapp=<value>` from the launch, so a bot button can open a named screen. */
   startParam: string | null
   unreadCount: number
-  fieldsAvailable: boolean
 }
 
 export type MiniappSession = MiniappIdentity & { csrfToken: string }
@@ -100,29 +98,6 @@ export type MiniappBoardPeek = {
   departmentOpenCards: number
   departmentOverdueCards: number
 }
-
-/** Mirrors `FieldValue` in `./custom-fields.js`. */
-export type MiniappFieldValue = string | number | boolean | readonly string[] | null
-
-export type MiniappField = {
-  defId: string
-  key: string
-  label: Readonly<Record<string, string>>
-  description: Readonly<Record<string, string>> | null
-  type: string
-  options: ReadonlyArray<{
-    id: string
-    label: Readonly<Record<string, string>>
-    colorToken: string
-  }>
-  required: boolean
-  selfEditable: boolean
-  value: MiniappFieldValue
-  /** The head has asked this person to fill it in (SPEC §5's notify-to-fill). */
-  requested: boolean
-}
-
-export type MiniappFields = { available: boolean; items: MiniappField[] }
 
 export type MiniappSetupStepId =
   | 'bot_token'

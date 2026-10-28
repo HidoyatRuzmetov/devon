@@ -328,9 +328,7 @@ services:
          {"name":"board","presence":true,"join_leave":true,"force_push_join_leave":true,
           "allow_presence_for_subscriber":true},
          {"name":"personal","presence":false,"allow_user_limited_channels":true,
-          "allow_subscribe_for_client":true},
-         {"name":"canvas","presence":true,"join_leave":true,"force_push_join_leave":true,
-          "allow_presence_for_subscriber":true,"allow_publish_for_subscriber":true}]
+          "allow_subscribe_for_client":true}]
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8000/health']
       interval: 10s

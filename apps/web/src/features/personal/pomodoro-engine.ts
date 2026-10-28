@@ -1,16 +1,5 @@
-// A dependency-free, module-level Pomodoro timer store (same pattern as `src/lib/router.tsx`'s
-// `useSyncExternalStore` subscribe/notify pair) -- singleton so the mini widget, the settings panel
-// and any "start focus on this task" button all observe and drive the exact same running timer,
-// including across a full unmount/remount of whichever component happens to render it (state lives
-// in `localStorage`, keyed by wall-clock end time, never a `setInterval` countdown that would drift
-// or reset). TECH-SPEC §3.3: "Pomodoro timer (defaults 25/5/15, 4 cycles, editable in settings,
-// sounds, browser notifications, a mini widget in the shell top bar that keeps running across
-// routes, session log and simple stats)".
-//
-// NOTE for integration (outside this module's allowed paths): mounting `<PomodoroWidget>` from
-// `apps/web/src/shell/app-shell.tsx`'s top-bar `trailing` slot is what makes it literally visible on
-// every route including `/` and `/admin`, not only `/personal` -- this engine is already
-// route-independent and ready for that; see `pomodoro-widget.tsx`'s header for the one-line change.
+// Shared, owner-scoped Pomodoro timer, persisted by wall-clock deadline across navigation.
+// Session receipts make completion and retries reliable; no history or statistics UI is exposed.
 import * as React from 'react'
 import type { PomodoroKind, PomodoroSettings } from './types.js'
 
@@ -28,10 +17,10 @@ export type PomodoroState = {
   remainingAtPause: number | null
   /** Completed focus phases since the last long break (0..cyclesBeforeLong-1). */
   cycleIndex: number
+  /** Receipt identity for the decorative completion cue, including a one-focus cycle. */
+  completedFocusId: string | null
   /** The server-side `pomodoro_sessions.id` for the phase in progress, if it has been recorded. */
   sessionId: string | null
-  /** The task captured when focus starts, retained locally through automatic breaks. */
-  taskId: string | null
 }
 
 const STORAGE_KEY = 'devon.personal.pomodoro.v1'
@@ -45,8 +34,8 @@ const IDLE_STATE: PomodoroState = {
   endAt: null,
   remainingAtPause: null,
   cycleIndex: 0,
+  completedFocusId: null,
   sessionId: null,
-  taskId: null,
 }
 
 function readState(userId: string): PomodoroState {
@@ -211,7 +200,7 @@ export function phaseToKind(phase: Exclude<PomodoroPhase, 'idle'>): PomodoroKind
 export function startPhase(
   phase: Exclude<PomodoroPhase, 'idle'>,
   settings: PomodoroSettings,
-  taskId: string | null = null,
+
   startedAt = Date.now(),
 ): void {
   const durationMs = durationMsFor(phase, settings)
@@ -222,7 +211,6 @@ export function startPhase(
     endAt: startedAt + durationMs,
     remainingAtPause: null,
     sessionId: null,
-    taskId,
   })
 }
 
@@ -242,12 +230,21 @@ export function resume(): void {
 }
 
 export function stopToIdle(): void {
-  setState({ ...IDLE_STATE, userId: state.userId, busy: state.busy, cycleIndex: state.cycleIndex })
+  setState({
+    ...IDLE_STATE,
+    userId: state.userId,
+    busy: state.busy,
+    cycleIndex: state.cycleIndex,
+    completedFocusId: state.completedFocusId,
+  })
 }
 
 export function advanceCycle(completedFocus: boolean, cyclesBeforeLong: number): number {
   const next = completedFocus ? (state.cycleIndex + 1) % cyclesBeforeLong : state.cycleIndex
-  setState({ cycleIndex: next })
+  setState({
+    cycleIndex: next,
+    completedFocusId: completedFocus ? state.sessionId : state.completedFocusId,
+  })
   return next
 }
 

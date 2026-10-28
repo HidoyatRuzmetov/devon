@@ -1,41 +1,31 @@
+import { validateActionPlan } from './action-plan.js'
 // Orchestration for the AI module: opens its own `withContext()` transaction per operation (same
 // split as the events module's `service.ts`/`repo.ts`), and is the one place `@devon/ai`'s gateway is
 // ever called from -- `index.ts`'s route handlers only ever call functions here, never `repo.ts` or
 // `@devon/ai` directly.
-import { createHash } from 'node:crypto'
-import { sql } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
+import type { AiProvider, ChatMessage, Locale } from '@devon/ai'
 import {
   canAffordCall,
   checkBudget,
   createProvider,
   getFeatureSpec,
   hasApiKey,
+  languageConstraint,
   loadAiConfig,
   runFeature as runAiFeature,
   run as runAiGateway,
-  languageConstraint,
 } from '@devon/ai'
-import type { AiProvider, ChatMessage, Locale } from '@devon/ai'
+import { withContext, type RequestContext } from '@devon/db'
+import { sql } from 'drizzle-orm'
+import { createHash } from 'node:crypto'
 import { z } from 'zod'
-import { actionInstructions, parseAction, proposedActionSchema } from './action-catalog.js'
-import * as search from './search-service.js'
-import * as repo from './repo.js'
-import { prepareFeatureInput } from './request-context.js'
-import { comparisonContext, comparisonScope } from './ask-context.js'
-import { markReady } from './briefing-repo.js'
-import { tashkentDateString } from '../analytics/aggregate.js'
-import { settingsToDto, traceToDto } from './dto.js'
-import type {
-  AiSettingsDto,
-  SearchBackendDto,
-  SearchHitDto,
-  SearchSubjectKind,
-  TraceDto,
-} from './schemas.js'
-import { ai as aiBreaker } from '../../lib/resilience/registry.js'
-import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
 import { aiCostUzsTotal, aiRequestDuration, aiTokensTotal } from '../../lib/metrics.js'
+import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
+import { ai as aiBreaker } from '../../lib/resilience/registry.js'
+import { tashkentDateString } from '../../lib/tashkent-date.js'
+import { actionInstructions, decodeActionJson, proposedActionSchema } from './action-catalog.js'
+import { markReady } from './briefing-repo.js'
+import { settingsToDto, traceToDto } from './dto.js'
 import {
   AiBudgetExceededError,
   AiFeatureDisabledError,
@@ -43,6 +33,16 @@ import {
   AiRunFailedError,
   AiUnavailableError,
 } from './errors.js'
+import * as repo from './repo.js'
+import { prepareFeatureInput } from './request-context.js'
+import type {
+  AiSettingsDto,
+  SearchBackendDto,
+  SearchHitDto,
+  SearchSubjectKind,
+  TraceDto,
+} from './schemas.js'
+import * as search from './search-service.js'
 
 // Built once per process, exactly like `apps/api/src/deps.ts`'s real implementation is constructed
 // once in `server.ts` -- `GlmProvider`/`MockProvider` are both stateless (a `MockProvider` built with
@@ -67,12 +67,12 @@ const chatAnswerSchema = z
   .object({
     content: z.string().trim().min(1).max(12_000),
     citations: z.array(z.string()).max(20),
-    actions: z.array(proposedActionSchema).max(5).default([]),
+    actions: z.preprocess(decodeActionJson, z.array(proposedActionSchema).max(50).default([])),
     contextRequest: z
       .object({
         refs: z.array(z.string().max(200)).max(100).default([]),
         queries: z.array(z.string().max(300)).max(5).default([]),
-        actionKinds: z.array(z.string().max(80)).max(44).default([]),
+        actionKinds: z.array(z.string().max(80)).max(100).default([]),
         fullSnapshot: z.boolean().default(false),
       })
       .strict()
@@ -126,7 +126,7 @@ export async function runDepartmentChatForActor(
     feature: 'semantic_ask',
     messages: input.messages,
     signal: input.signal,
-    maxTokens: 8192,
+    maxTokens: 16384,
     temperature: 0.1,
     overallTimeoutMs: input.timeoutMs ?? 180_000,
     tool: {
@@ -147,18 +147,29 @@ export async function runDepartmentChatForActor(
             properties: {
               refs: { type: 'array', maxItems: 100, items: { type: 'string' } },
               queries: { type: 'array', maxItems: 5, items: { type: 'string' } },
-              actionKinds: { type: 'array', maxItems: 44, items: { type: 'string' } },
+              actionKinds: { type: 'array', maxItems: 100, items: { type: 'string' } },
               fullSnapshot: { type: 'boolean' },
             },
             additionalProperties: false,
           },
           actions: {
             type: 'array',
-            maxItems: 5,
+            maxItems: 50,
             items: {
               type: 'object',
               properties: {
                 kind: { type: 'string' },
+                key: { type: 'string', pattern: '^[a-zA-Z][a-zA-Z0-9_-]{0,63}$' },
+                bindings: {
+                  type: 'array',
+                  maxItems: 8,
+                  items: {
+                    type: 'object',
+                    properties: { path: { type: 'string' }, from: { type: 'string' } },
+                    required: ['path', 'from'],
+                    additionalProperties: false,
+                  },
+                },
                 title: { type: 'string' },
                 summary: { type: 'string' },
                 arguments: { type: 'object' },
@@ -194,10 +205,7 @@ export async function runDepartmentChatForActor(
           ok: true,
           output: {
             ...output,
-            actions: output.actions.map((action) => ({
-              ...action,
-              arguments: parseAction(action.kind, action.arguments),
-            })),
+            actions: validateActionPlan(output.actions),
           },
         }
       } catch (error) {
@@ -705,83 +713,6 @@ export async function runFeatureForActor(
 }
 
 // --- EPIC-016: semantic search + the Ask box --------------------------------------------------
-
-export type AskParams = {
-  departmentId: string
-  userId: string
-  question: string
-  locale: 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en'
-}
-
-export type AskOutcome = {
-  data: Record<string, unknown>
-  meta: RunFeatureOutcome['meta']
-  sources: SearchHitDto[]
-  backend: 'embeddings' | 'fts'
-}
-
-/** How many retrieved passages the model is allowed to see. Twelve is the prompt's own cap; eight
- * keeps the call cheap and, in practice, everything past the eighth hit is noise the model has to
- * work to ignore. */
-const ASK_PASSAGES = 8
-
-/**
- * The Ask box. Retrieval first, then exactly one model call over what was retrieved -- never a model
- * call that could answer from its own knowledge (see `semantic-ask.ts`'s header for why that
- * distinction is the whole design in a ministry).
- *
- * The citations the model returns are intersected with the refs we actually handed it, here, on the
- * server. `@devon/ai`'s own `validateOutput` already does this, and doing it twice is deliberate:
- * the client renders these as links into real department records, and "the link goes somewhere that
- * does not exist" is the one failure a reader cannot detect for themselves.
- */
-export async function ask(ctx: RequestContext, params: AskParams): Promise<AskOutcome> {
-  const scope = comparisonScope(params.question)
-  const { hits, backend } = scope
-    ? {
-        hits: await comparisonContext(ctx, params.departmentId, params.question, scope),
-        backend: 'fts' as const,
-      }
-    : await search.search(ctx, params.departmentId, params.question, ASK_PASSAGES)
-
-  const passages = hits.map((hit) => ({
-    ref: `${hit.subjectType}:${hit.subjectId}`,
-    kind: hit.subjectType,
-    id: hit.subjectId,
-    title: hit.title || '—',
-    excerpt: (hit.snippet || hit.title || '—').slice(0, 1500),
-    score: hit.score,
-  }))
-
-  const outcome = await runFeatureForActor(ctx, {
-    departmentId: params.departmentId,
-    userId: params.userId,
-    feature: 'semantic_ask',
-    input: {
-      locale: params.locale,
-      backend,
-      question: params.question,
-      passages,
-      comparisonScope: scope,
-    },
-  })
-
-  const allowed = new Set(passages.map((passage) => passage.ref))
-  const citations = Array.isArray(outcome.data['citations'])
-    ? (outcome.data['citations'] as unknown[]).filter(
-        (ref): ref is string => typeof ref === 'string' && allowed.has(ref),
-      )
-    : []
-
-  return {
-    data: { ...outcome.data, citations },
-    meta: outcome.meta,
-    sources: hits.filter((hit) => citations.includes(`${hit.subjectType}:${hit.subjectId}`)).length
-      ? hits.filter((hit) => citations.includes(`${hit.subjectType}:${hit.subjectId}`))
-      : hits,
-    backend,
-  }
-}
 
 export async function runSearch(
   ctx: RequestContext,

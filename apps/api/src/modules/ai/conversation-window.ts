@@ -1,5 +1,5 @@
-import type { DepartmentChatContext } from './conversation-context.js'
 import { actionInstructions } from './action-catalog.js'
+import type { DepartmentChatContext } from './conversation-context.js'
 
 type Entry = {
   ref: string
@@ -63,16 +63,10 @@ export function conversationWindow(
   return {
     snapshot: {
       totals: context.totals,
-      directory: rows
+      directoryColumns: ['ref', 'title'],
+      directory: entries(context.directory ?? context.snapshot)
         .filter((entry) => !chosenRefs.has(entry.ref))
-        .map(({ ref, title, facts }) => ({
-          ref,
-          title,
-          status: facts?.['status'],
-          assigneeId: facts?.['assigneeUserId'],
-          projectId: facts?.['projectId'],
-          dueAt: facts?.['dueAt'],
-        })),
+        .map(({ ref, title }) => [ref, title]),
       snapshot: chosen,
       evidence,
       recordsIncluded: chosen.length,

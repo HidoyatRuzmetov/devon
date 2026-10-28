@@ -9,44 +9,18 @@
 // public barrel, which does not carry this file) and therefore talks to these tables through
 // `Tx.raw()` with hand-written SQL instead, exactly like `apps/api/src/db/repo.ts`'s `countUsers`
 // already does for a table that *is* in the shared map.
-import { boolean, integer, jsonb, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { boolean, integer, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { appSchema } from './app.js'
 
-export const personalSprintKindEnum = appSchema.enum('personal_sprint_kind', [
-  '3h',
-  'day',
-  'week',
-  'custom',
-])
-export const personalSprintStatusEnum = appSchema.enum('personal_sprint_status', [
-  'active',
-  'completed',
-  'archived',
-])
 export const pomodoroSessionKindEnum = appSchema.enum('pomodoro_session_kind', [
   'focus',
   'short_break',
   'long_break',
 ])
 
-export const personalSprints = appSchema.table('personal_sprints', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  kind: personalSprintKindEnum('kind').notNull(),
-  startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
-  endsAt: timestamp('ends_at', { withTimezone: true }).notNull(),
-  goal: text('goal'),
-  status: personalSprintStatusEnum('status').notNull().default('active'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  version: integer('version').notNull().default(1),
-})
-
 export const personalTasks = appSchema.table('personal_tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
-  sprintId: uuid('sprint_id'),
   parentId: uuid('parent_id'),
   title: text('title').notNull(),
   doneAt: timestamp('done_at', { withTimezone: true }),
@@ -59,35 +33,6 @@ export const personalTasks = appSchema.table('personal_tasks', {
   // built independently, and a personal task must remain valid even if its linked card is later
   // deleted from a department the owner has since left.
   linkedCardId: uuid('linked_card_id'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  version: integer('version').notNull().default(1),
-})
-
-export const personalNotes = appSchema.table('personal_notes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  title: text('title').notNull(),
-  body: jsonb('body').notNull().default({ text: '' }),
-  pinned: boolean('pinned').notNull().default(false),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  version: integer('version').notNull().default(1),
-})
-
-export const personalCanvases = appSchema.table('personal_canvases', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  title: text('title').notNull(),
-  // Element list + view state for the canvas layer (drawing tool). Shaped to be a drop-in target for
-  // a real `@excalidraw/excalidraw` scene later (`{ elements, appState }`) without a data migration --
-  // see the web feature's `canvas-editor.tsx` header for why this ships a first-party renderer for now.
-  scene: jsonb('scene').notNull().default({ elements: [], appState: {} }),
-  // The sticky-note overlay (TECH-SPEC §3.3): a separate jsonb array so it can be rendered/edited
-  // independently of the drawing layer, e.g. `[{ id, x, y, color, text, rotation }]`.
-  stickies: jsonb('stickies').notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -110,7 +55,6 @@ export const pomodoroSettings = appSchema.table('pomodoro_settings', {
 export const pomodoroSessions = appSchema.table('pomodoro_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
-  taskId: uuid('task_id'),
   kind: pomodoroSessionKindEnum('kind').notNull(),
   startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
   endedAt: timestamp('ended_at', { withTimezone: true }),

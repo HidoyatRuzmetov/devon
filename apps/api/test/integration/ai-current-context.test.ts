@@ -1,19 +1,18 @@
+import { MockProvider, buildOfflineRespond } from '@devon/ai'
+import type { RequestContext } from '@devon/db'
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import type { RequestContext } from '@devon/db'
-import { MockProvider, buildOfflineRespond } from '@devon/ai'
-import {
-  runFeatureForActor,
-  __setProviderForTests,
-  __clearCacheForTests,
-} from '../../src/modules/ai/service.js'
-import { comparisonContext, comparisonScope } from '../../src/modules/ai/ask-context.js'
 import { prepareFeatureInput } from '../../src/modules/ai/request-context.js'
 import {
-  startHarness,
-  stopHarness,
+  __clearCacheForTests,
+  __setProviderForTests,
+  runFeatureForActor,
+} from '../../src/modules/ai/service.js'
+import {
   seedDepartment,
   seedMember,
+  startHarness,
+  stopHarness,
   superuserQuery,
   type Db,
   type Server,
@@ -74,23 +73,6 @@ afterAll(async () => {
 })
 
 describe('automatic scoped AI context', () => {
-  it('routes individual similarity, group comparison and broad overlap questions separately', () => {
-    expect(comparisonScope('Any similar tasks?')).toBe('individual')
-    expect(comparisonScope('Are two groups doing the same work?')).toBe('projects')
-    expect(comparisonScope('Do individual tasks and group projects overlap?')).toBe('all')
-    expect(comparisonScope('Yakka vazifalar va guruh loyihalari takrorlanadimi?')).toBe('all')
-    expect(comparisonScope('Similar individual tasks, not group projects')).toBe('individual')
-    expect(comparisonScope('Are there similar individual projects?')).toBe('individual')
-    expect(comparisonScope('Shaxsiy loyihalar takrorlanadimi?')).toBe('individual')
-    expect(comparisonScope('Do individual tasks and projects overlap?')).toBe('all')
-    expect(comparisonScope('Are people doing repetitive work?')).toBe('all')
-    expect(comparisonScope('Oʻxshash yakka vazifalar bormi?')).toBe('individual')
-    expect(comparisonScope('Alohida vazifalar takrorlanadimi?')).toBe('individual')
-    expect(comparisonScope('Алоҳида вазифалар такрорланадими?')).toBe('individual')
-    expect(comparisonScope('Какие проекты дублируют друг друга?')).toBe('projects')
-    expect(comparisonScope('Лойиҳаларда бир хил ишлар борми?')).toBe('projects')
-    expect(comparisonScope('When is the next event?')).toBe(null)
-  })
   it('loads only active standalone tasks for creation-time duplicate checks, ignoring forged client candidates', async () => {
     const input = await prepareFeatureInput(ctx, departmentId, 'duplicate_check', {
       candidateTitle: 'Open data audit',
@@ -107,25 +89,6 @@ describe('automatic scoped AI context', () => {
       candidateTitle: 'Open data audit',
     })
     expect((fresh['existing'] as { id: string }[]).map((x) => x.id)).not.toContain(cardIds[0])
-  })
-  it('represents each group once and never includes internal assignments as rival work', async () => {
-    const hits = await comparisonContext(ctx, departmentId, 'Any repetitive work?', 'all')
-    expect(
-      hits
-        .filter((x) => x.subjectType === 'project')
-        .map((x) => x.subjectId)
-        .sort(),
-    ).toEqual([...projectIds].sort())
-    expect(
-      hits
-        .filter((x) => x.subjectType === 'card')
-        .map((x) => x.subjectId)
-        .sort(),
-    ).toEqual(cardIds.slice(0, 2).sort())
-    const individuals = await comparisonContext(ctx, departmentId, 'similar tasks', 'individual')
-    expect(individuals.every((x) => x.subjectType === 'card')).toBe(true)
-    const groups = await comparisonContext(ctx, departmentId, 'similar projects', 'projects')
-    expect(groups.every((x) => x.subjectType === 'project')).toBe(true)
   })
   it('keeps personal quick-add isolated and supplies current board directories automatically', async () => {
     const privateInput = await prepareFeatureInput(ctx, departmentId, 'quick_add_parse', {
@@ -150,9 +113,6 @@ describe('automatic scoped AI context', () => {
     )
     expect(boardInput['defaultAssigneeUserId']).toBeNull()
     expect(JSON.stringify(boardInput)).not.toContain('password')
-    const foreign = (await seedDepartment(db, { name: 'Foreign', slug: `foreign-${randomUUID()}` }))
-      .id
-    expect(await comparisonContext(ctx, foreign, 'similar work', 'all')).toEqual([])
   })
   it('caches only unchanged context for the same person and records no second charge', async () => {
     await superuserQuery(

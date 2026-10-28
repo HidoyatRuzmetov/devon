@@ -7,7 +7,6 @@ function task(id: string, parentId: string | null, sort = 0): Task {
     id,
     parentId,
     sort,
-    sprintId: null,
     title: id,
     doneAt: null,
     notes: null,

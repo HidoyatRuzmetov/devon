@@ -10,7 +10,7 @@ import { InlineKeyboard } from 'grammy'
 // The route list is shared with the app itself (`@devon/contracts`), so a bot button can never open
 // a screen the Mini App no longer has.
 import { MINIAPP_ROUTES, type MiniappRouteKey } from '@devon/contracts'
-import { miniappUrl } from './miniapp.js'
+import { miniappUrl } from './public-url.js'
 import { tb, type BotLocale } from './templates.js'
 
 export function miniappHref(route: MiniappRouteKey): string {
@@ -45,7 +45,6 @@ export function miniappMenuKeyboard(locale: BotLocale): InlineKeyboard | null {
   kb.webApp(tb(locale, 'miniapp.open_board'), miniappHref('board'))
   kb.webApp(tb(locale, 'miniapp.open_events'), miniappHref('events')).row()
   kb.webApp(tb(locale, 'miniapp.open_focus'), miniappHref('focus'))
-  kb.webApp(tb(locale, 'miniapp.open_fields'), miniappHref('fields'))
   return kb
 }
 

@@ -9,14 +9,17 @@
 // per-feature input/output validation happens inside `@devon/ai`'s `runFeature()`. `plan_sprint` is
 // the one personal-workspace feature (EPIC-009): its permission subject is `{kind:'personal'}` (I-1),
 // never `department_child`, even though its budget/flag still bills to the caller's active department.
-import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import type { FastifyRequest } from 'fastify'
+import type { Subject } from '@devon/contracts'
 import type { RequestContext } from '@devon/db'
+import type { FastifyRequest } from 'fastify'
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { contextDepartmentRole, isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
-import { contextDepartmentRole, isHeadOf } from '../../lib/actor.js'
-import type { Subject } from '@devon/contracts'
+import { readBriefing } from './briefing-repo.js'
+import { requestBriefing, startBriefingJobs, type BriefingJobsHandle } from './briefing.js'
+import conversationRoutes from './conversation-routes.js'
 import {
   AiBudgetExceededError,
   AiFeatureDisabledError,
@@ -24,30 +27,24 @@ import {
   AiRunFailedError,
   AiUnavailableError,
 } from './errors.js'
-import * as service from './service.js'
-import conversationRoutes from './conversation-routes.js'
-import { requestBriefing, startBriefingJobs, type BriefingJobsHandle } from './briefing.js'
-import { readBriefing } from './briefing-repo.js'
 import {
   aiSettingsSchema,
-  askBodySchema,
-  askResponseSchema,
+  briefingResponseSchema,
   featureParamsSchema,
   patchAiSettingsBodySchema,
+  refreshBriefingBodySchema,
+  refreshBriefingResponseSchema,
   reindexResponseSchema,
   runFeatureBodySchema,
   runFeatureResponseSchema,
   searchBackendSchema,
-  briefingResponseSchema,
-  refreshBriefingBodySchema,
-  refreshBriefingResponseSchema,
   searchQuerySchema,
   searchResponseSchema,
   usageListResponseSchema,
   usageQuerySchema,
-  type AskResponse,
   type RunFeatureResponse,
 } from './schemas.js'
+import * as service from './service.js'
 
 function activeDepartmentId(req: FastifyRequest): string {
   return req.actor?.viewAs?.departmentId ?? req.actor?.departmentId ?? ''
@@ -332,52 +329,6 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { response: { 200: searchBackendSchema } },
     },
     async (req) => service.describeSearchBackend(toDbContext(req), activeDepartmentId(req)),
-  )
-
-  app.post(
-    '/ask',
-    {
-      config: {
-        permission: { action: 'create', subject: departmentChildSubject },
-        // Same reasoning as `/features/:feature/run`: one question is one model call.
-        rateLimit: { max: 20, timeWindow: '1 minute' },
-      },
-      schema: { body: askBodySchema, response: { 200: askResponseSchema } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      try {
-        const outcome = await service.ask(toDbContext(req), {
-          departmentId: activeDepartmentId(req),
-          userId: req.actor!.userId,
-          question: req.body.question,
-          locale: req.body.locale,
-        })
-        // Same boundary note as `/features/:feature/run` above: `service.ts` is plain business logic
-        // and widens the feature id back to `string`; `askResponseSchema` re-validates at the HTTP
-        // layer either way, so this cast is the schema's shape, not a trust shortcut.
-        return reply.type('application/json').send(outcome as unknown as AskResponse)
-      } catch (err) {
-        if (err instanceof AiFeatureDisabledError) {
-          return sendProblem(reply, 'forbidden', {
-            errors: [{ path: 'feature', code: 'disabled' }],
-          })
-        }
-        if (err instanceof AiBudgetExceededError) {
-          return sendProblem(reply, 'forbidden', {
-            errors: [{ path: 'budget', code: 'exceeded' }],
-          })
-        }
-        if (err instanceof AiInputValidationError) {
-          return sendProblem(reply, 'validation_failed', {
-            errors: [{ path: 'question', code: 'invalid' }],
-          })
-        }
-        if (err instanceof AiRunFailedError) return sendProblem(reply, 'internal')
-        if (err instanceof AiUnavailableError) return sendProblem(reply, 'maintenance')
-        throw err
-      }
-    },
   )
 
   /**

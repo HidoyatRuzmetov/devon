@@ -1,0 +1,47 @@
+{
+  "assistantBatch": {
+    "review": "Проверка изменений",
+    "select": "Включить: {title}",
+    "selected": "Выбрано {selected} из {total}",
+    "confirm": "Подтвердить выбранное",
+    "discardAll": "Отклонить всё",
+    "unselected": "Невыбранные изменения будут отклонены.",
+    "details": "Подробности",
+    "hideDetails": "Скрыть подробности",
+    "save": "Сохранить изменения",
+    "cancel": "Отмена",
+    "askChange": "Попросить помощника изменить",
+    "editError": "Не удалось сохранить. Проверьте значения или обновите изменившееся предложение.",
+    "openResult": "Открыть результат",
+    "change": "Изменение",
+    "checklistCount": "Пунктов чек-листа: {count}",
+    "backToChat": "Назад к помощнику",
+    "dependsOn": "Использует: {title}",
+    "dependencyFailed": "Не применено: необходимое предыдущее изменение не выполнено.",
+    "kinds": {
+      "card_withChecklist": "Задача и список",
+      "card_assignMany": "Назначить участникам",
+      "checkin_add": "Добавить в чек-ин",
+      "checkin_update": "Изменить результат",
+      "checkin_remove": "Убрать из чек-ина",
+      "checkin_lock": "Закрыть этап",
+      "personal_calendar_create": "Добавить в личный календарь",
+      "personal_calendar_update": "Изменить запись календаря",
+      "personal_calendar_delete": "Удалить запись календаря"
+    },
+    "fields": {
+      "existingCardId": "Существующая задача",
+      "create": "Новая задача",
+      "checklist": "Список",
+      "recipientUserIds": "Получатели",
+      "cycleId": "Период",
+      "entryId": "Результат",
+      "state": "Состояние",
+      "phase": "Этап",
+      "remindAt": "Напоминание",
+      "allDay": "Весь день",
+      "parentKey": "Родительский пункт",
+      "key": "Ссылка на пункт"
+    }
+  }
+}

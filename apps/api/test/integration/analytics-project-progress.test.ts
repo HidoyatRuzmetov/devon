@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import type { AnalyticsSummaryDto } from '../../src/modules/analytics/schemas.js'
 import type { ProjectDTO } from '../../src/modules/projects/schemas.js'
 import {
   loginAs,
@@ -117,17 +116,18 @@ async function addChecklist(cardId: string, done: boolean[]) {
   }
 }
 
-async function progress(filter = '', session = head) {
-  const response = await checkedRequest(
-    `/analytics/summary?${new URLSearchParams({ filter })}`,
-    'GET',
-    undefined,
-    session,
-  )
-  return ((await response.json()) as AnalyticsSummaryDto).projectProgress
+async function progress(_filter = '', session = head) {
+  const response = await checkedRequest('/projects', 'GET', undefined, session)
+  const projects = (await response.json()) as ProjectDTO[]
+  return projects.map((p) => ({
+    id: p.id,
+    progress: p.progress,
+    totalTasks: p.objectiveTotal + p.subjectiveTotal,
+    doneTasks: p.objectiveDone + p.subjectiveDone,
+  }))
 }
 
-describe('consistent project progress in Home, Analytics and Projects', () => {
+describe('consistent project progress in Home and Projects', () => {
   it('keeps task counts separate from milestone progress', async () => {
     const projects = (await (await checkedRequest('/projects')).json()) as ProjectDTO[]
     const detail = (await (
@@ -186,21 +186,9 @@ describe('consistent project progress in Home, Analytics and Projects', () => {
     expect((await progress()).some((project) => project.id === emptyActive.id)).toBe(false)
   })
 
-  it('retains project/status filter semantics and never changes department progress with a person filter', async () => {
-    const onlyProject = await progress('project:"Partial project"')
-    expect(onlyProject).toHaveLength(1)
-    expect(onlyProject[0]?.id).toBe(partialProject.id)
-    expect(onlyProject[0]?.progress).toBe(0)
-    expect(await progress('project:"No such project"')).toEqual([])
-    const active = await progress('project:"Partial project" status:active')
-    expect(active[0]).toMatchObject({ totalTasks: 2, doneTasks: 0, progress: 0 })
-    const archived = await progress('project:"Partial project" status:archived')
-    expect(archived[0]).toMatchObject({ totalTasks: 1, doneTasks: 1, progress: 0 })
-    expect(
-      await progress('project:"Partial project" assignee:@me giver:nobody unit:"Unknown"'),
-    ).toEqual(onlyProject)
+  it('keeps the project list scoped to its department', async () => {
     const foreignProject = await createProject('Foreign project', foreign, foreignId)
-    expect((await progress()).some((project) => project.id === foreignProject.id)).toBe(false)
-    expect(await progress('project:"Partial project"', foreign)).toEqual([])
+    expect((await progress()).some((p) => p.id === foreignProject.id)).toBe(false)
+    expect((await progress('', foreign)).some((p) => p.id === partialProject.id)).toBe(false)
   })
 })

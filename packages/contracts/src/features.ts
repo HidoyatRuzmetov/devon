@@ -20,16 +20,11 @@
 /** Every switch key. Ordered as the settings screen lists them: data shape first, then planning,
  * then the things that act on their own. */
 export const FEATURE_KEYS = [
-  'custom_fields',
-  'person_fields',
   'estimates',
-  'workload',
   'dependencies',
   'recurring',
   'templates',
-  'goals',
   'focus_list',
-  'automations',
   'reminders',
 ] as const
 
@@ -48,33 +43,12 @@ export type FeatureSpec = {
 }
 
 export const FEATURES: Readonly<Record<FeatureKey, FeatureSpec>> = Object.freeze({
-  custom_fields: {
-    key: 'custom_fields',
-    labelKey: 'departments.features.custom_fields.label',
-    descriptionKey: 'departments.features.custom_fields.description',
-    defaultEnabled: false,
-    area: 'work',
-  },
-  person_fields: {
-    key: 'person_fields',
-    labelKey: 'departments.features.person_fields.label',
-    descriptionKey: 'departments.features.person_fields.description',
-    defaultEnabled: false,
-    area: 'people',
-  },
   estimates: {
     key: 'estimates',
     labelKey: 'departments.features.estimates.label',
     descriptionKey: 'departments.features.estimates.description',
     defaultEnabled: false,
     area: 'work',
-  },
-  workload: {
-    key: 'workload',
-    labelKey: 'departments.features.workload.label',
-    descriptionKey: 'departments.features.workload.description',
-    defaultEnabled: false,
-    area: 'people',
   },
   dependencies: {
     key: 'dependencies',
@@ -97,26 +71,12 @@ export const FEATURES: Readonly<Record<FeatureKey, FeatureSpec>> = Object.freeze
     defaultEnabled: false,
     area: 'planning',
   },
-  goals: {
-    key: 'goals',
-    labelKey: 'departments.features.goals.label',
-    descriptionKey: 'departments.features.goals.description',
-    defaultEnabled: false,
-    area: 'planning',
-  },
   focus_list: {
     key: 'focus_list',
     labelKey: 'departments.features.focus_list.label',
     descriptionKey: 'departments.features.focus_list.description',
     defaultEnabled: false,
     area: 'work',
-  },
-  automations: {
-    key: 'automations',
-    labelKey: 'departments.features.automations.label',
-    descriptionKey: 'departments.features.automations.description',
-    defaultEnabled: false,
-    area: 'automation',
   },
   reminders: {
     key: 'reminders',

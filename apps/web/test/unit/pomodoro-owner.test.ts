@@ -84,7 +84,7 @@ describe('Pomodoro ownership and receipt recovery', () => {
 
   it('uses the recorded start time and preserves paused time independently from ticking', () => {
     scopePomodoroState('owner-a')
-    startPhase('focus', settings, null, Date.now() - 10_000)
+    startPhase('focus', settings, Date.now() - 10_000)
     expect(remainingMs()).toBe(50_000)
     pause()
     vi.advanceTimersByTime(20_000)

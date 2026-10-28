@@ -6,10 +6,10 @@
 // `schemas-plus.ts` off `schemas.ts`: `api.ts` is the v1.0 card contract and is named in comments
 // across this feature. Every response is still validated at the fetch boundary -- nothing here is
 // trusted as `any` past this file.
+import { recurrenceRuleSchema, workTemplateKindSchema } from '@devon/contracts'
 import { z } from 'zod'
-import { goalMetricSchema, recurrenceRuleSchema, workTemplateKindSchema } from '@devon/contracts'
 import { apiClient } from '../../lib/api-client.js'
-import { cardPrioritySchema, cardRiskSchema, cardStatusSchema, memberSummarySchema } from './api.js'
+import { cardPrioritySchema, cardRiskSchema, cardStatusSchema } from './api.js'
 
 /** Every create in this file answers `201 { id }` and every update/delete answers `204` -- the
  * house shape (`api.ts`'s own `idResultSchema`). The caller re-reads through its query rather than
@@ -333,161 +333,6 @@ export async function removeFocusPin(cardId: string, csrfToken: string): Promise
 
 export async function reorderFocusList(cardIds: string[], csrfToken: string): Promise<void> {
   await apiClient.post('/api/v1/work/focus/reorder', { cardIds }, z.void(), csrfToken)
-}
-
-// --- A4 capacity and the workload grid -------------------------------------------------------------
-
-export const capacityRowSchema = z.object({
-  userId: z.string(),
-  weeklyHours: z.number(),
-  isDefault: z.boolean(),
-})
-export type CapacityRow = z.infer<typeof capacityRowSchema>
-export const capacityListSchema = z.array(capacityRowSchema)
-
-export function fetchCapacity(): Promise<CapacityRow[]> {
-  return apiClient.get('/api/v1/work/capacity', capacityListSchema)
-}
-
-export async function putCapacity(
-  userId: string,
-  weeklyHours: number,
-  csrfToken: string,
-): Promise<void> {
-  await apiClient.put(
-    `/api/v1/work/capacity/${encodeURIComponent(userId)}`,
-    { weeklyHours },
-    z.void(),
-    csrfToken,
-  )
-}
-
-export const workloadCellSchema = z.object({
-  weekStart: z.string(),
-  estimateHours: z.number(),
-  cardCount: z.number().int(),
-  overdueCount: z.number().int(),
-})
-export type WorkloadCell = z.infer<typeof workloadCellSchema>
-
-export const workloadRowSchema = z.object({
-  member: memberSummarySchema,
-  capacityHours: z.number(),
-  cells: z.array(workloadCellSchema),
-})
-export type WorkloadRow = z.infer<typeof workloadRowSchema>
-
-export const workloadSchema = z.object({
-  weekStarts: z.array(z.string()),
-  rows: z.array(workloadRowSchema),
-  /** A4's "Hisobga olinmagan" panel: the two ways a workload grid quietly lies -- open cards with
-   * no due date (they land in no week) and open cards with no estimate (they add nothing to any
-   * bar). */
-  unscheduled: z.object({
-    noDueDate: z.number().int(),
-    noEstimate: z.number().int(),
-    /** v1.1 critique SEV2 #3: every open card in the department, so the grid can tell honestly how
-     * much of the work its estimate-based colouring covers -- and fall back to counting cards when
-     * the answer is "less than half". */
-    openTotal: z.number().int(),
-  }),
-})
-export type Workload = z.infer<typeof workloadSchema>
-
-export type WorkloadQuery = { weeks?: number; start?: string; userId?: string }
-
-function workloadSearch(query: WorkloadQuery): string {
-  const params = new URLSearchParams()
-  if (query.weeks) params.set('weeks', String(query.weeks))
-  if (query.start) params.set('start', query.start)
-  if (query.userId) params.set('userId', query.userId)
-  const qs = params.toString()
-  return qs ? `?${qs}` : ''
-}
-
-export function fetchWorkload(query: WorkloadQuery = {}): Promise<Workload> {
-  return apiClient.get(`/api/v1/work/workload${workloadSearch(query)}`, workloadSchema)
-}
-
-/** SPEC §2.2: the grid is head-only, but a member gets their own row through the same service --
- * this is that call, and the server refuses any other user id for a member. */
-export function fetchMyWorkload(query: WorkloadQuery = {}): Promise<Workload> {
-  return apiClient.get(`/api/v1/work/workload/mine${workloadSearch(query)}`, workloadSchema)
-}
-
-export async function moveWorkloadCard(
-  input: { cardId: string; toUserId: string | null; toWeekStart: string },
-  csrfToken: string,
-): Promise<void> {
-  await apiClient.post('/api/v1/work/workload/move', input, z.void(), csrfToken)
-}
-
-// --- A11 department goals ---------------------------------------------------------------------------
-
-export const goalSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string().nullable(),
-  metric: goalMetricSchema,
-  filter: z.string(),
-  targetValue: z.number(),
-  startsOn: z.string().nullable(),
-  dueOn: z.string().nullable(),
-  archivedAt: z.string().nullable(),
-  createdAt: z.string(),
-  version: z.number().int(),
-  currentValue: z.number(),
-  progress: z.number(),
-  matchedCards: z.number().int(),
-})
-export type Goal = z.infer<typeof goalSchema>
-export const goalListSchema = z.array(goalSchema)
-
-export function fetchGoals(): Promise<Goal[]> {
-  return apiClient.get('/api/v1/goals', goalListSchema)
-}
-
-export type CreateGoalInput = {
-  title: string
-  description?: string
-  metric: z.infer<typeof goalMetricSchema>
-  filter?: string
-  targetValue: number
-  startsOn?: string | null
-  dueOn?: string | null
-}
-
-export function createGoal(input: CreateGoalInput, csrfToken: string): Promise<{ id: string }> {
-  return apiClient.post('/api/v1/goals', input, idResultSchema, csrfToken)
-}
-
-/** v1.1 critique SEV2 #8 -- editing a goal, which the product could not do at all. Mirrors the
- * server's own `patchGoalBodySchema`, which is deliberately *wider* than `CreateGoalInput`:
- * `description` and `dueOn` are nullable on a patch, because clearing a description is a real edit
- * and `undefined` would mean "leave it alone". `filter` is a string there, so an emptied filter is
- * sent as `''` -- "count every card" -- rather than as `null`. */
-export type PatchGoalInput = {
-  title?: string
-  description?: string | null
-  metric?: z.infer<typeof goalMetricSchema>
-  filter?: string
-  targetValue?: number
-  startsOn?: string | null
-  dueOn?: string | null
-  archived?: boolean
-  version?: number
-}
-
-export async function patchGoal(
-  id: string,
-  patch: PatchGoalInput,
-  csrfToken: string,
-): Promise<void> {
-  await apiClient.patch(`/api/v1/goals/${encodeURIComponent(id)}`, patch, z.void(), csrfToken)
-}
-
-export async function deleteGoal(id: string, csrfToken: string): Promise<void> {
-  await apiClient.delete(`/api/v1/goals/${encodeURIComponent(id)}`, csrfToken)
 }
 
 // --- A7 recurrence (the rule itself lives in `@devon/contracts`) --------------------------------------

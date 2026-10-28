@@ -1,0 +1,47 @@
+{
+  "assistantBatch": {
+    "review": "Review changes",
+    "select": "Include: {title}",
+    "selected": "{selected} of {total} selected",
+    "confirm": "Confirm selected",
+    "discardAll": "Discard all",
+    "unselected": "Unchecked changes will be discarded.",
+    "details": "Show details",
+    "hideDetails": "Hide details",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "askChange": "Ask assistant to revise",
+    "editError": "Could not save these changes. Check the values or refresh if the proposal changed.",
+    "openResult": "Open result",
+    "change": "Change",
+    "checklistCount": "{count} checklist items",
+    "backToChat": "Back to assistant",
+    "dependsOn": "Uses: {title}",
+    "dependencyFailed": "Not applied because a required earlier change was not completed.",
+    "kinds": {
+      "card_withChecklist": "Task and checklist",
+      "card_assignMany": "Assign task to members",
+      "checkin_add": "Add to check-in",
+      "checkin_update": "Update deliverable",
+      "checkin_remove": "Remove from check-in",
+      "checkin_lock": "Lock cycle",
+      "personal_calendar_create": "Add personal calendar entry",
+      "personal_calendar_update": "Edit personal calendar entry",
+      "personal_calendar_delete": "Delete personal calendar entry"
+    },
+    "fields": {
+      "existingCardId": "Existing task",
+      "create": "New task",
+      "checklist": "Checklist",
+      "recipientUserIds": "Recipients",
+      "cycleId": "Cycle",
+      "entryId": "Deliverable",
+      "state": "State",
+      "phase": "Meeting",
+      "remindAt": "Reminder",
+      "allDay": "All day",
+      "parentKey": "Parent item",
+      "key": "Item reference"
+    }
+  }
+}

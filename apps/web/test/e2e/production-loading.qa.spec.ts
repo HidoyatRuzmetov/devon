@@ -1,7 +1,7 @@
+import { expect, test, type Browser } from '@playwright/test'
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { expect, test, type Browser } from '@playwright/test'
-import { authedPatch, csrfToken, login, newFlowContext } from './flow-api.js'
+import { authedPatch, login, newFlowContext } from './flow-api.js'
 import { FLOW_WEB_BASE_URL } from './flow-env.js'
 import { settleCapture, waitForLoadedRoute } from './platform-capture.js'
 
@@ -15,8 +15,10 @@ const builtAssets = readdirSync(resolve(root, 'apps/web/dist/assets'))
     const sources: string[] = JSON.parse(readFileSync(map, 'utf8')).sources
     return { name, sources }
   })
-const chartAssets = builtAssets
-  .filter(({ sources }) => sources.some((source) => /\/recharts(?:@|\/)/.test(source)))
+const checkinAssets = builtAssets
+  .filter(({ sources }) =>
+    sources.some((source) => /\/features\/analytics\/checkin-screen/.test(source)),
+  )
   .map(({ name }) => name)
 const unrelatedHeavyHomeAssets = builtAssets
   .filter(({ sources }) =>
@@ -27,7 +29,8 @@ const unrelatedHeavyHomeAssets = builtAssets
     ),
   )
   .map(({ name }) => name)
-if (chartAssets.length === 0) throw new Error('A real built chart asset must exist for this proof')
+if (checkinAssets.length === 0)
+  throw new Error('A real built check-in asset must exist for this proof')
 
 async function actor(browser: Browser, username: 'demo.boshliq' | 'demo.xodim') {
   const context = await newFlowContext(browser)
@@ -53,7 +56,7 @@ async function actor(browser: Browser, username: 'demo.boshliq' | 'demo.xodim') 
   return { context, page, foreignRequests, pageErrors, assets }
 }
 
-test('cold built head Home avoids chart downloads while rendering the real management dashboard', async ({
+test('cold built head Home avoids check-in downloads while rendering the department overview', async ({
   browser,
 }, info) => {
   const { context, page, foreignRequests, pageErrors, assets } = await actor(
@@ -62,10 +65,10 @@ test('cold built head Home avoids chart downloads while rendering the real manag
   )
   try {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Management view', exact: true })).toBeVisible()
+    await expect(page.getByText('Total workforce', { exact: true })).toBeVisible()
     await waitForLoadedRoute(page, '/')
     await settleCapture(page)
-    expect(assets.filter((name) => chartAssets.includes(name))).toEqual([])
+    expect(assets.filter((name) => checkinAssets.includes(name))).toEqual([])
     expect(assets.filter((name) => unrelatedHeavyHomeAssets.includes(name))).toEqual([])
     expect(foreignRequests).toEqual([])
     expect(pageErrors).toEqual([])
@@ -76,7 +79,7 @@ test('cold built head Home avoids chart downloads while rendering the real manag
           build: JSON.parse(
             readFileSync(resolve(root, 'tools/perf/lighthouse/out/production-build.json'), 'utf8'),
           ),
-          chartAssets,
+          checkinAssets,
           unrelatedHeavyHomeAssets,
           requestedAssets: assets,
         },
@@ -135,9 +138,7 @@ test('built routing preserves unsigned, unknown and administrator route boundari
   }
 })
 
-test('compiled lazy head-only wrappers refuse member deep links before protected data reads', async ({
-  browser,
-}) => {
+test('retired management routes have no page or protected data reads', async ({ browser }) => {
   const check = async (path: string, protectedPrefix: string) => {
     const { context, page, foreignRequests, pageErrors } = await actor(browser, 'demo.xodim')
     const protectedReads: string[] = []
@@ -147,9 +148,7 @@ test('compiled lazy head-only wrappers refuse member deep links before protected
     })
     try {
       await page.goto(path)
-      await expect(
-        page.getByRole('heading', { name: 'This page is not open to you', exact: true }),
-      ).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Page not found', exact: true })).toBeVisible()
       expect(protectedReads).toEqual([])
       expect(foreignRequests).toEqual([])
       expect(pageErrors).toEqual([])
@@ -164,67 +163,30 @@ test('compiled lazy head-only wrappers refuse member deep links before protected
   ])
 })
 
-test('a member pins My stats through Analytics, reloads built Home and unpins the persisted chart', async ({
+test('built check-in view lazy-loads the new feature and opens Progress without retired chart dependencies', async ({
   browser,
 }, info) => {
   const { context, page, foreignRequests, pageErrors, assets } = await actor(browser, 'demo.xodim')
-  let ownedPin: string | undefined
   try {
-    const initial = await context.request.get('/api/v1/analytics/pins')
-    expect(initial.status()).toBe(200)
-    expect(
-      (await initial.json()).some((pin: { chartKey: string }) => pin.chartKey === 'personal'),
-    ).toBe(false)
     await page.goto('/analytics')
-    const personal = page.getByRole('region', { name: 'My stats', exact: true })
-    await expect(personal).toBeVisible()
-    const receipt = page.waitForResponse(
-      (response) =>
-        response.url() === `${FLOW_WEB_BASE_URL}/api/v1/analytics/pins` &&
-        response.request().method() === 'POST',
-    )
-    await personal.getByRole('button', { name: 'Pin to Home', exact: true }).click()
-    const pinned = await receipt
-    expect(pinned.status()).toBe(201)
-    const pin = await pinned.json()
-    expect(pin.chartKey).toBe('personal')
-    ownedPin = pin.id
-    await expect(personal.getByRole('button', { name: 'Unpin', exact: true })).toHaveAttribute(
-      'aria-pressed',
+    await expect(page.getByRole('tab', { name: 'Check-in / out', exact: true })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Two-week cycle', exact: true })).toBeVisible()
+    await page.getByRole('tab', { name: 'Progress', exact: true }).click()
+    await expect(page.locator('.checkin-progress')).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole('tab', { name: 'Progress', exact: true })).toHaveAttribute(
+      'aria-selected',
       'true',
     )
-
-    await page.getByRole('link', { name: 'Home', exact: true }).first().click()
-    await expect(page).toHaveURL(`${FLOW_WEB_BASE_URL}/`)
-    const homePersonal = page.getByRole('region', { name: 'My stats', exact: true })
-    await expect(homePersonal).toBeVisible()
-    await waitForLoadedRoute(page, '/')
-    await page.reload()
-    await expect(homePersonal).toBeVisible()
     await settleCapture(page)
-    expect(assets.some((name) => chartAssets.includes(name))).toBe(true)
-    await page.screenshot({ path: info.outputPath('member-pinned-home.png'), fullPage: true })
-
-    const deletion = page.waitForResponse(
-      (response) =>
-        response.url() === `${FLOW_WEB_BASE_URL}/api/v1/analytics/pins/${ownedPin}` &&
-        response.request().method() === 'DELETE',
-    )
-    await homePersonal.getByRole('button', { name: 'Unpin', exact: true }).click()
-    expect((await deletion).status()).toBe(204)
-    await expect(homePersonal).toHaveCount(0)
-    const stored = await context.request.get('/api/v1/analytics/pins')
-    expect(stored.status()).toBe(200)
-    expect((await stored.json()).some((entry: { id: string }) => entry.id === ownedPin)).toBe(false)
-    ownedPin = undefined
+    expect(assets.some((name) => checkinAssets.includes(name))).toBe(true)
+    expect(
+      builtAssets.some(({ sources }) => sources.some((source) => /recharts/.test(source))),
+    ).toBe(false)
     expect(foreignRequests).toEqual([])
     expect(pageErrors).toEqual([])
+    await page.screenshot({ path: info.outputPath('member-checkins.png'), fullPage: true })
   } finally {
-    // Remove only the chart created by this test if an intermediate assertion failed.
-    if (ownedPin)
-      await context.request.delete(`/api/v1/analytics/pins/${ownedPin}`, {
-        headers: { 'x-csrf-token': await csrfToken(context) },
-      })
     await context.close()
   }
 })

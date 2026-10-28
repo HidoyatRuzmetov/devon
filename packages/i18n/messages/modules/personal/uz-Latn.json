@@ -8,93 +8,14 @@
     },
     "title": "Shaxsiy",
     "eyebrow": "FAQAT SIZGA",
-    "description": "Davrlar, vazifalar, qaydlar, oq taxta va diqqat vaqti — faqat sizga koʻrinadigan maydon.",
     "tabs": {
-      "today": "Bugun",
-      "sprints": "Davrlar",
       "tasks": "Vazifalar",
-      "notes": "Qaydlar",
-      "canvas": "Oq taxta",
       "pomodoro": "Pomodoro"
-    },
-    "privacy": {
-      "note": "Bu yerdagilarni faqat siz koʻrasiz — boshqarma boshligʻi ham, boshqa hech kim ham koʻrmaydi.",
-      "dismiss": "Yopish"
     },
     "duration": {
       "daysShort": "kun",
       "hoursShort": "soat",
       "minutesShort": "daq"
-    },
-    "today": {
-      "tasks": {
-        "title": "Bugungi vazifalar",
-        "remaining": "{count} qoldi",
-        "completedToast": "Bajarildi"
-      },
-      "empty": {
-        "title": "Bugunga reja yoʻq",
-        "body": "Vazifa qoʻshing yoki davr boshlang — shu yerda koʻrinadi."
-      },
-      "allDone": {
-        "title": "Hozircha hammasi bajarildi",
-        "body": "Faol davrlaringizda ham, yigʻmada ham boshqa vazifa qolmadi."
-      },
-      "addPlaceholder": "Bugun uchun vazifa qoʻshish",
-      "focus": "Diqqat",
-      "period": {
-        "progressAria": "Davrning bajarilgan qismi",
-        "timeLeft": "{value} qoldi",
-        "noGoal": "Bu davr uchun hali maqsad belgilanmagan"
-      },
-      "rollover": {
-        "banner": "Bu davr vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?",
-        "bannerGoal": "«{goal}» davri vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?"
-      }
-    },
-    "sprints": {
-      "active": {
-        "title": "Faol davrlar"
-      },
-      "empty": {
-        "title": "Hali davr yoʻq",
-        "body": "Ishingizga maqsad va vaqt chegarasi belgilash uchun davr boshlang."
-      },
-      "create": {
-        "action": "Yangi davr",
-        "title": "Yangi davr",
-        "submit": "Davrni boshlash"
-      },
-      "goal": "Maqsad",
-      "edit": "Davrni tahrirlash",
-      "save": "Saqlash",
-      "starts": "Boshlanishi",
-      "ends": "Tugashi",
-      "invalidRange": "Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak.",
-      "goalPlaceholder": "Nimaga erishmoqchisiz?",
-      "history": {
-        "title": "Tarix ({count})"
-      },
-      "rollover": {
-        "action": "Koʻchirish",
-        "toast": "{count} ta tugallanmagan vazifa yangi davrga koʻchirildi"
-      },
-      "complete": {
-        "action": "Yakunlash",
-        "toast": "Davr yakunlandi"
-      },
-      "ended": "Vaqt tugadi",
-      "kind": {
-        "threeHour": "3 soat",
-        "day": "Kun",
-        "week": "Hafta",
-        "custom": "Boshqa"
-      },
-      "status": {
-        "active": "Faol",
-        "completed": "Yakunlangan",
-        "archived": "Arxivlangan"
-      }
     },
     "tasks": {
       "title": "Vazifa nomi",
@@ -114,66 +35,6 @@
       "outdent": "Yuqoriga chiqarish",
       "empty": {
         "section": "Bu yerda hali vazifa yoʻq."
-      }
-    },
-    "notes": {
-      "title": "Qayd nomi",
-      "body": "Qayd matni",
-      "create": "Yangi qayd",
-      "newTitle": "Yangi qayd",
-      "bodyPlaceholder": "Xohlagan narsangizni yozing",
-      "delete": "Qaydni oʻchirish",
-      "deleted": {
-        "toast": "Qayd oʻchirildi"
-      },
-      "pin": "Mahkamlash",
-      "unpin": "Mahkamlashni olib tashlash",
-      "autosave": {
-        "saving": "Saqlanmoqda…",
-        "saved": "Saqlandi"
-      },
-      "empty": {
-        "title": "Hali qayd yoʻq",
-        "body": "Qaydlar faqat siz uchun — xohlagan narsangizni yozib qoʻying."
-      }
-    },
-    "canvas": {
-      "title": "Oq taxta nomi",
-      "create": "Yangi oq taxta",
-      "newTitle": "Yangi oq taxta",
-      "open": "Ochish",
-      "back": "Oq taxtalarga qaytish",
-      "delete": "Oq taxtani oʻchirish",
-      "deleted": {
-        "toast": "Oq taxta oʻchirildi"
-      },
-      "autosave": {
-        "saving": "Saqlanmoqda…",
-        "saved": "Saqlandi"
-      },
-      "empty": {
-        "title": "Hali oq taxta yoʻq",
-        "body": "Oq taxta — eskiz va eslatma qogʻozlari uchun erkin maydon."
-      },
-      "addSticky": "Eslatma qogʻozi qoʻshish",
-      "deleteSticky": "Eslatma qogʻozini oʻchirish",
-      "stickyText": "Eslatma qogʻozi matni",
-      "drawingText": "Chizma matni",
-      "drawingSurface": "Chizma maydoni",
-      "undo": "Bekor qilish",
-      "redo": "Qaytarish",
-      "zoomIn": "Kattalashtirish",
-      "zoomOut": "Kichiklashtirish",
-      "strokeWidth": "Chiziq qalinligi",
-      "emptyText": "Matn",
-      "tool": {
-        "select": "Tanlash",
-        "pen": "Qalam",
-        "rectangle": "Toʻrtburchak",
-        "ellipse": "Ellips",
-        "arrow": "Oʻq",
-        "text": "Matn",
-        "eraser": "Oʻchirgʻich"
       }
     },
     "pomodoro": {
@@ -221,26 +82,6 @@
         "sound": "Ovoz",
         "notifications": "Brauzer bildirishnomalari",
         "autoStart": "Keyingi bosqichni avtomatik boshlash"
-      },
-      "stats": {
-        "todayFocus": "Bugungi diqqat vaqti",
-        "todaySessions": "Bugungi seanslar",
-        "weekFocus": "Bu haftadagi diqqat vaqti",
-        "weekSessions": "Bu haftadagi seanslar",
-        "minutesShort": "daq"
-      },
-      "log": {
-        "title": "Seanslar tarixi",
-        "today": "Bugun",
-        "yesterday": "Kecha",
-        "completed": "Yakunlangan",
-        "skipped": "Oʻtkazib yuborilgan",
-        "ongoing": "Davom etmoqda",
-        "showMore": "Yana {count} kunni koʻrsatish",
-        "empty": {
-          "title": "Hali seans yoʻq",
-          "body": "Diqqat vaqtini boshlang — shu yerda koʻrinadi."
-        }
       }
     },
     "ai": {
@@ -258,26 +99,9 @@
         "title": "Taklif etilgan quyi vazifalar",
         "editAria": "Taklif etilgan quyi vazifalarni tahrirlang, har biri alohida qatorda"
       },
-      "planSprint": {
-        "action": "AI bilan rejalashtirish",
-        "title": "AI davr rejasi",
-        "editAria": "Taklif etilgan tartibni tahrirlang, har bir vazifa alohida qatorda",
-        "focusBadge": "Bundan boshlang",
-        "emptyBucket": "Avval bu davrga vazifa qoʻshing",
-        "appliedToast": "Reja qoʻllanildi"
-      },
       "translate": {
         "action": "{locale} tiliga tarjima qilish",
         "title": "{locale} tiliga tarjima"
-      },
-      "catchUp": {
-        "subjectSelf": "Siz",
-        "noteTitle": "Haftalik xulosa",
-        "savedToast": "Qaydlarga saqlandi",
-        "action": "Nimani oʻtkazib yubordim",
-        "title": "Oxirgi hafta",
-        "acceptLabel": "Qaydlarga saqlash",
-        "editAria": "Xulosa matnini tahrirlash"
       }
     }
   }

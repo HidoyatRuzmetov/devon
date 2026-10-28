@@ -3,9 +3,9 @@ import {
   authedPatch,
   authedPost,
   createApprovedDepartment,
+  csrfToken,
   examplePassword,
   flowClientHeaders,
-  csrfToken,
   joinDepartmentAsNewUser,
   loginAsSuperAdmin,
   newFlowContext,
@@ -240,128 +240,6 @@ test('subscription kinds, selectable credentials, read-only ICS, renewal refusal
   }
 })
 
-test('editing an option label preserves existing answers through reorder, archive, Undo and restore', async ({
-  browser,
-}) => {
-  const f = await fixture(browser, true)
-  try {
-    await f.page.goto('/fields')
-    await f.page.getByRole('button', { name: 'New field', exact: true }).first().click()
-    const createDialog = f.page.getByRole('dialog', { name: 'New field', exact: true })
-    await createDialog.getByRole('textbox', { name: 'English', exact: true }).fill('Training grade')
-    await createDialog.getByRole('combobox', { name: 'Type', exact: true }).selectOption('select')
-    await createDialog.getByRole('button', { name: 'Add an option', exact: true }).click()
-    await createDialog.getByRole('textbox', { name: 'Name of option 1', exact: true }).fill('Basic')
-    const created = f.page.waitForResponse(
-      (r) => r.request().method() === 'POST' && new URL(r.url()).pathname === '/api/v1/fields/defs',
-    )
-    await createDialog.getByRole('button', { name: 'Add', exact: true }).click()
-    expect((await created).status()).toBe(201)
-    const def = (await (await f.context.request.get('/api/v1/fields/defs')).json()).defs[0]
-    const optionId = def.options[0].id as string
-    await f.page.goto('/account#fields')
-    const section = f.page.locator('#fields')
-    await section
-      .getByRole('combobox', { name: 'Training grade', exact: true })
-      .selectOption(optionId)
-    const saved = f.page.waitForResponse(
-      (r) => r.request().method() === 'PUT' && new URL(r.url()).pathname.endsWith('/fields/me'),
-    )
-    await section.getByRole('button', { name: 'Save', exact: true }).click()
-    expect((await saved).status()).toBe(200)
-    await f.page.goto('/fields')
-    let row = f.page
-      .locator('article')
-      .filter({ has: f.page.getByRole('heading', { name: /^Training grade/ }) })
-    await row.getByRole('button', { name: 'Edit', exact: true }).click()
-    const editDialog = f.page.getByRole('dialog', { name: 'Edit field', exact: true })
-    await editDialog
-      .getByRole('textbox', { name: 'Name of option 1', exact: true })
-      .fill('Foundation')
-    const edited = f.page.waitForResponse(
-      (r) =>
-        r.request().method() === 'PATCH' && new URL(r.url()).pathname.endsWith(`/defs/${def.id}`),
-    )
-    await editDialog.getByRole('button', { name: 'Save', exact: true }).click()
-    expect((await edited).status()).toBe(200)
-    const stored = (await (await f.context.request.get('/api/v1/fields/defs')).json()).defs.find(
-      (item: { id: string }) => item.id === def.id,
-    )
-    expect(stored.options[0].id).toBe(optionId)
-    expect(stored.options[0].label.en).toBe('Foundation')
-    await f.page.goto('/account#fields')
-    await expect(
-      section.getByRole('combobox', { name: 'Training grade', exact: true }),
-    ).toHaveValue(optionId)
-    await expect(section.getByRole('option', { name: 'Foundation', exact: true })).toBeAttached()
-    await f.page.goto('/fields')
-    await f.page.getByRole('button', { name: 'New field', exact: true }).first().click()
-    await createDialog.getByRole('textbox', { name: 'English', exact: true }).fill('Training hours')
-    await createDialog.getByRole('combobox', { name: 'Type', exact: true }).selectOption('number')
-    const second = f.page.waitForResponse(
-      (r) => r.request().method() === 'POST' && new URL(r.url()).pathname === '/api/v1/fields/defs',
-    )
-    await createDialog.getByRole('button', { name: 'Add', exact: true }).click()
-    expect((await second).status()).toBe(201)
-    const secondId = (await (await second).json()).def.id as string
-    row = f.page
-      .locator('article')
-      .filter({ has: f.page.getByRole('heading', { name: /^Training grade/ }) })
-    const reordered = f.page.waitForResponse(
-      (r) => r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith('/defs/reorder'),
-    )
-    await row.getByRole('button', { name: 'Move down', exact: true }).click()
-    expect((await reordered).status()).toBe(204)
-    expect(
-      (await (await f.context.request.get('/api/v1/fields/defs')).json()).defs.map(
-        (item: { id: string }) => item.id,
-      ),
-    ).toEqual([secondId, def.id])
-    const archived = f.page.waitForResponse(
-      (r) =>
-        r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith(`/${def.id}/archive`),
-    )
-    await row.getByRole('button', { name: 'Archive', exact: true }).click()
-    expect((await archived).status()).toBe(200)
-    await expect(row).not.toBeVisible()
-    const undone = f.page.waitForResponse(
-      (r) =>
-        r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith(`/${def.id}/restore`),
-    )
-    await f.page.getByRole('button', { name: 'Undo', exact: true }).click()
-    expect((await undone).status()).toBe(200)
-    await expect(row).toBeVisible()
-    const archivedAgain = f.page.waitForResponse(
-      (r) =>
-        r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith(`/${def.id}/archive`),
-    )
-    await row.getByRole('button', { name: 'Archive', exact: true }).click()
-    expect((await archivedAgain).status()).toBe(200)
-    await f.page.getByRole('switch', { name: 'Show archived', exact: true }).check()
-    await expect(row.getByText('Archived', { exact: true })).toBeVisible()
-    const restored = f.page.waitForResponse(
-      (r) =>
-        r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith(`/${def.id}/restore`),
-    )
-    await row.getByRole('button', { name: 'Restore', exact: true }).click()
-    expect((await restored).status()).toBe(200)
-    await f.page.goto('/account#fields')
-    await expect(
-      section.getByRole('combobox', { name: 'Training grade', exact: true }),
-    ).toHaveValue(optionId)
-    const finalStored = await (await f.context.request.get('/api/v1/fields/me')).json()
-    expect(
-      finalStored.fields.find((field: { def: { id: string } }) => field.def.id === def.id).value,
-    ).toBe(optionId)
-    await f.page.reload()
-    await expect(
-      section.getByRole('combobox', { name: 'Training grade', exact: true }),
-    ).toHaveValue(optionId)
-  } finally {
-    await f.close()
-  }
-})
-
 test('concurrent subscription creation enforces twenty live credentials atomically', async ({
   browser,
 }) => {
@@ -394,21 +272,10 @@ test('concurrent subscription creation enforces twenty live credentials atomical
   }
 })
 
-test('members can fill their own required fields but cannot manage definitions or renew another owner’s feed', async ({
-  browser,
-}) => {
+test('members cannot renew or revoke another owner’s calendar feed', async ({ browser }) => {
   const f = await fixture(browser, true)
   const member = await newFlowContext(browser)
   try {
-    const created = await authedPost(f.context, '/api/v1/fields/defs', {
-      appliesTo: 'person',
-      key: 'qa_required_topic',
-      label: { en: 'Required topic' },
-      type: 'text',
-      required: true,
-    })
-    expect(created.status()).toBe(201)
-    const defId = (await created.json()).def.id as string
     const ownerFeed = await authedPost(f.context, '/api/v1/calendar/feeds', {
       kind: 'all',
       label: 'Synthetic head feed',
@@ -422,22 +289,6 @@ test('members can fill their own required fields but cannot manage definitions o
       joinPassword: f.departmentInfo!.joinPassword,
     })
     expect((await authedPatch(member, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
-    const page = await member.newPage()
-    await page.goto('/fields')
-    await expect(
-      page.getByText('Only the head of the department defines fields.', { exact: false }),
-    ).toBeVisible()
-    await expect(page.getByRole('button', { name: 'New field', exact: true })).not.toBeVisible()
-    expect(
-      (
-        await authedPost(member, '/api/v1/fields/defs', {
-          appliesTo: 'person',
-          key: 'forbidden_field',
-          label: { en: 'Forbidden field' },
-          type: 'text',
-        })
-      ).status(),
-    ).toBe(403)
     expect(
       (await authedPost(member, `/api/v1/calendar/feeds/${feed.id}/rotate`, {})).status(),
     ).toBe(404)
@@ -450,136 +301,8 @@ test('members can fill their own required fields but cannot manage definitions o
     ).toBe(200)
     expect((await f.context.request.get(feed.url)).status()).toBe(200)
     expect((await (await member.request.get('/api/v1/calendar/feeds')).json()).items).toEqual([])
-    await page.getByRole('button', { name: 'Go to account settings', exact: true }).click()
-    const section = page.locator('#fields')
-    const answer = section.getByRole('textbox', { name: 'Required topic *', exact: true })
-    await answer.fill(' ')
-    await section.getByRole('button', { name: 'Save', exact: true }).click()
-    await expect(section.getByRole('alert')).toHaveText('This field is required.')
-    await expect(answer).toHaveAttribute('aria-invalid', 'true')
-    await answer.fill('Synthetic member answer')
-    const saved = page.waitForResponse(
-      (r) => r.request().method() === 'PUT' && new URL(r.url()).pathname.endsWith('/fields/me'),
-    )
-    await section.getByRole('button', { name: 'Save', exact: true }).click()
-    expect((await saved).status()).toBe(200)
-    await page.reload()
-    await expect(answer).toHaveValue('Synthetic member answer')
-    const actual = await (await member.request.get('/api/v1/fields/me')).json()
-    expect(
-      actual.fields.find((field: { def: { id: string } }) => field.def.id === defId).value,
-    ).toBe('Synthetic member answer')
-    const headFields = await (await f.context.request.get('/api/v1/fields/me')).json()
-    expect(
-      headFields.fields.find((field: { def: { id: string } }) => field.def.id === defId).value,
-    ).toBeNull()
   } finally {
     await member.close()
-    await f.close()
-  }
-})
-
-test('custom date answers preserve the chosen calendar day in Asia/Tashkent', async ({
-  browser,
-}) => {
-  const f = await fixture(browser, true, 'Asia/Tashkent')
-  try {
-    const created = await authedPost(f.context, '/api/v1/fields/defs', {
-      appliesTo: 'person',
-      key: 'qa_training_day',
-      label: { en: 'Training day' },
-      type: 'date',
-    })
-    expect(created.status()).toBe(201)
-    const defId = (await created.json()).def.id as string
-    await f.page.goto('/account#fields')
-    const section = f.page.locator('#fields')
-    await section.getByRole('button', { name: 'Training day', exact: true }).click()
-    const wanted = await f.page.evaluate(() => {
-      const now = new Date()
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`
-    })
-    await f.page.locator(`[data-day="${wanted}"] button`).click()
-    const saved = f.page.waitForResponse(
-      (r) => r.request().method() === 'PUT' && new URL(r.url()).pathname.endsWith('/fields/me'),
-    )
-    await section.getByRole('button', { name: 'Save', exact: true }).click()
-    expect((await saved).status()).toBe(200)
-    const stored = await (await f.context.request.get('/api/v1/fields/me')).json()
-    expect(
-      stored.fields.find((field: { def: { id: string } }) => field.def.id === defId).value,
-    ).toBe(wanted)
-    await f.page.reload()
-    await expect(section.getByRole('button', { name: 'Training day', exact: true })).toHaveText(
-      `${wanted.slice(8, 10)}.${wanted.slice(5, 7)}.${wanted.slice(0, 4)}`,
-    )
-  } finally {
-    await f.close()
-  }
-})
-
-test('a held custom-field answer receipt preserves newer typing for a second persisted save', async ({
-  browser,
-}) => {
-  const f = await fixture(browser, true)
-  let release!: () => void
-  let received!: () => void
-  const gate = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  const committed = new Promise<void>((resolve) => {
-    received = resolve
-  })
-  try {
-    const created = await authedPost(f.context, '/api/v1/fields/defs', {
-      appliesTo: 'person',
-      key: 'qa_training',
-      label: { en: 'Training topic', 'uz-Latn': 'Training topic' },
-      type: 'text',
-      required: true,
-    })
-    expect(created.status()).toBe(201)
-    const defId = (await created.json()).def.id as string
-    await f.page.goto('/account#fields')
-    const section = f.page.locator('#fields')
-    const answer = section.getByRole('textbox', { name: 'Training topic *', exact: true })
-    await answer.fill('First saved topic')
-    let first = true
-    await f.page.route('**/api/v1/fields/me', async (route) => {
-      if (route.request().method() !== 'PUT' || !first) return route.continue()
-      first = false
-      const actual = await route.fetch()
-      expect(actual.status()).toBe(200)
-      received()
-      await gate
-      await route.fulfill({ response: actual })
-    })
-    await section.getByRole('button', { name: 'Save', exact: true }).click()
-    await committed
-    await answer.fill('Newer topic still being written')
-    const receipt = f.page.waitForResponse(
-      (r) => r.request().method() === 'PUT' && new URL(r.url()).pathname.endsWith('/fields/me'),
-    )
-    release()
-    expect((await receipt).status()).toBe(200)
-    await expect(answer).toHaveValue('Newer topic still being written')
-    const firstStored = await (await f.context.request.get('/api/v1/fields/me')).json()
-    expect(
-      firstStored.fields.find((field: { def: { id: string } }) => field.def.id === defId).value,
-    ).toBe('First saved topic')
-    const saved = f.page.waitForResponse(
-      (r) => r.request().method() === 'PUT' && new URL(r.url()).pathname.endsWith('/fields/me'),
-    )
-    await section.getByRole('button', { name: 'Save', exact: true }).click()
-    expect((await saved).status()).toBe(200)
-    await f.page.reload()
-    await expect(answer).toHaveValue('Newer topic still being written')
-    const finalStored = await (await f.context.request.get('/api/v1/fields/me')).json()
-    expect(
-      finalStored.fields.find((field: { def: { id: string } }) => field.def.id === defId).value,
-    ).toBe('Newer topic still being written')
-  } finally {
-    release()
     await f.close()
   }
 })

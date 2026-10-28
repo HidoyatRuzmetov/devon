@@ -150,16 +150,7 @@
       "slug": "analytics",
       "auth": "session",
       "chrome": "app",
-      "heading": "analytics.title",
-      "roles": ["head", "member"]
-    },
-    {
-      "path": "/ai",
-      "name": "ai",
-      "slug": "ai",
-      "auth": "session",
-      "chrome": "app",
-      "heading": "ai.title",
+      "heading": "checkins.title",
       "roles": ["head", "member"]
     },
     {
@@ -280,30 +271,12 @@
       "heading": "state.notfound.title"
     },
     {
-      "path": "/people/table",
-      "name": "people",
-      "slug": "peopletable",
-      "auth": "session",
-      "chrome": "app",
-      "heading": "people.table.title",
-      "roles": ["head", "member"]
-    },
-    {
       "path": "/people/me",
       "name": "people",
       "slug": "peopleme",
       "auth": "session",
       "chrome": "app",
       "heading": "people.person.own.title",
-      "roles": ["head", "member"]
-    },
-    {
-      "path": "/work/workload",
-      "name": "work",
-      "slug": "workworkload",
-      "auth": "session",
-      "chrome": "app",
-      "heading": "work.workload.title",
       "roles": ["head", "member"]
     },
     {
@@ -323,33 +296,6 @@
       "auth": "session",
       "chrome": "app",
       "heading": "work.title",
-      "roles": ["head", "member"]
-    },
-    {
-      "path": "/goals",
-      "name": "work",
-      "slug": "goals",
-      "auth": "session",
-      "chrome": "app",
-      "heading": "work.goals.title",
-      "roles": ["head", "member"]
-    },
-    {
-      "path": "/fields",
-      "name": "fields",
-      "slug": "fields",
-      "auth": "session",
-      "chrome": "app",
-      "heading": "fields.manager.nav",
-      "roles": ["head", "member"]
-    },
-    {
-      "path": "/automations",
-      "name": "automations",
-      "slug": "automations",
-      "auth": "session",
-      "chrome": "app",
-      "heading": "automations.title",
       "roles": ["head", "member"]
     },
     {
