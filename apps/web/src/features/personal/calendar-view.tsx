@@ -44,7 +44,7 @@ const utcInput = (value: string) => new Date(value + '+05:00').toISOString()
 const tones = {
   personal: 'border-primary/25 bg-primary/8 text-primary',
   task: 'border-border bg-muted/60 text-foreground',
-  event: 'border-teal-600/25 bg-teal-600/8 text-teal-800 dark:text-teal-200',
+  event: 'border-info/25 bg-info/8 text-info-text',
 }
 const icons = { personal: LockKeyhole, task: CheckSquare, event: CalendarDays }
 
