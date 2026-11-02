@@ -1,5 +1,5 @@
 import { withContext, type RequestContext } from '@devon/db'
-import { sql } from 'drizzle-orm'
+import { sql, type SQL } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 import { isMaintenanceActive, listAllDepartmentIds } from '../notifications/repo.js'
 import { isTelegramConfigured, publicUrl, sendPlainMessage } from '../telegram/transport.js'
@@ -44,6 +44,16 @@ const messages = {
       'Сегодня checkout: обновите результаты. После закрытия checkout изменить этот период будет нельзя.',
   },
 }
+// Group reminders remain useful until every active member has locked this phase.
+// Preserve existing reminder behavior for departments with no active member roster yet.
+function hasOpenMembers(phase: SQL) {
+  return sql`(not exists(select 1 from app.memberships m
+    where m.department_id=c.department_id and m.role<>'head' and m.status='active' and m.deleted_at is null)
+    or exists(select 1 from app.memberships m
+      left join app.checkin_member_locks l on l.cycle_id=c.id and l.member_user_id=m.user_id
+      where m.department_id=c.department_id and m.role<>'head' and m.status='active' and m.deleted_at is null
+        and case when ${phase}='checkin' then l.checkin_locked_at is null else l.checkout_locked_at is null end))`
+}
 export async function processCheckins(
   send = sendPlainMessage,
   configured = isTelegramConfigured,
@@ -67,6 +77,7 @@ export async function processCheckins(
         where (${now.toISOString()}::timestamptz at time zone 'Asia/Tashkent')::date=case when phase.name='checkin' then c.starts_on else c.ends_on end
           and (${now.toISOString()}::timestamptz at time zone 'Asia/Tashkent')::time>='09:00'::time
           and case when phase.name='checkin' then c.checkin_locked_at is null else c.checkout_locked_at is null end
+          and ${hasOpenMembers(sql`phase.name`)}
         on conflict(cycle_id,phase,chat_id) do nothing`)
     })
     if (!configured()) continue
@@ -89,6 +100,7 @@ export async function processCheckins(
             where q.sent_at is null and q.attempts<8 and (q.lease_until is null or q.lease_until<now())
               and (${now.toISOString()}::timestamptz at time zone 'Asia/Tashkent')::date=case when q.phase='checkin' then c.starts_on else c.ends_on end
               and case when q.phase='checkin' then c.checkin_locked_at is null else c.checkout_locked_at is null end
+              and ${hasOpenMembers(sql`q.phase`)}
             order by q.id limit 1 for update of q skip locked)
           update app.checkin_reminders q set attempts=attempts+1,lease_token=${token},lease_until=now()+interval '5 minutes'
           from candidate where q.id=candidate.id returning q.id,q.phase,q.chat_id,q.cycle_id,candidate.locale_default as locale`)

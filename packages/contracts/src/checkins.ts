@@ -35,6 +35,14 @@ export const checkinBoardSchema = z.object({
   currentCycleId: z.string().uuid(),
   selectedCycleId: z.string().uuid(),
   cycles: z.array(checkinCycleSchema),
+  memberLocks: z.array(
+    z.object({
+      cycleId: z.string().uuid(),
+      memberUserId: z.string().uuid(),
+      checkinLockedAt: z.string().nullable(),
+      checkoutLockedAt: z.string().nullable(),
+    }),
+  ),
   units: z.array(z.object({ id: z.string().uuid() })).default([]),
   members: z.array(checkinMemberSchema),
   entries: z.array(checkinEntrySchema),
@@ -56,7 +64,12 @@ export const checkinUpdateSchema = z
   })
   .strict()
   .refine((value) => value.text !== undefined || value.state !== undefined, 'empty change')
-export const checkinLockSchema = z.object({ phase: z.enum(['checkin', 'checkout']) }).strict()
+export const checkinLockSchema = z
+  .object({
+    phase: z.enum(['checkin', 'checkout']),
+    memberUserId: z.string().uuid(),
+  })
+  .strict()
 export type CheckinBoard = z.infer<typeof checkinBoardSchema>
 export type CheckinEntry = z.infer<typeof checkinEntrySchema>
 export type CheckinCycle = z.infer<typeof checkinCycleSchema>

@@ -23,7 +23,7 @@ type Change =
   | { kind: 'add'; cycleId: string; itemId: string }
   | { kind: 'remove'; id: string }
   | { kind: 'update'; id: string; version: number; text?: string; state?: CheckinEntry['state'] }
-  | { kind: 'lock'; cycleId: string; phase: 'checkin' | 'checkout' }
+  | { kind: 'lock'; cycleId: string; phase: 'checkin' | 'checkout'; memberUserId: string }
 export function useCheckinChange() {
   const qc = useQueryClient(),
     t = useT(),
@@ -42,7 +42,7 @@ export function useCheckinChange() {
       if (change.kind === 'lock')
         return apiClient.post(
           `${BASE}/cycles/${change.cycleId}/lock`,
-          { phase: change.phase },
+          { phase: change.phase, memberUserId: change.memberUserId },
           z.void(),
           csrf,
         )

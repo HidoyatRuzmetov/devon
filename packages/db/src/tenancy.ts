@@ -36,6 +36,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   // v1.1 SPEC §4.3: the head's saved people-table views (migration `0201_people_views.sql`).
   'app.projects': 'department_owned',
   'app.checkin_cycles': 'department_owned',
+  'app.checkin_member_locks': 'department_owned',
   'app.checkin_entries': 'department_owned',
   'app.checkin_reminders': 'department_owned',
   'app.work_action_receipts': 'department_owned',

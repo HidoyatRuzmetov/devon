@@ -1,4 +1,4 @@
-import { date, integer, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { date, integer, primaryKey, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { appSchema } from './app.js'
 
 export const checkinCycles = appSchema.table('checkin_cycles', {
@@ -12,6 +12,17 @@ export const checkinCycles = appSchema.table('checkin_cycles', {
   checkoutLockedAt: timestamp('checkout_locked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+export const checkinMemberLocks = appSchema.table(
+  'checkin_member_locks',
+  {
+    departmentId: uuid('department_id').notNull(),
+    cycleId: uuid('cycle_id').notNull(),
+    memberUserId: uuid('member_user_id').notNull(),
+    checkinLockedAt: timestamp('checkin_locked_at', { withTimezone: true }),
+    checkoutLockedAt: timestamp('checkout_locked_at', { withTimezone: true }),
+  },
+  (table) => [primaryKey({ columns: [table.cycleId, table.memberUserId] })],
+)
 export const checkinEntries = appSchema.table('checkin_entries', {
   id: uuid('id').primaryKey().defaultRandom(),
   departmentId: uuid('department_id').notNull(),

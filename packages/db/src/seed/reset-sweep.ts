@@ -96,6 +96,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   // Memberships are the department's last child before the department itself, and the reason a
   // colleague who joined the demo department through the product does not block the reset.
   { table: 'app.checkin_entries' },
+  { table: 'app.checkin_member_locks' },
   { table: 'app.checkin_reminders' },
   { table: 'app.checkin_cycles' },
   { table: 'app.work_action_receipts' },

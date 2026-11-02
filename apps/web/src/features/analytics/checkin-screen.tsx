@@ -3,6 +3,7 @@ import { useLocale, useT } from '@devon/i18n'
 import {
   Avatar,
   Button,
+  Checkbox,
   Dialog,
   DialogContent,
   IconButton,
@@ -33,6 +34,7 @@ import { useDepartment, useSession } from '../../lib/session.js'
 import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
 import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
 import { useCheckinChange, useCheckins } from './checkins-api.js'
+import { cycleLockState, memberLock } from './checkin-locks.js'
 import { progressPeriods } from './progress-periods.js'
 import './checkins.css'
 
@@ -166,8 +168,10 @@ function Deliverable({
 
 function PersonCheckin({ data, member }: { data: CheckinBoard; member: CheckinMember }) {
   const [lockReview, setLockReview] = React.useState(false)
+  const [dontShow, setDontShow] = React.useState(false)
   const t = useT(),
-    { department } = useDepartment(),
+    { department, departmentId } = useDepartment(),
+    session = useSession(),
     change = useCheckinChange()
   const cycle = data.cycles.find((c) => c.id === data.selectedCycleId)!
   const entries = data.entries.filter((e) => e.memberUserId === member.userId)
@@ -177,29 +181,64 @@ function PersonCheckin({ data, member }: { data: CheckinBoard; member: CheckinMe
     group.push(entry)
     groups.set(entry.cardId, group)
   }
-  const closed = !!cycle.checkoutLockedAt,
-    locked = !!cycle.checkinLockedAt
+  const lock = memberLock(data, cycle, member.userId)
+  const closed = !!lock.checkoutLockedAt,
+    locked = !!lock.checkinLockedAt
+  const phase = locked ? 'checkout' : 'checkin'
+  const preferenceKey = `devon_checkin_confirm:${session.user?.id}:${departmentId}:${phase}`
+  function confirmLock(skipFuture = false) {
+    change.mutate(
+      { kind: 'lock', cycleId: cycle.id, memberUserId: member.userId, phase },
+      {
+        onSuccess: () => {
+          if (skipFuture) {
+            try {
+              window.localStorage.setItem(preferenceKey, 'skip')
+            } catch {
+              /* Keep prompting if storage is unavailable. */
+            }
+          }
+          setLockReview(false)
+          setDontShow(false)
+        },
+      },
+    )
+  }
+  function requestLock() {
+    let skip = false
+    try {
+      skip = window.localStorage.getItem(preferenceKey) === 'skip'
+    } catch {
+      /* Confirmation is the safe default. */
+    }
+    if (skip) confirmLock()
+    else {
+      setDontShow(false)
+      setLockReview(true)
+    }
+  }
   const localDay = new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 10)
   return (
     <section className="checkin-person" aria-label={name(member)}>
       <Dialog open={lockReview} onOpenChange={setLockReview}>
         <DialogContent title={t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}>
           <p className="my-4 text-small text-muted-foreground">
-            {t(locked ? 'checkins.confirmCheckout' : 'checkins.confirmCheckin')}
+            {t(locked ? 'checkins.confirmCheckout' : 'checkins.confirmCheckin', {
+              name: name(member),
+            })}
           </p>
+          <label className="mb-4 flex items-center gap-2 text-small">
+            <Checkbox
+              checked={dontShow}
+              onCheckedChange={(checked) => setDontShow(checked === true)}
+            />
+            {t('checkins.dontShowAgain')}
+          </label>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setLockReview(false)}>
               {t('checkins.cancel')}
             </Button>
-            <Button
-              disabled={change.isPending}
-              onClick={() =>
-                change.mutate(
-                  { kind: 'lock', cycleId: cycle.id, phase: locked ? 'checkout' : 'checkin' },
-                  { onSuccess: () => setLockReview(false) },
-                )
-              }
-            >
+            <Button disabled={change.isPending} onClick={() => confirmLock(dontShow)}>
               {t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}
             </Button>
           </div>
@@ -237,7 +276,7 @@ function PersonCheckin({ data, member }: { data: CheckinBoard; member: CheckinMe
               variant="secondary"
               size="sm"
               disabled={change.isPending || (locked && localDay < cycle.endsOn)}
-              onClick={() => setLockReview(true)}
+              onClick={requestLock}
             >
               <LockKeyhole className="size-4" />
               {t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}
@@ -374,15 +413,7 @@ function Progress({
                 >
                   {periodLabel(c.startsOn, c.endsOn)}
                   <span className="mt-1 block text-caption font-normal text-muted-foreground">
-                    {c.cycle
-                      ? t(
-                          c.cycle.checkoutLockedAt
-                            ? 'checkins.closed'
-                            : c.cycle.checkinLockedAt
-                              ? 'checkins.agreed'
-                              : 'checkins.draft',
-                        )
-                      : '\u00a0'}
+                    {c.cycle ? t(`checkins.${cycleLockState(data, c.cycle)}`) : '\u00a0'}
                   </span>
                 </th>
               ))}

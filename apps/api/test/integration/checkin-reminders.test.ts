@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { processCheckins } from '../../src/modules/checkins/worker.js'
 import {
   seedDepartment,
+  seedMember,
   startHarness,
   stopHarness,
   superuserQuery,
@@ -83,6 +84,39 @@ describe('scheduled check-in reminders', () => {
       [departmentId],
     )
     await processCheckins(send, () => true, friday)
+    expect(send).toHaveBeenCalledOnce()
+  })
+  it('keeps group reminders for unlocked members and stops once every member is locked', async () => {
+    const department = await seedDepartment(db, {
+      name: 'Individual locks',
+      slug: 'locks-' + randomUUID(),
+    })
+    const first = await seedMember(db, department.id, { role: 'member' })
+    const second = await seedMember(db, department.id, { role: 'member' })
+    await superuserQuery(
+      db,
+      "insert into app.telegram_groups(id,department_id,chat_id,kinds) values($1,$2,-991124,array['events'])",
+      [randomUUID(), department.id],
+    )
+    await processCheckins(vi.fn(), () => false, at('08:59:00'))
+    const lock = (memberId: string) =>
+      superuserQuery(
+        db,
+        `insert into app.checkin_member_locks(department_id,cycle_id,member_user_id,checkin_locked_at)
+      select department_id,id,$2,now() from app.checkin_cycles where department_id=$1`,
+        [department.id, memberId],
+      )
+    await lock(first.id)
+    const send = vi.fn(async () => ({ ok: true as const, messageId: 93 }))
+    await processCheckins(send, () => true, at('09:00:00'))
+    expect(send).toHaveBeenCalledOnce()
+    await superuserQuery(
+      db,
+      'update app.checkin_reminders set sent_at=null,lease_until=null where department_id=$1',
+      [department.id],
+    )
+    await lock(second.id)
+    await processCheckins(send, () => true, at('09:01:00'))
     expect(send).toHaveBeenCalledOnce()
   })
 })

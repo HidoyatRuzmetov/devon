@@ -267,8 +267,11 @@ export async function conversationContext(
     union all select 'checkin_entry:'||e.id,e.text,'/analytics?cycle='||c.id||'&member='||e.member_user_id,
       jsonb_build_object('kind','checkin_entry','entryId',e.id,'cycleId',c.id,'memberUserId',e.member_user_id,
         'cardId',e.card_id,'cardTitle',e.card_title,'checklistItemId',e.checklist_item_id,'state',e.state,'version',e.version,
-        'checkinLockedAt',c.checkin_locked_at,'checkoutLockedAt',c.checkout_locked_at),c.starts_on
-      from app.checkin_entries e join app.checkin_cycles c on c.id=e.cycle_id where e.removed_at is null
+        'checkinLockedAt',coalesce(l.checkin_locked_at,c.checkin_locked_at),
+        'checkoutLockedAt',coalesce(l.checkout_locked_at,c.checkout_locked_at)),c.starts_on
+      from app.checkin_entries e join app.checkin_cycles c on c.id=e.cycle_id
+      left join app.checkin_member_locks l on l.cycle_id=e.cycle_id and l.member_user_id=e.member_user_id
+      where e.removed_at is null
     ) select ref,title,href,facts,count(*) over()::integer as total from records
       order by case when ref=any(${sql.param(priorityRefs)}::text[]) then 0 else 1 end,period desc,ref limit 2000`)
   })

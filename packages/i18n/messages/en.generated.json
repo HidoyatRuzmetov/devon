@@ -2407,8 +2407,9 @@
     "progressHint": "Completed / agreed deliverables, including later additions",
     "progressCell": "{name}, {period}: {done} of {total} done",
     "noItems": "No deliverables agreed",
-    "confirmCheckin": "This agrees the check-in for all members. Existing deliverables can no longer be removed; progress updates and later additions remain available.",
-    "confirmCheckout": "This locks the checkout for all members. This cycle becomes a permanent snapshot and cannot be edited afterward."
+    "confirmCheckin": "Are you sure you want to agree {name}’s check-in? Existing deliverables can no longer be removed; progress updates and later additions remain available.",
+    "confirmCheckout": "Are you sure you want to lock {name}’s checkout? Their results for this cycle become a permanent snapshot and cannot be edited afterward.",
+    "dontShowAgain": "Don’t show again"
   },
   "departments": {
     "title": "Departments",

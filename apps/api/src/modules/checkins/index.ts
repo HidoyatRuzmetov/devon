@@ -21,8 +21,10 @@ const routes: FastifyPluginAsyncZod = async (app) => {
   app.setErrorHandler((error, _req, reply) => {
     if (error instanceof repo.CheckinError)
       return sendProblem(reply, error.code, { errors: [{ path: 'checkin', code: error.reason }] })
-    if (error instanceof Error && ['checkout_locked', 'checkin_locked'].includes(error.message))
-      return sendProblem(reply, 'conflict', { errors: [{ path: 'checkin', code: error.message }] })
+    // Drizzle wraps PostgreSQL trigger failures in a query error; keep lock conflicts as 409s.
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : error
+    if (cause instanceof Error && ['checkout_locked', 'checkin_locked'].includes(cause.message))
+      return sendProblem(reply, 'conflict', { errors: [{ path: 'checkin', code: cause.message }] })
     throw error
   })
   app.get(
@@ -93,7 +95,12 @@ const routes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      await repo.lockCycle(contextFromRequest(req), req.params.id, req.body.phase)
+      await repo.lockCycle(
+        contextFromRequest(req),
+        req.params.id,
+        req.body.phase,
+        req.body.memberUserId,
+      )
       return reply.code(204).send()
     },
   )

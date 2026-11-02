@@ -1,4 +1,5 @@
 import { WORK_TITLE_MAX } from '@devon/contracts'
+import { memberLock } from '../../analytics/checkin-locks.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // Shared task document for the routed drawer and full page. Primary status actions stay in the
 // header; assignee/priority/deadline precede the actual work. Secondary metadata is disclosed on
@@ -1505,6 +1506,10 @@ function Checklist({
   }
 
   function renderItem(item: (typeof card.checklist)[number]): React.ReactNode {
+    const entry = checkins.data?.entries.find((e) => e.checklistItemId === item.id)
+    const assignee = entry?.memberUserId ?? card.assigneeUserId
+    const lock =
+      checkins.data && cycle && assignee ? memberLock(checkins.data, cycle, assignee) : undefined
     return (
       <div key={item.id} className="flex flex-col gap-1">
         <ChecklistRow
@@ -1514,14 +1519,14 @@ function Checklist({
           onToggle={(done) => patchItem.mutate({ itemId: item.id, patch: { done } })}
           onDelete={() => deleteItem.mutate(item.id)}
           checkin={
-            checkins.data?.members.some((member) => member.userId === card.assigneeUserId)
+            checkins.data?.members.some((member) => member.userId === assignee)
               ? {
                   selected: !!checkins.data?.entries.some((e) => e.checklistItemId === item.id),
                   disabled:
                     !cycle ||
-                    !!cycle.checkoutLockedAt ||
+                    !!lock?.checkoutLockedAt ||
                     changeCheckin.isPending ||
-                    (!!cycle.checkinLockedAt &&
+                    (!!lock?.checkinLockedAt &&
                       !!checkins.data?.entries.some((e) => e.checklistItemId === item.id)),
                   toggle: () => {
                     const entry = checkins.data?.entries.find((e) => e.checklistItemId === item.id)

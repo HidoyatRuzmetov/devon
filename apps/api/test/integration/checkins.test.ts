@@ -1,6 +1,7 @@
 import type { CheckinBoard } from '@devon/contracts'
-import { withContext, type RequestContext } from '@devon/db'
+import { applyMigrations, withContext, type RequestContext } from '@devon/db'
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { cycleDates } from '../../src/modules/checkins/calendar.js'
 import { maintainCycles } from '../../src/modules/checkins/repo.js'
@@ -116,13 +117,18 @@ describe('check-in lifecycle and source integrity', () => {
     const f = await fixture(),
       id = await add(f)
     expect(
-      (await request(f.session, `/checkins/cycles/${f.cycleId}/lock`, 'POST', { phase: 'checkin' }))
-        .status,
+      (
+        await request(f.session, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+          phase: 'checkin',
+          memberUserId: f.member.id,
+        })
+      ).status,
     ).toBe(403)
     expect(
       (
         await request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
           phase: 'checkin',
+          memberUserId: f.member.id,
         })
       ).status,
     ).toBe(204)
@@ -298,8 +304,183 @@ describe('check-in lifecycle and source integrity', () => {
       (
         await request(a.headSession, `/checkins/cycles/${b.cycleId}/lock`, 'POST', {
           phase: 'checkin',
+          memberUserId: b.member.id,
         })
       ).status,
     ).toBe(404)
+  })
+  it('locks only the selected member, including an empty check-in, and requires a valid member', async () => {
+    const f = await fixture(),
+      other = await fixture(true)
+    const second = await seedMember(db, f.department.id, { role: 'member' })
+    const id = await add(f)
+    const lock = (memberUserId?: string) =>
+      request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+        phase: 'checkin',
+        ...(memberUserId ? { memberUserId } : {}),
+      })
+    expect((await lock()).status).toBe(422)
+    expect((await lock(other.member.id)).status).toBe(404)
+    expect((await lock(f.head.id)).status).toBe(404)
+    expect((await lock(second.id)).status).toBe(204)
+    const firstLock = (await read(f)).memberLocks.find((l) => l.memberUserId === second.id)
+    expect(firstLock?.checkinLockedAt).toBeTruthy()
+    expect((await lock(second.id)).status).toBe(204)
+    expect((await read(f)).memberLocks.find((l) => l.memberUserId === second.id)).toEqual(firstLock)
+    expect((await request(f.session, `/checkins/entries/${id}`, 'DELETE')).status).toBe(204)
+    expect((await read(f)).cycles.find((c) => c.id === f.cycleId)?.checkinLockedAt).toBeNull()
+    await superuserQuery(db, 'update app.cards set assignee_user_id=$1 where id=$2', [
+      second.id,
+      f.cardId,
+    ])
+    const itemId = randomUUID()
+    await superuserQuery(
+      db,
+      "insert into app.card_checklist_items(id,department_id,card_id,text) values($1,$2,$3,'Second member')",
+      [itemId, f.department.id, f.cardId],
+    )
+    const secondEntry = await add(f, itemId)
+    expect((await request(f.session, `/checkins/entries/${secondEntry}`, 'DELETE')).status).toBe(
+      409,
+    )
+    await expect(
+      superuserQuery(db, 'update app.checkin_entries set removed_at=now() where id=$1', [
+        secondEntry,
+      ]),
+    ).rejects.toThrow('checkin_locked')
+  })
+  it('freezes one checkout while another member can still edit and receive source updates', async () => {
+    const f = await fixture()
+    const second = await seedMember(db, f.department.id, { role: 'member' })
+    const firstId = await add(f)
+    const secondItem = randomUUID()
+    await superuserQuery(
+      db,
+      "insert into app.card_checklist_items(id,department_id,card_id,assignee_user_id,text) values($1,$2,$3,$4,'Second result')",
+      [secondItem, f.department.id, f.cardId, second.id],
+    )
+    const secondId = await add(f, secondItem)
+    expect(
+      (
+        await request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+          phase: 'checkout',
+          memberUserId: f.member.id,
+        })
+      ).status,
+    ).toBe(409)
+    // Make this an earlier cycle whose scheduled cutoff is still open, to exercise manual checkout.
+    await superuserQuery(
+      db,
+      "update app.checkin_cycles set starts_on=starts_on-14,ends_on=ends_on-14,checkin_deadline=now()+interval '1 day',checkout_deadline=now()+interval '2 days' where id=$1",
+      [f.cycleId],
+    )
+    expect(
+      (
+        await request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+          phase: 'checkout',
+          memberUserId: f.member.id,
+        })
+      ).status,
+    ).toBe(204)
+    const frozen = (await read(f)).entries.find((e) => e.id === firstId)!
+    await superuserQuery(
+      db,
+      "update app.card_checklist_items set text='Source revision',done_at=now() where id=any($1::uuid[])",
+      [[f.itemId, secondItem]],
+    )
+    await superuserQuery(db, "update app.cards set title='New title' where id=$1", [f.cardId])
+    let board = await read(f)
+    expect(board.entries.find((e) => e.id === firstId)).toEqual(frozen)
+    expect(board.entries.find((e) => e.id === secondId)).toMatchObject({
+      text: 'Source revision',
+      state: 'done',
+      cardTitle: 'New title',
+    })
+    expect(
+      (
+        await request(f.session, `/checkins/entries/${firstId}`, 'PATCH', {
+          version: frozen.version,
+          text: 'Forbidden',
+        })
+      ).status,
+    ).toBe(409)
+    expect((await request(f.session, `/checkins/entries/${firstId}`, 'DELETE')).status).toBe(409)
+    expect(
+      (
+        await request(f.session, `/checkins/cycles/${f.cycleId}/entries`, 'POST', {
+          checklistItemId: f.itemId,
+        })
+      ).status,
+    ).toBe(409)
+    expect(
+      (
+        await request(f.session, `/checkins/entries/${secondId}`, 'PATCH', {
+          version: board.entries.find((e) => e.id === secondId)!.version,
+          text: 'Still editable',
+        })
+      ).status,
+    ).toBe(204)
+    expect((await request(f.session, `/checkins/entries/${secondId}`, 'DELETE')).status).toBe(204)
+    board = await read(f)
+    expect(board.entries).toEqual([frozen])
+  })
+  it('unlocks the first cycle across departments exactly once and preserves later locks', async () => {
+    const f = await fixture(),
+      other = await fixture(true)
+    const id = await add(f)
+    const second = await seedMember(db, f.department.id, { role: 'member' })
+    await superuserQuery(
+      db,
+      `insert into app.checkin_member_locks(department_id,cycle_id,member_user_id,checkin_locked_at,checkout_locked_at)
+      values($1,$2,$3,now(),now()),($1,$2,$4,now(),null)`,
+      [f.department.id, f.cycleId, f.member.id, second.id],
+    )
+    await superuserQuery(
+      db,
+      'update app.checkin_cycles set checkin_locked_at=now(),checkout_locked_at=now()',
+      [],
+    )
+    await superuserQuery(
+      db,
+      "insert into app.checkin_cycles(department_id,starts_on,ends_on,checkin_deadline,checkout_deadline,checkin_locked_at) values($1,'2026-11-16','2026-11-27','2026-11-17T00:00:00+05:00','2026-11-28T00:00:00+05:00',now())",
+      [f.department.id],
+    )
+    const name = '2021_checkin_initial_unlock.sql'
+    const rollout = {
+      name,
+      sql: readFileSync(
+        new URL(`../../../../packages/db/migrations/${name}`, import.meta.url),
+        'utf8',
+      ),
+    }
+    expect((await applyMigrations(db.superuserUrl, {}, [rollout])).applied).toEqual([name])
+    const first = await read(f)
+    expect(first.cycles.find((c) => c.id === f.cycleId)).toMatchObject({
+      checkinLockedAt: null,
+      checkoutLockedAt: null,
+    })
+    expect(first.memberLocks.filter((l) => l.cycleId === f.cycleId)).toHaveLength(2)
+    expect(first.memberLocks.every((l) => !l.checkinLockedAt && !l.checkoutLockedAt)).toBe(true)
+    expect((await read(other)).cycles.find((c) => c.id === other.cycleId)).toMatchObject({
+      checkinLockedAt: null,
+      checkoutLockedAt: null,
+    })
+    expect((await request(f.session, `/checkins/entries/${id}`, 'DELETE')).status).toBe(204)
+    expect(first.cycles.find((c) => c.startsOn === '2026-11-16')?.checkinLockedAt).toBeTruthy()
+    expect(
+      (
+        await request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+          phase: 'checkin',
+          memberUserId: f.member.id,
+        })
+      ).status,
+    ).toBe(204)
+    expect((await applyMigrations(db.superuserUrl, {}, [rollout])).applied).toEqual([])
+    expect(
+      (await read(f)).memberLocks.find((l) => l.memberUserId === f.member.id)?.checkinLockedAt,
+    ).toBeTruthy()
+    expect(
+      (await read(f)).memberLocks.find((l) => l.memberUserId === second.id)?.checkinLockedAt,
+    ).toBeNull()
   })
 })

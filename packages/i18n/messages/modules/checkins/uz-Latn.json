@@ -38,7 +38,8 @@
     "progressHint": "Bajarilgan / kelishilgan bandlar, keyin qo‘shilganlar bilan",
     "progressCell": "{name}, {period}: {total} tadan {done} ta bajarildi",
     "noItems": "Kelishilgan bandlar yo‘q",
-    "confirmCheckin": "Barcha a’zolarning check-in natijalari kelishiladi. Bandlarni olib tashlab bo‘lmaydi; holatni yangilash va yangi band qo‘shish mumkin.",
-    "confirmCheckout": "Barcha a’zolarning checkout natijalari yopiladi. Ushbu davr o‘zgarmas yozuv sifatida saqlanadi va boshqa tahrirlanmaydi."
+    "confirmCheckin": "{name} uchun check-in natijalarini kelishishni tasdiqlaysizmi? Kelishilgan bandlarni olib tashlab bo‘lmaydi; holatni yangilash va yangi band qo‘shish mumkin.",
+    "confirmCheckout": "{name} uchun checkout natijalarini qulflashni tasdiqlaysizmi? Bu a’zoning davr natijalari saqlanadi va keyin o‘zgartirib bo‘lmaydi.",
+    "dontShowAgain": "Boshqa ko‘rsatilmasin"
   }
 }
