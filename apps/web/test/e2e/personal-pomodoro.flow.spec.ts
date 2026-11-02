@@ -40,15 +40,21 @@ test('@flow pure Pomodoro completes a phase without loading history or activity 
       if (request.method() === 'GET' && /\/pomodoro\/(stats|sessions)/.test(request.url()))
         historyReads.push(request.url())
     })
+    // Load the first pose without consuming animation frames while the browser hydrates.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.clock.install()
     await page.goto('/personal?tab=pomodoro')
-    await page.emulateMedia({ reducedMotion: 'no-preference' })
     const scene = page.locator('.pomodoro-character-scene')
-    await expect(scene).toHaveAttribute('data-motion', 'on')
+    await expect(scene).toHaveAttribute('data-motion', 'off')
     const sprite = page.locator(
       '.pomodoro-character-layer[data-active="true"] .pomodoro-character-sprite',
     )
     await expect(sprite).toHaveAttribute('data-ready', 'true')
+    // Only explicit runFor/fastForward calls advance time after loading; remote DOM reads
+    // must not skip poses under CI contention. Keep the full 24-frame assertion below.
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000))
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect(scene).toHaveAttribute('data-motion', 'on')
     const frames = new Set([await sprite.getAttribute('data-frame')])
     for (let step = 0; step < 50; step++) {
       await page.clock.runFor(65)
