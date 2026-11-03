@@ -41,7 +41,7 @@ async function fixture(browser: Browser) {
     (
       await head.request.put(`/api/v1/departments/${department.departmentId}/features`, {
         headers: { 'x-csrf-token': await csrfToken(head) },
-        data: { features: { workload: true, estimates: true } },
+        data: { features: { estimates: true } },
       })
     ).status(),
   ).toBe(200)
@@ -208,7 +208,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl'] as const) {
                 'OrdinaryScope Synthetic',
                 'UnitScope Synthetic',
               ]) {
-                const label = f.page.locator('p.text-body').filter({ hasText: name }).first()
+                const label = f.page.locator('button .text-lead').filter({ hasText: name }).first()
                 const bounds = await label.evaluate((element) => ({
                   client: element.clientWidth,
                   scroll: element.scrollWidth,
@@ -244,13 +244,8 @@ test('board keeps the head’s own work in department leadership and ordinary un
   const f = await fixture(browser)
   try {
     await f.page.goto('/work')
-    const leadership = f.page
-      .getByRole('heading', { name: 'Department leadership', exact: true })
-      .locator('..')
-      .locator('..')
-    await expect(
-      f.page.getByRole('heading', { name: 'Department leadership', exact: true }),
-    ).toBeVisible()
+    const leadership = f.page.locator(`[data-board-column="${f.userIds[0]}"]`)
+    await expect(leadership).toBeVisible()
     await expect(
       leadership.getByText('Synthetic head owned task', { exact: true }).first(),
     ).toBeVisible()
@@ -274,8 +269,8 @@ test('a real optional head unit remains assigned while directory scope and perso
 }) => {
   const f = await fixture(browser)
   try {
-    await f.page.goto(`/people?person=${f.userIds[0]}`)
-    await expect(f.page.getByText('Department-wide', { exact: true })).toBeVisible()
+    await f.page.goto('/people')
+    await expect(f.page.getByRole('heading', { name: /^Department leadership/ })).toBeVisible()
     expect(
       (
         await authedPost(f.head, `/api/v1/departments/${f.department.departmentId}/unit-roles`, {
@@ -286,11 +281,15 @@ test('a real optional head unit remains assigned while directory scope and perso
       ).status(),
     ).toBe(201)
     await f.page.reload()
-    await expect(f.page.getByText('Synthetic actual unit', { exact: true })).toBeVisible()
+    await expect(f.page.getByRole('heading', { name: /^Synthetic actual unit/ })).toBeVisible()
     await f.page.goto('/people')
-    const leadership = f.page.getByRole('heading', { name: /^Department leadership/ }).locator('..')
+    const leadership = f.page.locator('section').filter({
+      has: f.page.getByRole('heading', { name: /^Department leadership/ }),
+    })
     await expect(leadership.getByText('HeadScope Synthetic', { exact: true }).first()).toBeVisible()
-    await f.page.getByRole('button', { name: 'Synthetic actual unit', exact: true }).click()
+    await f.page.getByRole('button', { name: 'Filter by unit', exact: true }).click()
+    await f.page.getByRole('checkbox', { name: 'Synthetic actual unit', exact: true }).click()
+    await f.page.keyboard.press('Escape')
     await expect(f.page.getByText('HeadScope Synthetic', { exact: true }).first()).toBeVisible()
     await expect(f.page.getByText('UnitScope Synthetic', { exact: true }).first()).toBeVisible()
     await expect(f.page.getByText('OrdinaryScope Synthetic', { exact: true })).toHaveCount(0)
@@ -337,7 +336,7 @@ test('an ordinary colleague can assign a new card to the head, whose Mine retain
       (await (await f.head.request.get(`/api/v1/cards/${created.id}`)).json()).assigneeUserId,
     ).toBe(f.userIds[0])
     await f.page.goto('/work')
-    await f.page.getByRole('radio', { name: 'Mine', exact: true }).check()
+    await f.page.getByRole('radio', { name: 'Mine', exact: true }).click()
     await expect(
       f.page.getByText('Synthetic colleague assigned head task', { exact: true }).first(),
     ).toBeVisible()
@@ -369,7 +368,7 @@ test('directory names remain fully readable at 200 percent text size', async ({
       ['HeadScope Synthetic', 'OrdinaryScope Synthetic', 'UnitScope Synthetic'].map(
         async (name) => {
           // The avatar repeats the accessible name in a 1px sr-only span; inspect the visible title.
-          const label = f.page.locator('p.text-body').filter({ hasText: name }).first()
+          const label = f.page.locator('button .text-lead').filter({ hasText: name }).first()
           await expect(label).toBeVisible()
           const bounds = await label.evaluate((element) => ({
             client: element.clientWidth,

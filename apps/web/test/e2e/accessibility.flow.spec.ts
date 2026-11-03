@@ -64,6 +64,14 @@ async function inspect(page: Page, path: string, info: TestInfo, publicHeadingKe
   expect
     .soft(new URL(page.url()).pathname, `route ${path} must reach its documented destination`)
     .toBe(expectedPath)
+  if (path.startsWith('/work/card?')) {
+    const cardId = new URL(path, page.url()).searchParams.get('id')
+    expect(new URL(page.url()).searchParams.get('card')).toBe(cardId)
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
+      'Accessible task details',
+    )
+  }
   const result = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze()

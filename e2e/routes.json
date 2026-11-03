@@ -343,6 +343,7 @@
     },
     {
       "path": "/work/card",
+      "redirect": "/work",
       "name": "work",
       "slug": "workcard",
       "auth": "session",
