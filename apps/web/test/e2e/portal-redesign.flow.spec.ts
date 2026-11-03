@@ -598,9 +598,10 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
   expectStableFilterTransition(phoneClosing)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await headColumn.evaluate((el) => el.scrollTo({ top: 0, behavior: 'instant' }))
-  await page.getByRole('button', { name: 'Next columns', exact: true }).click()
+  await board.focus()
+  await page.keyboard.press('ArrowRight')
   await expect.poll(() => board.evaluate((el) => el.scrollLeft)).toBeGreaterThan(200)
-  await page.getByRole('button', { name: 'Previous columns', exact: true }).click()
+  await page.keyboard.press('ArrowLeft')
   await expect.poll(() => board.evaluate((el) => el.scrollLeft)).toBeLessThan(5)
   await expect(page.getByRole('combobox', { name: 'Choose a person', exact: true })).toContainText(
     'Test Head',

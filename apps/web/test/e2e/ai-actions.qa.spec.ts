@@ -118,7 +118,7 @@ for (const role of ['head', 'member'] as const) {
       await page.reload()
       await expect(proposal).toContainText('Applied')
       await proposal.getByRole('link', { name: 'Open result', exact: true }).click()
-      await expect(page).toHaveURL(isPage ? /\/pages\?page=/ : /\/work\/card\?id=/)
+      await expect(page).toHaveURL(isPage ? /\/pages\?page=/ : /\/work\?.*card=/)
       const download = page.getByRole('link', { name: fileName, exact: true })
       await expect(download).toBeVisible()
       const response = await context.request.get((await download.getAttribute('href'))!)
