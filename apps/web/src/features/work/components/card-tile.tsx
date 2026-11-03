@@ -58,7 +58,6 @@ import {
   PressScale,
   Shake,
   initialsFromName,
-  springSettle,
   useReducedMotion,
 } from '@devon/ui'
 import { RouterLink } from '../../../lib/router.js'
@@ -703,7 +702,11 @@ export function CardTile({
     <motion.div
       layout="position"
       layoutId={`work-card-${card.id}`}
-      transition={reducedMotion ? { duration: 0 } : springSettle}
+      transition={
+        reducedMotion
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }
+      }
       // Keep controls below the sticky column header both before and during press transforms.
       // Without a permanent context their z-index escapes at rest, then changes on pointerdown.
       className="relative isolate [scroll-margin-top:var(--work-column-scroll-margin,0px)] [&_:focus]:[scroll-margin-top:var(--work-column-scroll-margin,0px)]"

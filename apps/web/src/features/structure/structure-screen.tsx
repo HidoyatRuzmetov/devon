@@ -1,3 +1,5 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
+import { positionLabel } from '../../lib/profile-labels.js'
 // `/structure` -- TECH-SPEC EPIC-003: bo'limlar with unlimited nesting, self-assignment, unit roles,
 // an org chart correct with or without unit heads, colours, drag reorder. Rebuilt to UI-OVERHAUL.md's
 // screen recipe (§9.1 page header, §9.6 empty/error) and Jakob map row "Structure / org chart" (Miro,
@@ -170,7 +172,7 @@ export default function StructureScreen() {
     )
   }
   if (departments.isLoading || (departmentId && overviewQuery.isPending)) {
-    return <StateView kind="loading" titleKey="structure.units.title" />
+    return <ViewSkeleton view="structure" />
   }
   const error =
     overviewQuery.error ??
@@ -562,7 +564,7 @@ function AssignDialog({
               options={members.map((m) => ({
                 value: m.userId,
                 label: fullName(m),
-                ...(m.title ? { description: m.title } : {}),
+                ...(m.title ? { description: positionLabel(m.title, t) } : {}),
               }))}
             />
           </div>

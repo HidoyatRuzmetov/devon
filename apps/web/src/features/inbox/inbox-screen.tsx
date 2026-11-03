@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { notificationDestination } from './notification-destination.js'
 // Personal inbox, embedded in Home for members, heads and accounts without a department.
 import * as React from 'react'
@@ -437,7 +438,7 @@ function InboxBody({
     )
   }
   if (isPending || items === undefined) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="inbox" />
   }
   if (items.length === 0) {
     return (
@@ -687,7 +688,7 @@ export function InboxPanel() {
     return <ForcedStateBlock kind={forced} />
   }
   if (!settled) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="inbox" />
   }
   if (meQuery.data === null) return null // redirecting to /login
 

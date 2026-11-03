@@ -186,6 +186,10 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     notify: false,
     why: 'Owner-only changes; explicit reminders use their own worker.',
   },
+  'personal.calendar.invitation': {
+    notify: false,
+    why: 'The calendar subscriber reads as the invited user and delivers deduplicated private invitations.',
+  },
   'ai.conversation.created': PRIVATE_AI_CONVERSATION,
   'ai.conversation.requested': PRIVATE_AI_CONVERSATION,
   'ai.conversation.started': PRIVATE_AI_CONVERSATION,

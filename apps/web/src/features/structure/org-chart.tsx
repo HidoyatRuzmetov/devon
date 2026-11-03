@@ -1,3 +1,4 @@
+import { positionLabel } from '../../lib/profile-labels.js'
 // The org chart view (TECH-SPEC EPIC-003: "an org chart view ... that renders a department with zero
 // unit heads and one with three levels equally well, keyboard navigable, PNG export"). A hand-written
 // SVG tree -- no charting library -- built from the same `TreeNode[]` the list view uses, so the two
@@ -677,7 +678,7 @@ export function OrgChart({
                           className="fill-muted-foreground text-caption"
                           style={captionTextStyle}
                         >
-                          {(member.title ?? '').slice(0, 28)}
+                          {positionLabel(member.title, t).slice(0, 28)}
                         </text>
                       </g>
                     )

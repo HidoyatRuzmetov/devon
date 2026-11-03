@@ -147,11 +147,7 @@ test('@flow card drawer keeps primary work reachable and board controls discover
     const columns = page.locator('[data-board-column]')
     await expect(columns).toHaveCount(3)
     const compactWidth = (await columns.first().boundingBox())!.width
-    await layout.getByRole('button', { name: 'Roomy', exact: true }).click()
-    await expect
-      .poll(async () => (await columns.first().boundingBox())!.width)
-      .toBeGreaterThan(compactWidth)
-    await layout.getByRole('button', { name: 'Compact', exact: true }).click()
+    await expect(layout.getByRole('button', { name: /^(Roomy|Compact)$/ })).toHaveCount(0)
     await layout.getByRole('button', { name: 'Collapse every column', exact: true }).click()
     await expect
       .poll(async () => (await columns.first().boundingBox())!.width)

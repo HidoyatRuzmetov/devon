@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // "The days ahead": exactly what the ICS subscription contains, rendered in the app, so what a
 // person sees here and what lands in the calendar on their phone can never disagree (one query on
 // the API, two renderings).
@@ -78,8 +79,7 @@ export function AgendaPanel(): React.JSX.Element {
         />
       )
     }
-    if (query.isPending)
-      return <StateView kind="loading" titleKey="calendar.agenda.loading.title" />
+    if (query.isPending) return <ViewSkeleton view="agenda" />
     if (query.isError) {
       const err = query.error
       const code = err instanceof ApiError ? err.code : null

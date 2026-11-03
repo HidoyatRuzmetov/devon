@@ -1,5 +1,5 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import * as React from 'react'
-import { StateView } from '@devon/ui'
 import { navigate } from '../../../lib/router.js'
 
 /** Saved archive URLs lead to the existing completed list, with all restore actions intact. */
@@ -10,5 +10,5 @@ export default function LegacyArchiveScreen() {
     params.set('completed', '1')
     navigate(`/work/mine?${params.toString()}`, { replace: true })
   }, [])
-  return <StateView kind="loading" titleKey="state.loading" />
+  return <ViewSkeleton view="table" />
 }

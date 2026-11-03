@@ -1,357 +1,19 @@
-import type { CheckinBoard, CheckinEntry, CheckinMember } from '@devon/contracts'
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
+import type { CheckinBoard } from '@devon/contracts'
 import { useLocale, useT } from '@devon/i18n'
-import {
-  Avatar,
-  Button,
-  Checkbox,
-  Dialog,
-  DialogContent,
-  IconButton,
-  Input,
-  StateView,
-  Tabs,
-  TabsList,
-  TabsContent,
-  TabsTrigger,
-  cn,
-  initialsFromName,
-} from '@devon/ui'
-import {
-  Check,
-  Circle,
-  CircleAlert,
-  ListChecks,
-  ExternalLink,
-  LockKeyhole,
-  Minus,
-  Pencil,
-  X,
-} from 'lucide-react'
+import { StateView, Tabs, TabsList, TabsContent, TabsTrigger, cn } from '@devon/ui'
 import * as React from 'react'
-import { avatarUrl } from '../../lib/avatar.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
 import { useDepartment, useSession } from '../../lib/session.js'
 import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
 import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
-import { useCheckinChange, useCheckins } from './checkins-api.js'
-import { cycleLockState, memberLock } from './checkin-locks.js'
+import { CardPeekDialog } from '../work/components/card-peek-dialog.js'
+import { CheckinWorkspace } from './checkin-workspace.js'
+import { MemberAvatar, memberName as name, CheckinMemberChooser } from './checkin-member.js'
+import { useCheckins } from './checkins-api.js'
+import { cycleLockState } from './checkin-locks.js'
 import { progressPeriods } from './progress-periods.js'
 import './checkins.css'
-
-function name(member: CheckinMember) {
-  return `${member.givenName} ${member.familyName}`.trim()
-}
-function MemberAvatar({ member, large = false }: { member: CheckinMember; large?: boolean }) {
-  return (
-    <Avatar
-      decorative
-      alt={name(member)}
-      src={avatarUrl(member.avatarKey)}
-      initials={initialsFromName(member.givenName, member.familyName)}
-      hueSeed={member.unitId ?? member.userId}
-      className={large ? 'size-16 text-h3' : undefined}
-      size={large ? 'lg' : 'sm'}
-    />
-  )
-}
-const stateIcons = { pending: Circle, done: Check, blocked: CircleAlert }
-
-function Deliverable({
-  entry,
-  closed,
-  canRemove,
-}: {
-  entry: CheckinEntry
-  closed: boolean
-  canRemove: boolean
-}) {
-  const t = useT(),
-    change = useCheckinChange()
-  const [editing, setEditing] = React.useState(false),
-    [text, setText] = React.useState(entry.text)
-  const Icon = stateIcons[entry.state]
-  return (
-    <li className="checkin-deliverable" data-state={entry.state}>
-      <div className="checkin-deliverable-body">
-        {editing ? (
-          <form
-            className="min-w-0 flex-1"
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (text.trim())
-                change.mutate(
-                  { kind: 'update', id: entry.id, version: entry.version, text: text.trim() },
-                  { onSuccess: () => setEditing(false) },
-                )
-            }}
-          >
-            <Input
-              autoFocus
-              aria-label={t('checkins.edit')}
-              value={text}
-              maxLength={500}
-              onChange={(e) => setText(e.target.value)}
-            />
-            <div className="mt-2 flex gap-1">
-              <IconButton
-                type="submit"
-                aria-label={t('checkins.save')}
-                disabled={change.isPending || !text.trim()}
-              >
-                <Check />
-              </IconButton>
-              <IconButton aria-label={t('checkins.cancel')} onClick={() => setEditing(false)}>
-                <X />
-              </IconButton>
-            </div>
-          </form>
-        ) : (
-          <p className="checkin-deliverable-text">{entry.text}</p>
-        )}
-      </div>
-      <div className="checkin-deliverable-footer">
-        <Icon aria-hidden="true" className="checkin-state-icon" />
-        {closed ? (
-          <span className="checkin-state-label">{t(`checkins.state.${entry.state}`)}</span>
-        ) : (
-          <select
-            aria-label={t('checkins.statusFor', { item: entry.text })}
-            className="checkin-state-select"
-            value={entry.state}
-            disabled={change.isPending}
-            onChange={(e) =>
-              change.mutate({
-                kind: 'update',
-                id: entry.id,
-                version: entry.version,
-                state: e.target.value as CheckinEntry['state'],
-              })
-            }
-          >
-            {(['pending', 'done', 'blocked'] as const).map((state) => (
-              <option key={state} value={state}>
-                {t(`checkins.state.${state}`)}
-              </option>
-            ))}
-          </select>
-        )}
-        <div className="ml-auto flex gap-1">
-          {!closed && !editing ? (
-            <IconButton
-              className="checkin-action checkin-action-edit"
-              aria-label={t('checkins.edit')}
-              tooltip={t('checkins.edit')}
-              onClick={() => {
-                setText(entry.text)
-                setEditing(true)
-              }}
-            >
-              <Pencil />
-            </IconButton>
-          ) : null}
-          {canRemove ? (
-            <IconButton
-              className="checkin-action"
-              aria-label={t('checkins.remove')}
-              tooltip={t('checkins.remove')}
-              disabled={change.isPending}
-              onClick={() => change.mutate({ kind: 'remove', id: entry.id })}
-            >
-              <Minus />
-            </IconButton>
-          ) : null}
-        </div>
-      </div>
-    </li>
-  )
-}
-
-function PersonCheckin({ data, member }: { data: CheckinBoard; member: CheckinMember }) {
-  const [lockReview, setLockReview] = React.useState(false)
-  const [dontShow, setDontShow] = React.useState(false)
-  const t = useT(),
-    { department, departmentId } = useDepartment(),
-    session = useSession(),
-    change = useCheckinChange()
-  const cycle = data.cycles.find((c) => c.id === data.selectedCycleId)!
-  const entries = data.entries.filter((e) => e.memberUserId === member.userId)
-  const groups = new Map<string, CheckinEntry[]>()
-  for (const entry of entries) {
-    const group = groups.get(entry.cardId) ?? []
-    group.push(entry)
-    groups.set(entry.cardId, group)
-  }
-  const lock = memberLock(data, cycle, member.userId)
-  const closed = !!lock.checkoutLockedAt,
-    locked = !!lock.checkinLockedAt
-  const phase = locked ? 'checkout' : 'checkin'
-  const preferenceKey = `devon_checkin_confirm:${session.user?.id}:${departmentId}:${phase}`
-  function confirmLock(skipFuture = false) {
-    change.mutate(
-      { kind: 'lock', cycleId: cycle.id, memberUserId: member.userId, phase },
-      {
-        onSuccess: () => {
-          if (skipFuture) {
-            try {
-              window.localStorage.setItem(preferenceKey, 'skip')
-            } catch {
-              /* Keep prompting if storage is unavailable. */
-            }
-          }
-          setLockReview(false)
-          setDontShow(false)
-        },
-      },
-    )
-  }
-  function requestLock() {
-    let skip = false
-    try {
-      skip = window.localStorage.getItem(preferenceKey) === 'skip'
-    } catch {
-      /* Confirmation is the safe default. */
-    }
-    if (skip) confirmLock()
-    else {
-      setDontShow(false)
-      setLockReview(true)
-    }
-  }
-  const localDay = new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 10)
-  return (
-    <section className="checkin-person" aria-label={name(member)}>
-      <Dialog open={lockReview} onOpenChange={setLockReview}>
-        <DialogContent title={t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}>
-          <p className="my-4 text-small text-muted-foreground">
-            {t(locked ? 'checkins.confirmCheckout' : 'checkins.confirmCheckin', {
-              name: name(member),
-            })}
-          </p>
-          <label className="mb-4 flex items-center gap-2 text-small">
-            <Checkbox
-              checked={dontShow}
-              onCheckedChange={(checked) => setDontShow(checked === true)}
-            />
-            {t('checkins.dontShowAgain')}
-          </label>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setLockReview(false)}>
-              {t('checkins.cancel')}
-            </Button>
-            <Button disabled={change.isPending} onClick={() => confirmLock(dontShow)}>
-              {t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <header className="checkin-person-header">
-        <div className="min-w-0">
-          <h1 className="text-h2 font-semibold leading-tight">{name(member)}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-small text-muted-foreground">
-            <span>{t('checkins.total', { count: entries.length })}</span>
-            <span>
-              {t('checkins.doneCount', { count: entries.filter((e) => e.state === 'done').length })}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              {locked ? <LockKeyhole className="size-3.5" /> : null}
-              {t(closed ? 'checkins.closed' : locked ? 'checkins.agreed' : 'checkins.draft')}
-            </span>
-          </div>
-        </div>
-        <MemberAvatar member={member} large />
-      </header>
-      {locked || department?.role === 'head' ? (
-        <div className="checkin-cycle-note">
-          <p className="text-small text-muted-foreground">
-            {t(
-              closed
-                ? 'checkins.closedHint'
-                : locked
-                  ? 'checkins.agreedHint'
-                  : 'checkins.draftHint',
-            )}
-          </p>
-          {department?.role === 'head' && !closed ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={change.isPending || (locked && localDay < cycle.endsOn)}
-              onClick={requestLock}
-            >
-              <LockKeyhole className="size-4" />
-              {t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-      {entries.length ? (
-        <div className="checkin-task-scroll">
-          <div className="checkin-task-columns">
-            {[...groups].map(([cardId, items]) => {
-              const first = items[0]!
-              return (
-                <section key={cardId} className="checkin-task-group">
-                  <header className="checkin-task-header">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        {first.projectTitle ? (
-                          <>
-                            <h2 className="checkin-project-title">{first.projectTitle}</h2>
-                            <h3 className="checkin-task-title is-project-task">
-                              {first.cardTitle}
-                            </h3>
-                          </>
-                        ) : (
-                          <>
-                            <p className="checkin-task-kind">{t('checkins.individual')}</p>
-                            <h2 className="checkin-task-title">{first.cardTitle}</h2>
-                          </>
-                        )}
-                      </div>
-                      {first.sourceAvailable ? (
-                        <IconButton
-                          className="checkin-action"
-                          aria-label={t('checkins.openTask')}
-                          tooltip={t('checkins.openTask')}
-                          onClick={() =>
-                            navigate(
-                              `/work/card?id=${cardId}&from=analytics&cycle=${cycle.id}&member=${member.userId}`,
-                            )
-                          }
-                        >
-                          <ExternalLink />
-                        </IconButton>
-                      ) : null}
-                    </div>
-                  </header>
-                  <ul className="checkin-deliverables">
-                    {items.map((entry) => (
-                      <Deliverable
-                        key={entry.id}
-                        entry={entry}
-                        closed={closed}
-                        canRemove={!locked && !closed}
-                      />
-                    ))}
-                  </ul>
-                </section>
-              )
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="checkin-empty">
-          <ListChecks aria-hidden="true" className="size-8 text-primary" />
-          <h2>{t('checkins.empty')}</h2>
-          <p>{t('checkins.draftHint')}</p>
-          <Button size="sm" onClick={() => navigate('/work')}>
-            {t('checkins.openCards')}
-          </Button>
-        </div>
-      )}
-    </section>
-  )
-}
 
 export function progressColour(done: number, total: number): string | undefined {
   if (!total) return undefined
@@ -556,10 +218,9 @@ export default function CheckinScreen() {
         action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
       />
     )
-  if (!data) return <StateView kind="loading" titleKey="state.loading" />
+  if (!data) return <ViewSkeleton view="checkin" />
   const selected =
     data.members.find((m) => m.userId === (memberId ?? session.user?.id)) ?? data.members[0]
-  const palette = createUnitPalette(data.units)
   return (
     <Tabs value={view} onValueChange={(v) => setParams({ view: v })} className="checkins-page">
       <div className="checkins-toolbar">
@@ -567,18 +228,27 @@ export default function CheckinScreen() {
           <TabsTrigger value="checkin">{t('checkins.title')}</TabsTrigger>
           <TabsTrigger value="progress">{t('checkins.progress')}</TabsTrigger>
         </TabsList>
-        <select
-          aria-label={t('checkins.period')}
-          value={data.selectedCycleId}
-          onChange={(e) => setParams({ cycle: e.target.value })}
-          className="checkin-period-select"
-        >
-          {[...data.cycles].reverse().map((c) => (
-            <option key={c.id} value={c.id}>
-              {periodLabel(c.startsOn, c.endsOn)}
-            </option>
-          ))}
-        </select>
+        <div className="checkins-choosers">
+          <select
+            aria-label={t('checkins.period')}
+            value={data.selectedCycleId}
+            onChange={(e) => setParams({ cycle: e.target.value })}
+            className="checkin-period-select"
+          >
+            {[...data.cycles].reverse().map((c) => (
+              <option key={c.id} value={c.id}>
+                {periodLabel(c.startsOn, c.endsOn)}
+              </option>
+            ))}
+          </select>
+          {view === 'checkin' ? (
+            <CheckinMemberChooser
+              data={data}
+              selected={selected}
+              onChange={(member) => setParams({ member })}
+            />
+          ) : null}
+        </div>
       </div>
       <TabsContent
         value={view}
@@ -594,50 +264,8 @@ export default function CheckinScreen() {
           />
         ) : (
           <div className="checkins-layout">
-            <nav className="checkin-members" aria-label={t('checkins.people')}>
-              <label className="checkin-mobile-member text-small">
-                {t('checkins.people')}
-                <select
-                  className="checkin-period-select"
-                  value={selected?.userId ?? ''}
-                  onChange={(e) => setParams({ member: e.target.value })}
-                >
-                  {data.members.map((m) => (
-                    <option key={m.userId} value={m.userId}>
-                      {name(m)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="checkin-desktop-members">
-                {data.members.map((m, index) => (
-                  <React.Fragment key={m.userId}>
-                    {index === 0 || m.unitId !== data.members[index - 1]?.unitId ? (
-                      <h2 className="px-3 pb-2 pt-4 text-caption font-semibold text-muted-foreground">
-                        {m.unitName ?? t('checkins.unassigned')}
-                      </h2>
-                    ) : null}
-                    <button
-                      className={cn(
-                        'checkin-member',
-                        selected?.userId === m.userId && 'is-selected',
-                      )}
-                      aria-current={selected?.userId === m.userId ? 'true' : undefined}
-                      onClick={() => setParams({ member: m.userId })}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={cn('checkin-member-tint', unitColorClass(palette, m.unitId))}
-                      />
-                      <MemberAvatar member={m} />
-                      <span className="relative min-w-0 break-words text-left">{name(m)}</span>
-                    </button>
-                  </React.Fragment>
-                ))}
-              </div>
-            </nav>
             {selected ? (
-              <PersonCheckin
+              <CheckinWorkspace
                 key={`${selected.userId}:${data.selectedCycleId}`}
                 data={data}
                 member={selected}
@@ -648,6 +276,7 @@ export default function CheckinScreen() {
           </div>
         )}
       </TabsContent>
+      <CardPeekDialog />
     </Tabs>
   )
 }

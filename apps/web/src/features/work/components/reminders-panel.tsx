@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // v1.1 SPEC §7.4 -- "remind me at" on a card. The reminder lands in the inbox and, for anyone who
 // linked their Telegram account, as a bot message.
 //
@@ -7,17 +8,7 @@
 import * as React from 'react'
 import { BellRing, Check, Loader2, Trash2 } from 'lucide-react'
 import { useT, useLocale, formatDateTime } from '@devon/i18n'
-import {
-  Button,
-  Chip,
-  IconButton,
-  Input,
-  Skeleton,
-  Stagger,
-  StaggerItem,
-  StateView,
-  toast,
-} from '@devon/ui'
+import { Button, Chip, IconButton, Input, Stagger, StaggerItem, StateView, toast } from '@devon/ui'
 import {
   useAddReminderMutation,
   useCardRemindersQuery,
@@ -81,12 +72,7 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
   }
 
   if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-2" aria-busy="true">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-8 w-2/3" />
-      </div>
-    )
+    return <ViewSkeleton view="reminders" />
   }
 
   if (query.isError) {

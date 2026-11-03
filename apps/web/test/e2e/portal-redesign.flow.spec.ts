@@ -213,7 +213,7 @@ const test = base.extend<{ portal: PortalFixture }>({
                 education: [
                   {
                     institution: 'Example University',
-                    degree: 'Master',
+                    degree: 'master',
                     field: 'Public policy',
                     startYear: 2026,
                     endYear: 2028,

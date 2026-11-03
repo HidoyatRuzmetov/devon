@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // Calendar view (TECH-SPEC §5: "FullCalendar 7 or a clean month grid" -- this build takes the grid,
 // keeping the feature dependency-free): a plain month grid, one cell per day, cards shown on their
 // due date. Month navigation via `?month=YYYY-MM` so a linked month is shareable like every other view.
@@ -9,7 +10,6 @@ import { useT, useLocale, formatMonthYear } from '@devon/i18n'
 import {
   Button,
   IconButton,
-  Skeleton,
   Stagger,
   StaggerItem,
   StateView,
@@ -292,7 +292,7 @@ export default function CalendarScreen() {
 
   let grid: React.ReactNode
   if (cardsQuery.isPending || eventsQuery.isPending || projectsQuery.isPending) {
-    grid = <Skeleton className="h-140 w-full" />
+    grid = <ViewSkeleton view="calendar" />
   } else if (cardsQuery.isError || eventsQuery.isError || projectsQuery.isError) {
     grid = (
       <StateView

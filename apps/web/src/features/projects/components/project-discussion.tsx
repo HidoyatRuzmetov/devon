@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -242,7 +243,7 @@ export function ProjectDiscussion({ projectId }: { projectId: string }) {
             action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
           />
         ) : query.isPending ? (
-          <StateView kind="loading" titleKey="state.loading" />
+          <ViewSkeleton view="discussion" />
         ) : !query.data.length ? (
           <div className="m-auto flex max-w-80 flex-col items-center gap-3 text-center">
             <MessageSquare className="size-7 text-primary" />

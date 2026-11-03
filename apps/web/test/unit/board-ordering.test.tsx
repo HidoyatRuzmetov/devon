@@ -328,9 +328,10 @@ describe('board move and focus cache', () => {
           .checklist[0]!.doneAt,
       ).not.toBeNull()
       act(() => (firstToSettle === 'move' ? finishChecklist() : finishMove(card('a1', 'b', 'Zz'))))
-      await waitFor(() => expect(invalidate).toHaveBeenCalledTimes(2))
+      await waitFor(() => expect(invalidate).toHaveBeenCalledTimes(3))
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['work'] })
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['projects'] })
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['checkins'] })
     })
   }
 })

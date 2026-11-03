@@ -1,4 +1,10 @@
-import { checkinBoardSchema, type CheckinEntry } from '@devon/contracts'
+import {
+  checkinBoardSchema,
+  checkinSourceCardSchema,
+  type CheckinEntry,
+  type CheckinSelection,
+  type CheckinLayoutWrite,
+} from '@devon/contracts'
 import { useT } from '@devon/i18n'
 import { toast } from '@devon/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -20,6 +26,8 @@ export function useCheckins(cycleId?: string) {
   })
 }
 type Change =
+  | { kind: 'selection'; cycleId: string; memberUserId: string; body: CheckinSelection }
+  | { kind: 'layout'; cycleId: string; memberUserId: string; body: CheckinLayoutWrite }
   | { kind: 'add'; cycleId: string; itemId: string }
   | { kind: 'remove'; id: string }
   | { kind: 'update'; id: string; version: number; text?: string; state?: CheckinEntry['state'] }
@@ -31,6 +39,13 @@ export function useCheckinChange() {
   return useMutation<unknown, Error, Change>({
     mutationFn: (change: Change) => {
       const csrf = me?.csrfToken ?? ''
+      if (change.kind === 'selection' || change.kind === 'layout')
+        return apiClient.put(
+          `${BASE}/cycles/${change.cycleId}/members/${change.memberUserId}/${change.kind}`,
+          change.body,
+          z.void(),
+          csrf,
+        )
       if (change.kind === 'add')
         return apiClient.post(
           `${BASE}/cycles/${change.cycleId}/entries`,
@@ -60,5 +75,18 @@ export function useCheckinChange() {
         qc.invalidateQueries({ queryKey: ['work'] }),
       ])
     },
+  })
+}
+
+export function useCheckinCandidates(cycleId: string, memberUserId: string, enabled: boolean) {
+  const { departmentId } = useDepartment()
+  return useQuery({
+    queryKey: ['checkins', departmentId, 'candidates', cycleId, memberUserId],
+    enabled: !!departmentId && enabled,
+    queryFn: () =>
+      apiClient.get(
+        `${BASE}/cycles/${cycleId}/members/${memberUserId}/candidates`,
+        z.array(checkinSourceCardSchema),
+      ),
   })
 }

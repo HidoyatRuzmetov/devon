@@ -1,7 +1,16 @@
 import * as React from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { Button, Checkbox, Dialog, DialogContent, DialogTrigger, toast } from '@devon/ui'
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  IconButton,
+  toast,
+} from '@devon/ui'
+import { FolderPlus } from 'lucide-react'
 import { useMeQuery } from '../../../lib/session.js'
 import { navigate } from '../../../lib/router.js'
 import { useMembers } from '../../work/hooks.js'
@@ -9,7 +18,13 @@ import { fullName } from '../../work/lib/format.js'
 import { createProjectFromCard } from '../api.js'
 
 /** The caller renders this only for editable, ungrouped cards. Server rechecks both conditions. */
-export function ConvertProjectDialog({ cardId }: { cardId: string }) {
+export function ConvertProjectDialog({
+  cardId,
+  iconOnly = false,
+}: {
+  cardId: string
+  iconOnly?: boolean
+}) {
   const t = useT()
   const [open, setOpen] = React.useState(false)
   const [selected, setSelected] = React.useState<string[]>([])
@@ -36,16 +51,29 @@ export function ConvertProjectDialog({ cardId }: { cardId: string }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            setSelected([])
-            convert.reset()
-          }}
-        >
-          {t('projectEdit.convert')}
-        </Button>
+        {iconOnly ? (
+          <IconButton
+            aria-label={t('projectEdit.convert')}
+            tooltip={t('projectEdit.convert')}
+            onClick={() => {
+              setSelected([])
+              convert.reset()
+            }}
+          >
+            <FolderPlus />
+          </IconButton>
+        ) : (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setSelected([])
+              convert.reset()
+            }}
+          >
+            {t('projectEdit.convert')}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent title={t('projectEdit.convert')} className="max-w-120">
         <div className="mt-4 flex flex-col gap-4">

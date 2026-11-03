@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/admin/analytics` -- global analytics: departments, people, activity, AI spend.
 import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDate, formatUzs } from '@devon/i18n'
@@ -11,7 +12,7 @@ function AnalyticsBody() {
   const locale = useLocale()
   const query = useQuery({ queryKey: ['admin', 'analytics'], queryFn: fetchAdminAnalytics })
 
-  if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (query.isPending) return <ViewSkeleton view="analytics" />
   if (query.isError) {
     return (
       <StateView

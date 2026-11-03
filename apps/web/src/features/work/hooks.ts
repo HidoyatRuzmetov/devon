@@ -74,6 +74,7 @@ export function finishWorkWrite(qc: QueryClient) {
     return Promise.all([
       qc.invalidateQueries({ queryKey: ['work'] }),
       qc.invalidateQueries({ queryKey: ['projects'] }),
+      qc.invalidateQueries({ queryKey: ['checkins'] }),
     ])
 }
 
@@ -343,13 +344,9 @@ export function useMoveCardMutation() {
 
 const latestMoves = new WeakMap<QueryClient, Map<string, symbol>>()
 
-/** A card belonging to a project keeps `status: 'done'` (progress math on the project page counts
- * `status = 'done'` rows -- `apps/api/src/modules/projects/repo.ts`'s `getProgress`); a standalone
- * card goes straight to `'archived'` (People board and completed lists both key off that exact status --
- * TECH-SPEC's "done cards leave the board into the person's archive"). Either way the card leaves the
- * active People board (`GET /board` only ever returns `status = 'active'` rows). */
-export function nextDoneStatus(card: Pick<Card, 'projectScope'>): CardStatus {
-  return card.projectScope === 'none' ? 'archived' : 'done'
+/** Completion and archiving are distinct for both individual and project cards. */
+export function nextDoneStatus(_card: Pick<Card, 'projectScope'>): CardStatus {
+  return 'done'
 }
 
 export function useRestoreCardMutation() {

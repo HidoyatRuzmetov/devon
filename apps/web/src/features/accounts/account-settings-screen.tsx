@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from './settings-section.js'
 // Account settings share one shell. Each URL selects a focused pane, with related forms grouped
 // continuously inside it. Legacy entry points redirect here without losing their query state.
@@ -46,7 +47,7 @@ import {
 import { AppearanceSection } from './appearance-section.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { describeUserAgent } from './device-label.js'
-import { ProfessionalProfileSection } from './professional-profile-section.js'
+import { ProfessionalSettings } from './personnel-record-section.js'
 import { ProfileSection } from './profile-section.js'
 import { SettingsNavigation } from './settings-navigation.js'
 
@@ -111,7 +112,7 @@ function PhotoSection() {
 
   let body: React.ReactNode
   if (meQuery.isPending) {
-    body = <StateView kind="loading" titleKey="state.loading" />
+    body = <ViewSkeleton view="photo" />
   } else if (meQuery.isError) {
     body = <StateView kind="error" titleKey="state.error.title" bodyKey="state.error.body" />
   } else if (!user) {
@@ -183,7 +184,7 @@ function SessionsSection() {
 
   let body: React.ReactNode
   if (query.isPending) {
-    body = <StateView kind="loading" titleKey="state.loading" />
+    body = <ViewSkeleton view="sessions" />
   } else if (query.isError) {
     body = (
       <StateView
@@ -397,7 +398,7 @@ function TwoFactorSection() {
 
   let mainContent: React.ReactNode
   if (statusQuery.isPending) {
-    mainContent = <StateView kind="loading" titleKey="state.loading" />
+    mainContent = <ViewSkeleton view="security" />
   } else if (statusQuery.isError) {
     mainContent = (
       <StateView
@@ -708,7 +709,7 @@ function DeleteAccountSection() {
       description={t('accounts.delete.warning')}
     >
       {statusQuery.isPending ? (
-        <StateView kind="loading" titleKey="state.loading" />
+        <ViewSkeleton view="settings" />
       ) : statusQuery.isError ? (
         <StateView
           kind="error"
@@ -815,7 +816,7 @@ export default function AccountSettingsScreen() {
   let pane: React.ReactNode
   switch (adminRestricted ? '/account' : path) {
     case '/account/professional':
-      pane = <ProfessionalProfileSection />
+      pane = <ProfessionalSettings />
       break
     case '/account/notifications':
       pane = <PreferencesScreen embedded />
@@ -879,9 +880,7 @@ export default function AccountSettingsScreen() {
           aria-label={t('settings.content')}
           className="flex min-w-0 flex-1 flex-col gap-4 [&_[id]]:scroll-mt-20"
         >
-          <React.Suspense fallback={<StateView kind="loading" titleKey="state.loading" />}>
-            {pane}
-          </React.Suspense>
+          <React.Suspense fallback={<ViewSkeleton view="appearance" />}>{pane}</React.Suspense>
         </section>
       </div>
     </div>

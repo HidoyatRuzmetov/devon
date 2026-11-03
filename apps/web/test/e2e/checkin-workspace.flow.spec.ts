@@ -1,0 +1,129 @@
+import AxeBuilder from '@axe-core/playwright'
+import { expect, test } from '@playwright/test'
+import {
+  authedPatch,
+  authedPost,
+  createApprovedDepartment,
+  examplePassword,
+  joinDepartmentAsNewUser,
+  loginAsSuperAdmin,
+  newFlowContext,
+  uniqueLogin,
+} from './flow-api.js'
+
+test.use({ actionTimeout: 15000 })
+
+test('check-in selection, grouped tasks, progress, timer and drawers work on desktop and phone @flow', async ({
+  browser,
+}, testInfo) => {
+  test.setTimeout(180_000)
+  const admin = await newFlowContext(browser),
+    head = await newFlowContext(browser),
+    member = await newFlowContext(browser)
+  try {
+    await loginAsSuperAdmin(admin)
+    const department = await createApprovedDepartment(head, admin, {
+      headLogin: uniqueLogin('checkin.head'),
+      headPassword: examplePassword(),
+      departmentName: 'Check-in workspace QA',
+    })
+    await joinDepartmentAsNewUser(member, {
+      login: uniqueLogin('checkin.member'),
+      password: examplePassword(),
+      joinKey: department.joinKey,
+      joinPassword: department.joinPassword,
+    })
+    await authedPatch(head, '/api/v1/me', { locale: 'en' })
+    const me = (await (await member.request.get('/api/v1/me')).json()) as { user: { id: string } }
+    const headMe = (await (await head.request.get('/api/v1/me')).json()) as { user: { id: string } }
+    const projectResponse = await authedPost(head, '/api/v1/projects', {
+      title: 'Unified project',
+      ownerUserId: headMe.user.id,
+      members: [me.user.id],
+    })
+    expect(projectResponse.status(), await projectResponse.text()).toBe(201)
+    const project = (await projectResponse.json()) as { id: string }
+    const tasks = await Promise.all(
+      ['Urgent research', 'Second project task', 'Independent task'].map(async (title, index) => {
+        const response = await authedPost(head, '/api/v1/cards', {
+          title,
+          assigneeUserId: me.user.id,
+          priority: index === 0 ? 'urgent' : index === 1 ? 'high' : 'none',
+          ...(index < 2 ? { projectId: project.id } : {}),
+        })
+        expect(response.status(), await response.text()).toBe(201)
+        const card = (await response.json()) as { id: string }
+        await Promise.all(
+          ['First deliverable', 'Second deliverable'].map((text) =>
+            authedPost(head, `/api/v1/cards/${card.id}/checklist`, { text: `${title}: ${text}` }),
+          ),
+        )
+        return card
+      }),
+    )
+    const page = await head.newPage()
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto('/analytics?member=' + me.user.id)
+    await expect(page.getByRole('button', { name: 'Save selection', exact: true })).toBeVisible()
+    await expect(page.locator('.checkin-group-bar h2', { hasText: 'Unified project' })).toHaveCount(
+      1,
+    )
+    await expect(page.locator('.checkin-task')).toHaveCount(3)
+    await page
+      .getByRole('button', { name: 'Urgent research: First deliverable', exact: true })
+      .click()
+    await page
+      .getByRole('button', { name: 'Second project task: Second deliverable', exact: true })
+      .click()
+    await page.getByRole('button', { name: 'Save selection', exact: true }).click()
+    await expect(page.locator('.checkin-row')).toHaveCount(2)
+    await expect(page.locator('.checkin-group-bar h2', { hasText: 'Unified project' })).toHaveCount(
+      1,
+    )
+    await page.locator('.checkin-row-status').first().selectOption('blocked')
+    await expect(page.locator('.checkin-person-summary')).toContainText('0 done')
+    await page.locator('.checkin-row-status').first().selectOption('done')
+    await expect(page.locator('.checkin-person-summary')).toContainText('1 done')
+    const cardBody = (await page.locator('.checkin-task').first().boundingBox())!
+    await page.mouse.click(cardBody.x + 5, cardBody.y + cardBody.height - 5)
+    const drawer = page.getByRole('dialog')
+    await expect(drawer).toBeVisible()
+    await expect(drawer.getByRole('button', { name: 'Delete', exact: true }).first()).toBeDisabled()
+    await page.keyboard.press('Escape')
+    await expect(drawer).toHaveCount(0)
+    await page.getByRole('button', { name: 'Choose deliverables', exact: true }).click()
+    await expect(page.locator('.checkin-task')).toHaveCount(3)
+    await page.locator('.checkin-drag-handle').last().focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(page.getByRole('button', { name: /Manual order/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await page.getByRole('button', { name: 'Save selection', exact: true }).click()
+    await page.clock.install()
+    await page.getByRole('button', { name: 'Start timer', exact: true }).click()
+    await page.clock.fastForward(100_000)
+    await expect(page.locator('.checkin-timer')).toHaveAttribute('data-phase', 'warning')
+    await page.clock.fastForward(10_000)
+    await expect(page.locator('.checkin-timer')).toHaveAttribute('data-phase', 'urgent')
+    await page.clock.fastForward(10_000)
+    await expect(page.getByRole('timer')).toHaveText('0:00')
+    await page.getByRole('button', { name: 'Stop and reset timer', exact: true }).click()
+    await expect(page.getByRole('timer')).toHaveText('2:00')
+    await page.screenshot({ path: testInfo.outputPath('checkin-desktop.png'), fullPage: true })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect(page.locator('.checkin-person-chooser')).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    const a11y = await new AxeBuilder({ page }).analyze()
+    expect(a11y.violations.filter((v) => ['critical', 'serious'].includes(v.impact ?? ''))).toEqual(
+      [],
+    )
+    await page.screenshot({ path: testInfo.outputPath('checkin-mobile.png'), fullPage: true })
+    const source = (await (await head.request.get('/api/v1/cards/' + tasks[0]!.id)).json()) as {
+      workStage: string
+    }
+    expect(source.workStage).toBe('in_progress')
+  } finally {
+    await Promise.all([admin.close(), head.close(), member.close()])
+  }
+})

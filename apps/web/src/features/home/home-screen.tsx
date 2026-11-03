@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import { Button, Reveal, StateView } from '@devon/ui'
@@ -67,7 +68,7 @@ export default function HomeScreen() {
   }
 
   if (!settled) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="overview" />
   }
 
   if (!online && !user) {

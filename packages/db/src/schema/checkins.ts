@@ -35,6 +35,7 @@ export const checkinEntries = appSchema.table('checkin_entries', {
   unitName: text('unit_name'),
   unitColour: smallint('unit_colour'),
   cardTitle: text('card_title').notNull(),
+  cardPriority: text('card_priority').notNull().default('none'),
   projectId: uuid('project_id'),
   projectTitle: text('project_title'),
   text: text('text').notNull(),
@@ -44,6 +45,18 @@ export const checkinEntries = appSchema.table('checkin_entries', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   version: integer('version').notNull().default(1),
 })
+export const checkinLayouts = appSchema.table(
+  'checkin_layouts',
+  {
+    departmentId: uuid('department_id').notNull(),
+    cycleId: uuid('cycle_id').notNull(),
+    memberUserId: uuid('member_user_id').notNull(),
+    mode: text('mode').notNull().default('priority'),
+    cardIds: uuid('card_ids').array().notNull().default([]),
+    version: integer('version').notNull().default(1),
+  },
+  (table) => [primaryKey({ columns: [table.cycleId, table.memberUserId] })],
+)
 export const checkinReminders = appSchema.table('checkin_reminders', {
   id: uuid('id').primaryKey().defaultRandom(),
   departmentId: uuid('department_id').notNull(),

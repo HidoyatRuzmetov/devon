@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { useLocale, useT } from '@devon/i18n'
 import {
   Card,
@@ -90,7 +91,7 @@ export function TasksView() {
   }, [focusRequest, tasksQuery.data])
 
   if (tasksQuery.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="tasks" />
   }
   if (tasksQuery.isError) {
     return (

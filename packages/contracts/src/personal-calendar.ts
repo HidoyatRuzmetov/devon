@@ -8,6 +8,7 @@ export const personalCalendarBodySchema = z
     endsAt: z.string().datetime({ offset: true }),
     allDay: z.boolean().default(false),
     remindAt: z.string().datetime({ offset: true }).nullable().default(null),
+    participantUserIds: z.array(z.string().uuid()).max(100).optional(),
   })
   .strict()
   .refine((v) => Date.parse(v.endsAt) >= Date.parse(v.startsAt), {
@@ -33,6 +34,9 @@ export const personalCalendarItemSchema = z.object({
   version: z.number().int(),
   status: z.string(),
   href: z.string().nullable(),
+  ownerUserId: z.string().uuid().nullable().default(null),
+  participantUserIds: z.array(z.string().uuid()).default([]),
+  canEdit: z.boolean().default(false),
 })
 export const personalCalendarQuerySchema = z
   .object({ from: z.string().date(), to: z.string().date() })

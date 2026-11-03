@@ -13,6 +13,7 @@ import { columnOrder, lockCardOrder, rankForPosition } from './ordering.js'
 // --- row shapes returned by hand-written SQL (snake_case, as Postgres sends them) ------------------
 
 type CardRow = {
+  deletion_protected: boolean
   id: string
   kind: 'task' | 'project_task'
   title: string
@@ -88,6 +89,7 @@ function toCardDTO(row: CardRow): CardDTO {
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
     version: row.version,
+    deletionProtected: row.deletion_protected,
     // v1.1 SPEC §7. `recurrence` is parsed rather than trusted: the column is jsonb and a rule
     // written by an older build (or by hand) must not reach the client as a shape the contract
     // does not describe -- an unreadable rule reads as "no repeat", which is the fail-safe answer.
@@ -129,7 +131,8 @@ function cardSelect(viewerUserId: string | null): SQL {
     coalesce(tl.logged, 0) as logged_min,
     coalesce(db.open_blockers, 0) as blocked_by_open,
     coalesce(bl.blocking, 0) as blocks_count,
-    coalesce(fp.pinned, false) as focus_pinned, fp.position as focus_position
+    coalesce(fp.pinned, false) as focus_pinned, fp.position as focus_position,
+    exists(select 1 from app.checkin_entries e where e.card_id=c.id and e.removed_at is null) as deletion_protected
   from app.cards c
   left join lateral (
     select count(*) as total, count(*) filter (where done_at is not null) as done
@@ -364,9 +367,13 @@ export async function getChecklist(ctx: RequestContext, cardId: string) {
       due_at: Date | null
       order_key: string
       version: number
+      text_locked: boolean
+      deletion_protected: boolean
     }>(
-      sql`select id, card_id, parent_item_id, text, done_at, assignee_user_id, due_at, order_key, version
-          from app.card_checklist_items
+      sql`select id, card_id, parent_item_id, text, done_at, assignee_user_id, due_at, order_key, version,
+          app.checkin_item_locked(i.id) as text_locked,
+          exists(select 1 from app.checkin_entries e where e.checklist_item_id=i.id and e.removed_at is null) as deletion_protected
+          from app.card_checklist_items i
           where card_id = ${cardId} and deleted_at is null
           order by order_key asc, created_at asc, id asc`,
     )
@@ -380,6 +387,8 @@ export async function getChecklist(ctx: RequestContext, cardId: string) {
       dueAt: r.due_at ? new Date(r.due_at).toISOString() : null,
       orderKey: r.order_key,
       version: r.version,
+      textLocked: r.text_locked,
+      deletionProtected: r.deletion_protected,
     }))
   })
 }

@@ -1,11 +1,21 @@
 import { professionalProfileSchema } from '@devon/contracts'
 import { useT } from '@devon/i18n'
-import { Avatar, Button, Sheet, SheetContent, cn, initialsFromName } from '@devon/ui'
+import {
+  Avatar,
+  Button,
+  Dialog,
+  DialogContent,
+  Sheet,
+  SheetContent,
+  cn,
+  initialsFromName,
+} from '@devon/ui'
 import {
   Award,
   BookUser,
   BriefcaseBusiness,
   ChevronRight,
+  Download,
   ExternalLink,
   GraduationCap,
   Heart,
@@ -17,12 +27,15 @@ import {
   Puzzle,
   UserRound,
   Wrench,
-  X,
 } from 'lucide-react'
 import * as React from 'react'
+import { positionLabel, educationLabel } from '../../lib/profile-labels.js'
+import { useDepartment } from '../../lib/session.js'
+import { PersonnelRecordSection } from '../accounts/personnel-record-section.js'
 import { avatarUrl } from '../../lib/avatar.js'
 import { unitColorClass } from '../../lib/unit-palette.js'
 import type { Member, Unit } from './api.js'
+import { downloadResume } from './resume-export.js'
 
 export function fullName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymic'>): string {
   return [m.givenName, m.familyName].filter(Boolean).join(' ')
@@ -69,6 +82,9 @@ export function MemberCard({
 }) {
   const t = useT()
   const [open, setOpen] = React.useState(false)
+  const { department } = useDepartment()
+  const [recordOpen, setRecordOpen] = React.useState(false)
+  const [photoOpen, setPhotoOpen] = React.useState(false)
   const profile = member.professionalProfile ?? professionalProfileSchema.parse({})
   const colour =
     unitColour ?? unitColorClass(new Map(), member.unitId, member.membershipRole === 'head')
@@ -86,6 +102,34 @@ export function MemberCard({
       (a.current ? 2201 : (a.endYear ?? a.startYear ?? 0)),
   )
   const latestEducation = education[0]
+  const resume = () =>
+    downloadResume(
+      {
+        name: formalName(member),
+        position: positionLabel(member.title, t),
+        email: member.email ?? '',
+        unit: unit?.name ?? '',
+      },
+      profile,
+      {
+        about: t('portal.profile.about'),
+        experience: t('portal.profile.experience'),
+        education: t('portal.profile.education'),
+        skills: t('portal.profile.skills'),
+        languages: t('portal.profile.languages'),
+        certifications: t('portal.profile.certifications'),
+        links: t('portal.profile.links'),
+        present: t('portal.profile.present'),
+        highlights: t('peopleDownloads.highlights'),
+        resume: t('profileChoices.resume'),
+        educationDegrees: Object.fromEntries(
+          ['secondary', 'vocational', 'bachelor', 'master', 'phd', 'dsc'].map((code) => [
+            code,
+            t(`profileChoices.education.${code}`),
+          ]),
+        ),
+      },
+    )
   const empty = t('portal.profile.empty')
   const portrait = (large = false) => (
     <Avatar
@@ -115,90 +159,114 @@ export function MemberCard({
       .join(' – ')
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
+      <div
         style={style}
         data-unit-color={colour}
-        className={cn(
-          'group flex h-full min-w-0 w-full rounded-lg border border-border border-l-4 border-l-[var(--profile-unit)] bg-card text-left shadow-1 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [overflow-wrap:anywhere]',
-          compact ? 'items-center gap-2 p-2' : 'flex-col gap-3 p-4',
-        )}
+        className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-border border-l-4 border-l-[var(--profile-unit)] bg-card shadow-1 transition-colors hover:border-[var(--profile-unit)]"
       >
-        <span className="flex w-full items-center gap-3">
-          {portrait()}
-          <span className="min-w-0 flex-1">
-            <span className="block text-lead font-medium leading-snug">{fullName(member)}</span>
-            <span className="mt-1 block text-small text-muted-foreground">
-              {profile.headline || member.title || empty}
-            </span>
-          </span>
-          <ChevronRight
-            className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
-        </span>
-        {!compact ? (
-          <span className="flex w-full flex-col gap-2.5 border-t border-border pt-3 text-small">
-            <span className="flex min-w-0 items-center gap-2.5">
-              <Mail className="size-4 shrink-0 text-primary/80" aria-hidden="true" />
-              <span className="truncate text-muted-foreground">{member.email || empty}</span>
-            </span>
-            <span className="flex min-w-0 items-center gap-2.5">
-              <Phone className="size-4 shrink-0 text-primary/80" aria-hidden="true" />
-              <span className="text-muted-foreground">{profile.phone || empty}</span>
-            </span>
-            <span className="flex min-w-0 items-start gap-2.5">
-              <GraduationCap
-                className="mt-0.5 size-4 shrink-0 text-primary/80"
-                aria-hidden="true"
-              />
-              <span className="min-w-0">
-                {latestEducation ? (
-                  <>
-                    <span className="block font-medium">
-                      {latestEducation.field ||
-                        latestEducation.degree ||
-                        latestEducation.institution}
-                    </span>
-                    <span className="block text-caption text-muted-foreground">
-                      {latestEducation.institution}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-muted-foreground">{empty}</span>
-                )}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={style}
+          data-unit-color={colour}
+          className={cn(
+            'group flex min-w-0 w-full flex-1 text-left transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_9%,var(--color-card))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [overflow-wrap:anywhere]',
+            compact ? 'items-center gap-2 p-2' : 'flex-col gap-3 p-4',
+          )}
+        >
+          <span className="flex w-full items-center gap-3">
+            {portrait()}
+            <span className="min-w-0 flex-1">
+              <span className="block text-lead font-medium leading-snug">{fullName(member)}</span>
+              <span className="mt-1 block text-small text-muted-foreground">
+                {profile.headline || positionLabel(member.title, t) || empty}
               </span>
             </span>
+            <ChevronRight
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
           </span>
+          {!compact ? (
+            <span className="flex w-full flex-col gap-2.5 border-t border-border pt-3 text-small">
+              <span className="flex min-w-0 items-center gap-2.5">
+                <Mail className="size-4 shrink-0 text-primary/80" aria-hidden="true" />
+                <span className="truncate text-muted-foreground">{member.email || empty}</span>
+              </span>
+              <span className="flex min-w-0 items-center gap-2.5">
+                <Phone className="size-4 shrink-0 text-primary/80" aria-hidden="true" />
+                <span className="text-muted-foreground">{profile.phone || empty}</span>
+              </span>
+              <span className="flex min-w-0 items-start gap-2.5">
+                <GraduationCap
+                  className="mt-0.5 size-4 shrink-0 text-primary/80"
+                  aria-hidden="true"
+                />
+                <span className="min-w-0">
+                  {latestEducation ? (
+                    <>
+                      <span className="block font-medium">
+                        {latestEducation.field ||
+                          educationLabel(latestEducation.degree, t) ||
+                          latestEducation.institution}
+                      </span>
+                      <span className="block text-caption text-muted-foreground">
+                        {latestEducation.institution}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">{empty}</span>
+                  )}
+                </span>
+              </span>
+            </span>
+          ) : null}
+        </button>
+        {!compact && department?.role === 'head' ? (
+          <div
+            className="mx-4 flex flex-wrap items-center gap-1 border-t border-border py-2"
+            role="group"
+            aria-label={t('peopleDownloads.label')}
+          >
+            <Download className="mr-1 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={resume}
+              className="rounded-md px-2 py-1.5 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {t('profileChoices.resume')}
+            </button>
+            <span aria-hidden="true" className="h-3 border-l border-border" />
+            <button
+              type="button"
+              onClick={() => setRecordOpen(true)}
+              className="rounded-md px-2 py-1.5 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {t('profileChoices.record')}
+            </button>
+          </div>
         ) : null}
-      </button>
+      </div>
       <Sheet open={open} onOpenChange={setOpen} direction="right">
         <SheetContent side="right" title={fullName(member)} className="w-full sm:w-[36rem]">
-          <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
-            <span className="text-small font-medium text-muted-foreground">
-              {t('portal.profile.title')}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label={t('structure.units.chart.closePanel')}
-              onClick={() => setOpen(false)}
-            >
-              <X className="size-4" aria-hidden="true" />
-            </Button>
-          </div>
           <div
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [overflow-wrap:anywhere]"
             style={style}
           >
             <div data-profile-identity className="border-b border-border px-5 py-4 sm:px-6">
               <div className="flex items-start gap-3">
-                {portrait(true)}
+                <button
+                  disabled={!member.avatarKey}
+                  aria-label={t('photoEditor.view')}
+                  className="shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-ring"
+                  onClick={() => setPhotoOpen(true)}
+                >
+                  {portrait(true)}
+                </button>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-display text-h2 leading-tight">{fullName(member)}</h2>
                   <p className="mt-1 text-body text-muted-foreground">
-                    {profile.headline || member.title || empty}
+                    {profile.headline || positionLabel(member.title, t) || empty}
                   </p>
                   <p className="mt-2 flex items-start gap-2 text-caption text-muted-foreground">
                     <span
@@ -218,6 +286,11 @@ export function MemberCard({
               </div>
             </div>
             <div className="flex min-w-0 flex-col gap-4 px-5 py-4 sm:px-6">
+              {department?.role === 'head' ? (
+                <Button variant="secondary" onClick={() => setRecordOpen(true)}>
+                  {t('profileChoices.record')}
+                </Button>
+              ) : null}
               <ProfileSection title={t('portal.profile.contact')} icon={BookUser}>
                 <dl
                   data-profile-contacts
@@ -316,7 +389,9 @@ export function MemberCard({
                         </div>
                         {entry.degree || entry.field ? (
                           <p className="mt-1 text-small">
-                            {[entry.degree, entry.field].filter(Boolean).join(' · ')}
+                            {[educationLabel(entry.degree, t), entry.field]
+                              .filter(Boolean)
+                              .join(' · ')}
                           </p>
                         ) : null}
                       </li>
@@ -398,6 +473,27 @@ export function MemberCard({
           ) : null}
         </SheetContent>
       </Sheet>
+      {department?.role === 'head' ? (
+        <Dialog open={recordOpen} onOpenChange={setRecordOpen}>
+          <DialogContent title={t('profileChoices.record')} className="max-w-200">
+            <PersonnelRecordSection ownerUserId={member.userId} />
+          </DialogContent>
+        </Dialog>
+      ) : null}
+      <Dialog open={photoOpen} onOpenChange={setPhotoOpen}>
+        <DialogContent
+          title={fullName(member)}
+          titleHidden
+          className="max-w-[min(90vw,42rem)] border-0 bg-transparent p-0 shadow-none [&>button]:bg-card/90"
+          aria-describedby={undefined}
+        >
+          <img
+            src={avatarUrl(member.avatarKey, 512) ?? ''}
+            alt={fullName(member)}
+            className="max-h-[85dvh] w-full rounded-xl object-contain"
+          />
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -36,10 +36,10 @@ describe('professional profile publishing', () => {
     ).toBe(false)
     const result = professionalProfileWriteSchema.parse({
       education: [
-        { institution: 'University', degree: 'Bachelor', field: 'Policy', ...period },
+        { institution: 'University', degree: 'bachelor', field: 'Policy', ...period },
         {
           institution: 'Graduate school',
-          degree: 'Master',
+          degree: 'master',
           field: 'Economics',
           startYear: 2025,
           endYear: 2027,

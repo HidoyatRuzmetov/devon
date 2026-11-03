@@ -34,6 +34,10 @@ export async function patchProfile(userId: string, patch: PatchProfileBody, ctx:
         .where(eq(schema.users.id, userId))
         .returning()
       if (!rows[0]) return null
+      if ('title' in patch)
+        await tx.raw(
+          sql`update app.users set professional_profile_version=professional_profile_version+1, professional_profile=jsonb_set(professional_profile,'{position}',to_jsonb(coalesce(${patch.title ?? null}::text,''))) where id=${userId}`,
+        )
       tx.audit({
         action: 'accounts.profile_updated',
         subjectType: 'user',
@@ -583,7 +587,7 @@ export async function requestPasswordResetByLogin(login: string, ctx: AuditCtx):
 export async function getProfessionalProfile(userId: string, ctx: AuditCtx) {
   return withContext(toDbContext(ctx), async (tx) => {
     const [row] = await tx.raw<{ profile: unknown; version: number }>(
-      sql`select professional_profile as profile, professional_profile_version as version from app.users where id = ${userId} and deleted_at is null`,
+      sql`select professional_profile || jsonb_build_object('position',case when title in ('specialist_first_class','leading_specialist','chief_specialist','division_head','department_head') then title else '' end) as profile, professional_profile_version as version from app.users where id = ${userId} and deleted_at is null`,
     )
     return row
       ? { profile: professionalProfileSchema.parse(row.profile), version: row.version }
@@ -598,7 +602,7 @@ export async function saveProfessionalProfile(
 ) {
   return withContext(toDbContext(ctx), async (tx) => {
     const [row] = await tx.raw<{ version: number }>(
-      sql`update app.users set professional_profile = ${JSON.stringify(profile)}::jsonb, professional_profile_version = professional_profile_version + 1, updated_at = now() where id = ${userId} and deleted_at is null and professional_profile_version = ${version} returning professional_profile_version as version`,
+      sql`update app.users set title=${profile.position || null}, professional_profile = ${JSON.stringify(profile)}::jsonb, professional_profile_version = professional_profile_version + 1, updated_at = now() where id = ${userId} and deleted_at is null and professional_profile_version = ${version} returning professional_profile_version as version`,
     )
     if (!row) return null
     tx.audit({

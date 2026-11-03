@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/admin/accounts` -- table with an actions menu (UI-OVERHAUL.md §2 "Admin console ... accounts
 // table with actions menu"), instead of four buttons per row: search, lock/unlock, reset password,
 // force 2FA reset, anonymise/delete.
@@ -214,7 +215,7 @@ function AccountsBody() {
     onError: () => toast(t('admin.console.operationFailed')),
   })
 
-  if (listQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (listQuery.isPending) return <ViewSkeleton view="accounts" />
   if (listQuery.isError) {
     if (listQuery.error instanceof ApiError && listQuery.error.status === 403) {
       return (

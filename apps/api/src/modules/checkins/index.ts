@@ -3,6 +3,9 @@ import {
   checkinBoardSchema,
   checkinLockSchema,
   checkinUpdateSchema,
+  checkinSourceCardSchema,
+  checkinSelectionSchema,
+  checkinLayoutWriteSchema,
 } from '@devon/contracts'
 import type { FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
@@ -27,6 +30,58 @@ const routes: FastifyPluginAsyncZod = async (app) => {
       return sendProblem(reply, 'conflict', { errors: [{ path: 'checkin', code: cause.message }] })
     throw error
   })
+  const memberParams = params.extend({ memberUserId: z.string().uuid() })
+  app.get(
+    '/cycles/:id/members/:memberUserId/candidates',
+    {
+      config: { permission: { action: 'read', subject } },
+      schema: { params: memberParams, response: { 200: z.array(checkinSourceCardSchema) } },
+    },
+    async (req) => repo.candidates(contextFromRequest(req), req.params.id, req.params.memberUserId),
+  )
+  app.put(
+    '/cycles/:id/members/:memberUserId/selection',
+    {
+      config: { permission: { action: 'update', subject } },
+      schema: {
+        params: memberParams,
+        body: checkinSelectionSchema,
+        response: { 204: z.undefined() },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      await repo.saveSelection(
+        contextFromRequest(req),
+        req.params.id,
+        req.params.memberUserId,
+        req.body,
+      )
+      return reply.code(204).send()
+    },
+  )
+  app.put(
+    '/cycles/:id/members/:memberUserId/layout',
+    {
+      config: { permission: { action: 'update', subject } },
+      schema: {
+        params: memberParams,
+        body: checkinLayoutWriteSchema,
+        response: { 204: z.undefined() },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      await repo.saveLayout(
+        contextFromRequest(req),
+        req.params.id,
+        req.params.memberUserId,
+        req.body,
+      )
+      return reply.code(204).send()
+    },
+  )
+
   app.get(
     '/',
     {

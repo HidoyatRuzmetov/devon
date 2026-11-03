@@ -217,7 +217,7 @@ export async function runDepartmentChatForActor(
             detail +
             '. Correct the arguments exactly. attachmentIds belongs beside body, never inside body. If required information is missing, ask a question without an action. Exact schemas for these actions: ' +
             JSON.stringify(
-              actionInstructions().filter((action) =>
+              actionInstructions(ctx.departmentRole === 'head').filter((action) =>
                 output.actions.some((proposal) => proposal.kind === action.kind),
               ),
             ),

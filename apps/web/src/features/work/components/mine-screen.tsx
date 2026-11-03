@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // "Mine" view (TECH-SPEC §5): every card assigned to the signed-in user, across every project and
 // standalone task, grouped by risk so what's overdue is never buried under what isn't.
 import * as React from 'react'
@@ -10,7 +11,6 @@ import {
   Collapsible,
   HoverLift,
   PressScale,
-  Skeleton,
   Stagger,
   StaggerItem,
   StateView,
@@ -186,13 +186,7 @@ export default function MineScreen() {
 
   let body: React.ReactNode
   if (cardsQuery.isPending) {
-    body = (
-      <div className="flex flex-col gap-2">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-12 w-full" />
-        ))}
-      </div>
-    )
+    body = <ViewSkeleton view="mine" />
   } else if (cardsQuery.isError) {
     body = (
       <StateView

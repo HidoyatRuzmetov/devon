@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import {
   AI_CHAT_MESSAGE_MAX,
   type AiChatAttachment,
@@ -921,7 +922,7 @@ export default function AssistantScreen() {
       replaceSearchParam('conversation', null)
     previousScope.current = scope
   }, [scope])
-  if (me.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (me.isPending) return <ViewSkeleton view="assistant" />
   if (me.isError)
     return (
       <StateView

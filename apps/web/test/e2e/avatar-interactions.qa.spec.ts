@@ -53,6 +53,10 @@ test('@qa uploaded photos reach project and live stacks, each hovered person is 
     await memberPage
       .locator('#section-photo input[type="file"]')
       .setInputFiles(join(import.meta.dirname, 'fixtures/account-avatar.png'))
+    await memberPage
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Use photo', exact: true })
+      .click()
     expect((await finalized).status()).toBe(200)
     const memberMe = (await (await member.request.get('/api/v1/me')).json()) as {
       user: { id: string; avatarKey: string }

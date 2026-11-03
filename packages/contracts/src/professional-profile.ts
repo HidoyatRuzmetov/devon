@@ -1,6 +1,23 @@
 import { z } from 'zod'
 
 const text = z.string().trim().max(500)
+export const POSITION_CODES = [
+  'specialist_first_class',
+  'leading_specialist',
+  'chief_specialist',
+  'division_head',
+  'department_head',
+] as const
+export const EDUCATION_CODES = [
+  'secondary',
+  'vocational',
+  'bachelor',
+  'master',
+  'phd',
+  'dsc',
+] as const
+export const positionSchema = z.enum(POSITION_CODES)
+export const educationLevelSchema = z.enum(EDUCATION_CODES)
 const period = {
   startYear: z.number().int().min(1900).max(2200).nullable(),
   endYear: z.number().int().min(1900).max(2200).nullable(),
@@ -11,6 +28,7 @@ const orderedPeriod = (v: { startYear: number | null; endYear: number | null }) 
 export const professionalProfileSchema = z
   .object({
     headline: text.default(''),
+    position: positionSchema.or(z.literal('')).default(''),
     about: z.string().trim().max(10000).default(''),
     phone: z.string().trim().max(80).default(''),
     location: text.default(''),
@@ -20,7 +38,12 @@ export const professionalProfileSchema = z
     education: z
       .array(
         z
-          .object({ institution: text, degree: text, field: text, ...period })
+          .object({
+            institution: text,
+            degree: educationLevelSchema.or(z.literal('')),
+            field: text,
+            ...period,
+          })
           .strict()
           .refine(orderedPeriod, 'End year must follow start year'),
       )
@@ -65,6 +88,38 @@ export const professionalProfileSchema = z
   })
   .strict()
 export type ProfessionalProfile = z.infer<typeof professionalProfileSchema>
+// Recovery must accept unfinished URLs and partially typed years; publication validates above.
+export function isProfessionalProfileDraft(value: unknown): value is ProfessionalProfile {
+  const result = professionalProfileSchema
+    .extend({
+      education: z.array(
+        z.object({
+          institution: z.string(),
+          degree: educationLevelSchema.or(z.literal('')),
+          field: z.string(),
+          startYear: z.number().nullable(),
+          endYear: z.number().nullable(),
+          current: z.boolean(),
+        }),
+      ),
+      experience: z.array(
+        z.object({
+          organization: z.string(),
+          role: z.string(),
+          description: z.string(),
+          startYear: z.number().nullable(),
+          endYear: z.number().nullable(),
+          current: z.boolean(),
+        }),
+      ),
+      certifications: z.array(
+        z.object({ name: z.string(), issuer: z.string(), year: z.number().nullable() }),
+      ),
+      links: z.array(z.object({ label: z.string(), url: z.string() })),
+    })
+    .safeParse(value)
+  return result.success
+}
 export const professionalProfileRecordSchema = z.object({
   profile: professionalProfileSchema,
   version: z.number().int(),

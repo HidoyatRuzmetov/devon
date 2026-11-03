@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { useT } from '@devon/i18n'
@@ -33,7 +34,7 @@ export function FileApprovalQueue() {
       title={t('portal.files.queue')}
       description={t('portal.files.queueHint')}
     >
-      {query.isPending ? <StateView kind="loading" titleKey="state.loading" /> : null}
+      {query.isPending ? <ViewSkeleton view="files" /> : null}
       {query.isError ? (
         <StateView
           kind="error"

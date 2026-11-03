@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // Table view (TECH-SPEC §5): every card the current `?q=` filter matches, one row each, row-
 // virtualised (TanStack Virtual -- exact pinned version, `apps/web/package.json`) behind a sticky
 // header, with column sort, row checkboxes and a bulk action bar (assign/label/archive, archive
@@ -9,7 +10,7 @@ import * as React from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { AlertCircle, ArrowDown, ArrowUp, ArrowUpDown, Clock3 } from 'lucide-react'
 import { useT, useLocale } from '@devon/i18n'
-import { Badge, Checkbox, DatePicker, Input, Select, Skeleton, StateView, cn } from '@devon/ui'
+import { Badge, Checkbox, DatePicker, Input, Select, StateView, cn } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
@@ -201,13 +202,7 @@ export default function TableScreen() {
 
   let body: React.ReactNode
   if (cardsQuery.isPending) {
-    body = (
-      <div className="flex flex-col gap-2">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
-    )
+    body = <ViewSkeleton view="table" />
   } else if (cardsQuery.isError) {
     body = (
       <StateView

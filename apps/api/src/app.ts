@@ -112,6 +112,18 @@ export async function buildApp(
     // value can never reach a client, in any environment. `instance` carries the request id, which
     // is the only thread from what the user sees to what the server log holds (H15.1).
     const instance = `urn:devon:request:${req.id}`
+    const databaseCause = err.cause instanceof Error ? err.cause : err
+    if (
+      ['checkin_reference_protected', 'checkin_text_locked', 'checkin_assignment_locked'].includes(
+        databaseCause.message,
+      )
+    ) {
+      sendProblem(reply, 'conflict', {
+        instance,
+        errors: [{ path: 'checkin', code: databaseCause.message }],
+      })
+      return
+    }
     if (err.validation) {
       sendProblem(reply, 'validation_failed', {
         instance,

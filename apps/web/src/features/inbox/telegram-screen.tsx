@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from '../accounts/settings-section.js'
 // `/account/telegram` (this module's task: "linking via /start <code> + QR in Settings" + "department
 // group connection"). Personal linking is every signed-in user's own card. Group connection follows
@@ -89,7 +90,7 @@ function PersonalLinkCard() {
   const mute = useTelegramMuteMutation()
 
   if (statusQuery.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="telegram" />
   }
   if (statusQuery.isError || !statusQuery.data) {
     return (
@@ -315,7 +316,7 @@ type GroupsListProps = {
 function GroupsList({ query, disconnect, putKinds }: GroupsListProps) {
   const t = useT()
   if (query.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" className="mt-3" />
+    return <ViewSkeleton view="telegramGroups" />
   }
   if (query.isError) {
     return (
@@ -499,7 +500,7 @@ export default function TelegramScreen({ embedded = false }: { embedded?: boolea
     return <ForcedStateBlock kind={forced} />
   }
   if (!settled) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="telegramGroups" />
   }
   if (meQuery.data === null) return null
 

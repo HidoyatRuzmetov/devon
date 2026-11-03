@@ -17,6 +17,6 @@ export async function notifyUser(
   input: NewNotification,
 ): Promise<NotificationRow> {
   const created = await insertNotification(systemAuditCtx(null), input)
-  await deliverNotification(log, created, input.userId)
+  if (!created.deduplicated) await deliverNotification(log, created, input.userId)
   return created
 }

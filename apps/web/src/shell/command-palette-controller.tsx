@@ -1,3 +1,4 @@
+import { positionLabel } from '../lib/profile-labels.js'
 // Wraps `@devon/ui`'s `CommandPalette` "shell" (structure/keyboard/`role` semantics are real there;
 // this file wires the sources it filters over).
 //
@@ -362,7 +363,7 @@ export function CommandPaletteController({
       id: `person:${member.userId}`,
       label: [member.familyName, member.givenName].filter(Boolean).join(' '),
       icon: Users,
-      ...(member.title ? { hint: member.title } : {}),
+      ...(member.title ? { hint: positionLabel(member.title, t) } : {}),
       onSelect: () => go('/people'),
     }))
     const cardItems = entities.cards.slice(0, SOURCE_LIMIT).map((card) => ({

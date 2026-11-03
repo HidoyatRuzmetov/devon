@@ -1,9 +1,10 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // "Who brings what" (TECH-SPEC §3.4 `event_items`: "potluck / checklist"). Claim is optimistic-feeling
 // but server-arbitrated -- a 409 from a race (two people tapping the same item at once) surfaces as a
 // toast, never a silent no-op.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Field, Input, Skeleton, StateView, toast } from '@devon/ui'
+import { Button, Field, Input, StateView, toast } from '@devon/ui'
 import {
   useAddItemMutation,
   useClaimItemMutation,
@@ -70,7 +71,7 @@ export function ItemsPanel({ eventId }: { eventId: string }) {
   }
 
   function renderItemsBody() {
-    if (itemsQuery.isPending) return <Skeleton className="h-24 w-full" />
+    if (itemsQuery.isPending) return <ViewSkeleton view="tasks" />
     if (itemsQuery.isError) {
       return (
         <StateView

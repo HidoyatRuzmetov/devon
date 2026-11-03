@@ -1,6 +1,48 @@
 import { z } from 'zod'
 
 export const checkinStateSchema = z.enum(['pending', 'done', 'blocked'])
+export const checkinPrioritySchema = z.enum(['none', 'low', 'medium', 'high', 'urgent'])
+export const checkinLayoutSchema = z.object({
+  cycleId: z.string().uuid(),
+  memberUserId: z.string().uuid(),
+  mode: z.enum(['priority', 'manual']),
+  cardIds: z.array(z.string().uuid()),
+  version: z.number().int(),
+})
+export const checkinSourceCardSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  priority: checkinPrioritySchema,
+  projectId: z.string().uuid().nullable(),
+  projectTitle: z.string().nullable(),
+  version: z.number().int(),
+  canEdit: z.boolean(),
+  checklist: z.array(
+    z.object({
+      id: z.string().uuid(),
+      text: z.string(),
+      doneAt: z.string().nullable(),
+      parentItemId: z.string().uuid().nullable(),
+      version: z.number().int(),
+      textLocked: z.boolean(),
+      deletionProtected: z.boolean(),
+    }),
+  ),
+})
+export const checkinSelectionSchema = z
+  .object({
+    addItemIds: z.array(z.string().uuid()).max(1000),
+    removeEntryIds: z.array(z.string().uuid()).max(1000),
+  })
+  .strict()
+export const checkinLayoutWriteSchema = z
+  .object({
+    mode: z.enum(['priority', 'manual']),
+    cardIds: z.array(z.string().uuid()).max(1000),
+    version: z.number().int().nonnegative(),
+  })
+  .strict()
+  .refine((v) => new Set(v.cardIds).size === v.cardIds.length, 'Duplicate cards')
 export const checkinCycleSchema = z.object({
   id: z.string().uuid(),
   startsOn: z.string(),
@@ -24,6 +66,10 @@ export const checkinEntrySchema = z.object({
   checklistItemId: z.string().uuid(),
   cardId: z.string().uuid(),
   cardTitle: z.string(),
+  cardPriority: checkinPrioritySchema.default('none'),
+  cardVersion: z.number().int().nullable().default(null),
+  canEditCard: z.boolean().default(false),
+  textLocked: z.boolean().default(false),
   projectId: z.string().uuid().nullable(),
   projectTitle: z.string().nullable(),
   text: z.string(),
@@ -46,6 +92,7 @@ export const checkinBoardSchema = z.object({
   units: z.array(z.object({ id: z.string().uuid() })).default([]),
   members: z.array(checkinMemberSchema),
   entries: z.array(checkinEntrySchema),
+  layouts: z.array(checkinLayoutSchema).default([]),
   progress: z.array(
     z.object({
       cycleId: z.string().uuid(),
@@ -74,3 +121,6 @@ export type CheckinBoard = z.infer<typeof checkinBoardSchema>
 export type CheckinEntry = z.infer<typeof checkinEntrySchema>
 export type CheckinCycle = z.infer<typeof checkinCycleSchema>
 export type CheckinMember = z.infer<typeof checkinMemberSchema>
+export type CheckinSourceCard = z.infer<typeof checkinSourceCardSchema>
+export type CheckinSelection = z.infer<typeof checkinSelectionSchema>
+export type CheckinLayoutWrite = z.infer<typeof checkinLayoutWriteSchema>

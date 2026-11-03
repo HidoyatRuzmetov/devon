@@ -80,6 +80,7 @@ export const cardSchema = z.object({
    * the client never guesses a permission -- optional only so a client built before this field
    * existed still parses the payload. */
   canEdit: z.boolean().optional(),
+  deletionProtected: z.boolean().optional(),
 
   // --- v1.1 SPEC §7 (work-plus). Every one of these is computed in the same query that loads the
   // card (`CARD_SELECT`'s lateral joins), never in a per-card follow-up (I-14). All optional so a
@@ -108,6 +109,8 @@ export const cardSchema = z.object({
 export type CardDTO = z.infer<typeof cardSchema>
 
 export const checklistItemSchema = z.object({
+  deletionProtected: z.boolean().optional(),
+  textLocked: z.boolean().optional(),
   id: z.string().uuid(),
   cardId: z.string().uuid(),
   parentItemId: z.string().uuid().nullable(),

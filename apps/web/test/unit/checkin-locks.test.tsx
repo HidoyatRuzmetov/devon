@@ -1,3 +1,4 @@
+import { TooltipProvider } from '@devon/ui'
 import * as React from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import type { CheckinBoard } from '@devon/contracts'
@@ -13,8 +14,12 @@ const mocks = vi.hoisted(() => ({
   data: {} as CheckinBoard,
 }))
 vi.mock('../../src/features/analytics/checkins-api.js', () => ({
+  useCheckinCandidates: () => ({ data: [], isPending: false, isError: false }),
   useCheckins: () => ({ data: mocks.data }),
   useCheckinChange: () => ({ mutate: mocks.mutate, isPending: false }),
+}))
+vi.mock('../../src/features/work/components/card-peek-dialog.js', () => ({
+  CardPeekDialog: () => null,
 }))
 vi.mock('../../src/lib/session.js', () => ({
   useDepartment: () => ({ departmentId: 'department', department: { role: 'head' } }),
@@ -31,6 +36,7 @@ vi.mock('../../src/lib/use-viewport-bounded-height.js', () => ({
 beforeEach(() => {
   setLocale('en')
   localStorage.clear()
+  sessionStorage.clear()
   mocks.userId = 'head'
   mocks.search = new URLSearchParams('member=alice')
   mocks.mutate.mockReset().mockImplementation((_change, options) => options?.onSuccess?.())
@@ -41,6 +47,7 @@ beforeEach(() => {
     entries: [],
     progress: [],
     memberLocks: [],
+    layouts: [],
     cycles: [
       {
         id: 'cycle',
@@ -82,7 +89,11 @@ describe('individual check-in locks and confirmation', () => {
   })
 
   it('prompts on every lock by default and sends the selected member', () => {
-    render(<CheckinScreen />)
+    render(
+      <TooltipProvider>
+        <CheckinScreen />
+      </TooltipProvider>,
+    )
     for (let i = 0; i < 2; i++) {
       fireEvent.click(screen.getByRole('button', { name: 'Agree check-in' }))
       expect(mocks.mutate).toHaveBeenCalledTimes(i)
@@ -97,13 +108,21 @@ describe('individual check-in locks and confirmation', () => {
   })
 
   it('remembers an explicit opt-out after success, without sharing it with another account or checkout', () => {
-    const view = render(<CheckinScreen />)
+    const view = render(
+      <TooltipProvider>
+        <CheckinScreen />
+      </TooltipProvider>,
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Agree check-in' }))
     const dialog = screen.getByRole('dialog')
     fireEvent.click(within(dialog).getByRole('checkbox', { name: 'Don’t show again' }))
     fireEvent.click(within(dialog).getByRole('button', { name: 'Agree check-in' }))
     mocks.search = new URLSearchParams('member=bob')
-    view.rerender(<CheckinScreen />)
+    view.rerender(
+      <TooltipProvider>
+        <CheckinScreen />
+      </TooltipProvider>,
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Agree check-in' }))
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(mocks.mutate).toHaveBeenLastCalledWith(
@@ -111,7 +130,11 @@ describe('individual check-in locks and confirmation', () => {
       expect.anything(),
     )
     mocks.userId = 'another-head'
-    view.rerender(<CheckinScreen />)
+    view.rerender(
+      <TooltipProvider>
+        <CheckinScreen />
+      </TooltipProvider>,
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Agree check-in' }))
     expect(screen.getByRole('dialog')).toBeTruthy()
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
@@ -120,14 +143,22 @@ describe('individual check-in locks and confirmation', () => {
     mocks.data.memberLocks = [
       { cycleId: 'cycle', memberUserId: 'bob', checkinLockedAt: 'locked', checkoutLockedAt: null },
     ]
-    view.rerender(<CheckinScreen />)
+    view.rerender(
+      <TooltipProvider>
+        <CheckinScreen />
+      </TooltipProvider>,
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Lock checkout' }))
     expect(within(screen.getByRole('dialog')).getByText(/Are you sure.*Bob Member/)).toBeTruthy()
   })
 
   it('does not remember the checkbox on cancellation or a failed save', () => {
     mocks.mutate.mockImplementation(() => {})
-    render(<CheckinScreen />)
+    render(
+      <TooltipProvider>
+        <CheckinScreen />
+      </TooltipProvider>,
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Agree check-in' }))
     let dialog = screen.getByRole('dialog')
     fireEvent.click(within(dialog).getByRole('checkbox', { name: 'Don’t show again' }))

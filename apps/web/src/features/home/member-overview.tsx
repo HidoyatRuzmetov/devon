@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import * as React from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -307,8 +308,7 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
     return priority || a.title.localeCompare(b.title)
   })
   const count = counts.data
-  if (queries.some((query) => query.isPending))
-    return <StateView kind="loading" titleKey="state.loading" />
+  if (queries.some((query) => query.isPending)) return <ViewSkeleton view="memberHome" />
   if (queries.some((query) => query.isError))
     return (
       <StateView

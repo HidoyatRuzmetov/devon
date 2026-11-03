@@ -1,3 +1,4 @@
+import { POSITION_CODES } from '@devon/contracts'
 // `/register` (EPIC-001, TECH-SPEC §2.1). Renders inside `AuthShell` -- `app.tsx`'s `AUTH_ROUTES`
 // lists it alongside `/login`, `/setup` and `/join`, because a visitor creating an account has no
 // session and a sidebar full of destinations they cannot reach is not chrome, it is noise.
@@ -151,7 +152,18 @@ export default function RegisterScreen() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-small text-foreground">{t('accounts.register.jobTitle')}</span>
-            <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+            <select
+              className="h-11 rounded-md border border-border bg-card px-3"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+            >
+              <option value="">{t('profileChoices.choose')}</option>
+              {POSITION_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`profileChoices.position.${code}`)}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="flex flex-col gap-1.5">

@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // Polls (TECH-SPEC §3.4: "date / single / multi, anonymous option, deadline, results animation").
 // Voting replaces the caller's whole ballot server-side (`service.ts`'s `voteOnPoll`), so "change
 // vote" is just "vote again" here -- no separate retract step.
@@ -13,7 +14,6 @@ import {
   Input,
   IconButton,
   Select,
-  Skeleton,
   StateView,
   toast,
   useCelebrate,
@@ -391,7 +391,7 @@ export function PollsPanel({ eventId }: { eventId: string }) {
   )
 
   function renderPollsBody() {
-    if (pollsQuery.isPending) return <Skeleton className="h-32 w-full" />
+    if (pollsQuery.isPending) return <ViewSkeleton view="polls" />
     if (pollsQuery.isError) {
       return (
         <StateView

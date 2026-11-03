@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { SettingsSection } from '../../accounts/settings-section.js'
 // Web push opt-in (v1.1 SPEC §10, EPIC-019).
 //
@@ -94,7 +95,7 @@ export function PushPanel(): React.JSX.Element {
       )
     }
     if (keyQuery.isPending || push.loading) {
-      return <StateView kind="loading" titleKey="calendar.push.loading.title" />
+      return <ViewSkeleton view="push" />
     }
     if (keyQuery.isError) {
       const err = keyQuery.error

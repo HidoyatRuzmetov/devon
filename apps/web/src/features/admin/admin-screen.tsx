@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // Shared chrome for every `/admin/*` screen: the same forced-state/redirect/forbidden/offline guard
 // `routes/admin.tsx` (the foundation's placeholder this feature's `/admin` route now supersedes --
 // `app.tsx`'s route outlet checks a feature manifest's exact-path route before its own five-route
@@ -42,7 +43,7 @@ export function AdminScreen({
     return <ForcedStateBlock kind={forced} />
   }
   if (!settled) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="overview" />
   }
   if (meQuery.data === null) return null // redirecting to /login
 

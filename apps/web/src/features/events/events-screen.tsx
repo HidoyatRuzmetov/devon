@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/events` (TECH-SPEC §3.4/§5: "Calendar view (month/list)"). List and calendar are two lenses on
 // the same query -- no separate fetch per view. Create/detail are query-string driven (`?new=1`,
 // `?event=<id>`) rather than nested routes, matching `router.tsx`'s "exact-path only, no :params yet"
@@ -100,7 +101,7 @@ export default function EventsScreen() {
   }
 
   if (eventsQuery.isPending) {
-    return <StateView kind="loading" titleKey="events.loading.title" />
+    return <ViewSkeleton view="events" />
   }
 
   if (eventsQuery.isError) {

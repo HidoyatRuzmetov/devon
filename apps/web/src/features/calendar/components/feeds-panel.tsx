@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { SettingsSection } from '../../accounts/settings-section.js'
 // Per-user secret ICS feeds (v1.1 SPEC §10, EPIC-019): create, copy, renew, delete.
 //
@@ -366,7 +367,7 @@ export function FeedsPanel(): React.JSX.Element {
         />
       )
     }
-    if (query.isPending) return <StateView kind="loading" titleKey="calendar.feeds.loading.title" />
+    if (query.isPending) return <ViewSkeleton view="feeds" />
     if (query.isError) {
       const err = query.error
       const code = err instanceof ApiError ? err.code : null

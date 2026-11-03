@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // Project cards are loaded by immutable project id and paginated, so renaming a project or sharing
 // a title with another project cannot silently move/hide its tasks.
@@ -17,7 +18,6 @@ import {
   initialsFromName,
   Input,
   ProgressRing,
-  Skeleton,
   SparkleButton,
   Stagger,
   StaggerItem,
@@ -174,7 +174,7 @@ export default function ProjectPageScreen() {
     return <StateView kind="empty" titleKey="projects.noIdTitle" bodyKey="projects.noIdBody" />
   }
   if (projectQuery.isPending) {
-    return <Skeleton className="h-96 w-full" />
+    return <ViewSkeleton view="project" />
   }
   if (projectQuery.isError || !projectQuery.data) {
     return (
@@ -638,7 +638,7 @@ export default function ProjectPageScreen() {
                   </AiResultPanel>
                 ) : null}
 
-                {cardsQuery.isPending ? <Skeleton className="h-20 w-full" /> : null}
+                {cardsQuery.isPending ? <ViewSkeleton view="tasks" /> : null}
                 {cardsQuery.isError ? (
                   <StateView
                     kind="error"

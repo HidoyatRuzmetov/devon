@@ -1,3 +1,5 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
+import { positionLabel } from '../../lib/profile-labels.js'
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -94,7 +96,7 @@ export function DepartmentOverview({ header }: { header: React.ReactNode }) {
   }, [])
   const events = useEventsQuery(range)
   const queries = [membersQuery, unitsQuery, board, projectsQuery]
-  if (queries.some((q) => q.isPending)) return <StateView kind="loading" titleKey="state.loading" />
+  if (queries.some((q) => q.isPending)) return <ViewSkeleton view="overview" />
   if (queries.some((q) => q.isError))
     return (
       <StateView
@@ -460,7 +462,7 @@ function WorkforceAvatars({
                 <div className="min-w-0">
                   <p className="text-small font-semibold [overflow-wrap:anywhere]">{name}</p>
                   <p className="text-caption text-muted-foreground">
-                    {member.title ||
+                    {positionLabel(member.title, t) ||
                       t(
                         member.membershipRole === 'head'
                           ? 'overviewChat.head'

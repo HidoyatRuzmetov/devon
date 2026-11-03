@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // Version history with diff/restore (TECH-SPEC §3.5: "versions with diff/restore"). Lists every
 // snapshot `patchPage`/`restoreVersion` has ever written for this page; picking one shows a word-level
 // diff against the page's current content (`diff.ts`), and "Restore" reapplies that version's content
@@ -63,7 +64,7 @@ export function VersionHistory({
   })
   const currentText = `${page.title}\n\n${extractText(page.blocks)}`
 
-  if (versionsQuery.isPending) return <StateView compact kind="loading" titleKey="state.loading" />
+  if (versionsQuery.isPending) return <ViewSkeleton view="versions" />
   if (versionsQuery.isError)
     return (
       <StateView
@@ -120,7 +121,7 @@ export function VersionHistory({
                     />
                   </div>
                 ) : selectedQuery.isPending ? (
-                  <StateView compact kind="loading" titleKey="state.loading" />
+                  <ViewSkeleton view="version" />
                 ) : (
                   <DiffView
                     before={`${selectedQuery.data.title}\n\n${extractText(selectedQuery.data.blocks)}`}

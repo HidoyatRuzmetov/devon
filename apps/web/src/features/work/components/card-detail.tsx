@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { WORK_TITLE_MAX } from '@devon/contracts'
 import { memberLock } from '../../analytics/checkin-locks.js'
 import { avatarUrl } from '../../../lib/avatar.js'
@@ -26,7 +27,6 @@ import {
   RISE_PX,
   Select,
   Shake,
-  Skeleton,
   SparkleButton,
   StateView,
   toast,
@@ -284,9 +284,7 @@ export function CardDetailContent({
             <X aria-hidden="true" />
           </IconButton>
         ) : null}
-        <Skeleton className="h-8 w-3/4" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-40 w-full" />
+        <ViewSkeleton view="card" />
       </div>
     )
   }
@@ -367,20 +365,8 @@ export function CardDetailContent({
   async function markDone() {
     const status = nextDoneStatus(card!)
     await patchCard.mutateAsync({ id: card!.id, patch: { status } })
-    if (status === 'archived') {
-      toastWithUndo({
-        message: t('work.card.archived'),
-        undoLabel: t('action.undo'),
-        onUndo: () => void restoreCard.mutateAsync(card!.id),
-      })
-      onClose?.()
-    } else {
-      // UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": a celebration moment, not a
-      // plain status change -- a project-scoped card stays `done` (not archived, see
-      // `nextDoneStatus`), so this is the one path that actually deserves the burst.
-      doneCelebrate.fire()
-      toast(t('work.card.done'))
-    }
+    doneCelebrate.fire()
+    toast(t('work.card.done'))
   }
 
   async function deleteNow() {
@@ -642,66 +628,74 @@ export function CardDetailContent({
               {isWatching ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
             </IconButton>
             {canEdit ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <IconButton
-                    aria-label={t('cardRefinement.actions')}
-                    tooltip={t('cardRefinement.actions')}
-                  >
-                    <MoreHorizontal aria-hidden="true" />
-                  </IconButton>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  aria-label={t('cardRefinement.actions')}
-                  className="w-64 space-y-1 p-2"
+              <>
+                {!card.projectId ? <ConvertProjectDialog cardId={card.id} iconOnly /> : null}
+                <IconButton
+                  aria-label={t('work.action.delete')}
+                  tooltip={t('work.action.delete')}
+                  disabled={card.deletionProtected || deleteCard.isPending}
+                  onClick={() => void deleteNow()}
+                  className="text-destructive"
                 >
-                  <p className="px-2 py-1 text-caption font-medium text-muted-foreground">
-                    {t('cardRefinement.actions')}
-                  </p>
-                  {card.status !== 'archived' ? (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="w-full justify-start"
-                      disabled={patchCard.isPending}
-                      onClick={() => void archiveNow()}
+                  <Trash2 />
+                </IconButton>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <IconButton
+                      aria-label={t('cardRefinement.actions')}
+                      tooltip={t('cardRefinement.actions')}
                     >
-                      <Archive className="size-4" aria-hidden="true" />
-                      {t('work.card.archive')}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="w-full justify-start"
-                      disabled={restoreCard.isPending}
-                      onClick={() => void restoreCard.mutateAsync(card.id)}
-                    >
-                      <Archive className="size-4" aria-hidden="true" />
-                      {t('work.card.restore')}
-                    </Button>
-                  )}
-                  {!card.projectId ? (
-                    <div className="[&>button]:w-full [&>button]:justify-start">
-                      <ConvertProjectDialog cardId={card.id} />
+                      <MoreHorizontal aria-hidden="true" />
+                    </IconButton>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="end"
+                    aria-label={t('cardRefinement.actions')}
+                    className="w-64 space-y-1 p-2"
+                  >
+                    <p className="px-2 py-1 text-caption font-medium text-muted-foreground">
+                      {t('cardRefinement.actions')}
+                    </p>
+                    {card.status !== 'archived' ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-full justify-start"
+                        disabled={patchCard.isPending}
+                        onClick={() => void archiveNow()}
+                      >
+                        <Archive className="size-4" aria-hidden="true" />
+                        {t('work.card.archive')}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-full justify-start"
+                        disabled={restoreCard.isPending}
+                        onClick={() => void restoreCard.mutateAsync(card.id)}
+                      >
+                        <Archive className="size-4" aria-hidden="true" />
+                        {t('work.card.restore')}
+                      </Button>
+                    )}
+                    <div className="border-t border-border pt-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-full justify-start text-destructive"
+                        loading={deleteCard.isPending}
+                        disabled={card.deletionProtected}
+                        onClick={() => void deleteNow()}
+                        title={t('work.deletion.hint')}
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                        {t('work.action.delete')}
+                      </Button>
                     </div>
-                  ) : null}
-                  <div className="border-t border-border pt-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="w-full justify-start text-destructive"
-                      loading={deleteCard.isPending}
-                      onClick={() => void deleteNow()}
-                      title={t('work.deletion.hint')}
-                    >
-                      <Trash2 className="size-4" aria-hidden="true" />
-                      {t('work.action.delete')}
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+              </>
             ) : null}
             {onClose ? (
               <IconButton

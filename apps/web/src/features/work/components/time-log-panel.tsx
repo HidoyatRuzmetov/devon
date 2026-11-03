@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // v1.1 SPEC §7 (A3) -- the light time log: estimate, logged, remaining.
 //
 // "Light" is the whole design. There is no timer to forget to stop and no per-day grid to fill in;
@@ -14,7 +15,6 @@ import {
   IconButton,
   Input,
   Progress,
-  Skeleton,
   Stagger,
   StaggerItem,
   StateView,
@@ -96,12 +96,7 @@ export function TimeLogPanel({ cardId, canEdit, members }: TimeLogPanelProps): R
   }
 
   if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-2" aria-busy="true">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-8 w-3/4" />
-      </div>
-    )
+    return <ViewSkeleton view="timeLogs" />
   }
 
   if (query.isError) {

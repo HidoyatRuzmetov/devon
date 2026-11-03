@@ -783,6 +783,7 @@ test('profile photo uses actual PNG upload and WebP variants, rejects invalid by
       mimeType: 'image/png',
       buffer: bytes,
     })
+    await page.getByRole('dialog').getByRole('button', { name: 'Use photo', exact: true }).click()
     expect((await finalized).status()).toBe(200)
     const image = photo.getByRole('img', { name: 'Your profile photo', exact: true })
     await expect(image).toBeVisible()
@@ -806,7 +807,11 @@ test('profile photo uses actual PNG upload and WebP variants, rejects invalid by
       mimeType: 'image/png',
       buffer: Buffer.from('This is not an image'),
     })
-    await expect(photo.getByRole('alert')).toHaveText('This file is not a valid image.')
+    await expect(page.getByRole('dialog').getByRole('alert')).toHaveText(
+      'This image could not be opened. Choose a smaller JPG, PNG or WebP image.',
+    )
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
     expect((await (await user.context.request.get('/api/v1/me')).json()).user.avatarKey).toBe(
       originalAvatarKey,
     )
@@ -819,6 +824,7 @@ test('profile photo uses actual PNG upload and WebP variants, rejects invalid by
       mimeType: 'image/png',
       buffer: bytes,
     })
+    await page.getByRole('dialog').getByRole('button', { name: 'Use photo', exact: true }).click()
     await expect(photo.getByRole('alert')).toHaveText('Could not upload the photo. Try again.')
     expect((await (await user.context.request.get('/api/v1/me')).json()).user.avatarKey).toBe(
       originalAvatarKey,
@@ -829,6 +835,7 @@ test('profile photo uses actual PNG upload and WebP variants, rejects invalid by
         r.request().method() === 'POST' && new URL(r.url()).pathname === '/api/v1/accounts/avatar',
     )
     await input.setInputFiles({ name: 'retry-avatar.png', mimeType: 'image/png', buffer: bytes })
+    await page.getByRole('dialog').getByRole('button', { name: 'Use photo', exact: true }).click()
     expect((await retried).status()).toBe(200)
     await expect(photo.getByRole('alert')).toHaveCount(0)
     mkdirSync(evidence, { recursive: true })

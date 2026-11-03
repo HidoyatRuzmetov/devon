@@ -1,6 +1,11 @@
 import {
   aiActionBindingSchema,
   checkinAddSchema,
+  checkinSelectionSchema,
+  checkinLayoutWriteSchema,
+  professionalProfileWriteRecordSchema,
+  personnelWriteSchema,
+  personalRestoreBodySchema,
   checkinLockSchema,
   checkinUpdateSchema,
   personalCalendarBodySchema,
@@ -23,15 +28,28 @@ import {
   updateEventBodySchema,
 } from '../events/schemas.js'
 import { createPageBodySchema, patchPageBodySchema } from '../pages/schemas.js'
-import { createTaskBodySchema, patchTaskBodySchema } from '../personal/schemas.js'
+import {
+  createTaskBodySchema,
+  patchTaskBodySchema,
+  reorderTasksBodySchema,
+  patchPomodoroSettingsBodySchema,
+  createPomodoroSessionBodySchema,
+  patchPomodoroSessionBodySchema,
+} from '../personal/schemas.js'
 import {
   addMilestoneBodySchema,
   createProjectBodySchema,
+  createFromCardBodySchema,
+  createFromTemplateBodySchema,
+  createFromGalleryBodySchema,
   patchMilestoneBodySchema,
   patchProjectBodySchema,
 } from '../projects/schemas.js'
 import {
   createCardBodySchema,
+  moveCardBodySchema,
+  createLabelBodySchema,
+  createSavedViewBodySchema,
   createChecklistItemBodySchema,
   createCommentBodySchema,
   patchCardBodySchema,
@@ -40,15 +58,28 @@ import {
 } from '../work/schemas.js'
 import { assignManySchema, cardChecklistPlanSchema } from '../work/workflow-schemas.js'
 
+import { groupMessageSchema } from '../telegram/group-message.js'
+import {
+  addFocusBodySchema,
+  reorderFocusBodySchema,
+  createDependencyBodySchema,
+  createTimeLogBodySchema,
+  createReminderBodySchema,
+  createWorkTemplateBodySchema,
+  patchWorkTemplateBodySchema,
+  createFromCardTemplateBodySchema,
+} from '../work/schemas-plus.js'
+
 const id = z.uuid()
 const target = z.object({ id }).strict()
 const body = (schema: z.ZodType) => z.object({ body: schema }).strict()
 const withFiles = (schema: z.ZodType) =>
   z.object({ body: schema, attachmentIds: z.array(id).max(10).optional() }).strict()
 const patch = (schema: z.ZodType) => z.object({ id, body: schema }).strict()
-type Method = 'POST' | 'PATCH' | 'DELETE'
+type Method = 'POST' | 'PATCH' | 'DELETE' | 'PUT'
 type Args = Record<string, unknown>
 type Action = {
+  headOnly?: boolean
   schema: z.ZodType
   description: string
   method: Method
@@ -68,7 +99,7 @@ const resource = (
   path: (a) => `/${route}${a['id'] ? `/${a['id']}` : ''}`,
   href: (a, result) => href(String(result['id'] ?? a['id'] ?? '')),
 })
-const cardHref = (id: string) => `/work/card?id=${id}`
+const cardHref = (id: string) => `/work?card=${id}`
 const pageHref = (id: string) => `/pages?page=${id}`
 const projectHref = (id: string) => `/projects/view?id=${id}`
 const eventHref = (id: string) => `/events?event=${id}`
@@ -80,20 +111,249 @@ const milestoneId = z
 
 /** The model selects a named operation, never a URL, SQL statement, script or arbitrary method.
  * Every execution re-enters the ordinary API's permissions, validation, audit and event pipeline. */
+const endpoint = (
+  method: Method,
+  route: string,
+  schema: z.ZodType,
+  description: string,
+  href = '/work',
+): Action => ({
+  method,
+  schema,
+  description,
+  path: (args) =>
+    route.replace(/:([a-zA-Z]+)/g, (_, key: string) => encodeURIComponent(String(args[key]))),
+  href: () => href,
+})
 export const ACTIONS: Record<string, Action> = {
+  'telegram.groupMessage': {
+    ...endpoint(
+      'POST',
+      '/telegram/group-message',
+      body(groupMessageSchema),
+      'HEAD ONLY: send the exact reviewed message to a connected department Telegram group. groupId is optional only when exactly one group is connected. mentionAll=true or a standalone @all uses verified group mentions. Telegram bots cannot enumerate every silent member. Never send without an explicit user request and confirmation.',
+      '/account/telegram',
+    ),
+    headOnly: true,
+  },
+  'checkin.selection': endpoint(
+    'PUT',
+    '/checkins/cycles/:id/members/:memberUserId/selection',
+    z.object({ id, memberUserId: id, body: checkinSelectionSchema }).strict(),
+    'Atomically add source addItemIds and remove check-in removeEntryIds for this person/cycle. Agreed check-in allows additions only. Checkout lock rejects all changes.',
+    '/analytics',
+  ),
+  'checkin.layout': endpoint(
+    'PUT',
+    '/checkins/cycles/:id/members/:memberUserId/layout',
+    z.object({ id, memberUserId: id, body: checkinLayoutWriteSchema }).strict(),
+    'Save per-person cycle card order. mode priority resets automatic order; manual uses cardIds and current layout version (0 for new).',
+    '/analytics',
+  ),
+  'profile.resume': endpoint(
+    'PUT',
+    '/accounts/professional-profile',
+    body(professionalProfileWriteRecordSchema),
+    'Publish the current user’s reviewed professional resume using its version. Preserve all unchanged entries; position and education degree use canonical dropdown codes. This publishes to People.',
+    '/account/professional',
+  ),
+  'profile.personnel': endpoint(
+    'PUT',
+    '/accounts/personnel-record',
+    body(personnelWriteSchema),
+    'Save only the current user’s explicitly supplied private personnel record with version. Only owner and department head may read it. Never infer family details or copy public profile content into private fields without request.',
+    '/account/professional',
+  ),
+  'card.move': endpoint(
+    'POST',
+    '/cards/:id/move',
+    patch(moveCardBodySchema),
+    'Move a card using its current version and neighboring IDs. A changed board order becomes manual.',
+  ),
+  'card.undoDelete': endpoint(
+    'POST',
+    '/cards/:id/undo-delete',
+    target,
+    'Restore a soft-deleted card if its undo window allows.',
+  ),
+  'card.watch': endpoint(
+    'POST',
+    '/cards/:id/watchers',
+    target,
+    'Toggle watching a card for the current user. Inspect current watchers first; never toggle speculatively.',
+  ),
+  'focus.add': endpoint(
+    'POST',
+    '/work/focus',
+    body(addFocusBodySchema),
+    'Add an existing card to the current user’s focus list.',
+  ),
+  'focus.remove': endpoint(
+    'DELETE',
+    '/work/focus/:id',
+    target,
+    'Remove a card from the current user’s focus list, keeping the card.',
+  ),
+  'focus.reorder': endpoint(
+    'POST',
+    '/work/focus/reorder',
+    body(reorderFocusBodySchema),
+    'Reorder the current user’s focus cards.',
+  ),
+  'dependency.add': endpoint(
+    'POST',
+    '/cards/:id/dependencies',
+    patch(createDependencyBodySchema),
+    'Link a task dependency; feature and ownership rules apply.',
+  ),
+  'dependency.remove': endpoint(
+    'DELETE',
+    '/cards/:id/dependencies/:depId',
+    z.object({ id, depId: id }).strict(),
+    'Remove the specified dependency link.',
+  ),
+  'timeLog.add': endpoint(
+    'POST',
+    '/cards/:id/time-logs',
+    patch(createTimeLogBodySchema),
+    'Log time spent on a card.',
+  ),
+  'timeLog.remove': endpoint(
+    'DELETE',
+    '/cards/:id/time-logs/:logId',
+    z.object({ id, logId: id }).strict(),
+    'Remove a time entry the current user may manage.',
+  ),
+  'reminder.add': endpoint(
+    'POST',
+    '/cards/:id/reminders',
+    patch(createReminderBodySchema),
+    'Schedule a reminder for a card.',
+  ),
+  'reminder.remove': endpoint(
+    'DELETE',
+    '/cards/:id/reminders/:reminderId',
+    z.object({ id, reminderId: id }).strict(),
+    'Remove a specified card reminder.',
+  ),
+  'template.create': endpoint(
+    'POST',
+    '/work/templates',
+    body(createWorkTemplateBodySchema),
+    'Create a reusable task template.',
+  ),
+  'template.update': endpoint(
+    'PATCH',
+    '/work/templates/:id',
+    patch(patchWorkTemplateBodySchema),
+    'Edit a task template while preserving unspecified fields.',
+  ),
+  'template.delete': endpoint(
+    'DELETE',
+    '/work/templates/:id',
+    target,
+    'Delete a specified task template.',
+  ),
+  'template.createCard': endpoint(
+    'POST',
+    '/work/templates/:id/create-card',
+    patch(createFromCardTemplateBodySchema),
+    'Create a task from an existing task template.',
+  ),
+  'label.create': {
+    ...endpoint('POST', '/labels', body(createLabelBodySchema), 'HEAD ONLY: create a task label.'),
+    headOnly: true,
+  },
+  'view.create': endpoint(
+    'POST',
+    '/views',
+    body(createSavedViewBodySchema),
+    'Save a card view with filters.',
+  ),
+  'view.delete': endpoint('DELETE', '/views/:id', target, 'Delete a saved card view.'),
+  'project.fromCard': endpoint(
+    'POST',
+    '/projects/from-card',
+    body(createFromCardBodySchema),
+    'Convert an individual card into a group project with specified members. Protected check-in sources remain protected.',
+    '/projects',
+  ),
+  'project.undoDelete': endpoint(
+    'POST',
+    '/projects/:id/undo-delete',
+    target,
+    'Restore a soft-deleted project within the permitted undo window.',
+    '/projects',
+  ),
+  'project.fromTemplate': endpoint(
+    'POST',
+    '/projects/from-template',
+    body(createFromTemplateBodySchema),
+    'Create a group project from a built-in template.',
+    '/projects',
+  ),
+  'project.fromGallery': endpoint(
+    'POST',
+    '/projects/from-gallery',
+    body(createFromGalleryBodySchema),
+    'Create a project from a saved gallery template.',
+    '/projects',
+  ),
+  'personal.task.delete': endpoint(
+    'DELETE',
+    '/personal/tasks/:id',
+    target,
+    'Delete an owned personal task; never a shared card.',
+    '/personal',
+  ),
+  'personal.task.restore': endpoint(
+    'POST',
+    '/personal/tasks/:id/restore',
+    patch(personalRestoreBodySchema),
+    'Restore a personal task using the exact restoreToken from its deletion receipt.',
+    '/personal',
+  ),
+  'personal.task.reorder': endpoint(
+    'POST',
+    '/personal/tasks/reorder',
+    body(reorderTasksBodySchema),
+    'Reorder owned personal tasks with their current versions.',
+    '/personal',
+  ),
+  'personal.pomodoro.settings': endpoint(
+    'PATCH',
+    '/personal/pomodoro/settings',
+    body(patchPomodoroSettingsBodySchema),
+    'Change the current user’s Pomodoro preferences.',
+    '/personal',
+  ),
+  'personal.pomodoro.start': endpoint(
+    'POST',
+    '/personal/pomodoro/sessions',
+    body(createPomodoroSessionBodySchema),
+    'Start the current user’s Pomodoro session.',
+    '/personal',
+  ),
+  'personal.pomodoro.update': endpoint(
+    'PATCH',
+    '/personal/pomodoro/sessions/:id',
+    patch(patchPomodoroSessionBodySchema),
+    'Update an owned Pomodoro session using the normal timer rules.',
+    '/personal',
+  ),
   'personal.calendar.create': resource(
     'personal/calendar',
     (id) => `/personal?tab=calendar&entry=${id}`,
     'POST',
     body(personalCalendarBodySchema),
-    'Create an owner-only personal calendar entry, with optional Telegram reminder. Use this for a personal appointment/reminder, not a department event. Times must include the timezone; local time is Tashkent UTC+5. A reminder is at or before start.',
+    'Create a personal calendar entry, optionally inviting active colleagues using participantUserIds. Invitees see the title, times and notes in their calendars and receive a notification; only the owner can edit. Optional Telegram reminder belongs to the owner. Use this for a personal appointment/reminder, not a department event. Times must include the timezone; local time is Tashkent UTC+5. A reminder is at or before start.',
   ),
   'personal.calendar.update': resource(
     'personal/calendar',
     (id) => `/personal?tab=calendar&entry=${id}`,
     'PATCH',
     patch(personalCalendarUpdateSchema),
-    'Update the current user’s private calendar entry. Include its current version and the complete entry with unchanged fields preserved.',
+    'Update the current user’s calendar entry, including invitations. Preserve participantUserIds unless changing attendance is requested. Include its current version and the complete entry with unchanged fields preserved.',
   ),
   'personal.calendar.delete': {
     schema: z.object({ id, version: z.number().int().positive() }).strict(),
@@ -128,7 +388,7 @@ export const ACTIONS: Record<string, Action> = {
   'checkin.update': {
     schema: patch(checkinUpdateSchema),
     description:
-      'Update a check-in entry text or state (pending/done/blocked), with current version. id MUST be entryId from a checkin_entry record, never its cycleId or checklistItemId. Also updates its live source checklist. Locked checkout is immutable.',
+      'Update a check-in entry text or state (pending/done/blocked), with current version. id MUST be entryId from a checkin_entry record, never its cycleId or checklistItemId. Also updates its live source checklist. Agreed checklist wording cannot change; pending/done/blocked progress can. Blocked counts in total, never done. Locked checkout is immutable.',
     method: 'PATCH',
     path: (a) => `/checkins/entries/${a['id']}`,
     href: () => '/analytics',
@@ -144,7 +404,7 @@ export const ACTIONS: Record<string, Action> = {
   'checkin.lock': {
     schema: patch(checkinLockSchema),
     description:
-      'HEAD ONLY: agree checkin (prevents removal) or lock checkout (freezes historical results). id is the cycle ID. Only on an explicit request to lock/agreement.',
+      'HEAD ONLY: agree checkin (prevents removal) or lock checkout (freezes historical results). id is the cycle ID. body.memberUserId identifies the single person to lock. Only on an explicit request to lock/agreement.',
     method: 'POST',
     path: (a) => `/checkins/cycles/${a['id']}/lock`,
     href: (a) => `/analytics?cycle=${a['id']}`,
@@ -557,6 +817,9 @@ const ACTION_INSTRUCTIONS = Object.entries(ACTIONS).map(([kind, action]) => ({
   description: action.description,
   arguments: z.toJSONSchema(action.schema, { unrepresentable: 'any' }),
 }))
-export function actionInstructions() {
-  return ACTION_INSTRUCTIONS
+export function actionInstructions(isHead = false) {
+  return ACTION_INSTRUCTIONS.filter(
+    (action) =>
+      isHead || (!ACTIONS[action.kind]?.headOnly && !action.description.startsWith('HEAD ONLY')),
+  )
 }

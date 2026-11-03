@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import * as React from 'react'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
 import {
@@ -10,7 +11,6 @@ import {
   Field,
   IconButton,
   Input,
-  Skeleton,
   StateView,
   Textarea,
   initialsFromName,
@@ -495,7 +495,7 @@ export function CarpoolPanel({
         </div>
       ) : null}
       {query.isPending ? (
-        <Skeleton className="h-32 w-full" />
+        <ViewSkeleton view="carpool" />
       ) : query.isError ? (
         <StateView
           kind="error"

@@ -1,3 +1,5 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
+import { POSITION_CODES } from '@devon/contracts'
 import { SettingsSection } from './settings-section.js'
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -36,7 +38,7 @@ export function ProfileSection() {
       title={t('profileEdit.heading')}
       description={t('profileEdit.description')}
     >
-      {query.isPending ? <StateView kind="loading" titleKey="state.loading" /> : null}
+      {query.isPending ? <ViewSkeleton view="profile" /> : null}
       {query.isError ? (
         <StateView
           kind="error"
@@ -89,6 +91,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
       setValues(next)
       qc.setQueryData(['accounts', 'profile'], acknowledged)
       void qc.invalidateQueries({ queryKey: ['accounts', 'profile'] })
+      void qc.invalidateQueries({ queryKey: ['accounts', 'professional-profile'] })
       void qc.invalidateQueries({ queryKey: ['me'] })
       void qc.invalidateQueries({ queryKey: ['people'] })
       void qc.invalidateQueries({ queryKey: ['work'] })
@@ -129,38 +132,53 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                 </span>
               ) : null}
             </span>
-            <Input
-              value={values[field] ?? ''}
-              type={field === 'email' ? 'email' : 'text'}
-              autoComplete={
-                field === 'givenName'
-                  ? 'given-name'
-                  : field === 'familyName'
-                    ? 'family-name'
-                    : field === 'patronymic'
-                      ? 'additional-name'
-                      : field === 'title'
-                        ? 'organization-title'
+            {field === 'title' ? (
+              <select
+                className="h-11 rounded-md border border-border bg-card px-3"
+                value={values.title ?? ''}
+                onChange={(e) => {
+                  const next = { ...values, title: e.target.value || null }
+                  currentValues.current = next
+                  setValues(next)
+                }}
+              >
+                <option value="">{t('profileChoices.choose')}</option>
+                {POSITION_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {t(`profileChoices.position.${code}`)}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                value={values[field] ?? ''}
+                type={field === 'email' ? 'email' : 'text'}
+                autoComplete={
+                  field === 'givenName'
+                    ? 'given-name'
+                    : field === 'familyName'
+                      ? 'family-name'
+                      : field === 'patronymic'
+                        ? 'additional-name'
                         : field === 'email'
                           ? 'email'
                           : 'username'
-              }
-              required={['givenName', 'familyName', 'login'].includes(field)}
-              maxLength={
-                field === 'email' ? 256 : field === 'title' ? 150 : field === 'login' ? 64 : 100
-              }
-              {...(field === 'login' ? { minLength: 3, pattern: '[a-z0-9._\\-]+' } : {})}
-              onChange={(e) => {
-                const next = {
-                  ...values,
-                  [field]:
-                    e.target.value ||
-                    (['email', 'title', 'patronymic'].includes(field) ? null : ''),
                 }
-                currentValues.current = next
-                setValues(next)
-              }}
-            />
+                required={['givenName', 'familyName', 'login'].includes(field)}
+                maxLength={field === 'email' ? 256 : field === 'login' ? 64 : 100}
+                {...(field === 'login' ? { minLength: 3, pattern: '[a-z0-9._\\-]+' } : {})}
+                onChange={(e) => {
+                  const next = {
+                    ...values,
+                    [field]:
+                      e.target.value ||
+                      (['email', 'title', 'patronymic'].includes(field) ? null : ''),
+                  }
+                  currentValues.current = next
+                  setValues(next)
+                }}
+              />
+            )}
           </label>
         ))}
       </div>

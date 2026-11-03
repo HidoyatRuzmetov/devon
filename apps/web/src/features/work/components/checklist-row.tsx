@@ -14,7 +14,13 @@ export function ChecklistRow({
   onDelete,
   checkin,
 }: {
-  item: { id: string; text: string; doneAt: string | null }
+  item: {
+    id: string
+    text: string
+    doneAt: string | null
+    textLocked?: boolean
+    deletionProtected?: boolean
+  }
   canEdit: boolean
   onToggle: (done: boolean) => void
   onSave: (text: string) => SaveResult
@@ -70,6 +76,7 @@ export function ChecklistRow({
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 e.preventDefault()
+                e.stopPropagation()
                 setEditing(false)
               }
             }}
@@ -106,6 +113,7 @@ export function ChecklistRow({
                 className="checkin-action checkin-action-edit"
                 aria-label={t('work.card.editChecklistItem')}
                 tooltip={t('work.card.editChecklistItem')}
+                disabled={item.textLocked}
                 onClick={() => {
                   setDraft(item.text)
                   setEditing(true)
@@ -117,6 +125,7 @@ export function ChecklistRow({
                 className="checkin-action checkin-action-delete"
                 aria-label={t('work.action.delete')}
                 tooltip={t('work.action.delete')}
+                disabled={item.deletionProtected}
                 onClick={onDelete}
               >
                 <Trash2 className="size-3.5" />

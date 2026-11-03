@@ -251,8 +251,8 @@ export async function conversationContext(
       jsonb_build_object('kind','private_task','doneAt',done_at,'notes',notes,'parentId',parent_id,'version',version) as facts,0 as total
     from app.personal_tasks where user_id=${ctx.userId} and deleted_at is null
     union all select 'personal_calendar:'||id,title,'/personal?tab=calendar&entry='||id||'&month='||to_char(starts_at at time zone 'Asia/Tashkent','YYYY-MM'),
-      jsonb_build_object('kind','private_calendar','notes',notes,'startsAt',starts_at,'endsAt',ends_at,'allDay',all_day,'remindAt',remind_at,'version',version),0
-    from app.personal_calendar_entries where user_id=${ctx.userId} and deleted_at is null
+      jsonb_build_object('kind','private_calendar','ownerUserId',user_id,'participantUserIds',participant_user_ids,'canEdit',user_id=${ctx.userId},'notes',notes,'startsAt',starts_at,'endsAt',ends_at,'allDay',all_day,'remindAt',remind_at,'version',version),0
+    from app.personal_calendar_entries where (user_id=${ctx.userId} or ${ctx.userId}=any(participant_user_ids)) and deleted_at is null
     ) select ref,title,href,facts,count(*) over()::int as total from records
       order by case when ref=any(${sql.param(priorityRefs)}::text[]) then 0 else 1 end,ref limit 1000`),
   )
@@ -275,6 +275,18 @@ export async function conversationContext(
     ) select ref,title,href,facts,count(*) over()::integer as total from records
       order by case when ref=any(${sql.param(priorityRefs)}::text[]) then 0 else 1 end,period desc,ref limit 2000`)
   })
+  const controls = await withContext(ctx, (tx) =>
+    tx.raw<SnapshotRow>(sql`with records as (
+    select 'checkin_layout:'||cycle_id||':'||member_user_id as ref,'Check-in card order' as title,'/analytics?cycle='||cycle_id||'&member='||member_user_id as href,
+      jsonb_build_object('kind','checkin_layout','cycleId',cycle_id,'memberUserId',member_user_id,'mode',mode,'cardIds',card_ids,'version',version) as facts,0 as total
+      from app.checkin_layouts where department_id=${departmentId}
+    union all select 'telegram_group:'||id,coalesce(title,'Telegram group'),'/account/telegram',
+      jsonb_build_object('kind','telegram_group','groupId',id,'title',title),0
+      from app.telegram_groups where department_id=${departmentId} and disconnected_at is null and ${ctx.departmentRole === 'head' && !ctx.viewAs}
+    ) select ref,title,href,facts,count(*) over()::integer as total from records
+      order by case when ref=any(${sql.param(priorityRefs)}::text[]) then 0 else 1 end,ref limit 1000
+  `),
+  )
   const snapshot: unknown[] = []
   const sources: AiChatSource[] = []
   let bytes = 0
@@ -294,6 +306,8 @@ export async function conversationContext(
     personal_calendar: 40000,
     checkin_cycle: 20000,
     checkin_entry: 60000,
+    checkin_layout: 20000,
+    telegram_group: 6000,
   }
   const priority = new Set([
     ...priorityRefs,
@@ -303,7 +317,7 @@ export async function conversationContext(
     priority.has(row.ref) ||
     (typeof record(row.facts)?.['eventId'] === 'string' &&
       priority.has(`event:${record(row.facts)!['eventId']}`))
-  const allRows = [...people, ...rows, ...personal, ...logistics, ...checkins]
+  const allRows = [...people, ...rows, ...personal, ...logistics, ...checkins, ...controls]
   const ordered = [...allRows].sort(
     (a, b) =>
       Number(prioritized(b)) - Number(prioritized(a)) ||
@@ -361,7 +375,8 @@ export async function conversationContext(
     (people[0]?.total ?? 0) +
     (personal[0]?.total ?? 0) +
     (logistics[0]?.total ?? 0) +
-    (checkins[0]?.total ?? 0)
+    (checkins[0]?.total ?? 0) +
+    (controls[0]?.total ?? 0)
   const files = await conversationFiles(ctx, conversationId, attachmentIds)
   sources.push(...files.sources)
   sources.push({

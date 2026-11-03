@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from '../accounts/settings-section.js'
 // `/account/notifications` ("preferences per type and channel ... quiet hours").
 // Every toggle in the matrix saves itself the moment it changes (no separate Save button for a grid
@@ -187,7 +188,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
   }, [data, touched])
 
   if (quietHoursQuery.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="quietHours" />
   }
   if (quietHoursQuery.isError || !data) {
     return (
@@ -380,7 +381,7 @@ function CalendarFeedCard() {
 
 function PrefsMatrixBody({ query }: { query: ReturnType<typeof usePrefsQuery> }) {
   if (query.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="feeds" />
   }
   if (query.isError) {
     return (
@@ -417,7 +418,7 @@ export default function PreferencesScreen({ embedded = false }: { embedded?: boo
     return <ForcedStateBlock kind={forced} />
   }
   if (!settled) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="preferences" />
   }
   if (meQuery.data === null) return null
 

@@ -143,6 +143,11 @@ export {
 export * from './ai-chat.js'
 export * from './checkins.js'
 export {
+  POSITION_CODES,
+  EDUCATION_CODES,
+  positionSchema,
+  educationLevelSchema,
+  isProfessionalProfileDraft,
   professionalProfileRecordSchema,
   professionalProfileSchema,
   professionalProfileWriteRecordSchema,
@@ -151,5 +156,7 @@ export {
 } from './professional-profile.js'
 
 export * from './personal-calendar.js'
+export * from './personnel-record.js'
+export * as personnelTemplate from './personnel-template.js'
 
 export { aiActionBindingSchema } from './ai-chat.js'

@@ -1,3 +1,4 @@
+import { positionLabel } from '../../../lib/profile-labels.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // One People-board column: a sticky, colour-tagged member header (avatar, name, workload count),
 // their group-project tiles (EPIC-005), then their cards, an inline "+ Add card" quick-add at the
@@ -47,10 +48,6 @@ export interface BoardColumnProps {
   /** Lets the board report a "showing N of M" affordance for its collapse toggles without lifting
    * the (per-viewer, `localStorage`-backed) collapsed state itself out of each column. */
   onCollapsedChange?: (columnKey: string, collapsed: boolean) => void
-  /** v1.1 SPEC 3.3: `compact` narrows the column and tightens its header so a 26-person boshqarma
-   * fits on one screen instead of seven screens of horizontal scroll. Owned by the board (one
-   * preference for the whole board, remembered per viewer), passed down rather than read here. */
-  density?: 'comfortable' | 'compact'
   mobile?: boolean
   /** v1.1 SPEC §7 (A8) -- the board's multitask selection, owned by the board and passed straight
    * through to each tile. Omit `onSelectedChange` and the tiles render with no checkbox at all. */
@@ -102,7 +99,6 @@ export function BoardColumn({
   onDropped,
   onMoveTo,
   onCollapsedChange,
-  density = 'comfortable',
   mobile = false,
   selectedIds,
   onCardSelectedChange,
@@ -135,7 +131,7 @@ export function BoardColumn({
     const header = headerRef.current
     if (!column || !header) return
     // Native focus/scroll-into-view must reserve this sticky header's actual height,
-    // including translated text and density changes, plus room for the focus ring.
+    // including translated text, plus room for the focus ring.
     const measure = () =>
       column.style.setProperty(
         '--work-column-scroll-margin',
@@ -217,8 +213,6 @@ export function BoardColumn({
     )
   }
 
-  const compact = density === 'compact'
-
   return (
     // Columns stretch with the board's content canvas, so every sticky member/add header keeps its
     // full scrolling range even when a different colleague has the longest card list.
@@ -234,14 +228,14 @@ export function BoardColumn({
       style={unitStyle}
       className={cn(
         'devon-board-column flex shrink-0 flex-col gap-1 rounded-md border border-border',
-        compact ? 'w-56' : 'w-72',
+        'w-70',
       )}
     >
       <div
         ref={headerRef}
         className={cn(
           'devon-board-column-header sticky top-0 z-10 flex flex-col gap-2 rounded-t-md px-2 pb-2 shadow-1',
-          compact ? 'pt-1' : 'pt-2',
+          'pt-2',
         )}
       >
         <div className="hidden items-center gap-2 md:flex" title={unitName}>
@@ -262,10 +256,10 @@ export function BoardColumn({
                 >
                   {fullName(member)}
                 </p>
-                {/* The job title is the first thing to go at compact density -- the name and the two
-                  counts are what a head is scanning for. */}
-                {member.title && !compact ? (
-                  <p className="truncate text-caption text-muted-foreground">{member.title}</p>
+                {member.title ? (
+                  <p className="truncate text-caption text-muted-foreground">
+                    {positionLabel(member.title, t)}
+                  </p>
                 ) : null}
               </div>
             </>

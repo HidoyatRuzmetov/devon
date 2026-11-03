@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // v1.1 SPEC §7 (A9) -- "Diqqat markazi": up to five cards pinned to the top of My tasks and Home.
 //
 // ClickUp calls this LineUp. The point is not another list -- the department already has several --
@@ -17,7 +18,6 @@ import {
   HoverLift,
   IconButton,
   SectionCard,
-  Skeleton,
   Stagger,
   StaggerItem,
   StateView,
@@ -149,13 +149,7 @@ export function FocusList({
 
   let body: React.ReactNode
   if (query.isPending) {
-    body = (
-      <div className="flex flex-col gap-1.5" aria-busy="true">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
-    )
+    body = <ViewSkeleton view="focus" />
   } else if (query.isError) {
     body = (
       <StateView

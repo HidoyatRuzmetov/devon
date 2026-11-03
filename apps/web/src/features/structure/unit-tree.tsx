@@ -1,3 +1,4 @@
+import { positionLabel } from '../../lib/profile-labels.js'
 import { avatarUrl } from '../../lib/avatar.js'
 // The list view of the structure editor: nested bo'limlar with inline rename, a colour popover, drag
 // reorder (within a sibling group) and drag-to-nest (drop onto another row to become its child),
@@ -275,7 +276,7 @@ export function RoleChips({
                         </p>
                         {member?.title ? (
                           <p className="truncate text-small text-muted-foreground">
-                            {member.title}
+                            {positionLabel(member.title, t)}
                           </p>
                         ) : null}
                         <Badge tone={r.role === 'head' ? 'info' : 'neutral'} className="mt-1">
@@ -401,7 +402,9 @@ export function RoleChips({
                       {fullName(member)}
                     </p>
                     {member.title ? (
-                      <p className="truncate text-small text-muted-foreground">{member.title}</p>
+                      <p className="truncate text-small text-muted-foreground">
+                        {positionLabel(member.title, t)}
+                      </p>
                     ) : null}
                   </div>
                 </div>

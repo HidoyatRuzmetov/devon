@@ -7,6 +7,7 @@ import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Avatar, Button } from '@devon/ui'
 import { AVATAR_ACCEPT, type AvatarUploadStage } from './api.js'
+import { AvatarCrop } from './avatar-crop.js'
 
 export interface AvatarPickerProps {
   /** The photo already on the account (`avatarUrl(user.avatarKey, 128)`), if any. */
@@ -23,6 +24,7 @@ export interface AvatarPickerProps {
   errorKey?: string | null
   disabled?: boolean
   compact?: boolean
+  aspectRatio?: number
 }
 
 function useObjectUrl(file: File | null): string | null {
@@ -51,9 +53,11 @@ export function AvatarPicker({
   errorKey = null,
   disabled = false,
   compact = false,
+  aspectRatio = 1,
 }: AvatarPickerProps) {
   const t = useT()
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const [cropFile, setCropFile] = React.useState<File | null>(null)
   const previewUrl = useObjectUrl(file)
   const src = previewUrl ?? currentSrc
   const hasPhoto = src !== null
@@ -65,11 +69,22 @@ export function AvatarPicker({
     const picked = e.target.files?.[0]
     // Reset so choosing the same file again after a failure still fires `change`.
     e.target.value = ''
-    if (picked) onSelect(picked)
+    if (picked) setCropFile(picked)
   }
 
   return (
     <div className="flex items-start gap-4">
+      {cropFile ? (
+        <AvatarCrop
+          file={cropFile}
+          aspectRatio={aspectRatio}
+          onClose={() => setCropFile(null)}
+          onSave={(next) => {
+            setCropFile(null)
+            onSelect(next)
+          }}
+        />
+      ) : null}
       <Avatar
         src={src}
         alt={alt}

@@ -104,7 +104,9 @@ test('@flow deliverables, Progress, private calendar and timer work on desktop a
     await page.goto('/analytics')
     await expect(page.getByRole('heading', { name: 'Test Member', exact: true })).toBeVisible()
     await expect(page.getByText('20 deliverables', { exact: true })).toBeVisible()
-    await expect(page.locator('.checkin-project-title')).toHaveCount(2)
+    await expect(
+      page.locator('.checkin-group-bar h2').filter({ hasText: 'Digital services improvement' }),
+    ).toHaveCount(1)
     expect(
       (
         await new AxeBuilder({ page })
@@ -117,7 +119,7 @@ test('@flow deliverables, Progress, private calendar and timer work on desktop a
     await statuses.first().selectOption('done')
     await expect(page.getByText('1 done', { exact: true })).toBeVisible()
     await statuses.nth(1).selectOption('blocked')
-    await expect(page.locator('.checkin-deliverable[data-state=blocked]')).toHaveCount(1)
+    await expect(page.locator('.checkin-row[data-state=blocked]')).toHaveCount(1)
     await page.screenshot({
       path: info.outputPath('checkin-desktop.png'),
       fullPage: true,
@@ -138,17 +140,23 @@ test('@flow deliverables, Progress, private calendar and timer work on desktop a
       animations: 'disabled',
     })
     await page.getByRole('button', { name: /Test Member.*1 of 20 done/ }).click()
-    await page.getByRole('button', { name: 'Open card', exact: true }).first().click()
-    await expect(page).toHaveURL(/from=analytics/)
-    await page.getByRole('link', { name: 'Check-in / out', exact: true }).first().click()
+    await page.locator('.checkin-task-title').first().click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.getByText('20 deliverables', { exact: true })).toBeVisible()
     const headPage = await head.newPage()
-    await headPage.goto('/analytics')
-    await headPage.getByRole('button', { name: 'Agree check-in', exact: true }).click()
-    await headPage
-      .getByRole('dialog')
-      .getByRole('button', { name: 'Agree check-in', exact: true })
-      .click()
+    await headPage.goto('/analytics?member=' + me.user.id)
+    // The real calendar may already have passed Monday's automatic agreement deadline.
+    // Manual agreement is exercised separately with a controlled cycle in integration tests.
+    const currentCycle = board.cycles.find((c) => c.id === board.currentCycleId)!
+    if (!currentCycle.checkinLockedAt) {
+      await headPage.getByRole('button', { name: 'Agree check-in', exact: true }).click()
+      await headPage
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Agree check-in', exact: true })
+        .click()
+    }
     await expect(headPage.getByText('Check-in agreed', { exact: true })).toBeVisible()
     await page.reload()
     await expect(

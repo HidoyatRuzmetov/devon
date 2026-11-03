@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/join` (optionally `?key=<key>`) -- join by link or by form (TECH-SPEC §2.2). Anonymous visitors
 // sign in or register before joining; the invitation key survives both paths, but never its password.
 // `/join` is one of `app.tsx`'s `AUTH_ROUTES`, so
@@ -8,15 +9,7 @@ import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import { normalizeInvitationKey } from '@devon/contracts'
-import {
-  BlurFade,
-  Button,
-  Collapsible,
-  Input,
-  JoinDepartmentIllustration,
-  Shake,
-  StateView,
-} from '@devon/ui'
+import { BlurFade, Button, Collapsible, Input, JoinDepartmentIllustration, Shake } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery, useSession } from '../../lib/session.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
@@ -66,7 +59,7 @@ export default function JoinScreen() {
     return undefined
   }, [failureCount])
 
-  if (session.isLoading) return <StateView kind="loading" titleKey="state.loading" />
+  if (session.isLoading) return <ViewSkeleton view="join" />
 
   if (outcome) {
     return (

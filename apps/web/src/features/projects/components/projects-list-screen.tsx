@@ -1,9 +1,10 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // Group projects list (TECH-SPEC §5, EPIC-005): every project the department runs, as cards with
 // progress -- the same tiles the People board embeds (`ProjectTile`), just all of them in one grid
 // with a way to start a new one.
 import type * as React from 'react'
 import { useT } from '@devon/i18n'
-import { PageHeader, Skeleton, Stagger, StaggerItem, StateView } from '@devon/ui'
+import { PageHeader, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { useMembers } from '../../work/hooks.js'
 import { useProjectsQuery } from '../hooks.js'
 import { CreateProjectDialog } from './create-project-dialog.js'
@@ -19,13 +20,7 @@ export default function ProjectsListScreen() {
     // round2 SEV2: six of the old 78px stub tiles left 570px of empty page below them -- the rebuilt
     // tile (status, objective, milestone, members, task fraction) is taller, and its skeleton matches
     // that (DESIGN.md §4's "skeleton matches final layout"), not the old stub's height.
-    body = (
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-40 w-full" />
-        ))}
-      </div>
-    )
+    body = <ViewSkeleton view="templates" />
   } else if (projectsQuery.isError) {
     body = (
       <StateView

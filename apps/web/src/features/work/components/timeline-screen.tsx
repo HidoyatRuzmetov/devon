@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // Timeline view (TECH-SPEC §5: "timeline (SVG)") -- a Plane/Jira-quality Gantt: one row per CARD
 // (grouped by assignee, or by project via the toggle), a labelled bar per card carrying its own
 // title, a risk tint, a today line, a zoom control (day/week/today's window/month) with a sticky
@@ -13,7 +14,6 @@ import { useT, useLocale, formatDate, formatMonthYear, formatMonthShort } from '
 import {
   Button,
   Collapsible,
-  Skeleton,
   StateView,
   cn,
   toastWithUndo,
@@ -548,7 +548,7 @@ export default function TimelineScreen() {
 
   let chart: React.ReactNode
   if (cardsQuery.isPending) {
-    chart = <Skeleton className="h-96 w-full" />
+    chart = <ViewSkeleton view="timeline" />
   } else if (cardsQuery.isError) {
     chart = (
       <StateView

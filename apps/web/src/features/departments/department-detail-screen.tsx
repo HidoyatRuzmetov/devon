@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from '../accounts/settings-section.js'
 import { avatarUrl } from '../../lib/avatar.js'
 // `/department?id=<uuid>` -- detail, settings, invite and membership management for one department
@@ -107,7 +108,7 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
   })
 
   if (deptQuery.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" compact />
+    return <ViewSkeleton view="members" />
   }
   if (deptQuery.isError) {
     return (
@@ -283,7 +284,7 @@ function InviteTab({ id }: { id: string }) {
     toggleApproval.isPending ||
     pendingCount > 0
 
-  if (inviteQuery.isPending) return <StateView kind="loading" titleKey="state.loading" compact />
+  if (inviteQuery.isPending) return <ViewSkeleton view="invite" />
   if (inviteQuery.isError) {
     return (
       <StateView
@@ -627,7 +628,7 @@ function JoinRequestsCard({ id }: { id: string }) {
   if (query.isPending) {
     return (
       <SettingsSection title={t('departments.joinRequests.title')}>
-        <StateView kind="loading" titleKey="state.loading" compact />
+        <ViewSkeleton view="telegramGroups" />
       </SettingsSection>
     )
   }
@@ -1058,7 +1059,7 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     setConfirmAction(action)
   }
 
-  if (membersQuery.isPending) return <StateView kind="loading" titleKey="state.loading" compact />
+  if (membersQuery.isPending) return <ViewSkeleton view="members" />
   if (membersQuery.isError) {
     return (
       <StateView
@@ -1305,7 +1306,7 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
   }
   void memberships
   if (deptQuery.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="department" />
   }
   if (deptQuery.isError) {
     if (deptQuery.error instanceof ApiError && deptQuery.error.status === 403) {

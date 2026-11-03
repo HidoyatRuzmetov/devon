@@ -70,6 +70,13 @@ async function fixture(other = false) {
   const response = await request(session, '/checkins/')
   expect(response.status).toBe(200)
   const board = (await response.json()) as CheckinBoard
+  // Keep ordinary edit cases independent of the weekday on which CI runs.
+  await superuserQuery(
+    db,
+    "update app.checkin_cycles set checkin_locked_at=null,checkin_deadline=now()+interval '1 day' where id=$1",
+    [board.currentCycleId],
+  )
+
   return {
     department,
     head,
@@ -188,7 +195,7 @@ describe('check-in lifecycle and source integrity', () => {
     ).toBe(204)
     expect((await read(f)).progress[0]).toMatchObject({ done: 1, total: 1 })
   })
-  it('source edits update an open cycle, but a closed checkout stays frozen after edits and deletion', async () => {
+  it('source edits update a draft; agreed sources reject wording changes and deletion while progress can continue', async () => {
     const f = await fixture(),
       id = await add(f)
     expect(
@@ -213,7 +220,7 @@ describe('check-in lifecycle and source integrity', () => {
           done: false,
         })
       ).status,
-    ).toBe(204)
+    ).toBe(409)
     expect(
       (
         await request(f.session, `/checkins/entries/${id}`, 'PATCH', {
@@ -225,11 +232,11 @@ describe('check-in lifecycle and source integrity', () => {
     expect((await request(f.session, `/checkins/entries/${id}`, 'DELETE')).status).toBe(409)
     expect(
       (await request(f.session, `/cards/${f.cardId}/checklist/${f.itemId}`, 'DELETE')).status,
-    ).toBe(204)
+    ).toBe(409)
     expect((await read(f)).entries[0]).toMatchObject({
       text: 'Live revised result',
       state: 'done',
-      sourceAvailable: false,
+      sourceAvailable: true,
       version: frozen.version,
     })
   })
@@ -385,12 +392,22 @@ describe('check-in lifecycle and source integrity', () => {
     const frozen = (await read(f)).entries.find((e) => e.id === firstId)!
     await superuserQuery(
       db,
-      "update app.card_checklist_items set text='Source revision',done_at=now() where id=any($1::uuid[])",
+      'update app.card_checklist_items set done_at=now() where id=any($1::uuid[])',
       [[f.itemId, secondItem]],
+    )
+    await superuserQuery(
+      db,
+      "update app.card_checklist_items set text='Source revision' where id=$1",
+      [secondItem],
     )
     await superuserQuery(db, "update app.cards set title='New title' where id=$1", [f.cardId])
     let board = await read(f)
-    expect(board.entries.find((e) => e.id === firstId)).toEqual(frozen)
+    expect(board.entries.find((e) => e.id === firstId)).toMatchObject({
+      text: frozen.text,
+      state: frozen.state,
+      cardTitle: frozen.cardTitle,
+      version: frozen.version,
+    })
     expect(board.entries.find((e) => e.id === secondId)).toMatchObject({
       text: 'Source revision',
       state: 'done',
@@ -422,7 +439,161 @@ describe('check-in lifecycle and source integrity', () => {
     ).toBe(204)
     expect((await request(f.session, `/checkins/entries/${secondId}`, 'DELETE')).status).toBe(204)
     board = await read(f)
-    expect(board.entries).toEqual([frozen])
+    expect(board.entries).toHaveLength(1)
+    expect(board.entries[0]).toMatchObject({
+      id: frozen.id,
+      text: frozen.text,
+      state: frozen.state,
+      version: frozen.version,
+    })
+  })
+  it('saves selection atomically, protects every retained source, and advances completed tasks', async () => {
+    const f = await fixture()
+    const base = `/checkins/cycles/${f.cycleId}/members/${f.member.id}`
+    const candidates = await request(f.session, `${base}/candidates`)
+    expect(candidates.status).toBe(200)
+    expect(await candidates.json()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: f.cardId,
+          checklist: expect.arrayContaining([
+            expect.objectContaining({ id: f.itemId, textLocked: false }),
+          ]),
+        }),
+      ]),
+    )
+    expect(
+      (
+        await request(f.session, `${base}/selection`, 'PUT', {
+          addItemIds: [f.itemId, randomUUID()],
+          removeEntryIds: [],
+        })
+      ).status,
+    ).toBe(409)
+    expect((await read(f)).entries).toHaveLength(0)
+    expect(
+      (
+        await request(f.session, `${base}/selection`, 'PUT', {
+          addItemIds: [f.itemId],
+          removeEntryIds: [],
+        })
+      ).status,
+    ).toBe(204)
+    expect((await request(f.session, `/cards/${f.cardId}`, 'DELETE')).status).toBe(409)
+    expect(
+      (await request(f.session, `/cards/${f.cardId}/checklist/${f.itemId}`, 'DELETE')).status,
+    ).toBe(409)
+    expect(
+      (
+        await request(f.session, `/cards/${f.cardId}/checklist/${f.itemId}`, 'PATCH', {
+          done: true,
+        })
+      ).status,
+    ).toBe(204)
+    expect(
+      (
+        await superuserQuery<{ work_stage: string }>(
+          db,
+          'select work_stage from app.cards where id=$1',
+          [f.cardId],
+        )
+      )[0]?.work_stage,
+    ).toBe('in_progress')
+    expect(
+      (
+        await request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+          phase: 'checkin',
+          memberUserId: f.member.id,
+        })
+      ).status,
+    ).toBe(204)
+    const entry = (await read(f)).entries[0]!
+    expect(
+      (
+        await request(f.session, `${base}/selection`, 'PUT', {
+          addItemIds: [],
+          removeEntryIds: [entry.id],
+        })
+      ).status,
+    ).toBe(409)
+    expect(
+      (
+        await request(f.session, `/cards/${f.cardId}/checklist/${f.itemId}`, 'PATCH', {
+          text: 'Rewrite commitment',
+        })
+      ).status,
+    ).toBe(409)
+    expect(
+      (
+        await request(f.session, `/cards/${f.cardId}`, 'PATCH', {
+          title: 'Clearer task title',
+          priority: 'urgent',
+        })
+      ).status,
+    ).toBe(200)
+    expect((await read(f)).entries[0]).toMatchObject({
+      cardTitle: 'Clearer task title',
+      cardPriority: 'urgent',
+      text: 'Publish the report',
+    })
+  })
+  it('persists manual order with version conflicts and rejects foreign member choices', async () => {
+    const f = await fixture(),
+      other = await fixture(true)
+    const base = `/checkins/cycles/${f.cycleId}/members/${f.member.id}`
+    expect(
+      (
+        await request(f.session, `${base}/layout`, 'PUT', {
+          mode: 'manual',
+          cardIds: [f.cardId],
+          version: 0,
+        })
+      ).status,
+    ).toBe(204)
+    expect((await read(f)).layouts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          memberUserId: f.member.id,
+          mode: 'manual',
+          cardIds: [f.cardId],
+          version: 1,
+        }),
+      ]),
+    )
+    expect(
+      (
+        await request(f.session, `${base}/layout`, 'PUT', {
+          mode: 'priority',
+          cardIds: [],
+          version: 0,
+        })
+      ).status,
+    ).toBe(409)
+    expect(
+      (
+        await request(f.session, `${base}/layout`, 'PUT', {
+          mode: 'manual',
+          cardIds: [other.cardId],
+          version: 1,
+        })
+      ).status,
+    ).toBe(422)
+    expect(
+      (
+        await request(f.session, `${base}/selection`, 'PUT', {
+          addItemIds: [other.itemId],
+          removeEntryIds: [],
+        })
+      ).status,
+    ).toBe(409)
+    expect(
+      (
+        await request(
+          f.session,
+          `/checkins/cycles/${other.cycleId}/members/${other.member.id}/candidates`,
+        )
+      ).status,
+    ).toBe(404)
   })
   it('unlocks the first cycle across departments exactly once and preserves later locks', async () => {
     const f = await fixture(),

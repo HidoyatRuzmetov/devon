@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { useT } from '@devon/i18n'
 import { PageHeader, StateView, Tabs, TabsContent, TabsList, TabsTrigger } from '@devon/ui'
 import { CalendarDays, ListTodo, Timer } from 'lucide-react'
@@ -27,7 +28,7 @@ export default function PersonalScreen() {
   const requested = search.get('tab')
   const tab: TabId = requested === 'tasks' || requested === 'pomodoro' ? requested : 'calendar'
 
-  if (meQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (meQuery.isPending) return <ViewSkeleton view="tasks" />
   if (!meQuery.data) {
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
   }

@@ -1,8 +1,9 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // Feedback (TECH-SPEC §3.4: "rating + comment, anonymous option"). Shown once the event is `done`
 // (the caller only mounts this tab then) -- one rating per person, resubmitting updates it.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Checkbox, Field, Skeleton, StateView, Textarea, toast } from '@devon/ui'
+import { Button, Checkbox, Field, StateView, Textarea, toast } from '@devon/ui'
 import { Star } from 'lucide-react'
 import { useFeedbackQuery, useSubmitFeedbackMutation } from '../hooks.js'
 
@@ -96,7 +97,7 @@ export function FeedbackPanel({ eventId }: { eventId: string }) {
     }
   }
 
-  if (feedbackQuery.isPending) return <Skeleton className="h-40 w-full" />
+  if (feedbackQuery.isPending) return <ViewSkeleton view="feedback" />
   if (feedbackQuery.isError) {
     return (
       <StateView

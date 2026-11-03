@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // A dedicated timer. The shared controller owns phase transitions and recovery receipts.
 import { useT } from '@devon/i18n'
 import {
@@ -214,7 +215,7 @@ export function PomodoroPanel() {
     return () => clearTimeout(timeout)
   }, [state.completedFocusId])
 
-  if (settingsQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (settingsQuery.isPending) return <ViewSkeleton view="pomodoro" />
   if (settingsQuery.isError) {
     return (
       <StateView

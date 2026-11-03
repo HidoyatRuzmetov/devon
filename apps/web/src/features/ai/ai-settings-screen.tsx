@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import {
   formatDate,
   formatNumber,
@@ -232,7 +233,7 @@ function HelpersTab() {
   const [flashedFeature, setFlashedFeature] = React.useState<string | null>(null)
   const flashReduced = useReducedMotion()
 
-  if (settingsQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (settingsQuery.isPending) return <ViewSkeleton view="aiSettings" />
   if (settingsQuery.isError) {
     return (
       <StateView
@@ -529,7 +530,7 @@ function UsageTab() {
   const safePage = Math.min(page, pageCount - 1)
   const shown = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
 
-  if (usageQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (usageQuery.isPending) return <ViewSkeleton view="usage" />
   if (usageQuery.isError) {
     return (
       <StateView
@@ -750,7 +751,7 @@ export default function AiSettingsScreen() {
       : '/assistant'
   const [tab, setTab] = React.useState<TabId>('helpers')
 
-  if (isLoading) return <StateView kind="loading" titleKey="state.loading" />
+  if (isLoading) return <ViewSkeleton view="providers" />
   if (!isAuthenticated) {
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
   }

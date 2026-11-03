@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/admin/health` -- queues, DB, storage, Telegram, AI endpoint latency, backups.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -84,7 +85,7 @@ function HealthBody() {
     lastUpdatedAt.current = query.dataUpdatedAt
   }, [query.dataUpdatedAt])
 
-  if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (query.isPending) return <ViewSkeleton view="health" />
   if (query.isError) {
     return (
       <StateView

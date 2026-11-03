@@ -72,6 +72,7 @@ export const cardSchema = z.object({
    * field existed still parses, and absent is treated as "yes" (the old behaviour) rather than as a
    * silent lock-out. */
   canEdit: z.boolean().optional(),
+  deletionProtected: z.boolean().optional(),
 
   // --- v1.1 SPEC §7 (work-plus). Every one of these is computed server-side in the same query that
   // loads the card, and every one is optional so a response from a pre-v1.1 server still parses.
@@ -96,6 +97,8 @@ export const cardSchema = z.object({
 export type Card = z.infer<typeof cardSchema>
 
 export const checklistItemSchema = z.object({
+  deletionProtected: z.boolean().optional(),
+  textLocked: z.boolean().optional(),
   id: z.string(),
   cardId: z.string(),
   parentItemId: z.string().nullable(),

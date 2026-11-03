@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/departments` -- the fresh-account landing ("Create a department or join one", TECH-SPEC §2.1)
 // when the signed-in user has no membership yet, and the department switcher/hub once they do.
 // Rebuilt to UI-OVERHAUL.md's Jakob row "Departments hub / join" (Slack workspaces, Discord invite):
@@ -391,7 +392,7 @@ export default function DepartmentsHubScreen() {
     session.isLoading ||
     (session.isAuthenticated && (query.isPending || requestsQuery.isPending))
   ) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="departments" />
   }
   if (query.isError || requestsQuery.isError) {
     return (

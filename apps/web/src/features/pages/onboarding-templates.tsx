@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // The onboarding checklist template editor (TECH-SPEC §3.5: "onboarding checklist template that
 // becomes a newcomer's personal tasks on join, opt-in per department"). A head builds the
 // list once; `apps/api/src/modules/pages/onboarding.ts` applies every `ownerRole: 'newcomer'` item to
@@ -436,7 +437,7 @@ export function OnboardingTemplatesPanel() {
     }
   }, [templatesQuery.data])
 
-  if (templatesQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (templatesQuery.isPending) return <ViewSkeleton view="templates" />
   if (templatesQuery.isError)
     return (
       <StateView

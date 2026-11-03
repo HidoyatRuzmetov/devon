@@ -210,7 +210,7 @@ describe('confirmed AI actions through real domain routes', () => {
     const complete = await resolved(conversation.id, proposals[0]!.id)
     expect(complete).toMatchObject({
       status: 'executed',
-      result: { href: `/work/card?id=${cards[0]!['id']}` },
+      result: { href: `/work?card=${cards[0]!['id']}` },
     })
     expect(
       await superuserQuery(db, 'select id from app.cards where title=$1', [title]),
@@ -362,7 +362,7 @@ describe('confirmed AI actions through real domain routes', () => {
       conversation,
     )
     expect(await resolved(conversation.id, proposed.proposals[0]!.id, memberSession)).toMatchObject(
-      { status: 'executed', result: { href: `/work/card?id=${owned}` } },
+      { status: 'executed', result: { href: `/work?card=${owned}` } },
     )
     expect(await resolved(conversation.id, proposed.proposals[1]!.id, memberSession)).toMatchObject(
       { status: 'failed', error: 'forbidden' },

@@ -12,6 +12,7 @@ import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { AuditCtx } from '../../types.js'
+import { groupMessageRoutes } from './group-message.js'
 import { registerBotHandlers } from './bot.js'
 import { setupCounts } from './miniapp-repo.js'
 import { setupChecklistSchema } from './miniapp-schemas.js'
@@ -82,6 +83,8 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     registerBotHandlers(bot)
     botHandlersRegistered = true
   }
+
+  await app.register(groupMessageRoutes)
 
   // --- Personal linking ------------------------------------------------------------------------------
 

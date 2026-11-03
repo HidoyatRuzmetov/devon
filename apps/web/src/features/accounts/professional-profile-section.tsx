@@ -1,8 +1,12 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from './settings-section.js'
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   professionalProfileRecordSchema,
+  isProfessionalProfileDraft,
+  POSITION_CODES,
+  EDUCATION_CODES,
   professionalProfileWriteSchema,
   type ProfessionalProfile,
 } from '@devon/contracts'
@@ -20,6 +24,7 @@ import { useT } from '@devon/i18n'
 import { Button, Input, StateView, Textarea, toast } from '@devon/ui'
 import { apiClient } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
+import { useDurableDraft } from '../../lib/use-durable-draft.js'
 import type { Me } from '../../lib/api-schemas.js'
 
 const path = '/api/v1/accounts/professional-profile'
@@ -40,9 +45,9 @@ export function ProfessionalProfileSection() {
     <SettingsSection
       id="section-professional"
       title={t('portal.profile.title')}
-      description={t('portal.profile.intro')}
+      className="[&>header]:hidden"
     >
-      {query.isPending ? <StateView kind="loading" titleKey="state.loading" /> : null}
+      {query.isPending ? <ViewSkeleton view="resume" /> : null}
       {query.isError ? (
         <StateView
           kind="error"
@@ -76,7 +81,14 @@ function ProfileEditor({
 }) {
   const t = useT(),
     qc = useQueryClient()
-  const [profile, setProfile] = React.useState(initial)
+  const draft = useDurableDraft(
+    `devon.profile.resume.v2:${ownerUserId}`,
+    initial,
+    version,
+    isProfessionalProfileDraft,
+  )
+  const profile = draft.value,
+    setProfile = draft.update
   const save = useMutation({
     mutationFn: (command: SaveCommand) => {
       if (qc.getQueryData<Me | null>(['me'])?.user.id !== command.ownerUserId)
@@ -90,6 +102,7 @@ function ProfileEditor({
     },
     onSuccess: (record, command) => {
       if (qc.getQueryData<Me | null>(['me'])?.user.id !== command.ownerUserId) return
+      draft.acknowledge(command.profile, record.version)
       qc.setQueryData<ProfileRecord>(profileKey(command.ownerUserId), (current) =>
         current && current.version > record.version ? current : record,
       )
@@ -170,11 +183,36 @@ function ProfileEditor({
       if (first) formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus()
       return
     }
-    if (!save.isPending) save.mutate({ profile: parsed.data, version, ownerUserId, csrfToken })
+    if (!save.isPending)
+      save.mutate({ profile: parsed.data, version: draft.baseRevision, ownerUserId, csrfToken })
   }
   return (
     <form ref={formRef} noValidate className="flex min-w-0 flex-col gap-5" onSubmit={submit}>
-      <p className="text-caption text-muted-foreground">{t('settings.profile.requiredHint')}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-caption text-muted-foreground">
+        <span role="status">
+          {t(draft.storageFailed ? 'profileChoices.draftUnavailable' : 'profileChoices.draftSaved')}
+        </span>
+        {draft.restored ? (
+          <Button type="button" variant="ghost" size="sm" onClick={draft.discard}>
+            {t('profileChoices.discardDraft')}
+          </Button>
+        ) : null}
+      </div>
+      <label className="flex flex-col gap-1.5 text-small">
+        {t('profileChoices.positionLabel')}
+        <select
+          className="h-11 rounded-md border border-border bg-card px-3"
+          value={profile.position}
+          onChange={(e) => set('position', e.target.value as ProfessionalProfile['position'])}
+        >
+          <option value="">{t('profileChoices.choose')}</option>
+          {POSITION_CODES.map((code) => (
+            <option key={code} value={code}>
+              {t(`profileChoices.position.${code}`)}
+            </option>
+          ))}
+        </select>
+      </label>
       <fieldset className="flex min-w-0 flex-col gap-4">
         <legend className="mb-3 flex items-center gap-2 text-lead font-medium">
           <UserRound className="size-5 text-primary" aria-hidden="true" />
@@ -292,7 +330,21 @@ function ProfileEditor({
                           </span>
                         ) : null}
                       </span>
-                      {key === 'description' ? (
+                      {key === 'degree' ? (
+                        <select
+                          name={name}
+                          className="h-11 rounded-md border border-border bg-card px-3"
+                          value={String(value ?? '')}
+                          onChange={(e) => updateEntry(section, index, key, e.target.value)}
+                        >
+                          <option value="">{t('profileChoices.choose')}</option>
+                          {EDUCATION_CODES.map((code) => (
+                            <option key={code} value={code}>
+                              {t(`profileChoices.education.${code}`)}
+                            </option>
+                          ))}
+                        </select>
+                      ) : key === 'description' ? (
                         <Textarea
                           name={name}
                           value={String(value ?? '')}

@@ -29,12 +29,14 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/ai/briefing/refresh',
   'POST /api/v1/cards/assign-many',
   'POST /api/v1/checkins/cycles/:id/lock',
+  'POST /api/v1/telegram/group-message',
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud
  * rather than dressed up as an owner check (D11). */
 const AUTHENTICATED_ROUTES: readonly string[] = [
   'GET /api/v1/accounts/avatar/:userId/:uploadId/:size',
+  'GET /api/v1/accounts/personnel-record',
   // EPIC-018 realtime (v1.1 SPEC §10). "May this signed-in person open a WebSocket at all" is not a
   // department question: the connection carries no department of its own, and every *channel* on it
   // is authorised separately -- `POST /realtime/subscribe-token` runs `can()` per channel, and

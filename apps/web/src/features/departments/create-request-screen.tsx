@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/departments/new` -- the create-request form (TECH-SPEC §2.2) plus the pending-state screen for a
 // request already in flight, in one route (no path-param route exists yet for a request id -- see
 // MODULE-GUIDE.md "Web features"; this module reads its own request list instead of needing one).
@@ -88,7 +89,7 @@ export default function CreateRequestScreen() {
     },
   })
 
-  if (requestsQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (requestsQuery.isPending) return <ViewSkeleton view="join" />
   if (requestsQuery.isError) {
     return (
       <StateView

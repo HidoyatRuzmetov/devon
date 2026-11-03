@@ -109,8 +109,8 @@ test('compiled Search keeps native focus and fetches all five real entity source
         has: page.getByText(cards.items[0].title, { exact: true }),
       })
       .click()
-    await expect(page).toHaveURL(`${FLOW_WEB_BASE_URL}/work/card?id=${cards.items[0].id}`)
-    await waitForLoadedRoute(page, '/work/card')
+    await expect(page).toHaveURL(`${FLOW_WEB_BASE_URL}/work?card=${cards.items[0].id}`)
+    await expect(page.getByRole('dialog')).toBeVisible()
     expect(foreign).toEqual([])
     expect(errors).toEqual([])
     await info.attach('real-entity-receipts', {

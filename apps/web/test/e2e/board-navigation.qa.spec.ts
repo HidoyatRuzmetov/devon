@@ -143,8 +143,8 @@ test('normal desktop board reaches distant people and keeps quick add visible wh
     expect((await column(f.memberId).boundingBox())!.x).toBeGreaterThan(
       (await viewport.boundingBox())!.x + (await viewport.boundingBox())!.width,
     )
-    await expect(page.getByRole('button', { name: 'Previous columns', exact: true })).toBeDisabled()
-    await expect(page.getByRole('button', { name: 'Next columns', exact: true })).toBeEnabled()
+    await expect(page.getByRole('button', { name: 'Previous columns', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Next columns', exact: true })).toHaveCount(0)
     await expect
       .poll(() =>
         insideViewport(
@@ -212,9 +212,11 @@ test('normal desktop board reaches distant people and keeps quick add visible wh
         ),
       )
       .toBe(true)
-    await page.getByRole('button', { name: 'Next columns', exact: true }).click()
-    await expect.poll(() => viewport.evaluate((element) => element.scrollLeft)).toBeGreaterThan(300)
-    await page.getByRole('button', { name: 'Previous columns', exact: true }).click()
+    await viewport.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect.poll(() => viewport.evaluate((element) => element.scrollLeft)).toBeGreaterThan(200)
+    await viewport.focus()
+    await page.keyboard.press('ArrowLeft')
     await expect.poll(() => viewport.evaluate((element) => element.scrollLeft)).toBe(0)
 
     const headPage = await f.head.newPage()
@@ -331,12 +333,14 @@ test('normal phone touch navigation pages between people and preserves native ke
     await expect.poll(() => insideViewport(viewport, other)).toBe(true)
     await settleCapture(page, false)
     await page.screenshot({ path: info.outputPath('phone-person-search.png') })
-    // The phone buttons move one complete person page and the picker follows the actual column.
-    await page.getByRole('button', { name: 'Previous columns', exact: true }).tap()
+    // Arrow keys move one complete person page and the picker follows the actual column.
+    await viewport.focus()
+    await page.keyboard.press('ArrowLeft')
     await expectPerson(columnOrder[otherIndex - 1]!.id)
-    await page.getByRole('button', { name: 'Next columns', exact: true }).tap()
+    await viewport.focus()
+    await page.keyboard.press('ArrowRight')
     await expectPerson(otherPerson.id)
-    // Arrow keys remain native browser scrolling when the board region has focus.
+    // The focused board responds to arrow keys without a separate navigation button.
     await viewport.focus()
     const left = await viewport.evaluate((element) => element.scrollLeft)
     await page.keyboard.press('ArrowRight')
@@ -352,7 +356,7 @@ test('normal phone touch navigation pages between people and preserves native ke
     await page.getByPlaceholder('Search people…', { exact: true }).fill('Head Navigator')
     await page.getByRole('option', { name: /^Head Navigator\b/ }).tap()
     await expectPerson(f.headId)
-    await expect(page.getByRole('button', { name: 'Previous columns', exact: true })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Previous columns', exact: true })).toHaveCount(0)
     const headColumn = column(f.headId)
     expect(await headColumn.evaluate((element) => getComputedStyle(element).overflowY)).toBe('auto')
     await headColumn.focus()

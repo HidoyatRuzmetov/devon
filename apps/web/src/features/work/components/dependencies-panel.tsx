@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // v1.1 SPEC §7 (A10) -- "blocks" / "blocked by" on a card, with the cycle guard.
 //
 // The picker greys out every card that would close a loop *before* the click, using the same
@@ -12,7 +13,6 @@ import {
   Button,
   Combobox,
   IconButton,
-  Skeleton,
   Stagger,
   StaggerItem,
   StateView,
@@ -177,12 +177,7 @@ export function DependenciesPanel({
   }
 
   if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-2" aria-busy="true">
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-2/3" />
-      </div>
-    )
+    return <ViewSkeleton view="dependencies" />
   }
 
   if (query.isError) {

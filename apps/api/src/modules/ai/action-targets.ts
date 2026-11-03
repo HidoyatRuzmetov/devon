@@ -13,7 +13,7 @@ export function actionTargetIssues(actions: readonly Action[], refs: readonly st
   }
   return actions.flatMap((action) => {
     const expected = action.kind.startsWith('checkin.')
-      ? ['checkin.add', 'checkin.lock'].includes(action.kind)
+      ? ['checkin.add', 'checkin.lock', 'checkin.selection', 'checkin.layout'].includes(action.kind)
         ? 'checkin_cycle'
         : 'checkin_entry'
       : action.kind.startsWith('personal.calendar.')

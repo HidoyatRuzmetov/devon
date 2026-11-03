@@ -75,7 +75,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
           education: [
             {
               institution: 'Example University',
-              degree: 'Bachelor',
+              degree: 'bachelor',
               field: 'Economics',
               startYear: 2016,
               endYear: 2020,
@@ -83,7 +83,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
             },
             {
               institution: 'Example Graduate School',
-              degree: 'Master',
+              degree: 'master',
               field: 'Public policy',
               startYear: 2025,
               endYear: 2027,

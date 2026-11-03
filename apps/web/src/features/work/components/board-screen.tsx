@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // The People board (TECH-SPEC §5, EPIC-004's centrepiece): one column per member, grouped under a
 // colour-coded bo'lim section, unassigned last.
 //
@@ -12,8 +13,7 @@
 //  3. **A head's columns are ordered by trouble**: overdue first, then open load. The five people
 //     who need attention are the five leftmost columns instead of being alphabetically scattered
 //     across seven screens of horizontal scroll.
-// Plus the two affordances a 26-column board needs and did not have: collapse-all, and a compact
-// density that fits roughly twice as many columns on a 1440px screen.
+// Collapse-all and keyboard scrolling keep large department boards navigable.
 //
 // Virtualisation is intentionally
 // not wired in here: at this build's demo scale (~250 cards over 16 columns, TECH-SPEC §14) a plain
@@ -35,7 +35,6 @@ import {
   PopoverContent,
   PopoverTrigger,
   SegmentedControl,
-  Skeleton,
   StateView,
   cn,
   toast,
@@ -46,8 +45,6 @@ import {
   ChevronsRightLeft,
   FolderKanban,
   Info,
-  Rows3,
-  Rows4,
 } from 'lucide-react'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useSearchParams } from '../../../lib/router.js'
@@ -115,9 +112,7 @@ function useStoredPreference<T extends string>(
 type BoardScope = 'all' | 'mine'
 const isBoardScope = (v: string): v is BoardScope => v === 'all' || v === 'mine'
 
-/** SPEC §3.3: a density that fits a 26-person boshqarma on one screen. */
-type BoardDensity = 'comfortable' | 'compact'
-const isBoardDensity = (v: string): v is BoardDensity => v === 'comfortable' || v === 'compact'
+/** A drag chooses shared manual placement; attention ordering is optional. */
 const isCardOrder = (v: string): v is BoardCardOrder => v === 'manual' || v === 'attention'
 
 function findMemberMatches(
@@ -156,12 +151,6 @@ function BoardScreenInner() {
     isCardOrder,
   )
   const [scope, setScope] = useStoredPreference<BoardScope>('scope', user?.id, 'all', isBoardScope)
-  const [density, setDensity] = useStoredPreference<BoardDensity>(
-    'density',
-    user?.id,
-    'compact',
-    isBoardDensity,
-  )
   const scrollerElRef = React.useRef<HTMLDivElement | null>(null)
   const changeScope = useScopeTransition(scope, setScope, scrollerElRef)
   const mobileNavigationTargetRef = React.useRef<string | null>(null)
@@ -440,11 +429,7 @@ function BoardScreenInner() {
   if (boardQuery.isPending) {
     return (
       <WorkShell filterLayout="people_board" hideMeControl>
-        <div className="flex gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-96 w-72 shrink-0" />
-          ))}
-        </div>
+        <ViewSkeleton view="board" />
       </WorkShell>
     )
   }
@@ -592,28 +577,13 @@ function BoardScreenInner() {
         scroller={scrollerElRef}
         members={board.members}
         currentUserId={user?.id}
-        canScrollLeft={edges.left}
-        canScrollRight={edges.right}
-        layoutKey={`${scope}:${density}:${expandAllNonce}`}
+        layoutKey={`${scope}:${expandAllNonce}`}
         showEveryone={() => void changeScope('all')}
       />
       <div
         className="flex shrink-0 items-center gap-1 border-l border-border pl-1"
         data-board-layout-controls
       >
-        <Button
-          variant="ghost"
-          size="sm"
-          className="min-h-9 px-2"
-          onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
-        >
-          {density === 'compact' ? (
-            <Rows3 className="size-4" aria-hidden="true" />
-          ) : (
-            <Rows4 className="size-4" aria-hidden="true" />
-          )}
-          {t(density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact')}
-        </Button>
         <IconButton
           className="md:size-8"
           aria-label={t(
@@ -681,8 +651,6 @@ function BoardScreenInner() {
             scroller={scrollerElRef}
             members={groups.flatMap((group) => group.columns.map((column) => column.member))}
             currentUserId={user?.id}
-            canScrollLeft={edges.left}
-            canScrollRight={edges.right}
             layoutKey={`mobile:${scope}:${expandAllNonce}`}
             showEveryone={() => void changeScope('all')}
           />
@@ -704,6 +672,7 @@ function BoardScreenInner() {
             </MultitaskToolbarSlot>
           </div>
           <div className="relative min-h-0 min-w-0 flex-1">
+            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Named scroll region supports arrow navigation outside interactive descendants. */}
             <div
               ref={setScrollerRefs}
               data-board-scope={isFiltering ? 'all' : scope}
@@ -712,7 +681,35 @@ function BoardScreenInner() {
               onScrollEnd={reconcileMobilePage}
               onPointerDownCapture={reconcileMobilePage}
               onWheelCapture={reconcileMobilePage}
-              onKeyDownCapture={reconcileMobilePage}
+              onKeyDown={(event) => {
+                const target = event.target as HTMLElement
+                if (
+                  event.defaultPrevented ||
+                  event.altKey ||
+                  event.ctrlKey ||
+                  event.metaKey ||
+                  event.shiftKey ||
+                  target.closest(
+                    'input,textarea,select,[contenteditable=true],[role=combobox],[role=dialog],[data-drag-handle]',
+                  )
+                )
+                  return
+                if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
+                event.preventDefault()
+                const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight'
+                const scroller = horizontal
+                  ? event.currentTarget
+                  : isMobile
+                    ? (target.closest<HTMLElement>('[data-board-column]') ?? event.currentTarget)
+                    : event.currentTarget
+                scroller.scrollBy({
+                  left: horizontal ? (event.key === 'ArrowLeft' ? -1 : 1) * 280 : 0,
+                  top: horizontal ? 0 : (event.key === 'ArrowUp' ? -1 : 1) * 160,
+                  behavior: matchMedia('(prefers-reduced-motion: reduce)').matches
+                    ? 'instant'
+                    : 'smooth',
+                })
+              }}
               // The outer WorkShell owns the viewport bound. CSS shares the remaining height
               // with animated controls in the same layout pass, avoiding resize-observer lag.
               // Desktop shares one two-axis canvas; phones keep a vertical scroll per person.
@@ -740,7 +737,6 @@ function BoardScreenInner() {
                           unitPalette={unitPalette}
                           labels={board.labels}
                           filterKey={q}
-                          density={density}
                           mobile={isMobile}
                           onOpenCard={openCardPeek}
                           onDropped={handleDropped}
@@ -768,7 +764,6 @@ function BoardScreenInner() {
                       unitPalette={unitPalette}
                       labels={board.labels}
                       filterKey={q}
-                      density={density}
                       mobile={isMobile}
                       onOpenCard={openCardPeek}
                       onDropped={handleDropped}

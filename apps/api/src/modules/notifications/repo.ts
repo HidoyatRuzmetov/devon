@@ -23,6 +23,7 @@ import {
 } from './quiet-hours.js'
 
 export type NotificationRow = {
+  deduplicated?: boolean
   id: string
   type: string
   reason: Reason
@@ -40,6 +41,7 @@ export type NotificationRow = {
 }
 
 export type NewNotification = {
+  dedupeKey?: string
   userId: string
   type: string
   reason: Reason
@@ -183,21 +185,25 @@ export async function insertNotification(
       `)
         if (!recipients[0]) throw new NotificationRecipientUnavailableError()
       }
-      const rows = await tx.raw<NotificationSqlRow & { inapp_visible: boolean }>(sql`
+      const rows = await tx.raw<
+        NotificationSqlRow & { inapp_visible: boolean; inserted: boolean }
+      >(sql`
       insert into app.notifications
-        (user_id, type, reason, subject_type, subject_id, department_id, title, body, deep_link, event_at, inapp_visible)
+        (user_id, type, reason, subject_type, subject_id, department_id, title, body, deep_link, event_at, inapp_visible,dedupe_key)
       values (${input.userId}, ${input.type}, ${input.reason}, ${input.subjectType},
               ${input.subjectId ?? null}, ${input.departmentId ?? null},
               ${JSON.stringify(input.title)}::jsonb, ${input.body ? JSON.stringify(input.body) : null}::jsonb,
               ${input.deepLink ?? null}, ${input.eventAt ?? null},
               coalesce((select enabled from app.notification_prefs
                 where user_id = ${input.userId} and reason = ${input.reason}
-                  and channel = 'inapp'), true))
+                  and channel = 'inapp'), true),${input.dedupeKey ?? null})
+      on conflict(user_id,dedupe_key) where dedupe_key is not null do update set dedupe_key=app.notifications.dedupe_key
       returning id, type, reason, subject_type, subject_id, department_id, title, body, deep_link,
-                event_at, read_at, archived_at, snoozed_until, created_at, inapp_visible
+                event_at, read_at, archived_at, snoozed_until, created_at, inapp_visible, (xmax=0) as inserted
     `)
       const row = rows[0]
       if (!row) throw new Error('notifications: insert returned no row')
+      if (!row.inserted) return { ...fromSqlRow(row), deduplicated: true }
       tx.audit({
         action: 'notifications.created',
         subjectType: 'notification',

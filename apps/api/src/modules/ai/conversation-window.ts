@@ -17,6 +17,7 @@ export function conversationWindow(
   selected: ReadonlySet<string>,
   actionKinds: ReadonlySet<string>,
   full = false,
+  isHead = false,
 ) {
   const tokens = new Set(question.toLocaleLowerCase().match(/[\p{L}\p{N}_-]{4,}/gu) ?? [])
   const normalizedQuestion = question.toLocaleLowerCase()
@@ -59,7 +60,7 @@ export function conversationWindow(
     const { text: _text, ...metadata } = entry
     return { ...metadata, contentAvailable: typeof _text === 'string' && _text.length > 0 }
   })
-  const actions = actionInstructions()
+  const actions = actionInstructions(isHead)
   return {
     snapshot: {
       totals: context.totals,

@@ -270,7 +270,7 @@ export async function sendMentionMessage(
   chatId: string,
   text: string,
   entities: MessageEntity[],
-  replyTo: number,
+  replyTo?: number,
   threadId?: number,
 ): Promise<SendResult> {
   const bot = getBot()
@@ -280,7 +280,9 @@ export async function sendMentionMessage(
       withTimeout(
         bot.api.sendMessage(chatId, text, {
           entities,
-          reply_parameters: { message_id: replyTo, allow_sending_without_reply: true },
+          ...(replyTo
+            ? { reply_parameters: { message_id: replyTo, allow_sending_without_reply: true } }
+            : {}),
           ...(threadId ? { message_thread_id: threadId } : {}),
           link_preview_options: { is_disabled: true },
         }),

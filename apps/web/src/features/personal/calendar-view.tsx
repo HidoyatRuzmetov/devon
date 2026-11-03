@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import {
   personalCalendarListSchema,
   type PersonalCalendarInput,
@@ -7,6 +8,7 @@ import { useLocale, useT } from '@devon/i18n'
 import {
   Button,
   Checkbox,
+  Combobox,
   Dialog,
   DialogContent,
   IconButton,
@@ -30,6 +32,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { z } from 'zod'
+import { useMembers } from '../work/hooks.js'
 import { apiClient } from '../../lib/api-client.js'
 import { RouterLink, navigate, replaceSearchParam, useSearchParams } from '../../lib/router.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
@@ -66,6 +69,9 @@ function CalendarEditor({
   const [end, setEnd] = React.useState(item ? localInput(item.endsAt) : date + 'T10:00')
   const [allDay, setAllDay] = React.useState(item?.allDay ?? false)
   const [remind, setRemind] = React.useState(item?.remindAt ? localInput(item.remindAt) : '')
+  const members = useMembers()
+  const canEdit = !item || item.canEdit
+  const [participants, setParticipants] = React.useState(item?.participantUserIds ?? [])
   const [confirmDelete, setConfirmDelete] = React.useState(false)
   const save = useMutation({
     mutationFn: async (remove: boolean) => {
@@ -78,6 +84,7 @@ function CalendarEditor({
       const body: PersonalCalendarInput = {
         title,
         notes,
+        participantUserIds: participants,
         startsAt: utcInput(allDay ? start.slice(0, 10) + 'T00:00' : start),
         endsAt: utcInput(allDay ? end.slice(0, 10) + 'T23:59' : end),
         allDay,
@@ -119,62 +126,118 @@ function CalendarEditor({
           className="mt-4 flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault()
-            if (valid) save.mutate(false)
+            if (valid && canEdit) save.mutate(false)
           }}
         >
-          <label className="grid gap-1.5 text-small">
-            <span>{t('personalCalendar.titleField')}</span>
-            <Input
-              autoFocus
-              value={title}
-              maxLength={160}
-              required
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </label>
-          <label className="flex items-center gap-2 text-small">
-            <Checkbox checked={allDay} onCheckedChange={(v) => setAllDay(v === true)} />
-            {t('personalCalendar.allDay')}
-          </label>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {(
-              [
-                { value: start, set: setStart, label: 'start' },
-                { value: end, set: setEnd, label: 'end' },
-              ] as const
-            ).map((field) => (
-              <label key={field.label} className="grid gap-1.5 text-small">
-                <span>{t(`personalCalendar.${field.label}`)}</span>
-                <Input
-                  type={allDay ? 'date' : 'datetime-local'}
-                  required
-                  value={allDay ? field.value.slice(0, 10) : field.value}
-                  onChange={(e) => field.set(allDay ? e.target.value + 'T09:00' : e.target.value)}
+          {!canEdit ? (
+            <p className="text-small text-muted-foreground">{t('calendarInvites.readOnly')}</p>
+          ) : null}
+          <fieldset disabled={!canEdit || save.isPending} className="flex flex-col gap-4">
+            <label className="grid gap-1.5 text-small">
+              <span>{t('personalCalendar.titleField')}</span>
+              <Input
+                autoFocus
+                value={title}
+                maxLength={160}
+                required
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-small">
+              <Checkbox checked={allDay} onCheckedChange={(v) => setAllDay(v === true)} />
+              {t('personalCalendar.allDay')}
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(
+                [
+                  { value: start, set: setStart, label: 'start' },
+                  { value: end, set: setEnd, label: 'end' },
+                ] as const
+              ).map((field) => (
+                <label key={field.label} className="grid gap-1.5 text-small">
+                  <span>{t(`personalCalendar.${field.label}`)}</span>
+                  <Input
+                    type={allDay ? 'date' : 'datetime-local'}
+                    required
+                    value={allDay ? field.value.slice(0, 10) : field.value}
+                    onChange={(e) => field.set(allDay ? e.target.value + 'T09:00' : e.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+            <label className="grid gap-1.5 text-small">
+              <span>{t('personalCalendar.notes')}</span>
+              <Textarea
+                rows={3}
+                maxLength={4000}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </label>
+            <label className="grid gap-1.5 text-small">
+              <span className="flex items-center gap-2">
+                <Bell className="size-4" />
+                {t('personalCalendar.reminder')}
+              </span>
+              <Input
+                type="datetime-local"
+                value={remind}
+                max={start}
+                onChange={(e) => setRemind(e.target.value)}
+              />
+            </label>
+            <div className="space-y-2">
+              <span className="text-small">{t('calendarInvites.people')}</span>
+              {canEdit ? (
+                <Combobox
+                  label={t('calendarInvites.people')}
+                  placeholder={t('calendarInvites.add')}
+                  searchPlaceholder={t('checkins.searchPeople')}
+                  emptyMessage={t('checkins.noMembers')}
+                  value={null}
+                  options={members
+                    .filter(
+                      (member) =>
+                        member.userId !== me.data?.user.id && !participants.includes(member.userId),
+                    )
+                    .map((member) => ({
+                      value: member.userId,
+                      label: `${member.givenName} ${member.familyName}`,
+                    }))}
+                  onValueChange={(id) => setParticipants((previous) => [...previous, id])}
                 />
-              </label>
-            ))}
-          </div>
-          <label className="grid gap-1.5 text-small">
-            <span>{t('personalCalendar.notes')}</span>
-            <Textarea
-              rows={3}
-              maxLength={4000}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </label>
-          <label className="grid gap-1.5 text-small">
-            <span className="flex items-center gap-2">
-              <Bell className="size-4" />
-              {t('personalCalendar.reminder')}
-            </span>
-            <Input
-              type="datetime-local"
-              value={remind}
-              max={start}
-              onChange={(e) => setRemind(e.target.value)}
-            />
-          </label>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {participants.map((id) => {
+                  const member = members.find((m) => m.userId === id)
+                  return (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-small"
+                    >
+                      {member
+                        ? `${member.givenName} ${member.familyName}`
+                        : t('calendarInvites.unavailable')}
+                      {canEdit ? (
+                        <IconButton
+                          className="size-7"
+                          aria-label={t('calendarInvites.remove')}
+                          onClick={() =>
+                            setParticipants((current) => current.filter((value) => value !== id))
+                          }
+                        >
+                          <Trash2 className="size-3.5" />
+                        </IconButton>
+                      ) : null}
+                    </span>
+                  )
+                })}
+              </div>
+              {participants.length ? (
+                <p className="text-caption text-muted-foreground">{t('calendarInvites.shared')}</p>
+              ) : null}
+            </div>
+          </fieldset>
           <p className="text-caption text-muted-foreground">
             {t('personalCalendar.timezone')}
             {' · '}
@@ -191,7 +254,7 @@ function CalendarEditor({
             </p>
           ) : null}
           <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-            {item ? (
+            {item && canEdit ? (
               <Button
                 type="button"
                 variant={confirmDelete ? 'destructive' : 'ghost'}
@@ -205,9 +268,15 @@ function CalendarEditor({
             ) : (
               <span />
             )}
-            <Button type="submit" disabled={!valid || save.isPending} loading={save.isPending}>
-              {t('personalCalendar.save')}
-            </Button>
+            {canEdit ? (
+              <Button type="submit" disabled={!valid || save.isPending} loading={save.isPending}>
+                {t('personalCalendar.save')}
+              </Button>
+            ) : (
+              <Button type="button" onClick={onClose}>
+                {t('shell.shortcuts.close')}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>
@@ -380,7 +449,7 @@ export function PersonalCalendarView() {
           action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
         />
       ) : query.isPending ? (
-        <StateView kind="loading" titleKey="state.loading" />
+        <ViewSkeleton view="calendar" />
       ) : (
         <>
           <div

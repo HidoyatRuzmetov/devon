@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/admin/audit` -- paginated audit log, hash-chain verification, CSV export.
 //
 // round2 SEV2: this was developer output -- 50 rows of `session.created`, `session · f8dda908`, in
@@ -256,7 +257,7 @@ function AuditBody() {
       ),
   })
 
-  if (listQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (listQuery.isPending) return <ViewSkeleton view="audit" />
   if (listQuery.isError) {
     return (
       <StateView

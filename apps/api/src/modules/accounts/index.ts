@@ -1,3 +1,4 @@
+import { personnelRoutes } from './personnel-routes.js'
 // /api/v1/accounts/* -- EPIC-001 (registration, sessions/devices, 2FA, password reset/change, account
 // deletion, profile photo). `POST /register` and `POST /2fa/login-verify` are the two public routes
 // this module adds (registered in `plugins/authorize.ts`'s `PUBLIC_ROUTES`, MODULE-GUIDE.md's one
@@ -54,6 +55,7 @@ const SESSION_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
 const AVATAR_VARIANT_MAX_BYTES = 2 * 1024 * 1024
 
 const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(personnelRoutes)
   const ownAccount = (userId: string) => ({
     kind: 'own_account' as const,
     userId,

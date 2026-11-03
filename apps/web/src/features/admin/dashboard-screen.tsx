@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/admin` -- overview + quick links. Supersedes `routes/admin.tsx`'s foundation placeholder (a
 // smaller readyz-only health card): `app.tsx`'s route outlet matches this feature's exact-path route
 // first (MODULE-GUIDE.md "Web features"), so this component now renders at `/admin` and the old
@@ -101,7 +102,7 @@ function HealthSnapshot() {
   )
 
   function renderBody(): React.ReactNode {
-    if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
+    if (query.isPending) return <ViewSkeleton view="overview" />
     if (query.isError) {
       return (
         <p className="text-small text-muted-foreground">
@@ -279,7 +280,7 @@ function DashboardBody() {
     queryFn: fetchMaintenance,
   })
 
-  if (instanceQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (instanceQuery.isPending) return <ViewSkeleton view="overview" />
   if (instanceQuery.isError) {
     return (
       <StateView

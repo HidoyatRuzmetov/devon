@@ -19,6 +19,7 @@ import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { AuditCtx } from '../../types.js'
 import { calendarRoutes } from './calendar-routes.js'
+import { subscribeCalendarInvitations } from './calendar-notifications.js'
 import { pomodoroSessionToDto, pomodoroSettingsToDto, taskToDto } from './dto.js'
 import * as repo from './repo.js'
 import {
@@ -50,6 +51,10 @@ function ctxFrom(req: FastifyRequest): AuditCtx {
 }
 
 const personalRoutes: FastifyPluginAsyncZod = async (app) => {
+  const unsubscribe = subscribeCalendarInvitations(app.log)
+  app.addHook('onClose', async () => {
+    unsubscribe()
+  })
   await app.register(calendarRoutes)
   const ownerSubject = (r: { actor: { userId: string } | null }) => ({
     kind: 'personal' as const,

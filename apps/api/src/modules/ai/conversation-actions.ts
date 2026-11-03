@@ -164,6 +164,8 @@ export async function resolveProposal(
       new Map(prior.filter((p) => p.key).map((p) => [p.key!, p])),
     )
     const operation = ACTIONS[proposal.kind]!
+    if (operation.headOnly && (ctx.departmentRole !== 'head' || ctx.viewAs))
+      throw new ConversationError('forbidden')
     if (proposal.kind === 'attachment.attach') {
       await attachFiles(
         req,

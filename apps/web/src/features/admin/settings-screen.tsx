@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/admin/settings` -- registration toggle, four-locale maintenance mode, the sentinel key, and the
 // wipe switch (TECH-SPEC §11: typed phrase + password + optional 2FA + a 60-second, server-verified
 // countdown with cancel).
@@ -78,7 +79,7 @@ function RegistrationCard() {
         {t('admin.console.settings.registrationBody')}
       </p>
       {query.isPending ? (
-        <StateView kind="loading" titleKey="state.loading" />
+        <ViewSkeleton view="registration" />
       ) : query.isError ? (
         <SettingsReadError error={query.error} retry={() => query.refetch()} />
       ) : (
@@ -150,7 +151,7 @@ function MaintenanceCard() {
   })
 
   if (query.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="maintenance" />
   }
   if (query.isError) return <SettingsReadError error={query.error} retry={() => query.refetch()} />
 
@@ -269,7 +270,7 @@ function SentinelCard() {
         {t('admin.console.settings.sentinelBody')}
       </p>
       {query.isPending ? (
-        <StateView kind="loading" titleKey="state.loading" />
+        <ViewSkeleton view="sentinel" />
       ) : query.isError ? (
         <SettingsReadError error={query.error} retry={() => query.refetch()} />
       ) : (
@@ -421,8 +422,7 @@ function WipeCard() {
       : ''
 
   function renderWipeStatus(): React.ReactNode {
-    if (instanceQuery.isPending || statusQuery.isPending)
-      return <StateView kind="loading" titleKey="state.loading" />
+    if (instanceQuery.isPending || statusQuery.isPending) return <ViewSkeleton view="wipe" />
     if (instanceQuery.isError || statusQuery.isError)
       return (
         <SettingsReadError
@@ -465,7 +465,7 @@ function WipeCard() {
       )
     }
     if (pending?.status === 'executing') {
-      return <StateView kind="loading" titleKey="admin.console.settings.wipeExecuting" />
+      return <ViewSkeleton view="wipe" />
     }
     if (pending?.status === 'failed') {
       return (

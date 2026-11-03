@@ -74,6 +74,8 @@ export interface ComboboxProps {
   invalid?: boolean
   className?: string
   contentClassName?: string
+  renderOption?: (option: ComboboxOption) => React.ReactNode
+  renderValue?: (option: ComboboxOption) => React.ReactNode
 }
 
 /** DESIGN.md §3: "Select/Combobox (async, keyboard, Uzbek/Cyrillic search)". Built on `cmdk` (the
@@ -97,6 +99,8 @@ export function Combobox({
   invalid = false,
   className,
   contentClassName,
+  renderOption,
+  renderValue,
 }: ComboboxProps): React.JSX.Element {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
@@ -128,7 +132,7 @@ export function Combobox({
           )}
         >
           <span className={cn('min-w-0 truncate', !selected && 'text-muted-foreground')}>
-            {selected ? selected.label : placeholder}
+            {selected ? (renderValue?.(selected) ?? selected.label) : placeholder}
           </span>
           <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         </button>
@@ -181,7 +185,7 @@ export function Combobox({
                   >
                     {option.icon ? <option.icon className="size-4" aria-hidden="true" /> : null}
                     <span className="min-w-0 flex-1">
-                      <span className="block">{option.label}</span>
+                      <span className="block">{renderOption?.(option) ?? option.label}</span>
                       {option.description ? (
                         <span className="block text-caption text-muted-foreground">
                           {option.description}

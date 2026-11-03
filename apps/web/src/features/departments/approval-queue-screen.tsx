@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/departments/requests` -- super-admin approval queue (TECH-SPEC §2.2). A `member`/`head` visiting
 // this route gets a 403 from the API (`{kind:'instance'}`, `can()`); rendered as the shared "forbidden"
 // state rather than a raw error. Rebuilt to this pass's brief: "approval queue for the super admin
@@ -76,7 +77,7 @@ export default function ApprovalQueueScreen() {
     },
   })
 
-  if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (query.isPending) return <ViewSkeleton view="approvals" />
   if (query.isError) {
     if (query.error instanceof ApiError && query.error.status === 403) {
       return (

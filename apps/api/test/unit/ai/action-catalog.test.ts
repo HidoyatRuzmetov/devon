@@ -95,7 +95,7 @@ describe('deterministic assistant action catalogue', () => {
     expect(action.path(args)).toBe(path)
   })
   it('serializes every action schema for the provider without runtime transforms', () => {
-    const instructions = actionInstructions()
+    const instructions = actionInstructions(true)
     expect(instructions).toHaveLength(Object.keys(ACTIONS).length)
     expect(instructions.every((action) => action.arguments.type === 'object')).toBe(true)
   })

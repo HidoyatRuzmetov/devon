@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/pages` (TECH-SPEC §3.5, EPIC-011): a list of the department's pages plus, via `?page=<id>`
 // (URL-as-state, MODULE-GUIDE.md's "no path params yet" tradeoff), one page's editor + version
 // history. `?tab=onboarding` switches the list view to the onboarding checklist template editor.
@@ -206,7 +207,7 @@ function PageList({
   const pagesQuery = usePagesQuery()
   const locale = useLocale()
 
-  if (pagesQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (pagesQuery.isPending) return <ViewSkeleton view="pages" />
   if (pagesQuery.isError) {
     return (
       <StateView
@@ -414,7 +415,7 @@ function PageDetail({
     timer.current = setTimeout(() => void flushRef.current(), 800)
   }
 
-  if (pageQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (pageQuery.isPending) return <ViewSkeleton view="page" />
   if (pageQuery.isError) {
     return (
       <StateView
@@ -598,7 +599,7 @@ export default function PagesScreen() {
     )
   }
 
-  if (meQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (meQuery.isPending) return <ViewSkeleton view="pages" />
   if (!meQuery.data) {
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
   }

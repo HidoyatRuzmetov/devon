@@ -1,12 +1,15 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/people` -- TECH-SPEC EPIC-003: "the People page listing members grouped by unit." Rebuilt to
 // UI-OVERHAUL.md's Jakob row "People directory" (Slack members, Google Contacts): search first,
 // cards with unit identity and professional profile drawers, unit filters and distinct empty/no-results.
 import { useT } from '@devon/i18n'
 import {
-  Badge,
-  FilterChip,
+  Button,
+  Checkbox,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
   Input,
-  SegmentedControl,
   Stagger,
   StaggerItem,
   StateView,
@@ -14,7 +17,7 @@ import {
   normalizeForSearch,
 } from '@devon/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, Search } from 'lucide-react'
+import { Building2, Search, ChevronDown } from 'lucide-react'
 import * as React from 'react'
 import { ApiError } from '../../lib/api-client.js'
 import { useForcedState } from '../../lib/forced-state.js'
@@ -100,8 +103,8 @@ export default function PeopleScreen() {
   const departments = useMyDepartments()
   const departmentId = departments.activeDepartmentId
   const [query, setQuery] = React.useState('')
-  const [unitFilter, setUnitFilter] = React.useState<string | null>(() =>
-    new URLSearchParams(window.location.search).get('unit'),
+  const [unitFilter, setUnitFilter] = React.useState<string[]>(() =>
+    new URLSearchParams(window.location.search).getAll('unit'),
   )
   // ui-blitz round3 #23: the hover card's "copy link" action writes `?member=<userId>` -- this reads
   // it back, drops any unit filter that would hide that member, and scrolls/highlights their card
@@ -134,7 +137,6 @@ export default function PeopleScreen() {
     },
   })
 
-  const [layout, setLayout] = React.useState<'cards' | 'table'>('cards')
   const highlightMemberId = search.get('member')
   const [highlightedId, setHighlightedId] = React.useState<string | null>(null)
   const consumedHighlightRef = React.useRef<string | null>(null)
@@ -156,7 +158,7 @@ export default function PeopleScreen() {
     const member = membersQuery.data.find((m) => m.userId === highlightMemberId)
     if (!member) return
     consumedHighlightRef.current = highlightMemberId
-    setUnitFilter((cur) => (cur !== null && cur !== member.unitId ? null : cur))
+    setUnitFilter((cur) => (cur.length && !cur.includes(member.unitId ?? '') ? [] : cur))
     setQuery('')
     const raf = requestAnimationFrame(() => {
       const el = document.querySelector(`[data-member-id="${CSS.escape(highlightMemberId)}"]`)
@@ -183,7 +185,7 @@ export default function PeopleScreen() {
     )
   }
   if (departments.isLoading || (departmentId && (membersQuery.isPending || unitsQuery.isPending))) {
-    return <StateView kind="loading" titleKey="structure.people.title" />
+    return <ViewSkeleton view="people" />
   }
   const error = membersQuery.error ?? unitsQuery.error ?? (departments.isError ? new Error() : null)
   if (error instanceof ApiError && error.code === 'forbidden') {
@@ -220,11 +222,11 @@ export default function PeopleScreen() {
   const units = orderedUnits(unitsQuery.data.units)
   const unitsById = new Map(units.map((u) => [u.id, u]))
   const unitPalette = createUnitPalette(units)
-  const isFiltering = query.trim().length > 0 || unitFilter !== null
+  const isFiltering = query.trim().length > 0 || unitFilter.length > 0
 
   const filtered = allMembers
     .filter((m) => matchesQuery(m, query))
-    .filter((m) => unitFilter === null || m.unitId === unitFilter)
+    .filter((m) => unitFilter.length === 0 || unitFilter.includes(m.unitId ?? ''))
 
   const groups = groupByUnit(units, filtered)
   const hasAnyMembers = allMembers.length > 0
@@ -247,116 +249,12 @@ export default function PeopleScreen() {
                 labelKey: 'structure.people.filters.clear',
                 onAction: () => {
                   setQuery('')
-                  setUnitFilter(null)
+                  setUnitFilter([])
                 },
               },
             }
           : {})}
       />
-    )
-  } else if (layout === 'table') {
-    // SPEC §4.1: "cards or a simple table (name, boʻlim, unit role, title)". Deliberately the four
-    // directory facts and nothing else -- every indicator column is head-only and lives on
-    // `/people/table`, which a member cannot open at all.
-    body = (
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full min-w-[32rem] border-collapse text-left text-small">
-          <caption className="sr-only">{t('structure.people.table.caption')}</caption>
-          <thead>
-            <tr className="border-b border-border bg-muted/40">
-              <th scope="col" className="px-3 py-2 font-medium">
-                {t('structure.people.table.name')}
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                {t('structure.people.table.unit')}
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                {t('structure.people.table.unitRole')}
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                {t('structure.people.table.title')}
-              </th>
-            </tr>
-          </thead>
-          <Stagger as="tbody" animateKey={`${query}:${unitFilter ?? ''}`}>
-            {filtered.map((m) => {
-              const unitName = m.unitId ? (unitsById.get(m.unitId)?.name ?? null) : null
-              return (
-                <StaggerItem
-                  as="tr"
-                  key={m.userId}
-                  className="border-b border-border last:border-0 hover:bg-accent/50"
-                >
-                  <th scope="row" className="px-3 py-2 font-normal">
-                    <MemberCard
-                      compact
-                      member={m}
-                      unitColour={unitColorClass(
-                        unitPalette,
-                        m.unitId,
-                        m.membershipRole === 'head',
-                      )}
-                    />
-                  </th>
-                  <td className="px-3 py-2">
-                    {unitName ??
-                      t(
-                        m.membershipRole === 'head'
-                          ? 'headScope.departmentWide'
-                          : 'structure.people.unassignedGroup',
-                      )}
-                  </td>
-                  <td className="px-3 py-2">
-                    {m.unitRole ? (
-                      <Badge tone={m.unitRole === 'head' ? 'info' : 'neutral'}>
-                        {t(`structure.roles.roleLabel.${m.unitRole}`)}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t('structure.people.table.noRole')}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2">
-                    {m.title ?? (
-                      <span className="text-muted-foreground">
-                        {t('structure.people.table.noTitle')}
-                      </span>
-                    )}
-                  </td>
-                </StaggerItem>
-              )
-            })}
-          </Stagger>
-        </table>
-      </div>
-    )
-  } else if (unitFilter !== null) {
-    body = (
-      <Stagger
-        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-        animateKey={`${unitFilter}:${query}`}
-      >
-        {filtered.map((m) => (
-          <StaggerItem key={m.userId} className="h-full">
-            <div
-              data-member-id={m.userId}
-              className={cn(
-                'h-full rounded-md transition-shadow duration-(--dur-standard)',
-                highlightedId === m.userId &&
-                  'ring-2 ring-primary ring-offset-2 ring-offset-background',
-              )}
-            >
-              <MemberCard
-                member={m}
-                unitColour={unitColorClass(unitPalette, m.unitId, m.membershipRole === 'head')}
-                unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
-                onAssign={m.userId === me?.user.id ? undefined : () => setAssignTarget(m)}
-              />
-            </div>
-          </StaggerItem>
-        ))}
-      </Stagger>
     )
   } else {
     body = (
@@ -447,38 +345,58 @@ export default function PeopleScreen() {
             className="pl-9"
           />
         </div>
-        <SegmentedControl
-          size="sm"
-          label={t('structure.people.layout.label')}
-          value={layout}
-          onValueChange={setLayout}
-          options={[
-            { value: 'cards', label: t('structure.people.layout.cards') },
-            { value: 'table', label: t('structure.people.layout.table') },
-          ]}
-        />
-      </div>
-
-      {hasAnyMembers && units.length > 0 ? (
-        <div
-          className="flex flex-wrap gap-2"
-          role="group"
-          aria-label={t('structure.people.filters.label')}
-        >
-          <FilterChip active={unitFilter === null} onClick={() => setUnitFilter(null)}>
-            {t('structure.people.filters.all')}
-          </FilterChip>
-          {units.map((u) => (
-            <FilterChip
-              key={u.id}
-              active={unitFilter === u.id}
-              onClick={() => setUnitFilter((cur) => (cur === u.id ? null : u.id))}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="secondary"
+              className="min-w-36 justify-between"
+              aria-label={t('structure.people.filters.label')}
             >
-              {u.name}
-            </FilterChip>
-          ))}
-        </div>
-      ) : null}
+              <Building2 className="size-4" />
+              {unitFilter.length
+                ? t('peopleDownloads.unitsSelected', { count: unitFilter.length })
+                : t('structure.people.filters.all')}
+              <ChevronDown className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-72 p-2">
+            <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2.5 text-small hover:bg-accent">
+              <Checkbox
+                checked={unitFilter.length === 0}
+                onCheckedChange={() => setUnitFilter([])}
+              />
+              {t('structure.people.filters.all')}
+            </label>
+            <div className="my-1 border-t border-border" />
+            <div className="max-h-72 overflow-y-auto">
+              {units.map((unit) => (
+                <label
+                  key={unit.id}
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2.5 text-small hover:bg-accent"
+                >
+                  <Checkbox
+                    checked={unitFilter.includes(unit.id)}
+                    onCheckedChange={() =>
+                      setUnitFilter((current) =>
+                        current.includes(unit.id)
+                          ? current.filter((id) => id !== unit.id)
+                          : [...current, unit.id],
+                      )
+                    }
+                  />
+                  <span
+                    className={cn(
+                      'size-2 shrink-0 rounded-full',
+                      unitColorClass(unitPalette, unit.id),
+                    )}
+                  />
+                  <span className="min-w-0 break-words">{unit.name}</span>
+                </label>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       {body}
 

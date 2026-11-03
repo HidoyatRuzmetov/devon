@@ -46,7 +46,12 @@ export const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
       const saved = await saveCalendar(contextFromRequest(req), req.body)
       if (saved && 'error' in saved)
         return sendProblem(reply, 'validation_failed', {
-          errors: [{ path: 'remindAt', code: 'future_required' }],
+          errors: [
+            {
+              path: saved.error === 'invalid_participants' ? 'participantUserIds' : 'remindAt',
+              code: saved.error,
+            },
+          ],
         })
       return reply.code(201).send(saved!)
     },
@@ -72,7 +77,12 @@ export const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!saved) return sendProblem(reply, 'conflict')
       if ('error' in saved)
         return sendProblem(reply, 'validation_failed', {
-          errors: [{ path: 'remindAt', code: 'future_required' }],
+          errors: [
+            {
+              path: saved.error === 'invalid_participants' ? 'participantUserIds' : 'remindAt',
+              code: saved.error,
+            },
+          ],
         })
       return saved
     },

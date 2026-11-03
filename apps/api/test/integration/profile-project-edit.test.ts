@@ -55,7 +55,7 @@ describe('self-service profile', () => {
       givenName: 'New',
       familyName: 'Name',
       patronymic: 'Family',
-      title: 'Engineer',
+      title: 'chief_specialist',
       email: 'example@example.test',
     }
     const response = await request('/accounts/profile', 'PATCH', profile)

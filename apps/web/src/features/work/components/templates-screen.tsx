@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // v1.1 SPEC §7.2 -- the template gallery: card templates and project templates, department ones the
 // head curates plus everyone's own personal ones.
 //
@@ -14,7 +15,6 @@ import {
   IconButton,
   PageHeader,
   SegmentedControl,
-  Skeleton,
   Stagger,
   StaggerItem,
   StateView,
@@ -218,13 +218,7 @@ export default function TemplatesScreen(): React.JSX.Element {
 
   let body: React.ReactNode
   if (query.isPending) {
-    body = (
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Skeleton key={i} className="h-44 w-full" />
-        ))}
-      </div>
-    )
+    body = <ViewSkeleton view="templates" />
   } else if (query.isError) {
     body = (
       <StateView

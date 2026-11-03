@@ -13,8 +13,8 @@ export async function listCalendar(
   return withContext(ctx, async (tx) => {
     const personal =
       await tx.raw<PersonalCalendarItem>(sql`select id,'personal' as kind,title,notes,starts_at::text as "startsAt",ends_at::text as "endsAt",
-      all_day as "allDay",remind_at::text as "remindAt",version,'active' as status,null::text as href
-      from app.personal_calendar_entries where user_id=${ctx.userId} and deleted_at is null and starts_at<${end}::timestamptz and ends_at>=${start}::timestamptz order by starts_at,id`)
+      all_day as "allDay",remind_at::text as "remindAt",version,'active' as status,null::text as href,user_id as "ownerUserId",participant_user_ids as "participantUserIds",(user_id=${ctx.userId}) as "canEdit"
+      from app.personal_calendar_entries where (user_id=${ctx.userId} or ${ctx.userId}=any(participant_user_ids)) and deleted_at is null and starts_at<${end}::timestamptz and ends_at>=${start}::timestamptz order by starts_at,id`)
     if (!ctx.departmentId) return personal
     const tasks =
       await tx.raw<PersonalCalendarItem>(sql`select id,'task' as kind,title,'' as notes,due_at::text as "startsAt",due_at::text as "endsAt",
@@ -27,7 +27,21 @@ export async function listCalendar(
       from app.events e join app.event_rsvps r on r.event_id=e.id and r.user_id=${ctx.userId} and r.status in ('yes','waitlist')
       where e.department_id=${ctx.departmentId} and e.deleted_at is null and e.status not in ('draft','cancelled')
         and e.starts_at<${end}::timestamptz and e.ends_at>=${start}::timestamptz order by e.starts_at,e.id`)
-    return [...personal, ...tasks, ...events]
+    return [
+      ...personal,
+      ...tasks.map((item) => ({
+        ...item,
+        ownerUserId: ctx.userId,
+        participantUserIds: [],
+        canEdit: false,
+      })),
+      ...events.map((item) => ({
+        ...item,
+        ownerUserId: null,
+        participantUserIds: [],
+        canEdit: false,
+      })),
+    ]
   })
 }
 export async function saveCalendar(
@@ -38,14 +52,22 @@ export async function saveCalendar(
 ) {
   return withContext(ctx, async (tx) => {
     const target = id ?? randomUUID()
+    let previousParticipants: string[] = []
+    let nextVersion = 1
     // An already-delivered reminder may remain on an edited entry. A newly selected reminder
     // must be in the future; lock the current version before comparing, so concurrent rescheduling
     // cannot turn a stale edit into a second delivery.
     if (id) {
-      const current = await tx.raw<{ remind_at: Date | null; version: number }>(
-        sql`select remind_at,version from app.personal_calendar_entries where id=${id} and user_id=${ctx.userId} and deleted_at is null for update`,
+      const current = await tx.raw<{
+        remind_at: Date | null
+        version: number
+        participant_user_ids: string[]
+      }>(
+        sql`select remind_at,version,participant_user_ids from app.personal_calendar_entries where id=${id} and user_id=${ctx.userId} and deleted_at is null for update`,
       )
       if (!current[0] || current[0].version !== version) return null
+      previousParticipants = current[0].participant_user_ids
+      nextVersion = current[0].version + 1
       if (
         input.remindAt &&
         Date.parse(input.remindAt) <= Date.now() &&
@@ -54,15 +76,26 @@ export async function saveCalendar(
         return { error: 'reminder_in_past' as const }
     } else if (input.remindAt && Date.parse(input.remindAt) <= Date.now())
       return { error: 'reminder_in_past' as const }
+    const participants = [...new Set(input.participantUserIds ?? previousParticipants)].filter(
+      (userId) => userId !== ctx.userId,
+    )
+    const added = participants.filter((userId) => !previousParticipants.includes(userId))
+    if (added.length) {
+      if (!ctx.departmentId) return { error: 'invalid_participants' as const }
+      const members = await tx.raw<{ id: string }>(
+        sql`select m.user_id as id from app.memberships m join app.users u on u.id=m.user_id where m.department_id=${ctx.departmentId} and m.status='active' and m.deleted_at is null and u.deleted_at is null and u.status='active' and m.user_id=any(${sql.param(added)}::uuid[]) for share of m,u`,
+      )
+      if (members.length !== added.length) return { error: 'invalid_participants' as const }
+    }
     if (id) {
       const rows = await tx.raw<{
         id: string
       }>(sql`update app.personal_calendar_entries set title=${input.title},notes=${input.notes},starts_at=${input.startsAt},ends_at=${input.endsAt},
-        all_day=${input.allDay},remind_at=${input.remindAt},version=version+1,updated_at=now() where id=${id} and user_id=${ctx.userId} and deleted_at is null and version=${version} returning id`)
+        all_day=${input.allDay},remind_at=${input.remindAt},participant_user_ids=${sql.param(participants)}::uuid[],version=version+1,updated_at=now() where id=${id} and user_id=${ctx.userId} and deleted_at is null and version=${version} returning id`)
       if (!rows.length) return null
     } else {
-      await tx.raw(sql`insert into app.personal_calendar_entries(id,user_id,title,notes,starts_at,ends_at,all_day,remind_at)
-        values(${target},${ctx.userId},${input.title},${input.notes},${input.startsAt},${input.endsAt},${input.allDay},${input.remindAt})`)
+      await tx.raw(sql`insert into app.personal_calendar_entries(id,user_id,title,notes,starts_at,ends_at,all_day,remind_at,participant_user_ids)
+        values(${target},${ctx.userId},${input.title},${input.notes},${input.startsAt},${input.endsAt},${input.allDay},${input.remindAt},${sql.param(participants)}::uuid[])`)
     }
     tx.audit({
       action: id ? 'personal.calendar.updated' : 'personal.calendar.created',
@@ -71,6 +104,18 @@ export async function saveCalendar(
       after: { via: ctx.userAgent?.includes(' ai-action/') ? 'ai' : 'manual' },
     })
     tx.emit({ type: 'personal.calendar.changed', payload: { userId: ctx.userId, id: target } })
+    for (const userId of new Set([...previousParticipants, ...participants])) {
+      tx.emit({
+        type: 'personal.calendar.invitation',
+        payload: {
+          userId,
+          id: target,
+          version: nextVersion,
+          removed: !participants.includes(userId),
+          added: added.includes(userId),
+        },
+      })
+    }
     return { id: target }
   })
 }
@@ -78,8 +123,10 @@ export async function deleteCalendar(ctx: RequestContext, id: string, version: n
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
       id: string
+      participant_user_ids: string[]
+      version: number
     }>(sql`update app.personal_calendar_entries set deleted_at=now(),updated_at=now(),version=version+1
-      where id=${id} and user_id=${ctx.userId} and version=${version} and deleted_at is null returning id`)
+      where id=${id} and user_id=${ctx.userId} and version=${version} and deleted_at is null returning id,participant_user_ids,version`)
     if (!rows.length) return false
     tx.audit({
       action: 'personal.calendar.deleted',
@@ -87,6 +134,11 @@ export async function deleteCalendar(ctx: RequestContext, id: string, version: n
       subjectId: id,
     })
     tx.emit({ type: 'personal.calendar.changed', payload: { userId: ctx.userId, id } })
+    for (const userId of rows[0]!.participant_user_ids)
+      tx.emit({
+        type: 'personal.calendar.invitation',
+        payload: { userId, id, version: rows[0]!.version, removed: true, added: false },
+      })
     return true
   })
 }

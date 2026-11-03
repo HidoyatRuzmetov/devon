@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 // `/admin/departments` -- table, status pills, and a row drawer (view-as, pause with a reason sheet,
 // archive/restore) instead of a wall of inline buttons per row (UI-OVERHAUL.md §2 "Admin console ...
 // departments table with status pills and row drawer").
@@ -175,7 +176,7 @@ function DepartmentDrawer({
   )
 
   function renderDetail(): React.ReactNode {
-    if (detailQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+    if (detailQuery.isPending) return <ViewSkeleton view="department" />
     if (detailQuery.isError || !d) {
       return (
         <StateView
@@ -308,7 +309,7 @@ function DepartmentsBody() {
       fetchAdminDepartments({ query: query || undefined, status: status || undefined, cursor }),
   })
 
-  if (listQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (listQuery.isPending) return <ViewSkeleton view="departments" />
   if (listQuery.isError) {
     if (listQuery.error instanceof ApiError && listQuery.error.status === 403) {
       return (

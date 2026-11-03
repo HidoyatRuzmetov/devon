@@ -51,7 +51,7 @@ describe('professional profiles, staffing and card stages', () => {
       education: [
         {
           institution: 'Example University',
-          degree: 'Bachelor',
+          degree: 'bachelor',
           field: 'Economics',
           startYear: 2016,
           endYear: 2020,
@@ -59,7 +59,7 @@ describe('professional profiles, staffing and card stages', () => {
         },
         {
           institution: 'Example University',
-          degree: 'Master',
+          degree: 'master',
           field: 'Policy',
           startYear: 2026,
           endYear: 2028,

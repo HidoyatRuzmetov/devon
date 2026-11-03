@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Combobox, IconButton } from '@devon/ui'
-import { ChevronLeft, ChevronRight, UserRound } from 'lucide-react'
+import { UserRound } from 'lucide-react'
 import type { MemberSummary } from '../api.js'
 import { fullName } from '../lib/format.js'
 
@@ -9,8 +9,6 @@ export function BoardNavigation({
   scroller,
   members,
   currentUserId,
-  canScrollLeft,
-  canScrollRight,
   layoutKey,
   showEveryone,
   mobile = false,
@@ -20,8 +18,6 @@ export function BoardNavigation({
   scroller: React.RefObject<HTMLDivElement | null>
   members: readonly MemberSummary[]
   currentUserId: string | undefined
-  canScrollLeft: boolean
-  canScrollRight: boolean
   layoutKey: string
   showEveryone: () => void
   mobile?: boolean
@@ -67,24 +63,6 @@ export function BoardNavigation({
     setPendingTarget({ id })
   }
 
-  function move(direction: -1 | 1) {
-    const board = scroller.current
-    if (!board) return
-    if (mobile) {
-      const columns = [...board.querySelectorAll<HTMLElement>('[data-board-column]')]
-      const index = columns.findIndex((column) => column.dataset['boardColumn'] === activePersonId)
-      const target = columns[Math.max(0, Math.min(columns.length - 1, index + direction))]
-      if (target?.dataset['boardColumn']) jumpTo(target.dataset['boardColumn'])
-      return
-    }
-    board.scrollBy({
-      left: direction * Math.max(240, board.clientWidth * 0.8),
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 'instant'
-        : 'smooth',
-    })
-  }
-
   return (
     <div
       role="group"
@@ -95,15 +73,6 @@ export function BoardNavigation({
           : 'flex min-w-0 flex-1 items-center gap-1 xl:flex-none'
       }
     >
-      {mobile ? (
-        <IconButton
-          aria-label={t('work.board.previousColumns')}
-          disabled={!canScrollLeft}
-          onClick={() => move(-1)}
-        >
-          <ChevronLeft className="size-4" aria-hidden="true" />
-        </IconButton>
-      ) : null}
       <div className="flex min-w-0 flex-1 items-center gap-1">
         <Combobox
           className="h-11 min-w-0 flex-1 text-small md:h-9 xl:w-40"
@@ -157,35 +126,8 @@ export function BoardNavigation({
               : Math.max(1, members.findIndex((member) => member.userId === activePersonId) + 1)}
             /{members.length + 1}
           </span>
-          <IconButton
-            aria-label={t('work.board.nextColumns')}
-            disabled={!canScrollRight}
-            onClick={() => move(1)}
-          >
-            <ChevronRight className="size-4" aria-hidden="true" />
-          </IconButton>
         </>
       ) : null}
-      <div className={mobile ? 'hidden' : 'ml-auto hidden items-center md:flex'}>
-        <IconButton
-          className="md:size-7"
-          aria-label={t('work.board.previousColumns')}
-          title={t('work.board.previousColumns')}
-          disabled={!canScrollLeft}
-          onClick={() => move(-1)}
-        >
-          <ChevronLeft className="size-4" aria-hidden="true" />
-        </IconButton>
-        <IconButton
-          className="md:size-7"
-          aria-label={t('work.board.nextColumns')}
-          title={t('work.board.nextColumns')}
-          disabled={!canScrollRight}
-          onClick={() => move(1)}
-        >
-          <ChevronRight className="size-4" aria-hidden="true" />
-        </IconButton>
-      </div>
     </div>
   )
 }

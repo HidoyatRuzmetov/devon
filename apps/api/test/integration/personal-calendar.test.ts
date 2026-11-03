@@ -57,6 +57,47 @@ async function create() {
 }
 const range = '?from=2027-04-01&to=2027-05-01'
 describe('personal calendar privacy and delivery', () => {
+  it('shares only explicitly invited entries and keeps attendee writes forbidden', async () => {
+    const input = { ...entry(), participantUserIds: [head.id] }
+    const response = await request('', 'POST', input)
+    expect(response.status).toBe(201)
+    const { id } = (await response.json()) as { id: string }
+    const invited = (await (
+      await request(range, 'GET', undefined, other)
+    ).json()) as PersonalCalendarItem[]
+    expect(invited.find((item) => item.id === id)).toMatchObject({
+      ownerUserId: owner.id,
+      participantUserIds: [head.id],
+      canEdit: false,
+      title: input.title,
+    })
+    expect(
+      (
+        await request(
+          '/' + id,
+          'PATCH',
+          { version: 1, entry: { ...input, title: 'Cannot edit' } },
+          other,
+        )
+      ).status,
+    ).toBe(409)
+    expect((await request('/' + id + '?version=1', 'DELETE', undefined, other)).status).toBe(409)
+    expect(
+      (
+        await request('/' + id, 'PATCH', {
+          version: 1,
+          entry: { ...input, participantUserIds: [] },
+        })
+      ).status,
+    ).toBe(200)
+    const removed = (await (
+      await request(range, 'GET', undefined, other)
+    ).json()) as PersonalCalendarItem[]
+    expect(removed.some((item) => item.id === id)).toBe(false)
+    expect(
+      (await request('', 'POST', { ...entry(), participantUserIds: [randomUUID()] })).status,
+    ).toBe(422)
+  })
   it('keeps owner entries private even from the head, rejects foreign writes and stale revisions', async () => {
     const { id, input } = await create()
     const listed = await request(range)

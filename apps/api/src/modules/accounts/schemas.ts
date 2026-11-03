@@ -4,6 +4,7 @@
 // rather than redeclaring, since `LOCALES` is documented as a frozen, load-bearing constant no package
 // "owns" (see that file's own header comment).
 import { z } from 'zod'
+import { positionSchema } from '@devon/contracts'
 import { localeSchema, asLocale } from '../../schemas.js'
 import type { UserRecord } from '../../types.js'
 
@@ -56,10 +57,11 @@ export const profileSchema = z
     givenName: z.string().trim().min(1).max(100),
     familyName: z.string().trim().min(1).max(100),
     patronymic: z.string().trim().max(100).nullable(),
-    title: z.string().trim().max(150).nullable(),
+    title: z.string().nullable(),
   })
   .strict()
 export const patchProfileBodySchema = profileSchema
+  .extend({ title: positionSchema.nullable() })
   .partial()
   .refine((value) => Object.keys(value).length > 0, { message: 'empty patch' })
 export type PatchProfileBody = z.infer<typeof patchProfileBodySchema>
@@ -72,7 +74,7 @@ export const registerBodySchema = z
     givenName: z.string().min(1).max(100),
     familyName: z.string().min(1).max(100),
     patronymic: z.string().max(100).optional(),
-    title: z.string().max(150).optional(),
+    title: positionSchema.optional(),
     locale: localeSchema.default('uz-Latn'),
     timezone: z.string().max(64).default('Asia/Tashkent'),
   })
