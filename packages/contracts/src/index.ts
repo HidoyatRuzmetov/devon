@@ -157,6 +157,7 @@ export {
 
 export * from './personal-calendar.js'
 export * from './personnel-record.js'
+export * from './personnel-script.js'
 export * as personnelTemplate from './personnel-template.js'
 
 export { aiActionBindingSchema } from './ai-chat.js'

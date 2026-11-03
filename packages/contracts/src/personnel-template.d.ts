@@ -9,6 +9,7 @@ export function toCyrillic(value: string): string
 export function fileName(name: string): string
 export function currentJob(data: PersonnelData): PersonnelData['work'][number] | null
 export function fmtDate(value: string): string
+export function fmtSince(value: string): string
 export function eduLines(schools: PersonnelData['schools']): string[]
 export function workLine(work: PersonnelData['work'][number]): string
 export function relWorkLines(relative: PersonnelData['relatives'][number]): string[]

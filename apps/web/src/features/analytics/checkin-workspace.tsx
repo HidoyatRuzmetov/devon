@@ -269,20 +269,15 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
             action={{ labelKey: 'state.error.action', onAction: () => candidates.refetch() }}
           />
         ) : (
-          <motion.div
-            layout
-            className="checkin-task-columns"
-            data-editing={editing}
-            transition={{ duration: reduced ? 0 : 0.28 }}
-          >
+          <div className="checkin-task-columns" data-editing={editing}>
             <AnimatePresence initial={false} mode="popLayout">
               {groups.map((group, index) => (
                 <motion.div
                   key={group.id}
-                  layout
+                  layout="position"
                   initial={{ opacity: 0, y: reduced ? 0 : 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: reduced ? 1 : 0.97 }}
+                  exit={{ opacity: 0, y: reduced ? 0 : -8 }}
                   transition={
                     reduced ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 34 }
                   }
@@ -387,7 +382,7 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
                 </motion.div>
               ))}
             </AnimatePresence>
-          </motion.div>
+          </div>
         )}
         {!groups.length && !candidates.isPending ? (
           <div className="checkin-empty">

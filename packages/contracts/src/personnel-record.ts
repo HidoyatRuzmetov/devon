@@ -82,7 +82,7 @@ export const personnelDataSchema = z
       .default([]),
     protectedNames: z
       .array(z.string().trim().min(1).max(300))
-      .max(100)
+      .max(500)
       .default(['Cola', 'Coca-Cola', 'Telegram', 'Google', 'Microsoft', 'Apple', 'OpenAI']),
   })
   .strict()
@@ -102,3 +102,14 @@ export const personnelIssueSchema = z.object({
   missing: z.boolean().optional(),
 })
 export type PersonnelIssue = z.infer<typeof personnelIssueSchema>
+export const personnelExportRequestSchema = z
+  .object({
+    ownerUserId: z.uuid(),
+    data: personnelDataSchema,
+    script: z.enum(['latin', 'cyrillic']),
+  })
+  .strict()
+export const personnelExportResponseSchema = z.object({
+  data: personnelDataSchema,
+  script: z.enum(['latin', 'cyrillic']),
+})

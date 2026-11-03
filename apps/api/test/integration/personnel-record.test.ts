@@ -1,4 +1,6 @@
 import { personnelDataSchema, personnelTemplate } from '@devon/contracts'
+import { MockProvider, type ChatCompletionResult } from '@devon/ai'
+import { __setProviderForTests } from '../../src/modules/ai/service.js'
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import {
@@ -7,6 +9,7 @@ import {
   seedMember,
   startHarness,
   stopHarness,
+  superuserQuery,
   type Db,
   type Server,
   type Session,
@@ -42,7 +45,79 @@ beforeAll(async () => {
   )) as [Session, Session, Session, Session]
 })
 afterAll(async () => {
+  __setProviderForTests(null)
   if (db && server) await stopHarness({ db, server })
+})
+
+it('prepares exports only for owner/head, preserves AI-identified names and never stores private prompts', async () => {
+  await superuserQuery(
+    db,
+    `insert into app.ai_department_settings(department_id,budget_uzs_per_month,flags) values($1,1000000,'{"semantic_ask":true}')`,
+    [departmentId],
+  )
+  const response = (names: string[]): ChatCompletionResult => ({
+    content: null,
+    reasoningContent: null,
+    finishReason: 'tool_calls',
+    usage: { promptTokens: 80, completionTokens: 20, totalTokens: 100 },
+    toolCalls: [
+      {
+        id: randomUUID(),
+        name: 'personnel_verbatim_names',
+        argumentsJson: JSON.stringify({ names }),
+      },
+    ],
+  })
+  const model = new MockProvider({
+    script: [response(['Invented brand']), response(['Cola', 'PhD'])],
+  })
+  __setProviderForTests(model)
+  const data = valid()
+  data.work[0]!.text = 'Cola kompaniyasi bosh mutaxassisi'
+  data.degree = 'texnika fanlari bo‘yicha falsafa doktori (PhD)'
+  data.photo = 'data:image/jpeg;base64,/9j/2Q=='
+  const payload = { ownerUserId: ownerId, data, script: 'cyrillic' }
+  const prepare = (actor: Session, body = payload, headers = actor.headers) =>
+    fetch(server.baseUrl + '/api/v1/accounts/personnel-record/prepare-export', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    })
+  expect((await prepare(peer)).status).toBe(404)
+  expect((await prepare(foreignHead)).status).toBe(404)
+  const noCsrf = { ...owner.headers }
+  delete noCsrf['x-csrf-token']
+  expect((await prepare(owner, payload, noCsrf)).status).toBe(403)
+  expect(model.calls).toHaveLength(0)
+  const prepared = await prepare(owner)
+  expect(prepared.status, await prepared.clone().text()).toBe(200)
+  expect(prepared.headers.get('cache-control')).toBe('no-store')
+  const result = (await prepared.json()) as { data: ReturnType<typeof valid> }
+  expect(result.data.work[0]!.text).toBe('Cola компанияси бош мутахассиси')
+  expect(result.data.degree).toContain('PhD')
+  expect(result.data.photo).toBe(data.photo)
+  expect(result.data.protectedNames).toEqual(['Cola', 'PhD'])
+  expect(model.calls).toHaveLength(2) // Invented substrings are rejected and retried.
+  const sent = JSON.stringify(model.calls[0]!.messages)
+  expect(sent).not.toContain(data.photo)
+  expect(sent).not.toContain(data.birthDate)
+  expect(sent).not.toContain(data.work[0]!.since)
+  const before = await (await request(owner)).text()
+  expect((await prepare(head)).status).toBe(200)
+  expect(await (await request(owner)).text()).toBe(before)
+  const traces = await superuserQuery(db, 'select * from app.ai_traces where department_id=$1', [
+    departmentId,
+  ])
+  expect(traces).toHaveLength(2)
+  expect(JSON.stringify(traces)).not.toContain(data.relatives[0]!.address)
+  expect(JSON.stringify(traces)).not.toContain(data.fio)
+  await superuserQuery(
+    db,
+    `update app.ai_department_settings set flags='{"semantic_ask":false}' where department_id=$1`,
+    [departmentId],
+  )
+  expect((await prepare(head)).status).toBe(403)
+  expect(model.calls).toHaveLength(3)
 })
 function request(actor: Session, suffix = '', data?: unknown) {
   const headers = { ...actor.headers }

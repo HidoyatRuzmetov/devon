@@ -33,6 +33,10 @@ const TARGET_DIRS = [
 
 // { file: relative path from repo root (POSIX separators), url: the exact literal }
 const ALLOWLIST = [
+  {
+    file: 'apps/web/src/features/structure/resume-export.ts',
+    url: 'http://schemas.openxmlformats.org',
+  }, // Fixed OOXML namespace identifiers in Word ZIP entries; never network requests
   { file: 'apps/api/src/modules/admin/health-probes.ts', url: 'https://api.telegram.org' }, // Official Telegram Bot API, fixed by the service protocol
   { file: 'apps/api/src/modules/calendar/caldav.ts', url: 'http://calendarserver.org' }, // CalDAV XML namespace identifier, never dereferenced
   { file: 'apps/api/src/modules/calendar/caldav.ts', url: 'http://apple.com' }, // iCalendar XML namespace identifier, never dereferenced

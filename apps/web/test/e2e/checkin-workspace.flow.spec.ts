@@ -91,7 +91,29 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
     await expect(drawer.getByRole('button', { name: 'Delete', exact: true }).first()).toBeDisabled()
     await page.keyboard.press('Escape')
     await expect(drawer).toHaveCount(0)
+    // Sample actual rendered text through the transition: layout may move it, never scale it.
+    await page.evaluate(() => {
+      const text = document.querySelector('.checkin-group-bar h2')!
+      const range = document.createRange()
+      range.selectNodeContents(text)
+      const samples: number[] = []
+      ;(window as unknown as { checkinTextHeights: number[] }).checkinTextHeights = samples
+      const start = performance.now()
+      function sample() {
+        samples.push(range.getBoundingClientRect().height)
+        if (performance.now() - start < 700) requestAnimationFrame(sample)
+      }
+      sample()
+    })
     await page.getByRole('button', { name: 'Choose deliverables', exact: true }).click()
+    await page.waitForTimeout(750)
+    const heights = await page.evaluate(() =>
+      (window as unknown as { checkinTextHeights: number[] }).checkinTextHeights.filter(
+        (height) => height > 0,
+      ),
+    )
+    expect(heights.length).toBeGreaterThan(5)
+    expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.5)
     await expect(page.locator('.checkin-task')).toHaveCount(3)
     await page.locator('.checkin-drag-handle').last().focus()
     await page.keyboard.press('ArrowUp')

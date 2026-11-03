@@ -1566,6 +1566,7 @@ export {
   toCyrillic,
   currentJob,
   fmtDate,
+  fmtSince,
   eduLines,
   workLine,
   relWorkLines,
