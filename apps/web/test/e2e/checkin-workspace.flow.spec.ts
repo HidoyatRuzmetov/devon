@@ -100,6 +100,9 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
       'true',
     )
     await page.getByRole('button', { name: 'Save selection', exact: true }).click()
+    await expect(page.locator('.checkin-task')).toHaveCount(2)
+    // Let the selection exit/layout spring settle before installing the synthetic timer clock.
+    await page.waitForTimeout(600)
     await page.clock.install()
     await page.getByRole('button', { name: 'Start timer', exact: true }).click()
     await page.clock.fastForward(100_000)
@@ -110,6 +113,7 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
     await expect(page.getByRole('timer')).toHaveText('0:00')
     await page.getByRole('button', { name: 'Stop and reset timer', exact: true }).click()
     await expect(page.getByRole('timer')).toHaveText('2:00')
+    await page.clock.runFor(600)
     await page.screenshot({ path: testInfo.outputPath('checkin-desktop.png'), fullPage: true })
     await page.setViewportSize({ width: 390, height: 844 })
     await expect(page.locator('.checkin-person-chooser')).toBeVisible()

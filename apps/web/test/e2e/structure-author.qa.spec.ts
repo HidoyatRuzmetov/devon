@@ -237,9 +237,11 @@ test('head authors units, assigns and removes a member, restores the deleted sub
       unitId: null,
     })
     await f.page.goto('/people')
-    await f.page.getByRole('radio', { name: 'Table', exact: true }).check()
-    const headRow = f.page.getByRole('row').filter({ hasText: 'Head Author' })
-    await expect(headRow.getByRole('cell', { name: 'Department-wide', exact: true })).toBeVisible()
+    const leadership = f.page.locator('section').filter({
+      has: f.page.getByRole('heading', { name: /^Department leadership/ }),
+    })
+    await expect(leadership.getByText('Head Author', { exact: true })).toBeVisible()
+    await expect(f.page.getByRole('radio', { name: 'Table', exact: true })).toHaveCount(0)
     await f.page.screenshot({ path: info.outputPath('leadership-retained.png'), fullPage: true })
   } finally {
     await f.close()

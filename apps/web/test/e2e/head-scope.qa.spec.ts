@@ -142,9 +142,8 @@ test('directory distinguishes department leadership from an ordinary unassigned 
       .filter({ has: f.page.getByRole('heading', { name: /^Department leadership/ }) })
     await expect(leadership.getByText('HeadScope Synthetic', { exact: true }).first()).toBeVisible()
     await f.page.screenshot({ path: testInfo.outputPath('directory-after.png'), fullPage: true })
-    await f.page.getByRole('radio', { name: 'Table', exact: true }).check()
-    const row = f.page.getByRole('row').filter({ hasText: 'HeadScope Synthetic' })
-    await expect(row.getByRole('cell', { name: 'Department-wide', exact: true })).toBeVisible()
+    await expect(f.page.getByRole('radio', { name: 'Table', exact: true })).toHaveCount(0)
+    await expect(leadership.getByText('HeadScope Synthetic', { exact: true }).first()).toBeVisible()
     const actual = await (
       await f.head.request.get(`/api/v1/departments/${f.department.departmentId}/roster`)
     ).json()

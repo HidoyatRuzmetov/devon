@@ -1,8 +1,8 @@
 {
   "checkins": {
     "empty": "No deliverables selected.",
-    "editTask": "Edit task title",
-    "priority": "Task priority",
+    "editTask": "Edit card title",
+    "priority": "Card priority",
     "newItem": "Add checklist item",
     "searchPeople": "Find a person…",
     "sortPriority": "Priority order — switch to manual",
@@ -13,7 +13,7 @@
     "selectAddOnly": "Check-in agreed. Add deliverables; agreed items stay selected.",
     "saveSelection": "Save selection",
     "editSelection": "Choose deliverables",
-    "noSourceTasks": "No assigned tasks yet. Create a task in Cards.",
+    "noSourceTasks": "No assigned cards yet. Create one in Cards.",
     "priorityLabel": {
       "urgent": "Urgent",
       "high": "High",

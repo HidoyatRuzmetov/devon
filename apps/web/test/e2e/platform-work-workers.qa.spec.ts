@@ -272,10 +272,10 @@ test('@qa real after-done recurrence waits for UI completion and preserves its i
       doneAt: string | null
       archivedAt: string | null
     }
-    // Standalone completion intentionally moves the card into its owner's archive. The next
-    // after-done occurrence must count from that actual completion, rather than an overdue date.
-    expect(done.status).toBe('archived')
-    expect(done.archivedAt).toBeTruthy()
+    // Completion stays in Done. Recurrence counts from completion, not an overdue date.
+    expect(done.status).toBe('done')
+    expect(done.doneAt).toBeTruthy()
+    expect(done.archivedAt).toBeNull()
     const job = await completedJob(f.producer, 'work.recurrence')
     await expect.poll(() => readSeries(id), { timeout: 10_000 }).toHaveLength(2)
     const successor = readSeries(id).find((row) => row.id !== id)!
@@ -284,7 +284,7 @@ test('@qa real after-done recurrence waits for UI completion and preserves its i
       test.info().outputPath('worker-completion-before-interval.json'),
       JSON.stringify({ job, originalDue, done, successor }, null, 2),
     )
-    const gap = new Date(successor.due_at!).getTime() - new Date(done.archivedAt!).getTime()
+    const gap = new Date(successor.due_at!).getTime() - new Date(done.doneAt!).getTime()
     expect(gap).toBeGreaterThan(86_400_000 - 60_000)
     expect(gap).toBeLessThanOrEqual(86_400_000)
     await openCard(f.watching, successor.id, title)
