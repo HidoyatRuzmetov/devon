@@ -67,7 +67,12 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
   const preferenceKey = `devon_checkin_confirm:${session.user?.id}:${departmentId}:${phase}`
   const [dragging, setDragging] = React.useState<string | null>(null)
   const [dropTarget, setDropTarget] = React.useState<string | null>(null)
-  const touchSource = React.useRef<string | null>(null)
+  const pointerDrag = React.useRef<{
+    source: string
+    x: number
+    y: number
+    active: boolean
+  } | null>(null)
   const storedLayout = data.layouts.find(
     (l) => l.cycleId === cycle.id && l.memberUserId === member.userId,
   )
@@ -285,18 +290,6 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
                   data-checkin-group={group.id}
                   data-dragging={dragging === group.id}
                   data-drop-target={dropTarget === group.id && dragging !== group.id}
-                  onDragOver={(e) => {
-                    if (dragging) {
-                      e.preventDefault()
-                      setDropTarget(group.id)
-                    }
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    if (dragging) reorder(dragging, group.id)
-                    setDragging(null)
-                    setDropTarget(null)
-                  }}
                 >
                   <div className="checkin-group-bar">
                     {group.cards[0]!.projectId ? (
@@ -314,41 +307,52 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
                         className="checkin-drag-handle"
                         aria-label={t('checkins.reorder')}
                         title={t('checkins.reorderHint')}
-                        draggable
+                        type="button"
                         disabled={change.isPending}
-                        onDragStart={(e) => {
-                          e.dataTransfer.effectAllowed = 'move'
-                          e.dataTransfer.setData('text/plain', group.id)
-                          const card = e.currentTarget.closest('.checkin-group')
-                          if (card) e.dataTransfer.setDragImage(card, 24, 24)
-                          setDragging(group.id)
-                        }}
-                        onDragEnd={() => {
-                          setDragging(null)
-                          setDropTarget(null)
-                        }}
                         onPointerDown={(event) => {
-                          if (event.pointerType !== 'touch' || change.isPending) return
+                          if (event.button !== 0 || change.isPending || closed) return
+                          event.preventDefault()
+                          event.currentTarget.focus({ preventScroll: true })
                           event.currentTarget.setPointerCapture(event.pointerId)
-                          touchSource.current = group.id
-                          setDragging(group.id)
+                          pointerDrag.current = {
+                            source: group.id,
+                            x: event.clientX,
+                            y: event.clientY,
+                            active: false,
+                          }
                         }}
                         onPointerMove={(event) => {
-                          if (!touchSource.current) return
+                          const drag = pointerDrag.current
+                          if (!drag) return
+                          if (
+                            !drag.active &&
+                            Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 5
+                          )
+                            return
+                          drag.active = true
+                          setDragging(drag.source)
                           const target = document
                             .elementFromPoint(event.clientX, event.clientY)
                             ?.closest<HTMLElement>('[data-checkin-group]')
                           setDropTarget(target?.dataset['checkinGroup'] ?? null)
                         }}
-                        onPointerUp={() => {
-                          if (touchSource.current && dropTarget)
-                            reorder(touchSource.current, dropTarget)
-                          touchSource.current = null
+                        onPointerUp={(event) => {
+                          const drag = pointerDrag.current
+                          const target = document
+                            .elementFromPoint(event.clientX, event.clientY)
+                            ?.closest<HTMLElement>('[data-checkin-group]')?.dataset['checkinGroup']
+                          pointerDrag.current = null
+                          setDragging(null)
+                          setDropTarget(null)
+                          if (drag?.active && target) reorder(drag.source, target)
+                        }}
+                        onLostPointerCapture={() => {
+                          pointerDrag.current = null
                           setDragging(null)
                           setDropTarget(null)
                         }}
                         onPointerCancel={() => {
-                          touchSource.current = null
+                          pointerDrag.current = null
                           setDragging(null)
                           setDropTarget(null)
                         }}

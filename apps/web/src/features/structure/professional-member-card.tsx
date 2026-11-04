@@ -117,10 +117,10 @@ export function MemberCard({
         education: t('portal.profile.education'),
         skills: t('portal.profile.skills'),
         languages: t('portal.profile.languages'),
+        hobbies: t('portal.profile.hobbies'),
         certifications: t('portal.profile.certifications'),
         links: t('portal.profile.links'),
         present: t('portal.profile.present'),
-        highlights: t('peopleDownloads.highlights'),
         resume: t('profileChoices.resume'),
         educationDegrees: Object.fromEntries(
           ['secondary', 'vocational', 'bachelor', 'master', 'phd', 'dsc'].map((code) => [
@@ -484,13 +484,14 @@ export function MemberCard({
         <DialogContent
           title={fullName(member)}
           titleHidden
-          className="max-w-[min(90vw,42rem)] border-0 bg-transparent p-0 shadow-none [&>button]:bg-card/90"
+          imageViewer
+          className="max-w-[min(90vw,42rem)]"
           aria-describedby={undefined}
         >
           <img
             src={avatarUrl(member.avatarKey, 512) ?? ''}
             alt={fullName(member)}
-            className="max-h-[85dvh] w-full rounded-xl object-contain"
+            className="max-h-[calc(100dvh-7rem)] w-full rounded-xl object-contain"
           />
         </DialogContent>
       </Dialog>

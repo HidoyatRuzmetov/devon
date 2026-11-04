@@ -38,54 +38,76 @@ export interface DialogContentProps extends React.ComponentPropsWithoutRef<
   /** The CommandPalette needs an accessible name (WCAG) without a visible heading -- its structure
    * starts directly with the search input (spec.md §5). */
   titleHidden?: boolean
+  /** Image viewers need a high-contrast control above the photograph. */
+  imageViewer?: boolean
 }
 
 export const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, title, showClose = true, titleHidden = false, children, ...props }, ref) => {
-  const t = useT()
-  return (
-    <DialogPrimitive.Portal>
-      <DialogOverlay />
-      <DialogPrimitive.Content
-        ref={ref}
-        className={cn(
-          'fixed left-1/2 top-1/2 z-50 w-full max-w-120 -translate-x-1/2 -translate-y-1/2',
-          'max-h-[calc(100dvh-2rem)] overflow-y-auto',
-          'rounded-lg border border-border bg-surface-3 p-6 shadow-3',
-          'data-[state=open]:animate-[devon-dialog-in_220ms_var(--ease-out)]',
-          'data-[state=closed]:animate-[devon-fade-out_140ms_var(--ease-in)]',
-          className,
-        )}
-        {...props}
-      >
-        <DialogPrimitive.Title
-          className={
-            titleHidden
-              ? 'sr-only'
-              : cn('break-words text-h3 text-foreground', showClose && 'pr-10')
-          }
+>(
+  (
+    {
+      className,
+      title,
+      showClose = true,
+      titleHidden = false,
+      imageViewer = false,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const t = useT()
+    return (
+      <DialogPrimitive.Portal>
+        <DialogOverlay className={imageViewer ? 'bg-black/75 backdrop-blur-md' : undefined} />
+        <DialogPrimitive.Content
+          ref={ref}
+          className={cn(
+            'fixed left-1/2 top-1/2 z-50 w-full max-w-120 -translate-x-1/2 -translate-y-1/2',
+            'max-h-[calc(100dvh-2rem)] overflow-y-auto',
+            'rounded-lg border border-border bg-surface-3 p-6 shadow-3',
+            'data-[state=open]:animate-[devon-dialog-in_220ms_var(--ease-out)]',
+            'data-[state=closed]:animate-[devon-fade-out_140ms_var(--ease-in)]',
+            className,
+            imageViewer && 'overflow-visible border-0 bg-transparent p-0 pt-14 shadow-none',
+          )}
+          {...props}
         >
-          {title}
-        </DialogPrimitive.Title>
-        {children}
-        {showClose ? (
-          <DialogPrimitive.Close
-            className={cn(
-              'absolute right-4 top-4 inline-flex size-9 max-md:size-11 items-center justify-center rounded-sm',
-              'text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2',
-              'focus-visible:ring-ring focus-visible:ring-offset-2',
-            )}
-            aria-label={t('shell.shortcuts.close')}
+          <DialogPrimitive.Title
+            className={
+              titleHidden
+                ? 'sr-only'
+                : cn('break-words text-h3 text-foreground', showClose && 'pr-10')
+            }
           >
-            <X className="size-4" aria-hidden="true" />
-          </DialogPrimitive.Close>
-        ) : null}
-      </DialogPrimitive.Content>
-    </DialogPrimitive.Portal>
-  )
-})
+            {title}
+          </DialogPrimitive.Title>
+          {children}
+          {showClose ? (
+            <DialogPrimitive.Close
+              className={cn(
+                'absolute right-4 top-4 inline-flex size-9 max-md:size-11 items-center justify-center rounded-sm',
+                'text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2',
+                'focus-visible:ring-ring focus-visible:ring-offset-2',
+                imageViewer &&
+                  'right-0 top-0 size-11 rounded-full border border-white/25 bg-black/60 text-white shadow-lg backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:ring-white focus-visible:ring-offset-0',
+              )}
+              aria-label={t('shell.shortcuts.close')}
+            >
+              <X
+                className={imageViewer ? 'size-5' : 'size-4'}
+                strokeWidth={imageViewer ? 1.8 : 2}
+                aria-hidden="true"
+              />
+            </DialogPrimitive.Close>
+          ) : null}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    )
+  },
+)
 DialogContent.displayName = 'DialogContent'
 
 export const DialogDescription = DialogPrimitive.Description

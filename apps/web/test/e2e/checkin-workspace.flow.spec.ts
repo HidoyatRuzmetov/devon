@@ -115,6 +115,27 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
     expect(heights.length).toBeGreaterThan(5)
     expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.5)
     await expect(page.locator('.checkin-task')).toHaveCount(3)
+    const grip = await page.locator('.checkin-drag-handle').last().boundingBox()
+    const targetGroup = await page.locator('.checkin-group').first().boundingBox()
+    const sourceId = await page.locator('.checkin-group').last().getAttribute('data-checkin-group')
+    await page.mouse.move(grip!.x + grip!.width / 2, grip!.y + grip!.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(targetGroup!.x + 30, targetGroup!.y + 30, { steps: 15 })
+    await page.mouse.up()
+    await expect(page.locator('.checkin-group').first()).toHaveAttribute(
+      'data-checkin-group',
+      sourceId!,
+    )
+    await expect(page.getByRole('button', { name: /Manual order/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await page.reload()
+    await page.getByRole('button', { name: 'Choose deliverables', exact: true }).click()
+    await expect(page.locator('.checkin-group').first()).toHaveAttribute(
+      'data-checkin-group',
+      sourceId!,
+    )
     await page.locator('.checkin-drag-handle').last().focus()
     await page.keyboard.press('ArrowUp')
     await expect(page.getByRole('button', { name: /Manual order/ })).toHaveAttribute(
