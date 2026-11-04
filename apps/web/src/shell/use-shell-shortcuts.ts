@@ -36,7 +36,7 @@ export function useShellShortcuts({
       }
       if (mod && e.key.toLowerCase() === 'b' && onToggleSidebar) {
         e.preventDefault()
-        onToggleSidebar()
+        if (!e.repeat) onToggleSidebar()
         return
       }
       if (isTypingTarget(e.target) || mod || e.altKey) return

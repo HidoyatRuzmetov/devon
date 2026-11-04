@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { cn } from '../lib/cn.js'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
-import { springSettle } from '../motion/tokens.js'
+import { springSettle, tweenPage } from '../motion/tokens.js'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../primitives/tooltip.js'
 import { resolveNavEntries, type NavContext, type NavEntry } from './nav-registry.js'
 
@@ -111,8 +111,9 @@ export function Sidebar({
 
   return (
     <nav
+      data-sidebar-collapsed={collapsed}
       className={cn(
-        'flex h-full flex-col overflow-y-auto overscroll-contain bg-sidebar text-sidebar-foreground',
+        'devon-sidebar flex h-full flex-col overflow-x-hidden overflow-y-auto overscroll-contain bg-sidebar text-sidebar-foreground',
         'transition-[width] duration-(--dur-page) ease-(--ease-emphasized)',
         collapsed ? 'w-(--width-sidebar-rail)' : 'w-(--width-sidebar)',
         className,
@@ -328,13 +329,13 @@ function SidebarItem({
       onMouseEnter={entry.onPrefetch}
       onFocus={entry.onPrefetch}
       className={cn(
-        'relative flex min-h-9 min-w-0 items-center gap-3 rounded-sm px-3 text-body',
+        'relative flex min-h-9 min-w-0 items-center gap-3 rounded-sm px-[11px] text-body',
         'transition-colors duration-(--dur-micro) ease-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
         active
           ? 'text-sidebar-foreground'
           : 'text-sidebar-foreground/75 hover:bg-sidebar-accent/60',
-        collapsed && 'justify-center gap-0 px-0',
+        collapsed && 'gap-0',
       )}
     >
       {/* UI-OVERHAUL.md §3 "Sidebar active item": the fill is one object that *moves* between rows
@@ -380,7 +381,12 @@ function SidebarItem({
   )
 
   return (
-    <li className="min-w-0">
+    <motion.li
+      className="min-w-0"
+      layout={reduced ? false : 'position'}
+      transition={tweenPage}
+      initial={false}
+    >
       {collapsed ? (
         // Its own provider rather than relying on the app's: the collapsed rail is the one place a
         // label is *only* available as a tooltip, so it must work wherever the sidebar is mounted
@@ -397,6 +403,6 @@ function SidebarItem({
       ) : (
         row
       )}
-    </li>
+    </motion.li>
   )
 }

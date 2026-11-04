@@ -99,6 +99,14 @@ The authorized education/position announcement was sent once with receipt `4826b
 
 ## Validation
 
+The sidebar resize follow-up removes the 1,280px shell cap from collection workspaces (Cards and
+its views, People, projects, structure, events, Personal and check-in/out). Profile/detail screens
+retain their centered reading width. Expanded navigation reveals a stable-width label layout;
+icons remain anchored at the rail center and row movement animates position without scaling text.
+Browser checks sample expansion/collapse frames across ten routes at 1920px, Cards at 1024/1440px,
+settings, held Ctrl+B and reduced motion. They verify all 200 reclaimed pixels, no horizontal page
+overflow, centered icons and existing keyboard/tooltip behavior.
+
 November 4 Mini App outage: the production web image omitted `apps/miniapp/dist`, and the shared
 proxy policy blocked Telegram's SDK and framing. The image now builds and serves the separate
 `/miniapp/` shell, with noncached HTML, immutable assets and real 404s for missing bundles. Only the

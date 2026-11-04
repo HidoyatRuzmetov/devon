@@ -29,7 +29,7 @@ export function SidebarUserBlock({
       aria-label={label}
       className={cn(
         'flex min-h-11 w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sidebar-foreground transition-colors duration-(--dur-micro) hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-        collapsed && 'justify-center px-0',
+        collapsed && 'gap-0 px-3',
         className,
       )}
     >

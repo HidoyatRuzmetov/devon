@@ -71,6 +71,22 @@ import { useShellShortcuts } from './use-shell-shortcuts.js'
 
 const THEME_ORDER: readonly ThemePreference[] = ['light', 'dark', 'system']
 
+// Collection workspaces use the space reclaimed by the rail at every desktop width.
+// Reading/detail/settings screens retain their comfortable centered measure.
+const FULL_WIDTH_ROUTES = new Set([
+  '/work',
+  '/work/table',
+  '/work/timeline',
+  '/work/calendar',
+  '/work/mine',
+  '/projects',
+  '/people',
+  '/structure',
+  '/events',
+  '/personal',
+  '/analytics',
+])
+
 function readCollapsed(): boolean {
   try {
     return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === '1'
@@ -505,9 +521,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {route === '/' ? <HubAmbientWash className="-z-10 h-full" /> : null}
           <PaletteProvider onOpen={() => changePaletteOpen(true)}>
-            <PageContainer
-              width={route === '/personal' || route === '/analytics' ? 'full' : 'default'}
-            >
+            <PageContainer width={FULL_WIDTH_ROUTES.has(route) ? 'full' : 'default'}>
               {route !== '/' &&
               route !== '/assistant' &&
               ['overview', 'assistant', 'analytics', 'personal'].includes(

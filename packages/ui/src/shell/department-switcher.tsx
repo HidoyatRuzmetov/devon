@@ -58,7 +58,7 @@ export function DepartmentSwitcher({
             'text-sidebar-foreground transition-colors duration-(--dur-micro) ease-out',
             'hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2',
             'focus-visible:ring-ring focus-visible:ring-inset',
-            collapsed && 'justify-center px-0',
+            collapsed && 'gap-0 px-3',
             className,
           )}
         >

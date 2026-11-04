@@ -627,6 +627,13 @@
    pointer is over the nav or a child has focus -- a permanent bar on a 264 px column is noise.
    The fade itself is a real element in `sidebar.tsx`, not a mask, so it never clips a focus ring.
    ------------------------------------------------------------------------------------------------ */
+/* Revealing the expanded sidebar clips a full-width layout rather than squeezing its labels
+   into the rail and repeatedly wrapping them. Icons keep the same horizontal anchor in both
+   states; the nav's width is the single animation that reflows the surrounding workspace. */
+.devon-sidebar[data-sidebar-collapsed='false'] > * {
+  min-width: var(--width-sidebar);
+}
+
 .devon-nav-scroller {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
