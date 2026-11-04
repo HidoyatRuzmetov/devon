@@ -144,7 +144,7 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
     )
     await page.getByRole('button', { name: 'Save selection', exact: true }).click()
     await expect(page.locator('.checkin-task')).toHaveCount(2)
-    await page.getByRole('button', { name: 'New task', exact: true }).click()
+    await page.getByRole('button', { name: 'New card', exact: true }).click()
     await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Created during check-in')
     await page.getByRole('combobox', { name: 'Priority', exact: true }).selectOption('high')
     await page

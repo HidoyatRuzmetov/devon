@@ -4357,15 +4357,15 @@
     "noRecordHint": "This person has not saved a personnel record. Their private draft stays on their own device."
   },
   "checkinTask": {
-    "create": "New task",
-    "forPerson": "Individual task for {name}.",
+    "create": "New card",
+    "forPerson": "Individual card for {name}.",
     "deliverables": "Deliverables",
     "onePerLine": "One checklist item per line",
     "createAndAdd": "Create and add to check-in"
   },
   "cardActions": {
-    "alreadyGrouped": "This task already belongs to a group project.",
-    "alreadyDone": "This task is already done.",
+    "alreadyGrouped": "This card already belongs to a group project.",
+    "alreadyDone": "This card is already done.",
     "checkinProtected": "Used in check-in/out. Remove its deliverables from every unlocked period before deleting.",
     "deleted": "Deleted",
     "deletedOn": "Deleted {date}"

@@ -47,6 +47,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
           {props.disabled ? (
             <span
               className="inline-flex cursor-not-allowed"
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Disabled buttons cannot receive focus; this wrapper exposes their reason to keyboard users.
               tabIndex={0}
               role="group"
               aria-disabled="true"

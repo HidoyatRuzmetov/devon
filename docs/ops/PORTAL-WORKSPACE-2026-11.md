@@ -31,7 +31,7 @@ flowchart TD
     Q[Checklist plus in Cards drawer] --> R{Current period checkout open?}
     R -->|Yes| F
     R -->|No| S[Reject addition]
-    F -->|Head: New task| T[Individual task title, priority and checklist]
+    F -->|Head: New card| T[Individual task title, priority and checklist]
     E -->|Head: New task| T
     T --> U{Person active and checkout open?}
     U -->|Yes| V[Create source task and select its checklist in one transaction]
