@@ -137,6 +137,9 @@ test('private drafts recover, photos crop and invitations reach the attendee cal
     await page.getByRole('button', { name: 'View photo', exact: true }).click()
     await expect(page.getByRole('dialog', { includeHidden: true })).toHaveCount(2)
     const lightbox = page.getByRole('dialog').last()
+    await lightbox.evaluate(async (element) => {
+      await Promise.all(element.getAnimations().map((animation) => animation.finished))
+    })
     const closeBox = await lightbox
       .getByRole('button', { name: 'Close', exact: true })
       .boundingBox()

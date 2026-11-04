@@ -53,9 +53,9 @@ The timer is at the right of the person header, left of the existing controls. I
 
 Professional settings has Résumé and Personnel record tabs. Draft typing is saved locally under the account and department; publishing/sharing requires Save. Optimistic revisions prevent overwriting a newer saved record. Device storage failures are shown.
 
-Personnel records are available only to the owner and the department head, with database RLS and API authorization. They are not included in the public directory or the assistant's automatically collected context. The original supplied form's validation and document rules are retained. Latin/Cyrillic downloads show a wording review, preserve configured proper names, and allow corrections without modifying saved data. Automatic transliteration cannot resolve every linguistic ambiguity; the review is deliberate.
+Personnel records are available only to the owner and the department head, with database RLS and API authorization. They are not included in the public directory or the assistant's automatically collected context. The original supplied form's validation and document rules are retained. The editor uses two document pages with inline fields and examples; Preview shows the completed document, and clicking a value returns to editing. Latin/Cyrillic downloads use AI to identify names to preserve and show an editable document review without modifying saved data. Automatic transliteration cannot resolve every linguistic ambiguity; the review is deliberate.
 
-People uses cards only. Search is followed by a multiselect unit dropdown. The head sees a small download row under education: résumé Word export and personnel record with Latin/Cyrillic downloads. The résumé uses recent professional highlights, a one-page layout for typical profiles and a second page for longer history; unusually long entries are shortened and labeled as highlights. No private family information enters a résumé.
+People uses cards only. Search is followed by a multiselect unit dropdown. The head sees a small download row under education: résumé Word export and personnel record with Latin/Cyrillic downloads. The résumé contains the complete saved public professional profile, including all descriptions, education, experience, skills, languages, hobbies, certifications and links. Word paginates longer profiles naturally without truncation, fixed page limits or a footer referring to People. No private family information enters a résumé.
 
 Profile photo controls include crop, pan, zoom, rotate, mirror and reset. The avatar is square and the personnel portrait is 3:4. People photos open in a separate lightbox; Escape closes the topmost overlay first.
 
@@ -69,7 +69,7 @@ Assistant actions use the ordinary domain routes and confirmation flow. The cata
 
 Migrations 2022–2027 add database protections, conservatively restore recoverable referenced sources, correct provable accidental archives, clear only the old free-text position/education values, and add private records/calendar invitations/group-message receipts. Explicitly archived cards remain archived. Physically deleted records cannot be reconstructed without source data.
 
-After the release is healthy, send the authorized education/position announcement once using a stable operation receipt. Do not resend on retries or application restarts.
+The authorized education/position announcement was sent once with receipt `4826b8b2-8de7-4548-b4c0-d8e06ec99228`. Do not resend on retries, subsequent releases or application restarts.
 
 ## Validation
 

@@ -359,7 +359,11 @@ export default function PeopleScreen() {
               <ChevronDown className="size-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-72 p-2">
+          <PopoverContent
+            align="end"
+            className="w-72 p-2"
+            aria-label={t('structure.people.filters.label')}
+          >
             <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2.5 text-small hover:bg-accent">
               <Checkbox
                 checked={unitFilter.length === 0}
