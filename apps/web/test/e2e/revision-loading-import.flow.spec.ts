@@ -142,12 +142,29 @@ test('real data loading follows each layout and imported personnel records requi
       elements.map((el) => ({
         top: el.getBoundingClientRect().top,
         height: el.getBoundingClientRect().height,
+        width: el.getBoundingClientRect().width,
         whiteSpace: getComputedStyle(el).whiteSpace,
       })),
     )
     expect(boxes).toHaveLength(2)
     expect(boxes[0]!.top).toBe(boxes[1]!.top)
+    expect(Math.abs(boxes[0]!.width - boxes[1]!.width)).toBeLessThan(1)
     expect(boxes.every((box) => box.whiteSpace === 'nowrap')).toBe(true)
+    const checkDownloadWidth = async (width: number) => {
+      await page.setViewportSize({ width, height: 844 })
+      const size = await downloads.evaluate((el) => ({
+        client: el.clientWidth,
+        scroll: el.scrollWidth,
+      }))
+      expect(
+        size.scroll <= size.client,
+        `Download controls at ${width}px: ${JSON.stringify(size)}`,
+      ).toBe(true)
+    }
+    await checkDownloadWidth(390)
+    await checkDownloadWidth(320)
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.screenshot({ path: info.outputPath('balanced-download-dates.png') })
   } finally {
     await head.close()
     await admin.close()

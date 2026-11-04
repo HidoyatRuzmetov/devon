@@ -91,10 +91,16 @@ export function MemberCard({
   const { department } = useDepartment()
   const [recordOpen, setRecordOpen] = React.useState(false)
   const [recordScript, setRecordScript] = React.useState<'latin' | 'cyrillic'>('latin')
-  const updatedDate = (value?: string | null) =>
-    value
-      ? ` (${new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Tashkent' }).format(new Date(value))})`
-      : ''
+  const updatedDate = (value?: string | null, brackets = true) => {
+    if (!value) return ''
+    const date = new Intl.DateTimeFormat(locale, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'Asia/Tashkent',
+    }).format(new Date(value))
+    return brackets ? ` (${date})` : date
+  }
   const [photoOpen, setPhotoOpen] = React.useState(false)
   const profile = member.professionalProfile ?? professionalProfileSchema.parse({})
   const colour =
@@ -173,7 +179,7 @@ export function MemberCard({
       <div
         style={style}
         data-unit-color={colour}
-        className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-border border-l-4 border-l-[var(--profile-unit)] bg-card shadow-1 transition-colors hover:border-[var(--profile-unit)]"
+        className="@container/profile flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-border border-l-4 border-l-[var(--profile-unit)] bg-card shadow-1 transition-colors hover:border-[var(--profile-unit)]"
       >
         <button
           type="button"
@@ -235,22 +241,23 @@ export function MemberCard({
         </button>
         {!compact && department?.role === 'head' ? (
           <div
-            className="mx-4 grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1.35fr)] items-center gap-1 border-t border-border py-1"
+            className="mx-4 grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] items-start gap-1.5 border-t border-border py-1 @max-[300px]/profile:mx-3 @max-[300px]/profile:gap-1"
             data-testid="people-document-downloads"
             role="group"
             aria-label={t('peopleDownloads.label')}
           >
-            <Download className="mr-1 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <Download className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <button
               type="button"
               onClick={resume}
               title={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
-              className="flex min-w-0 flex-col items-start justify-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-[12px] font-medium leading-4 text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
+              aria-label={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
+              className="flex min-w-0 w-full flex-col items-start whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
             >
               <span>{t('profileChoices.resume')}</span>
               {member.resumeUpdatedAt ? (
-                <span className="text-[11px] font-normal leading-none text-muted-foreground">
-                  {updatedDate(member.resumeUpdatedAt)}
+                <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
+                  {updatedDate(member.resumeUpdatedAt, false)}
                 </span>
               ) : null}
             </button>
@@ -259,15 +266,19 @@ export function MemberCard({
                 <button
                   type="button"
                   title={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
-                  className="flex min-w-0 flex-col items-start justify-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-[12px] font-medium leading-4 text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
+                  aria-label={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
+                  className="relative flex min-w-0 w-full flex-col items-start whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors before:absolute before:inset-y-1 before:-left-[3px] before:w-px before:bg-border hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
                 >
-                  <span className="flex w-full items-center justify-between gap-1">
+                  <span className="inline-flex items-center gap-1 @max-[300px]/profile:gap-0.5">
                     {t('profileChoices.record')}
-                    <ChevronDown className="size-3 shrink-0" aria-hidden="true" />
+                    <ChevronDown
+                      className="size-3 shrink-0 @max-[300px]/profile:size-2.5"
+                      aria-hidden="true"
+                    />
                   </span>
                   {member.personnelUpdatedAt ? (
-                    <span className="text-[11px] font-normal leading-none text-muted-foreground">
-                      {updatedDate(member.personnelUpdatedAt)}
+                    <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
+                      {updatedDate(member.personnelUpdatedAt, false)}
                     </span>
                   ) : null}
                 </button>
