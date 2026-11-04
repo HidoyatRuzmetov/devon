@@ -114,7 +114,6 @@
       "peekTitle": "Card details",
       "markDone": "Mark done",
       "archive": "Archive",
-      "archived": "Card archived",
       "done": "Card done",
       "checklistComplete": "Checklist complete",
       "restore": "Restore",
@@ -157,8 +156,7 @@
     },
     "status": {
       "active": "Active",
-      "done": "Done",
-      "archived": "Archived"
+      "done": "Done"
     },
     "activity": {
       "created": "created the card",
@@ -236,12 +234,7 @@
       "rest": "Everything else",
       "emptyTitle": "Nothing assigned to you",
       "emptyBody": "Cards assigned to you will show up here.",
-      "completed": "Completed",
-      "completedAndArchived": "Completed & archived"
-    },
-    "archive": {
-      "completedHint": "Archived · Completed",
-      "unfinishedHint": "Archived · Not completed"
+      "completed": "Completed"
     },
     "action": {
       "save": "Save",
@@ -425,7 +418,6 @@
       "estimateSet": "{count} cards estimated",
       "estimateCleared": "Estimate cleared on {count} cards",
       "movedDone": "{count} cards marked done",
-      "archived": "{count} cards archived",
       "partial": "{count} were not yours to change",
       "noneApplied": "No card was changed",
       "failed": "The action could not be completed",
@@ -434,21 +426,20 @@
       "selectCard": "Select the card “{title}”"
     },
     "focus": {
-      "title": "Focus list",
-      "description": "The five things that matter most today.",
-      "count": "{count} / {max}",
-      "chip": "In focus",
-      "pin": "Add to focus",
-      "unpin": "Remove from focus",
-      "pinned": "Added to your focus list",
-      "unpinned": "Removed from your focus list",
-      "full": "A focus list holds at most {max} cards.",
-      "failed": "Could not update the focus list",
+      "title": "Pinned",
+      "description": "Your pinned tasks.",
+      "count": "{count}",
+      "chip": "Pinned",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "pinned": "Pinned",
+      "unpinned": "Unpinned",
+      "failed": "Could not update pinned tasks",
       "moveUp": "Move “{title}” up",
       "moveDown": "Move “{title}” down",
-      "unpinCard": "Remove “{title}” from focus",
-      "emptyTitle": "Your focus list is empty",
-      "emptyBody": "Open a card and choose “Add to focus”."
+      "unpinCard": "Unpin “{title}”",
+      "emptyTitle": "No pinned tasks",
+      "emptyBody": "Open a card and choose “Pin”."
     },
     "templates": {
       "title": "Templates",

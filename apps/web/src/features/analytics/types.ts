@@ -4,7 +4,7 @@ export const personalOverviewSchema = z.object({
   toDoCount: z.number().int().optional(),
   inProgressCount: z.number().int().optional(),
   doneCount: z.number().int().optional(),
-  archivedCount: z.number().int().optional(),
+  deletedCount: z.number().int().optional(),
   overdueCount: z.number(),
   doneThisWeek: z.number(),
   onTimeRate: z.number().nullable(),

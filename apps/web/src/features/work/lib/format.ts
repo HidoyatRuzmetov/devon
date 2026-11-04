@@ -6,7 +6,7 @@ import type { CardPriority, CardRisk, CardStatus } from '../api.js'
 /** Archiving preserves whether work was finished; it is not itself completion. */
 export type CardCompletion = { status: CardStatus; doneAt?: string | null | undefined }
 export function isCardCompleted(card: CardCompletion): boolean {
-  return card.status === 'done' || (card.status === 'archived' && Boolean(card.doneAt))
+  return card.status === 'done'
 }
 
 export const PRIORITY_ORDER: readonly CardPriority[] = ['urgent', 'high', 'medium', 'low', 'none']
@@ -91,7 +91,6 @@ export const PRIORITY_ICON_NAME: Record<
 export const STATUS_LABEL_KEY: Record<CardStatus, string> = {
   active: 'work.status.active',
   done: 'work.status.done',
-  archived: 'work.status.archived',
 }
 
 /** `"Aliyev A."` -- family name plus given-name initial, DESIGN.md's compact person label for a

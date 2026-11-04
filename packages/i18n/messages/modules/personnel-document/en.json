@@ -16,7 +16,7 @@
     "exportHint": "This is your export copy. Changes here affect only the downloaded file; your record stays unchanged.",
     "clickToEdit": "Click any value to edit it. Escape returns to editing. Ctrl / ⌘ + Enter switches preview.",
     "readonly": "Saved record. Available only to you and the department head.",
-    "aiHint": "AI identifies names and brands automatically for Latin / Cyrillic export. Document text is processed by your department’s AI provider; your photo is excluded.",
+    "aiHint": "AI preserves names for Latin / Cyrillic export.",
     "preparing": "Preparing your document and checking names…",
     "exportError": "Document preparation is unavailable. Your draft is safe. Try again shortly or check the department’s AI settings.",
     "reviewHint": "Review the wording before downloading. Click any value to correct the export copy.",
@@ -49,6 +49,11 @@
       "prevJob": "Avval maktab o‘qituvchisi",
       "deathYear": "2020",
       "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy"
-    }
+    },
+    "import": "Import",
+    "importReview": "Imported draft — review before saving.",
+    "undoImport": "Undo import",
+    "importUnreadable": "Use a readable PDF, DOCX, ODT, RTF or text file up to 8 MB. Scanned PDFs need a text layer.",
+    "importError": "Import unavailable. Your draft is unchanged; try again."
   }
 }

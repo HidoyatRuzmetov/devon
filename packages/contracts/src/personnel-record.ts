@@ -113,3 +113,21 @@ export const personnelExportResponseSchema = z.object({
   data: personnelDataSchema,
   script: z.enum(['latin', 'cyrillic']),
 })
+export const personnelImportRequestSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1)
+      .max(255)
+      .regex(/\.(pdf|docx|odt|rtf|txt|md|html|htm)$/i),
+    content: z
+      .string()
+      .min(1)
+      .max(11_184_812)
+      .regex(/^[A-Za-z0-9+/]+={0,2}$/),
+  })
+  .strict()
+export const personnelImportResponseSchema = z.object({
+  data: personnelDataSchema,
+  warnings: z.array(z.string().max(500)).max(30),
+})

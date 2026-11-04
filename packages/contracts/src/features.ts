@@ -24,7 +24,6 @@ export const FEATURE_KEYS = [
   'dependencies',
   'recurring',
   'templates',
-  'focus_list',
   'reminders',
 ] as const
 
@@ -70,13 +69,6 @@ export const FEATURES: Readonly<Record<FeatureKey, FeatureSpec>> = Object.freeze
     descriptionKey: 'departments.features.templates.description',
     defaultEnabled: false,
     area: 'planning',
-  },
-  focus_list: {
-    key: 'focus_list',
-    labelKey: 'departments.features.focus_list.label',
-    descriptionKey: 'departments.features.focus_list.description',
-    defaultEnabled: false,
-    area: 'work',
   },
   reminders: {
     key: 'reminders',

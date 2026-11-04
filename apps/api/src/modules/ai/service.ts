@@ -43,6 +43,12 @@ import type {
   TraceDto,
 } from './schemas.js'
 import * as search from './search-service.js'
+import { personnelDataSchema } from '@devon/contracts'
+import {
+  personnelImportToolSchema,
+  personnelImportInstructions,
+  validatePersonnelImport,
+} from './personnel-import.js'
 
 // Built once per process, exactly like `apps/api/src/deps.ts`'s real implementation is constructed
 // once in `server.ts` -- `GlmProvider`/`MockProvider` are both stateless (a `MockProvider` built with
@@ -382,6 +388,98 @@ export async function identifyPersonnelNamesForActor(
       result.meta.status === 'timeout' ? 'timeout' : 'failed',
     )
   return [...new Set(result.data.names)]
+}
+
+/** Private file import uses the same provider, budget, privacy and metering as export. */
+export async function importPersonnelRecordForActor(
+  ctx: RequestContext,
+  source: string,
+  signal: AbortSignal,
+) {
+  if (!hasApiKey(aiConfig) && !providerIsTestOverride)
+    throw new AiRunFailedError('provider_unavailable')
+  const { settings, spent } = await withContext(ctx, async (tx) => ({
+    settings: await repo.getSettings(tx, ctx.departmentId!, ctx.departmentRole === 'head'),
+    spent: await repo.spentThisMonthUzs(tx, ctx.departmentId!),
+  }))
+  if (!settings.flags['semantic_ask']) throw new AiFeatureDisabledError()
+  const content = source
+  const bytes = Buffer.byteLength(content, 'utf8')
+  if (bytes > 600_000) throw new AiInputValidationError('context_limit')
+  if (
+    !canAffordCall(
+      spent,
+      settings.budget_uzs_per_month,
+      (bytes + 16384) * 3,
+      aiConfig.pricePerMillionTokensUzs,
+    )
+  )
+    throw new AiBudgetExceededError()
+  try {
+    aiBreaker.guard()
+  } catch {
+    throw new AiUnavailableError('circuit_open')
+  }
+  const schema = personnelImportToolSchema
+  const result = await runAiGateway({
+    provider: getProvider(),
+    config: aiConfig,
+    feature: 'semantic_ask',
+    signal,
+    temperature: 0,
+    maxTokens: 8192,
+    overallTimeoutMs: 90_000,
+    messages: [
+      {
+        role: 'system',
+        content: personnelImportInstructions,
+      },
+      { role: 'user', content },
+    ],
+    tool: {
+      name: 'import_personnel_record',
+      description: 'Extract personnel fields with verbatim supporting quotations for user review.',
+      schema,
+      parameters: z.toJSONSchema(schema, { target: 'draft-7', io: 'output' }),
+    },
+    validate: (output) => validatePersonnelImport(source, output),
+  })
+  recordAiRunMetrics('semantic_ask', result.meta)
+  if (result.meta.status === 'provider_error')
+    aiBreaker.fail(new Error('personnel_import_provider_failed'))
+  else if (!signal.aborted) aiBreaker.succeed()
+  await withContext(ctx, async (tx) => {
+    await repo.insertTrace(tx, {
+      departmentId: ctx.departmentId!,
+      userId: ctx.userId!,
+      feature: 'semantic_ask',
+      model: result.meta.model,
+      promptTokens: result.meta.promptTokens,
+      cachedPromptTokens: result.meta.cachedPromptTokens,
+      completionTokens: result.meta.completionTokens,
+      totalTokens: result.meta.totalTokens,
+      costUzs: result.meta.costUzs,
+      latencyMs: result.meta.latencyMs,
+      retried: result.meta.retried,
+      status: result.meta.status,
+    })
+    tx.audit({
+      action: 'ai.personnel_import.metered',
+      subjectType: 'ai_trace',
+      subjectId: 'semantic_ask',
+      after: {
+        status: result.meta.status,
+        totalTokens: result.meta.totalTokens,
+        costUzs: result.meta.costUzs,
+      },
+    })
+  })
+  if (!result.ok)
+    throw new AiRunFailedError(
+      'Could not extract a verified personnel record',
+      result.meta.status === 'timeout' ? 'timeout' : 'failed',
+    )
+  return { data: personnelDataSchema.parse(result.data.data), warnings: result.data.warnings }
 }
 
 /**

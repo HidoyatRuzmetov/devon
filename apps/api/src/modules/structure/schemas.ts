@@ -118,6 +118,8 @@ export const memberSchema = z.object({
   avatarKey: z.string().nullable(),
   email: z.string().nullable().optional(),
   professionalProfile: professionalProfileSchema.optional(),
+  resumeUpdatedAt: z.string().nullable().optional(),
+  personnelUpdatedAt: z.string().nullable().optional(),
   membershipRole: membershipRoleSchema,
   unitId: uuidSchema.nullable(),
   unitRole: unitRoleKindSchema.nullable(),

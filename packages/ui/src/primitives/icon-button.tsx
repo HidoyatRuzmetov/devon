@@ -43,7 +43,21 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
     )
     return tooltip ? (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger asChild>
+          {props.disabled ? (
+            <span
+              className="inline-flex cursor-not-allowed"
+              tabIndex={0}
+              role="group"
+              aria-disabled="true"
+              aria-label={props['aria-label']}
+            >
+              {button}
+            </span>
+          ) : (
+            button
+          )}
+        </TooltipTrigger>
         <TooltipContent>{tooltip}</TooltipContent>
       </Tooltip>
     ) : (

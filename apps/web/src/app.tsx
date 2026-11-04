@@ -1,7 +1,8 @@
 import * as React from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { MotionProvider, RouteSkeleton, StateView, TooltipProvider } from '@devon/ui'
+import { MotionProvider, StateView, TooltipProvider } from '@devon/ui'
 import { useT } from '@devon/i18n'
+import { RouteLoading, SessionLoading } from './lib/route-loading.js'
 import { queryClient } from './lib/query-client.js'
 import { reconcileLocaleWithUser } from './lib/locale-boot.js'
 import {
@@ -103,8 +104,7 @@ function isSuperAdminRoute(path: string): boolean {
 /** Every lazy route renders a page-shaped skeleton while its chunk downloads, never a spinner and
  * never a blank frame (DESIGN.md §4). */
 function RouteFallback() {
-  const t = useT()
-  return <RouteSkeleton label={t('shell.loading.route')} />
+  return <RouteLoading />
 }
 
 /** design.md §6: five core routes and two chrome families -- `AppShell` for the product, the lighter
@@ -184,11 +184,7 @@ export function RouteOutlet() {
     )
   }
   if (requiresSession && !meQuery.data) {
-    return (
-      <AuthShell>
-        <RouteFallback />
-      </AuthShell>
-    )
+    return <SessionLoading />
   }
 
   if (isSuperAdminRoute(path) && meQuery.data && meQuery.data.user.role !== 'super_admin') {

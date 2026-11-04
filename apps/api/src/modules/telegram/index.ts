@@ -390,6 +390,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         miniappUrl: miniappUrl(),
         memberCount: counts.memberCount,
         linkedMemberCount: counts.linkedMemberCount,
+        unlinkedMembers: counts.unlinkedMembers,
         groupCount: counts.groupCount,
         steps: [
           { id: 'bot_token' as const, done: configured, progress: null },

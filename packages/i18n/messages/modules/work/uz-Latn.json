@@ -114,7 +114,6 @@
       "peekTitle": "Karta tafsilotlari",
       "markDone": "Bajarildi deb belgilash",
       "archive": "Arxivga olish",
-      "archived": "Arxivga olindi",
       "done": "Bajarildi",
       "checklistComplete": "Roʻyxat toʻliq bajarildi",
       "restore": "Tiklash",
@@ -157,8 +156,7 @@
     },
     "status": {
       "active": "Faol",
-      "done": "Bajarildi",
-      "archived": "Arxivlangan"
+      "done": "Bajarildi"
     },
     "activity": {
       "created": "kartani qoʻshdi",
@@ -236,12 +234,7 @@
       "rest": "Qolganlari",
       "emptyTitle": "Sizga hali vazifa berilmagan",
       "emptyBody": "Sizga berilgan vazifalar shu yerda koʻrinadi.",
-      "completed": "Bajarilgan",
-      "completedAndArchived": "Bajarilgan va arxivlangan"
-    },
-    "archive": {
-      "completedHint": "Arxivlangan · Bajarilgan",
-      "unfinishedHint": "Arxivlangan · Bajarilmagan"
+      "completed": "Bajarilgan"
     },
     "action": {
       "save": "Saqlash",
@@ -425,7 +418,6 @@
       "estimateSet": "{count} ta karta baholandi",
       "estimateCleared": "{count} ta kartaning bahosi tozalandi",
       "movedDone": "{count} ta karta bajarildi",
-      "archived": "{count} ta karta arxivlandi",
       "partial": "{count} tasiga huquqingiz yetmadi",
       "noneApplied": "Hech bir karta oʻzgarmadi",
       "failed": "Amalni bajarib boʻlmadi",
@@ -434,21 +426,20 @@
       "selectCard": "«{title}» kartasini tanlash"
     },
     "focus": {
-      "title": "Diqqat markazi",
-      "description": "Bugun eng muhim beshta ish.",
-      "count": "{count} / {max}",
-      "chip": "Diqqatda",
-      "pin": "Diqqat markaziga",
-      "unpin": "Diqqat markazidan olish",
-      "pinned": "Diqqat markaziga qoʻshildi",
-      "unpinned": "Diqqat markazidan olindi",
-      "full": "Diqqat markazida eng koʻpi {max} ta karta boʻladi.",
-      "failed": "Diqqat markazini yangilab boʻlmadi",
+      "title": "Mahkamlangan",
+      "description": "Mahkamlangan vazifalaringiz.",
+      "count": "{count}",
+      "chip": "Biriktirilgan",
+      "pin": "Mahkamlash",
+      "unpin": "Ajratish",
+      "pinned": "Mahkamlandi",
+      "unpinned": "Ajratildi",
+      "failed": "Biriktirilgan vazifalarni yangilab bo‘lmadi",
       "moveUp": "«{title}»ni yuqoriga surish",
       "moveDown": "«{title}»ni pastga surish",
-      "unpinCard": "«{title}»ni diqqat markazidan olish",
-      "emptyTitle": "Diqqat markazi boʻsh",
-      "emptyBody": "Kartani ochib, «Diqqat markaziga» tugmasini bosing."
+      "unpinCard": "“{title}”ni ajratish",
+      "emptyTitle": "Biriktirilgan vazifalar yo‘q",
+      "emptyBody": "Kartani oching va “Biriktirish”ni tanlang."
     },
     "templates": {
       "title": "Andozalar",

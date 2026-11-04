@@ -3,10 +3,13 @@
 // exactly one primary action when a kind is forced -- this is the one place that mapping is defined,
 // so all five routes stay identical for the states that do not naturally occur on them (e.g.
 // `forbidden` on `/`, `empty` on `/login`).
-import { StateView, type StateKind } from '@devon/ui'
+import { Button, StateView, type StateKind } from '@devon/ui'
+import { useT } from '@devon/i18n'
+import { RouteLoading } from '../lib/route-loading.js'
 import { navigate } from '../lib/router.js'
 
 export function ForcedStateBlock({ kind }: { kind: StateKind }) {
+  const t = useT()
   switch (kind) {
     case 'empty':
       return (
@@ -22,11 +25,12 @@ export function ForcedStateBlock({ kind }: { kind: StateKind }) {
       // kinds, loading included, even though an organic (unforced) loading state has none yet
       // (design.md §8.2 shows a bare skeleton) -- `<StateView>` only renders `action` when given one.
       return (
-        <StateView
-          kind="loading"
-          titleKey="state.loading"
-          action={{ labelKey: 'state.error.action', onAction: () => window.location.reload() }}
-        />
+        <>
+          <RouteLoading />
+          <Button data-primary variant="secondary" onClick={() => window.location.reload()}>
+            {t('state.error.action')}
+          </Button>
+        </>
       )
     case 'error':
       return (

@@ -1,41 +1,31 @@
+import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   personnelRecordSchema,
   personnelDataSchema,
   personnelExportResponseSchema,
+  personnelImportResponseSchema,
   personnelTemplate,
   type PersonnelData,
   type PersonnelIssue,
 } from '@devon/contracts'
 import { useLocale, useT } from '@devon/i18n'
-import { Button, StateView, Tabs, TabsList, TabsTrigger, TabsContent, toast } from '@devon/ui'
+import { Button, StateView, toast } from '@devon/ui'
 import { ArrowLeft, Download, Eye, FileText, LockKeyhole, Pencil, Sparkles } from 'lucide-react'
-import { apiClient } from '../../lib/api-client.js'
+import { apiClient, ApiError } from '../../lib/api-client.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
 import { useDurableDraft } from '../../lib/use-durable-draft.js'
-import { ProfessionalProfileSection } from './professional-profile-section.js'
 import { PersonnelDocument, blankSchool, blankWork, blankRelative } from './personnel-document.js'
 import { downloadPersonnel, toLatin } from './personnel-export.js'
 
-export function ProfessionalSettings() {
-  const t = useT()
-  return (
-    <Tabs defaultValue="resume">
-      <TabsList aria-label={t('portal.profile.title')}>
-        <TabsTrigger value="resume">{t('profileChoices.resume')}</TabsTrigger>
-        <TabsTrigger value="record">{t('profileChoices.record')}</TabsTrigger>
-      </TabsList>
-      <TabsContent value="resume">
-        <ProfessionalProfileSection />
-      </TabsContent>
-      <TabsContent value="record">
-        <PersonnelRecordSection />
-      </TabsContent>
-    </Tabs>
-  )
-}
-export function PersonnelRecordSection({ ownerUserId }: { ownerUserId?: string }) {
+export function PersonnelRecordSection({
+  ownerUserId,
+  initialExportScript,
+}: {
+  ownerUserId?: string
+  initialExportScript?: 'latin' | 'cyrillic' | undefined
+}) {
   const me = useMeQuery().data,
     { departmentId, department } = useDepartment()
   const owner = ownerUserId ?? me?.user.id ?? ''
@@ -60,35 +50,7 @@ export function PersonnelRecordSection({ ownerUserId }: { ownerUserId?: string }
         action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
       />
     )
-  if (!query.data)
-    return (
-      <div className="space-y-4 pt-3" aria-busy="true">
-        <div className="h-14 animate-pulse rounded-xl bg-muted" />
-        <div className="personnel-desk" aria-hidden="true">
-          <div className="personnel-paper">
-            <div className="personnel-masthead">
-              <div className="space-y-6 pt-4">
-                <div className="mx-auto h-5 w-36 animate-pulse bg-muted" />
-                <div className="h-9 animate-pulse bg-muted" />
-              </div>
-              <div className="personnel-portrait animate-pulse bg-muted" />
-            </div>
-            <div className="personnel-pairs">
-              {Array.from({ length: 10 }, (_, i) => (
-                <div key={i} className="mb-6 space-y-3">
-                  <div className="h-3 w-28 animate-pulse bg-muted" />
-                  <div className="h-6 animate-pulse bg-muted" />
-                </div>
-              ))}
-            </div>
-            <div className="mx-auto my-8 h-6 w-48 animate-pulse bg-muted" />
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="mb-4 h-8 animate-pulse bg-muted" />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
+  if (!query.data) return <ViewSkeleton view="personnel" />
   const initial = query.data.version
     ? query.data.data
     : {
@@ -120,6 +82,7 @@ export function PersonnelRecordSection({ ownerUserId }: { ownerUserId?: string }
       version={query.data.version}
       readonly={owner !== me?.user.id}
       csrf={me?.csrfToken ?? ''}
+      initialExportScript={initialExportScript}
     />
   )
 }
@@ -131,6 +94,7 @@ function PersonnelEditor({
   version,
   readonly,
   csrf,
+  initialExportScript,
 }: {
   owner: string
   departmentId: string
@@ -138,6 +102,7 @@ function PersonnelEditor({
   version: number
   readonly: boolean
   csrf: string
+  initialExportScript?: 'latin' | 'cyrillic' | undefined
 }) {
   const t = useT(),
     locale = useLocale(),
@@ -159,6 +124,9 @@ function PersonnelEditor({
     script: 'latin' | 'cyrillic'
   } | null>(null)
   const [exportError, setExportError] = React.useState(false)
+  const [importError, setImportError] = React.useState<string | null>(null)
+  const [importUndo, setImportUndo] = React.useState<PersonnelData | null>(null)
+  const importInput = React.useRef<HTMLInputElement>(null)
   const form = React.useRef<HTMLFormElement>(null),
     toolbar = React.useRef<HTMLDivElement>(null)
   const previewButton = React.useRef<HTMLButtonElement>(null)
@@ -173,6 +141,7 @@ function PersonnelEditor({
     onSuccess: (record) => {
       draft.acknowledge(data, record.version)
       qc.setQueryData(['accounts', 'personnel', departmentId, owner], record)
+      void qc.invalidateQueries({ queryKey: ['structure', 'members', departmentId] })
       toast.success(t('profileEdit.saved'))
     },
     onError: () => toast.error(t('portal.profile.saveError')),
@@ -194,7 +163,49 @@ function PersonnelEditor({
     },
     onError: () => setExportError(true),
   })
-  const busy = save.isPending || prepare.isPending
+  const [importWarnings, setImportWarnings] = React.useState<string[]>([])
+  const importer = useMutation({
+    mutationFn: async (file: File) => {
+      if (file.size > 8 * 1024 * 1024 || !/\.(pdf|docx|odt|rtf|txt|md|html|htm)$/i.test(file.name))
+        throw new ApiError(422, 'validation_failed', null)
+      const content = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onerror = () => reject(new Error('file_read_failed'))
+        reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '')
+        reader.readAsDataURL(file)
+      })
+      return apiClient.post(
+        '/api/v1/accounts/personnel-record/import',
+        { name: file.name, content },
+        personnelImportResponseSchema,
+        csrf,
+      )
+    },
+    onMutate: () => setImportError(null),
+    onSuccess: (result) => {
+      setImportWarnings(result.warnings)
+      setImportUndo(structuredClone(data))
+      draft.update(() => ({ ...result.data, photo: data.photo }))
+      setPreview(false)
+      setIssues(null)
+      toast.success(t('personnelDocument.importReview'))
+    },
+    onError: (error) =>
+      setImportError(
+        error instanceof ApiError && error.status === 422
+          ? 'personnelDocument.importUnreadable'
+          : 'personnelDocument.importError',
+      ),
+  })
+  const busy = save.isPending || prepare.isPending || importer.isPending
+  const autoPrepared = React.useRef(false)
+  React.useEffect(() => {
+    if (!initialExportScript || autoPrepared.current) return
+    autoPrepared.current = true
+    if (check()) prepare.mutate(initialExportScript)
+    // One preparation per opened record. A new dialog remounts the editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialExportScript])
   const editingAllowed = !readonly || !!exportReview
   function edit(path?: string) {
     if (!editingAllowed || busy) return
@@ -278,10 +289,39 @@ function PersonnelEditor({
               variant="secondary"
               size="sm"
               loading={save.isPending}
-              disabled={prepare.isPending}
+              disabled={prepare.isPending || importer.isPending}
             >
               {t('work.action.save')}
             </Button>
+          ) : null}
+          {!readonly && !exportReview ? (
+            <>
+              <input
+                ref={importInput}
+                type="file"
+                className="sr-only"
+                tabIndex={-1}
+                accept=".pdf,.docx,.odt,.rtf,.txt,.md,.html,.htm"
+                aria-label={t('personnelDocument.import')}
+                disabled={busy}
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  event.target.value = ''
+                  if (file && !busy) importer.mutate(file)
+                }}
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={busy}
+                loading={importer.isPending}
+                onClick={() => importInput.current?.click()}
+              >
+                <Sparkles className="size-4" />
+                {t('personnelDocument.import')}
+              </Button>
+            </>
           ) : null}
           {editingAllowed ? (
             <Button
@@ -298,6 +338,41 @@ function PersonnelEditor({
           ) : null}
         </div>
       </div>
+      {importWarnings.length ? (
+        <div role="status" className="rounded-md border border-border bg-accent p-3 text-small">
+          <p className="font-medium">{t('personnelDocument.importReview')}</p>
+          <ul className="mt-2 list-disc pl-5">
+            {importWarnings.map((warning, index) => (
+              <li key={index}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {importError ? (
+        <p role="alert" className="text-small text-destructive">
+          {t(importError)}
+        </p>
+      ) : null}
+      {importUndo && !exportReview ? (
+        <div
+          className="flex items-center justify-between gap-3 rounded-lg bg-accent/40 px-3 py-2 text-small"
+          role="status"
+        >
+          <span>{t('personnelDocument.importReview')}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              draft.update(() => importUndo)
+              setImportUndo(null)
+            }}
+          >
+            {t('personnelDocument.undoImport')}
+          </Button>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-2 px-1 text-caption text-muted-foreground">
         <div className="flex max-w-160 items-start gap-2">
           <LockKeyhole className="mt-0.5 size-3.5 shrink-0" />

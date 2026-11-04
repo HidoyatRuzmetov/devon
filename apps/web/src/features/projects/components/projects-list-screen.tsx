@@ -20,7 +20,7 @@ export default function ProjectsListScreen() {
     // round2 SEV2: six of the old 78px stub tiles left 570px of empty page below them -- the rebuilt
     // tile (status, objective, milestone, members, task fraction) is taller, and its skeleton matches
     // that (DESIGN.md §4's "skeleton matches final layout"), not the old stub's height.
-    body = <ViewSkeleton view="templates" />
+    body = <ViewSkeleton view="projects" />
   } else if (projectsQuery.isError) {
     body = (
       <StateView

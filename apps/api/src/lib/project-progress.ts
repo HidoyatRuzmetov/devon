@@ -46,10 +46,10 @@ export async function getProjectProgressBatch(
     sql`select
           c.project_id,
           count(*) filter (where c.project_scope <> 'subjective') as objective_total,
-          count(*) filter (where c.project_scope <> 'subjective' and (c.status = 'done' or c.done_at is not null)) as objective_done,
+          count(*) filter (where c.project_scope <> 'subjective' and (c.status = 'done')) as objective_done,
           count(*) filter (where c.project_scope = 'subjective') as subjective_total,
-          count(*) filter (where c.project_scope = 'subjective' and (c.status = 'done' or c.done_at is not null)) as subjective_done,
-          sum(case when c.status = 'done' or c.done_at is not null then 1.0
+          count(*) filter (where c.project_scope = 'subjective' and (c.status = 'done')) as subjective_done,
+          sum(case when c.status = 'done' then 1.0
             when coalesce(checklist.total, 0) > 0 then checklist.done::numeric / checklist.total
             else 0 end) as completion
         from app.cards c
@@ -61,7 +61,7 @@ export async function getProjectProgressBatch(
           group by item.card_id
         ) checklist on checklist.card_id = c.id
         where c.project_id in (${idList}) and c.deleted_at is null
-          and (c.status <> 'archived' or c.done_at is not null) ${statusFilter}
+          ${statusFilter}
         group by c.project_id`,
   )
   return new Map(rows.map((row) => [row.project_id, row]))

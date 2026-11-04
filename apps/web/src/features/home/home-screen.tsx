@@ -1,3 +1,4 @@
+import { CardDrawerLoading } from '../../lib/card-drawer-loading.js'
 import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
@@ -68,7 +69,7 @@ export default function HomeScreen() {
   }
 
   if (!settled) {
-    return <ViewSkeleton view="overview" />
+    return <ViewSkeleton view="memberHome" />
   }
 
   if (!online && !user) {
@@ -144,7 +145,7 @@ export default function HomeScreen() {
         <MemberOverview key={overviewScope} header={header} />
       )}
       {cardOpen || cardPeekVisited ? (
-        <React.Suspense fallback={null}>
+        <React.Suspense fallback={<CardDrawerLoading />}>
           <HomeCardPeekDialog key={overviewScope} />
         </React.Suspense>
       ) : null}

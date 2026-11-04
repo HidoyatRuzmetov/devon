@@ -141,7 +141,7 @@ function buildStandaloneCard(
     : ageDays > 30
       ? roll < 8
         ? 'done'
-        : 'archived'
+        : 'done'
       : ageDays > 10
         ? roll < 6
           ? 'done'
@@ -164,7 +164,7 @@ function buildStandaloneCard(
   const isClosed = status !== 'active'
   const dueAt = isClosed ? daysFromNow(closedDueOffset) : hasDue ? daysFromNow(openDueOffset) : null
   const doneAt = isClosed ? daysFromNow(closedDoneOffset) : null
-  const archivedAt = status === 'archived' ? daysFromNow(Math.min(-1, closedDoneOffset + 2)) : null
+  const archivedAt = null
 
   const priority = PRIORITIES[(assigneeIndex + n) % PRIORITIES.length]!
 

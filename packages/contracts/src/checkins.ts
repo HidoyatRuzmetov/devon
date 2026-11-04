@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { WORK_TITLE_MAX } from './work-limits.js'
 
 export const checkinStateSchema = z.enum(['pending', 'done', 'blocked'])
 export const checkinPrioritySchema = z.enum(['none', 'low', 'medium', 'high', 'urgent'])
@@ -103,6 +104,15 @@ export const checkinBoardSchema = z.object({
   ),
 })
 export const checkinAddSchema = z.object({ checklistItemId: z.string().uuid() }).strict()
+export const checkinCreateTaskSchema = z
+  .object({
+    operationId: z.uuid(),
+    title: z.string().trim().min(1).max(WORK_TITLE_MAX),
+    priority: checkinPrioritySchema.default('none'),
+    checklist: z.array(z.string().trim().min(1).max(500)).min(1).max(100),
+  })
+  .strict()
+export type CheckinCreateTask = z.infer<typeof checkinCreateTaskSchema>
 export const checkinUpdateSchema = z
   .object({
     version: z.number().int().positive(),

@@ -254,10 +254,6 @@
         "label": "Goals",
         "description": "Quarterly goals and how far along they are."
       },
-      "focus_list": {
-        "label": "Focus list",
-        "description": "Up to five headline items per person."
-      },
       "automations": {
         "label": "Automations",
         "description": "Simple rules like “due date approaching — remind me”."

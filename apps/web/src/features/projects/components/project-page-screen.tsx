@@ -47,7 +47,6 @@ import type { Card } from '../../work/api.js'
 import { openCardPeek, CardPeekDialog } from '../../work/components/card-peek-dialog.js'
 import { useCreateCardMutation, useMembers, usePatchCardMutation } from '../../work/hooks.js'
 import { fullName, isCardCompleted } from '../../work/lib/format.js'
-import { ArchivedCardBadge } from '../../work/components/archived-card-badge.js'
 import { CardAttachments } from '../../work/components/card-attachments.js'
 import { ProjectDiscussion } from './project-discussion.js'
 import {
@@ -81,7 +80,7 @@ function TaskRow({ card }: { card: Card }) {
   return (
     <div className="flex items-center gap-2 rounded-sm px-1 py-1 hover:bg-accent">
       <Checkbox
-        disabled={card.status === 'archived' || card.canEdit === false || patchCard.isPending}
+        disabled={card.canEdit === false || patchCard.isPending}
         checked={isCardCompleted(card)}
         onCheckedChange={(v) =>
           patchCard.mutate({
@@ -103,7 +102,6 @@ function TaskRow({ card }: { card: Card }) {
       >
         {card.title}
       </button>
-      <ArchivedCardBadge card={card} />
       {card.status === 'active' ? (
         <span
           className={cn(
@@ -638,7 +636,7 @@ export default function ProjectPageScreen() {
                   </AiResultPanel>
                 ) : null}
 
-                {cardsQuery.isPending ? <ViewSkeleton view="tasks" /> : null}
+                {cardsQuery.isPending ? <ViewSkeleton view="projectTasks" /> : null}
                 {cardsQuery.isError ? (
                   <StateView
                     kind="error"

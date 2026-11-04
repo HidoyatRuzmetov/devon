@@ -7,6 +7,7 @@
     "commands": "Send /help in the bot for commands, or /app to open your workspace inside Telegram.",
     "group": "For a department group: add the bot to your group, get a group connection code below, then paste the full /connect command into the group.",
     "progress": "Connected: {linked} of {total} people · {groups} groups",
-    "telegramUnavailable": "The bot cannot be reached right now. Your inbox still works. Try again shortly or contact your administrator."
+    "telegramUnavailable": "The bot cannot be reached right now. Your inbox still works. Try again shortly or contact your administrator.",
+    "notConnected": "Not connected: {names}"
   }
 }

@@ -78,7 +78,7 @@ describe('recurrence explanation matches the selected task workflow', () => {
     expect(preview).not.toHaveTextContent('2026-10-07')
   })
   it.each([
-    { status: 'archived' as const, doneAt: null, archivedAt: '2026-10-09T09:41:32.000Z' },
+    { status: 'done' as const, doneAt: null, archivedAt: '2026-10-09T09:41:32.000Z' },
     { status: 'done' as const, doneAt: '2026-10-09T09:41:32.000Z', archivedAt: null },
   ])('uses actual $status completion for the visible next date', (completion) => {
     const { preview } = show(completion)

@@ -1,10 +1,14 @@
 import { professionalProfileSchema } from '@devon/contracts'
-import { useT } from '@devon/i18n'
+import { useLocale, useT } from '@devon/i18n'
 import {
   Avatar,
   Button,
   Dialog,
   DialogContent,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
   Sheet,
   SheetContent,
   cn,
@@ -15,6 +19,7 @@ import {
   BookUser,
   BriefcaseBusiness,
   ChevronRight,
+  ChevronDown,
   Download,
   ExternalLink,
   GraduationCap,
@@ -81,9 +86,15 @@ export function MemberCard({
   unitColour?: string
 }) {
   const t = useT()
+  const locale = useLocale()
   const [open, setOpen] = React.useState(false)
   const { department } = useDepartment()
   const [recordOpen, setRecordOpen] = React.useState(false)
+  const [recordScript, setRecordScript] = React.useState<'latin' | 'cyrillic'>('latin')
+  const updatedDate = (value?: string | null) =>
+    value
+      ? ` (${new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Tashkent' }).format(new Date(value))})`
+      : ''
   const [photoOpen, setPhotoOpen] = React.useState(false)
   const profile = member.professionalProfile ?? professionalProfileSchema.parse({})
   const colour =
@@ -235,15 +246,35 @@ export function MemberCard({
               className="rounded-md px-2 py-1.5 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
             >
               {t('profileChoices.resume')}
+              {updatedDate(member.resumeUpdatedAt)}
             </button>
             <span aria-hidden="true" className="h-3 border-l border-border" />
-            <button
-              type="button"
-              onClick={() => setRecordOpen(true)}
-              className="rounded-md px-2 py-1.5 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              {t('profileChoices.record')}
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  {t('profileChoices.record')}
+                  {updatedDate(member.personnelUpdatedAt)}
+                  <ChevronDown className="size-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {(['latin', 'cyrillic'] as const).map((script) => (
+                  <DropdownMenuItem
+                    key={script}
+                    onSelect={() => {
+                      setRecordScript(script)
+                      setRecordOpen(true)
+                    }}
+                  >
+                    <Download className="size-4" />
+                    {t(`personnel.${script}`)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ) : null}
       </div>
@@ -258,7 +289,7 @@ export function MemberCard({
                 <button
                   disabled={!member.avatarKey}
                   aria-label={t('photoEditor.view')}
-                  className="shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-ring"
+                  className="shrink-0 cursor-zoom-in rounded-full disabled:cursor-default focus-visible:outline-2 focus-visible:outline-ring"
                   onClick={() => setPhotoOpen(true)}
                 >
                   {portrait(true)}
@@ -476,7 +507,10 @@ export function MemberCard({
       {department?.role === 'head' ? (
         <Dialog open={recordOpen} onOpenChange={setRecordOpen}>
           <DialogContent title={t('profileChoices.record')} className="max-w-200">
-            <PersonnelRecordSection ownerUserId={member.userId} />
+            <PersonnelRecordSection
+              ownerUserId={member.userId}
+              initialExportScript={recordScript}
+            />
           </DialogContent>
         </Dialog>
       ) : null}

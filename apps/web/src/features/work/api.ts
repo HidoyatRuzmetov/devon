@@ -7,7 +7,7 @@ import { recurrenceRuleSchema } from '@devon/contracts'
 import { apiClient } from '../../lib/api-client.js'
 
 export const cardKindSchema = z.enum(['task', 'project_task'])
-export const cardStatusSchema = z.enum(['active', 'done', 'archived'])
+export const cardStatusSchema = z.enum(['active', 'done'])
 export const cardPrioritySchema = z.enum(['none', 'low', 'medium', 'high', 'urgent'])
 export const cardProjectScopeSchema = z.enum(['none', 'objective', 'subjective'])
 export const cardRiskSchema = z.enum(['none', 'at_risk', 'overdue'])
@@ -55,6 +55,7 @@ export const cardSchema = z.object({
   dueAt: z.string().nullable(),
   doneAt: z.string().nullable(),
   archivedAt: z.string().nullable(),
+  deletedAt: z.string().nullable().optional(),
   orderKey: z.string(),
   labels: z.array(z.string()),
   watchers: z.array(z.string()),
@@ -201,6 +202,7 @@ export function fetchBoard(): Promise<Board> {
 }
 
 export type CardListQuery = {
+  deleted?: boolean | undefined
   projectId?: string | undefined
   q?: string | undefined
   mine?: boolean | undefined
@@ -210,6 +212,7 @@ export type CardListQuery = {
 
 export function fetchCards(query: CardListQuery = {}): Promise<z.infer<typeof cardListSchema>> {
   const params = new URLSearchParams()
+  if (query.deleted) params.set('deleted', 'true')
   if (query.projectId) params.set('projectId', query.projectId)
   if (query.q) params.set('q', query.q)
   if (query.mine) params.set('mine', 'true')
@@ -310,10 +313,6 @@ export async function undoDeleteCard(id: string, csrfToken: string): Promise<voi
     z.void(),
     csrfToken,
   )
-}
-
-export async function restoreCard(id: string, csrfToken: string): Promise<void> {
-  await apiClient.post(`/api/v1/cards/${encodeURIComponent(id)}/restore`, {}, z.void(), csrfToken)
 }
 
 export async function toggleWatcher(id: string, csrfToken: string): Promise<CardDetail> {

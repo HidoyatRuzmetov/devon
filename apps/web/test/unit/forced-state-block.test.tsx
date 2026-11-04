@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import type { StateKind } from '@devon/ui'
 import { ForcedStateBlock } from '../../src/shell/forced-state-block.js'
 
+vi.mock('../../src/lib/session.js', () => ({ useDepartment: () => ({ department: null }) }))
 const KINDS: readonly StateKind[] = ['empty', 'loading', 'error', 'forbidden', 'offline']
 
 // AC-7's disproof, mechanised: "a state with zero or more than one primary action" fails the

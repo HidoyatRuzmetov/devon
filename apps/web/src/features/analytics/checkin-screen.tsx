@@ -218,7 +218,7 @@ export default function CheckinScreen() {
         action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
       />
     )
-  if (!data) return <ViewSkeleton view="checkin" />
+  if (!data) return <ViewSkeleton view={view === 'progress' ? 'progress' : 'checkin'} />
   const selected =
     data.members.find((m) => m.userId === (memberId ?? session.user?.id)) ?? data.members[0]
   return (

@@ -71,7 +71,7 @@ export function ItemsPanel({ eventId }: { eventId: string }) {
   }
 
   function renderItemsBody() {
-    if (itemsQuery.isPending) return <ViewSkeleton view="tasks" />
+    if (itemsQuery.isPending) return <ViewSkeleton view="eventItems" />
     if (itemsQuery.isError) {
       return (
         <StateView

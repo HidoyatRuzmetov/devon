@@ -73,7 +73,7 @@
     "view": "Rasmni ochish"
   },
   "personnel": {
-    "private": "Maxfiy: saqlangan maʼlumotnomani faqat siz va boshqarma boshligʻingiz koʻra oladi. U Odamlar boʻlimida eʼlon qilinmaydi.",
+    "private": "Faqat siz va bo‘lim boshlig‘ingiz ko‘ra oladi.",
     "draftSaved": "Qoralama shu qurilmada saqlandi. Rahbarga taqdim etish uchun saqlang.",
     "addRow": "Qator qoʻshish",
     "protectedNames": "Oʻzgartirilmaydigan nomlar",
@@ -157,5 +157,19 @@
     "highlights": "Asosiy kasbiy maʼlumotlar. Toʻliq profil «Xodimlar» boʻlimida mavjud.",
     "noRecord": "Maʼlumotnoma hali saqlanmagan",
     "noRecordHint": "Xodim hali maʼlumotnomasini saqlamagan. Shaxsiy qoralama uning oʻz qurilmasida qoladi."
+  },
+  "checkinTask": {
+    "create": "Yangi vazifa",
+    "forPerson": "{name} uchun individual vazifa.",
+    "deliverables": "Natijalar",
+    "onePerLine": "Har bir satrda bitta nazorat ro‘yxati bandi",
+    "createAndAdd": "Yaratish va chekinga qo‘shish"
+  },
+  "cardActions": {
+    "alreadyGrouped": "Vazifa allaqachon guruh loyihasiga tegishli.",
+    "alreadyDone": "Vazifa allaqachon bajarilgan.",
+    "checkinProtected": "Check-in/out tarkibida. O‘chirishdan oldin natijalarini barcha ochiq davrlardan olib tashlang.",
+    "deleted": "O‘chirilgan",
+    "deletedOn": "O‘chirilgan: {date}"
   }
 }

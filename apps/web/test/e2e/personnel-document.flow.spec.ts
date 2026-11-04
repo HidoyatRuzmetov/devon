@@ -27,7 +27,7 @@ test('personnel record edits on two paper pages, previews in place and exports a
     const page = await head.newPage()
     await page.setViewportSize({ width: 1440, height: 1100 })
     await page.goto('/account/professional')
-    await page.getByRole('tab', { name: 'Personnel record', exact: true }).click()
+    await page.getByRole('link', { name: 'Personnel record', exact: true }).click()
     await expect(
       page.getByRole('textbox', { name: 'Academic degree', exact: true }),
     ).toHaveAttribute('placeholder', /PhD/)
@@ -39,8 +39,11 @@ test('personnel record edits on two paper pages, previews in place and exports a
       .getByRole('textbox', { name: 'Full legal name', exact: true })
       .fill('Karimov Sardor Akmalovich')
     await page.getByRole('button', { name: 'Preview', exact: true }).click()
-    await expect(page.locator('.personnel-paper')).toHaveCount(2)
-    await page.getByRole('button', { name: 'Full legal name', exact: true }).click()
+    await expect(page.locator('.template-paper')).toHaveCount(2)
+    await page
+      .getByRole('button', { name: 'Karimov Sardor Akmalovich', exact: true })
+      .first()
+      .click()
     await expect(page.getByRole('textbox', { name: 'Full legal name', exact: true })).toBeFocused()
     await page.keyboard.press('Control+Enter')
     await expect(page.getByRole('button', { name: 'Edit document', exact: true })).toBeVisible()
@@ -114,7 +117,7 @@ test('personnel record edits on two paper pages, previews in place and exports a
       localStorage.setItem(key, JSON.stringify({ ...draft, value: next }))
     }, data)
     await page.reload()
-    await page.getByRole('tab', { name: 'Personnel record', exact: true }).click()
+    await page.getByRole('link', { name: 'Personnel record', exact: true }).click()
     await expect(page.getByRole('textbox', { name: 'Academic title', exact: true })).toHaveValue(
       'dotsent',
     )
@@ -159,8 +162,8 @@ test('personnel record edits on two paper pages, previews in place and exports a
     await expect(page.getByRole('alert').filter({ hasText: 'Your draft is safe' })).toBeVisible()
     await page.getByRole('button', { name: 'Word · Cyrillic', exact: true }).click()
     await expect(page.getByText('Word export preview', { exact: true })).toBeVisible()
-    await expect(page.locator('.personnel-employment')).toContainText('Cola')
-    await page.getByRole('button', { name: 'Academic title', exact: true }).click()
+    await expect(page.locator('.template-paper').first()).toContainText('Cola')
+    await page.locator('[data-preview-field="title"]').click()
     await page.getByRole('textbox', { name: 'Academic title', exact: true }).fill('профессор')
     const download = page.waitForEvent('download')
     await page.getByRole('button', { name: 'Download reviewed Word file', exact: true }).click()

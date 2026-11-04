@@ -5,11 +5,13 @@ import type {
   CheckinSourceCard,
   CheckinSelection,
   CheckinLayoutWrite,
+  CheckinCreateTask,
   ProblemCode,
 } from '@devon/contracts'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
 import { sql } from 'drizzle-orm'
 import { addDays, currentCheckinStart, cycleDates, tashkentDay } from './calendar.js'
+import { createCardWithChecklistInTx, withWorkOperation } from '../work/workflow-repo.js'
 
 export class CheckinError extends Error {
   constructor(
@@ -365,7 +367,7 @@ export async function candidates(
         order by i.order_key,i.created_at,i.id) from app.card_checklist_items i where i.card_id=c.id and i.deleted_at is null
           and coalesce(i.assignee_user_id,c.assignee_user_id)=${memberUserId}),'[]'::jsonb) as checklist
       from app.cards c left join app.projects p on p.id=c.project_id and p.deleted_at is null
-      where c.deleted_at is null and c.status<>'archived' and
+      where c.deleted_at is null and
         (c.assignee_user_id=${memberUserId} or exists(select 1 from app.card_checklist_items i
           where i.card_id=c.id and i.assignee_user_id=${memberUserId} and i.deleted_at is null))
       order by case c.priority when 'urgent' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end,c.created_at,c.id`)
@@ -410,7 +412,7 @@ export async function saveSelection(
         order by un.sort,un.id limit 1) unit on true
       left join app.projects p on p.id=c.project_id and p.deleted_at is null
       where i.id=any(${sql.param(addIds)}::uuid[]) and m.user_id=${memberUserId} and i.deleted_at is null and c.deleted_at is null
-        and c.status<>'archived' and m.deleted_at is null and m.status='active' and m.role<>'head'
+        and m.deleted_at is null and m.status='active' and m.role<>'head'
       on conflict(cycle_id,checklist_item_id) do update set removed_at=null,updated_at=now(),version=app.checkin_entries.version+1,
         text=case when app.checkin_entries.removed_at is null then app.checkin_entries.text else excluded.text end,
         state=case when app.checkin_entries.removed_at is null then app.checkin_entries.state else excluded.state end
@@ -424,6 +426,55 @@ export async function saveSelection(
       removed: removeIds,
     })
   })
+}
+
+export async function createIndividualTask(
+  ctx: RequestContext,
+  cycleId: string,
+  memberUserId: string,
+  input: CheckinCreateTask,
+) {
+  if (ctx.departmentRole !== 'head' || ctx.viewAs)
+    throw new CheckinError('forbidden', 'head_required')
+  return withWorkOperation(
+    ctx,
+    input.operationId,
+    { kind: 'checkinTask', cycleId, memberUserId, input },
+    async (tx) => {
+      const { card, checklistAdded } = await createCardWithChecklistInTx(
+        ctx,
+        tx,
+        {
+          title: input.title,
+          kind: 'task',
+          assigneeUserId: memberUserId,
+          priority: input.priority,
+        },
+        input.checklist.map((text, i) => ({ key: String(i), text })),
+      )
+      await maintainCycles(tx, ctx)
+      await requireCheckinMember(tx, cycleId, memberUserId)
+      await cycleForEdit(tx, cycleId, memberUserId)
+      const added = await tx.raw<{ id: string }>(sql`insert into app.checkin_entries
+      (department_id,cycle_id,checklist_item_id,card_id,member_user_id,member_name,unit_id,unit_name,unit_colour,card_title,project_id,project_title,text,state)
+      select c.department_id,${cycleId},i.id,c.id,m.user_id,concat_ws(' ',u.given_name,u.family_name),unit.id,unit.name,unit.colour,c.title,null,null,i.text,'pending'
+      from app.cards c join app.card_checklist_items i on i.card_id=c.id and i.deleted_at is null
+      join app.memberships m on m.user_id=c.assignee_user_id and m.department_id=c.department_id
+      join app.users u on u.id=m.user_id and u.deleted_at is null
+      left join lateral(select un.* from app.unit_roles ur join app.units un on un.id=ur.unit_id
+        where ur.user_id=m.user_id and ur.department_id=m.department_id and ur.deleted_at is null and un.deleted_at is null
+        order by un.sort,un.id limit 1) unit on true
+      where c.id=${card.id} and c.project_id is null and c.kind='task' and m.status='active' and m.deleted_at is null and m.role<>'head'
+      returning id`)
+      if (added.length !== checklistAdded) throw new CheckinError('conflict', 'selection_changed')
+      changed(tx, ctx, 'individual_task_created', cycleId, {
+        memberUserId,
+        cardId: card.id,
+        count: added.length,
+      })
+      return { id: card.id, cardIds: [card.id], created: 1, checklistAdded }
+    },
+  )
 }
 
 export async function saveLayout(

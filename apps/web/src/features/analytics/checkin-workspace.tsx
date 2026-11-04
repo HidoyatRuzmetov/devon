@@ -10,6 +10,7 @@ import {
   GripVertical,
   LockKeyhole,
   Pencil,
+  Plus,
   X,
 } from 'lucide-react'
 import { useDepartment, useSession } from '../../lib/session.js'
@@ -19,6 +20,7 @@ import { checkinGroups, checkinTasks } from './checkin-layout.js'
 import { CheckinTaskView } from './checkin-task.js'
 import { CheckinTimer } from './checkin-timer.js'
 import { MemberAvatar, memberName } from './checkin-member.js'
+import { CheckinCreateTask } from './checkin-create-task.js'
 
 export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member: CheckinMember }) {
   const t = useT(),
@@ -26,6 +28,7 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
     session = useSession(),
     change = useCheckinChange()
   const reduced = useReducedMotion()
+  const [creating, setCreating] = React.useState(false)
   const cycle = data.cycles.find((c) => c.id === data.selectedCycleId)!
   const entries = data.entries.filter((e) => e.memberUserId === member.userId)
   const lock = memberLock(data, cycle, member.userId),
@@ -168,6 +171,18 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
   const localDay = new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 10)
   return (
     <section className="checkin-person" aria-label={memberName(member)}>
+      {creating && !closed && department?.role === 'head' ? (
+        <CheckinCreateTask
+          cycleId={cycle.id}
+          memberUserId={member.userId}
+          memberName={memberName(member)}
+          onClose={() => setCreating(false)}
+          onCreated={() => {
+            setCreating(false)
+            if (!dirty) setEditing(false)
+          }}
+        />
+      ) : null}
       <Dialog open={lockReview} onOpenChange={setLockReview}>
         <DialogContent title={t(locked ? 'checkins.lockCheckout' : 'checkins.lockCheckin')}>
           <p className="my-4 text-small text-muted-foreground">
@@ -396,6 +411,16 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
       </div>
       {!closed ? (
         <div className="checkin-selection-actions">
+          {department?.role === 'head' ? (
+            <Button
+              variant="secondary"
+              disabled={change.isPending}
+              onClick={() => setCreating(true)}
+            >
+              <Plus className="size-4" />
+              {t('checkinTask.create')}
+            </Button>
+          ) : null}
           {editing && entries.length > 0 ? (
             <IconButton
               aria-label={t('checkins.cancel')}

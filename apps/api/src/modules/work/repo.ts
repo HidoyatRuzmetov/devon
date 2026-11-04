@@ -23,12 +23,13 @@ type CardRow = {
   project_id: string | null
   project_scope: 'none' | 'objective' | 'subjective'
   work_stage: 'todo' | 'in_progress'
-  status: 'active' | 'done' | 'archived'
+  status: 'active' | 'done'
   priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
   start_at: Date | null
   due_at: Date | null
   done_at: Date | null
   archived_at: Date | null
+  deleted_at: Date | null
   order_key: string
   labels: string[]
   watchers: string[]
@@ -78,6 +79,7 @@ function toCardDTO(row: CardRow): CardDTO {
     dueAt: row.due_at ? new Date(row.due_at).toISOString() : null,
     doneAt: row.done_at ? new Date(row.done_at).toISOString() : null,
     archivedAt: row.archived_at ? new Date(row.archived_at).toISOString() : null,
+    deletedAt: row.deleted_at ? new Date(row.deleted_at).toISOString() : null,
     orderKey: row.order_key,
     labels: row.labels ?? [],
     watchers: row.watchers ?? [],
@@ -123,7 +125,7 @@ export function parseRecurrence(value: unknown): RecurrenceRule | null {
 function cardSelect(viewerUserId: string | null): SQL {
   return sql`
   select c.id, c.kind, c.title, c.description, c.assignee_user_id, c.giver_user_id, c.project_id,
-    c.project_scope, c.work_stage, c.status, c.priority, c.start_at, c.due_at, c.done_at, c.archived_at,
+    c.project_scope, c.work_stage, c.status, c.priority, c.start_at, c.due_at, c.done_at, c.archived_at, c.deleted_at,
     c.order_key, c.labels, c.watchers, c.links, c.created_by_user_id, c.created_at, c.updated_at,
     c.version, c.estimate_min, c.recurrence, c.recurrence_series_id,
     coalesce(cl.total, 0) as checklist_total, coalesce(cl.done, 0) as checklist_done,
@@ -232,22 +234,21 @@ export async function getProjectNames(
   })
 }
 
-/** Board + filterable-list source: every non-deleted card in the department, optionally excluding
- * `archived` (the People board never shows archived cards -- TECH-SPEC §3.2: "done cards leave the
- * board ... go to the person's archive"). Bounded to 5000 rows -- generous for this demo's ~200
- * cards and this build's stated scale target, revisited (a real SQL predicate compiler for the filter
- * grammar) if a department ever approaches it. */
+/** Board and list source. Deleted records are available only through the explicit history partition.
+ * Bounded to 5000 rows per partition; filtering still respects the caller’s RLS context. */
 export async function listCards(
   ctx: RequestContext,
   departmentId: string,
-  options: { excludeArchived?: boolean; projectId?: string | undefined } = {},
+  options: { deleted?: boolean | undefined; projectId?: string | undefined } = {},
 ): Promise<CardDTO[]> {
   return withContext(ctx, async (tx) => {
-    const statusFilter = options.excludeArchived ? sql`and c.status != 'archived'` : sql``
+    const deletionFilter = options.deleted
+      ? sql`c.deleted_at is not null`
+      : sql`c.deleted_at is null`
     const projectFilter = options.projectId ? sql`and c.project_id = ${options.projectId}` : sql``
     const rows = await tx.raw<CardRow>(
       sql`${cardSelect(ctx.userId)}
-          where c.department_id = ${departmentId} and c.deleted_at is null ${statusFilter} ${projectFilter}
+          where c.department_id = ${departmentId} and ${deletionFilter} ${projectFilter}
           order by fp.position asc nulls last, c.order_key collate "C" asc, c.created_at asc, c.id asc
           limit 5000`,
     )
@@ -826,7 +827,7 @@ export async function patchCard(
       sets.push(
         sql`done_at = ${patch.status === 'done' ? sql`now()` : patch.status === 'active' ? null : sql`done_at`}`,
       )
-      sets.push(sql`archived_at = ${patch.status === 'archived' ? sql`now()` : null}`)
+      sets.push(sql`archived_at = null`)
     }
 
     // v1.1 (the `concurrency-races` probe): the `beforeRow.version !== expectedVersion` check above
@@ -1288,33 +1289,6 @@ export async function undoDeleteCard(
       type: 'work.card.restored',
       departmentId,
       payload: { cardId, actorUserId },
-    })
-    return true
-  })
-}
-
-export async function restoreCard(
-  ctx: RequestContext,
-  departmentId: string,
-  cardId: string,
-  actorUserId: string,
-): Promise<boolean> {
-  return withContext(ctx, async (tx) => {
-    const result = await tx.raw<{ id: string }>(
-      sql`update app.cards set status = 'active', archived_at = null, updated_at = now(), version = version + 1
-          where id = ${cardId} and department_id = ${departmentId} and status = 'archived' and deleted_at is null
-          returning id`,
-    )
-    if (result.length === 0) return false
-    await tx.raw(
-      sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
-          values (${randomUUID()}, ${departmentId}, ${cardId}, ${actorUserId}, 'status', ${JSON.stringify({ to: 'active', restored: true })}::jsonb)`,
-    )
-    tx.audit({
-      action: 'work.card_restored',
-      subjectType: 'card',
-      subjectId: cardId,
-      departmentId,
     })
     return true
   })

@@ -44,7 +44,7 @@ export const FIELD_LABEL_KEY: Record<FieldKey, string> = {
   project: 'work.field.project',
   label: 'work.field.labels',
 }
-export const STATUS_VALUES = ['active', 'done', 'archived'] as const
+export const STATUS_VALUES = ['active', 'done'] as const
 export const DUE_OPERATORS: readonly CompareOp[] = ['<=', '>=', '<', '>', '=']
 export const DUE_WORDS = [
   'today',

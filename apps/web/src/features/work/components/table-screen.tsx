@@ -30,7 +30,6 @@ import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { MultitaskToolbar, MultitaskToolbarSlot, useCardSelection } from './multitask-toolbar.js'
 import { WorkShell } from './work-shell.js'
 import type { Card, CardPriority, MemberSummary } from '../api.js'
-import { ArchivedCardBadge } from './archived-card-badge.js'
 
 const PRIORITIES: readonly CardPriority[] = ['none', 'low', 'medium', 'high', 'urgent']
 const PRIORITY_ORDER: Record<CardPriority, number> = {
@@ -608,13 +607,9 @@ const TableRow = React.memo(function TableRow({
           : null}
       </span>
       <span role="cell" className="overflow-hidden">
-        {card.status === 'archived' ? (
-          <ArchivedCardBadge card={card} />
-        ) : (
-          <Badge tone="neutral" className="whitespace-nowrap">
-            {t(`work.status.${card.status}`)}
-          </Badge>
-        )}
+        <Badge tone="neutral" className="whitespace-nowrap">
+          {t(`work.status.${card.status}`)}
+        </Badge>
       </span>
     </div>
   )
@@ -651,7 +646,7 @@ const MobileTableRow = React.memo(function MobileTableRow({
   const metaParts = [
     assignee ? fullName(assignee) : t('work.field.unassigned'),
     t(PRIORITY_LABEL_KEY[card.priority]),
-    ...(card.status === 'archived' ? [] : [t(`work.status.${card.status}`)]),
+    t(`work.status.${card.status}`),
   ]
   if (card.risk !== 'none') metaParts.push(t(RISK_LABEL_KEY[card.risk]))
 
@@ -710,7 +705,6 @@ const MobileTableRow = React.memo(function MobileTableRow({
         </p>
         <p className="truncate text-caption text-muted-foreground">{metaParts.join(' · ')}</p>
       </div>
-      <ArchivedCardBadge card={card} />
     </div>
   )
 })

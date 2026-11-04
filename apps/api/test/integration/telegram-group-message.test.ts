@@ -13,13 +13,23 @@ import {
   type Server,
   type Session,
 } from './harness.js'
-let db: Db, server: Server, head: Session, member: Session, groupId: string
+let db: Db,
+  server: Server,
+  head: Session,
+  member: Session,
+  groupId: string,
+  departmentId: string,
+  peerId: string,
+  ownerId: string
 const send = vi.fn(async () => ({ ok: true as const, messageId: 100 }))
 beforeAll(async () => {
   ;({ db, server } = await startHarness())
   const department = await seedDepartment(db, { name: 'Group message QA', slug: randomUUID() })
   const owner = await seedMember(db, department.id, { role: 'head' }),
     peer = await seedMember(db, department.id, { role: 'member' })
+  departmentId = department.id
+  peerId = peer.id
+  ownerId = owner.id
   head = await loginAs(server.baseUrl, owner.login)
   member = await loginAs(server.baseUrl, peer.login)
   groupId = randomUUID()
@@ -87,4 +97,25 @@ it('refuses members and foreign group IDs, mentions only verified present people
   expect((await request(head, operation, '@all Please update your profile', true)).status).toBe(200)
   expect((await request(head, operation, 'Changed body', true)).status).toBe(409)
   expect(send).toHaveBeenCalledOnce()
+})
+
+it('lists unconnected active colleagues only for the department head', async () => {
+  await superuserQuery(db, 'insert into app.telegram_links(user_id,chat_id) values($1,991888)', [
+    ownerId,
+  ])
+  const foreign = await seedDepartment(db, { name: 'Other department', slug: randomUUID() })
+  await seedMember(db, foreign.id, { role: 'member' })
+  const requestSetup = (actor: Session, id = departmentId) =>
+    fetch(server.baseUrl + '/api/v1/telegram/departments/' + id + '/setup-checklist', {
+      headers: actor.headers,
+    })
+  const response = await requestSetup(head)
+  expect(response.status).toBe(200)
+  expect(await response.json()).toMatchObject({
+    memberCount: 2,
+    linkedMemberCount: 1,
+    unlinkedMembers: [{ userId: peerId, name: expect.any(String) }],
+  })
+  expect((await requestSetup(member)).status).toBe(403)
+  expect((await requestSetup(head, foreign.id)).status).toBe(403)
 })

@@ -33,7 +33,6 @@ const DEMO_FEATURES: Readonly<Record<string, boolean>> = Object.freeze({
   dependencies: true,
   recurring: true,
   templates: true,
-  focus_list: true,
   reminders: true,
 })
 

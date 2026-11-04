@@ -144,6 +144,32 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
     )
     await page.getByRole('button', { name: 'Save selection', exact: true }).click()
     await expect(page.locator('.checkin-task')).toHaveCount(2)
+    await page.getByRole('button', { name: 'New task', exact: true }).click()
+    await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Created during check-in')
+    await page.getByRole('combobox', { name: 'Priority', exact: true }).selectOption('high')
+    await page
+      .getByRole('textbox', { name: 'Deliverables', exact: true })
+      .fill('Prepare draft\nReview draft')
+    const creationResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes('/members/') &&
+        response.url().endsWith('/tasks'),
+    )
+    await page.getByRole('button', { name: 'Create and add to check-in', exact: true }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.locator('.checkin-task')).toHaveCount(3)
+    await expect(page.locator('.checkin-row')).toHaveCount(4)
+    await expect(
+      page
+        .locator('.checkin-task', { hasText: 'Created during check-in' })
+        .locator('.checkin-row')
+        .first(),
+    ).toContainText('Prepare draft')
+    const created = (await (await creationResponse).json()) as { id: string }
+    expect(
+      (await (await head.request.get('/api/v1/cards/' + created.id)).json()).projectId,
+    ).toBeNull()
     // Let the selection exit/layout spring settle before installing the synthetic timer clock.
     await page.waitForTimeout(600)
     await page.clock.install()

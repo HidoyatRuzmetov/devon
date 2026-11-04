@@ -26,6 +26,14 @@ export function checkinTasks(
       })
     tasks.get(entry.cardId)!.entries.push(entry)
   }
+  for (const task of tasks.values()) {
+    const positions = new Map(task.checklist.map((item, index) => [item.id, index]))
+    task.entries.sort(
+      (a, b) =>
+        (positions.get(a.checklistItemId) ?? Infinity) -
+        (positions.get(b.checklistItemId) ?? Infinity),
+    )
+  }
   return [...tasks.values()]
 }
 export function checkinGroups(tasks: CheckinTask[], mode: 'priority' | 'manual', order: string[]) {

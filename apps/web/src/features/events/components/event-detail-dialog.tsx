@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // The event detail overlay -- opened via `?event=<id>` from `events-screen.tsx`. A `Dialog` rather
 // than the mobile-only fixed-width `Sheet` (MODULE-GUIDE.md's own reasoning for `calendar-month.tsx`
@@ -20,7 +21,6 @@ import {
   Reveal,
   Sheet,
   SheetContent,
-  Skeleton,
   StateView,
   Tabs,
   TabsContent,
@@ -408,13 +408,7 @@ export function EventDetailDialog({
 
   function renderDialogBody() {
     if (eventQuery.isPending) {
-      return (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-36 w-full" />
-          <Skeleton className="h-6 w-60" />
-          <Skeleton className="h-24 w-full" />
-        </div>
-      )
+      return <ViewSkeleton view="eventDetail" />
     }
     if (eventQuery.isError) {
       const code = eventQuery.error instanceof ApiError ? eventQuery.error.code : null

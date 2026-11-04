@@ -28,7 +28,7 @@ export default function PersonalScreen() {
   const requested = search.get('tab')
   const tab: TabId = requested === 'tasks' || requested === 'pomodoro' ? requested : 'calendar'
 
-  if (meQuery.isPending) return <ViewSkeleton view="tasks" />
+  if (meQuery.isPending) return <ViewSkeleton view={tab} />
   if (!meQuery.data) {
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
   }

@@ -73,7 +73,7 @@
     "view": "View photo"
   },
   "personnel": {
-    "private": "Private: only you and your department head can read the saved personnel record. It is never published in People.",
+    "private": "Private: visible only to you and your department head.",
     "draftSaved": "Draft saved on this device. Save to share with your department head.",
     "addRow": "Add entry",
     "protectedNames": "Names to keep unchanged",
@@ -157,5 +157,19 @@
     "highlights": "Selected professional highlights. The complete profile is available in People.",
     "noRecord": "No personnel record yet",
     "noRecordHint": "This person has not saved a personnel record. Their private draft stays on their own device."
+  },
+  "checkinTask": {
+    "create": "New task",
+    "forPerson": "Individual task for {name}.",
+    "deliverables": "Deliverables",
+    "onePerLine": "One checklist item per line",
+    "createAndAdd": "Create and add to check-in"
+  },
+  "cardActions": {
+    "alreadyGrouped": "This task already belongs to a group project.",
+    "alreadyDone": "This task is already done.",
+    "checkinProtected": "Used in check-in/out. Remove its deliverables from every unlocked period before deleting.",
+    "deleted": "Deleted",
+    "deletedOn": "Deleted {date}"
   }
 }

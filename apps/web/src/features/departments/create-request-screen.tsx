@@ -89,7 +89,7 @@ export default function CreateRequestScreen() {
     },
   })
 
-  if (requestsQuery.isPending) return <ViewSkeleton view="join" />
+  if (requestsQuery.isPending) return <ViewSkeleton view="departmentRequest" />
   if (requestsQuery.isError) {
     return (
       <StateView

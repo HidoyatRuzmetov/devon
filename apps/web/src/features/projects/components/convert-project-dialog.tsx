@@ -21,12 +21,18 @@ import { createProjectFromCard } from '../api.js'
 export function ConvertProjectDialog({
   cardId,
   iconOnly = false,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   cardId: string
   iconOnly?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
   const t = useT()
-  const [open, setOpen] = React.useState(false)
+  const [localOpen, setLocalOpen] = React.useState(false)
+  const open = controlledOpen ?? localOpen
+  const setOpen = onOpenChange ?? setLocalOpen
   const [selected, setSelected] = React.useState<string[]>([])
   const me = useMeQuery().data
   const members = useMembers()
@@ -50,31 +56,33 @@ export function ConvertProjectDialog({
         if (!convert.isPending) setOpen(next)
       }}
     >
-      <DialogTrigger asChild>
-        {iconOnly ? (
-          <IconButton
-            aria-label={t('projectEdit.convert')}
-            tooltip={t('projectEdit.convert')}
-            onClick={() => {
-              setSelected([])
-              convert.reset()
-            }}
-          >
-            <FolderPlus />
-          </IconButton>
-        ) : (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setSelected([])
-              convert.reset()
-            }}
-          >
-            {t('projectEdit.convert')}
-          </Button>
-        )}
-      </DialogTrigger>
+      {controlledOpen === undefined ? (
+        <DialogTrigger asChild>
+          {iconOnly ? (
+            <IconButton
+              aria-label={t('projectEdit.convert')}
+              tooltip={t('projectEdit.convert')}
+              onClick={() => {
+                setSelected([])
+                convert.reset()
+              }}
+            >
+              <FolderPlus />
+            </IconButton>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setSelected([])
+                convert.reset()
+              }}
+            >
+              {t('projectEdit.convert')}
+            </Button>
+          )}
+        </DialogTrigger>
+      ) : null}
       <DialogContent title={t('projectEdit.convert')} className="max-w-120">
         <div className="mt-4 flex flex-col gap-4">
           <p className="text-small text-muted-foreground">{t('projectEdit.convertHint')}</p>

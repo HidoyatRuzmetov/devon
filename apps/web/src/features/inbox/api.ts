@@ -246,6 +246,7 @@ const telegramSetupSchema = z.object({
   miniappUrl: z.string(),
   memberCount: z.number(),
   linkedMemberCount: z.number(),
+  unlinkedMembers: z.array(z.object({ userId: z.string(), name: z.string() })).default([]),
   groupCount: z.number(),
 })
 

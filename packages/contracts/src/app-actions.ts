@@ -272,8 +272,6 @@ export const APP_ACTIONS = {
   'work.card.edit': { area: 'work', action: 'update', subject: 'owned' },
   'work.card.move': { area: 'work', action: 'update', subject: 'owned' },
   'work.card.reassign': { area: 'work', action: 'update', subject: 'owned' },
-  'work.card.archive': { area: 'work', action: 'archive', subject: 'owned' },
-  'work.card.restore': { area: 'work', action: 'update', subject: 'owned' },
   'work.card.checklist.edit': {
     area: 'work',
     action: 'update',

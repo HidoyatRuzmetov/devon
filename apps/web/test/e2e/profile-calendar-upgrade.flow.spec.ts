@@ -69,12 +69,12 @@ test('private drafts recover, photos crop and invitations reach the attendee cal
     expect(JSON.stringify(published)).not.toContain('Unpublished recovery draft')
     await page.getByRole('button', { name: 'Discard recovered draft' }).click()
     await expect(page.getByRole('textbox', { name: 'Headline', exact: true })).toHaveValue('')
-    await page.getByRole('tab', { name: 'Personnel record', exact: true }).click()
+    await page.getByRole('link', { name: 'Personnel record', exact: true }).click()
     await page
       .getByRole('textbox', { name: 'Full legal name', exact: true })
       .fill('Karimov Sardor Akmalovich')
     await page.reload()
-    await page.getByRole('tab', { name: 'Personnel record', exact: true }).click()
+    await page.getByRole('link', { name: 'Personnel record', exact: true }).click()
     await expect(page.getByRole('textbox', { name: 'Full legal name', exact: true })).toHaveValue(
       'Karimov Sardor Akmalovich',
     )
@@ -115,7 +115,42 @@ test('private drafts recover, photos crop and invitations reach the attendee cal
     const crop = page.getByRole('dialog', { name: 'Edit profile photo' })
     await expect(crop).toBeVisible()
     await expect(crop.getByRole('button', { name: 'Use photo' })).toBeEnabled()
-    await crop.getByRole('slider', { name: 'Zoom' }).fill('1.5')
+    const canvas = crop.locator('canvas')
+    const beforeZoom = await canvas.evaluate((el: HTMLCanvasElement) => el.toDataURL())
+    await canvas.hover()
+    await page.keyboard.down('Control')
+    await page.mouse.wheel(0, -100)
+    await page.keyboard.up('Control')
+    await expect
+      .poll(() => canvas.evaluate((el: HTMLCanvasElement) => el.toDataURL()))
+      .not.toBe(beforeZoom)
+    expect(await page.evaluate(() => window.visualViewport?.scale)).toBe(1)
+    await expect(crop.getByRole('slider')).toHaveCount(0)
+    const touch = await page.context().newCDPSession(page)
+    const rect = (await canvas.boundingBox())!
+    const x = rect.x + rect.width / 2,
+      y = rect.y + rect.height / 2
+    const beforePinch = await canvas.evaluate((el: HTMLCanvasElement) => el.toDataURL())
+    await touch.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [
+        { x: x - 30, y, id: 1 },
+        { x: x + 30, y, id: 2 },
+      ],
+    })
+    await touch.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [
+        { x: x - 65, y, id: 1 },
+        { x: x + 65, y, id: 2 },
+      ],
+    })
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await expect
+      .poll(() => canvas.evaluate((el: HTMLCanvasElement) => el.toDataURL()))
+      .not.toBe(beforePinch)
+    expect(await page.evaluate(() => window.visualViewport?.scale)).toBe(1)
+    await touch.detach()
     await crop.getByRole('button', { name: 'Rotate 90°' }).click()
     await crop.getByRole('button', { name: 'Flip horizontally' }).click()
     await page.screenshot({ path: testInfo.outputPath('photo-crop.png') })
@@ -158,11 +193,12 @@ test('private drafts recover, photos crop and invitations reach the attendee cal
     await headPage.goto('/people')
     const personCard = headPage.locator(`[data-member-id="${memberMe.user.id}"]`)
     const downloading = headPage.waitForEvent('download')
-    await personCard.getByRole('button', { name: 'Résumé', exact: true }).click()
+    await personCard.getByRole('button', { name: /^Résumé/ }).click()
     const downloaded = await downloading
     expect(downloaded.suggestedFilename()).toMatch(/\.docx$/)
     expect(await downloaded.failure()).toBeNull()
-    await personCard.getByRole('button', { name: 'Personnel record', exact: true }).click()
+    await personCard.getByRole('button', { name: /^Personnel record/ }).click()
+    await headPage.getByRole('menuitem', { name: /Latin/ }).click()
     await expect(headPage.getByRole('dialog', { name: 'Personnel record' })).toBeVisible()
     await headPage.keyboard.press('Escape')
     const unitFilter = headPage.getByRole('button', { name: 'Filter by unit' })

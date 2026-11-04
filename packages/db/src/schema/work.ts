@@ -23,7 +23,7 @@ import {
 export const appSchema = pgSchema('app')
 
 export const cardKindEnum = appSchema.enum('card_kind', ['task', 'project_task'])
-export const cardStatusEnum = appSchema.enum('card_status', ['active', 'done', 'archived'])
+export const cardStatusEnum = appSchema.enum('card_status', ['active', 'done'])
 export const cardPriorityEnum = appSchema.enum('card_priority', [
   'none',
   'low',

@@ -152,14 +152,14 @@ describe('assistant action review', () => {
     render(<Review />)
     fireEvent.click(screen.getByRole('button', { name: 'Edit request' }))
     expect(screen.getByRole('button', { name: 'Confirm selected' })).toBeDisabled()
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'archived' } })
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'active' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
     expect(calls.edit).toHaveBeenCalledWith(
       {
         conversationId,
         proposalId: proposal.id,
         revision: 0,
-        arguments: { id: targetId, body: { status: 'archived', version: 3 } },
+        arguments: { id: targetId, body: { status: 'active', version: 3 } },
       },
       expect.any(Object),
     )

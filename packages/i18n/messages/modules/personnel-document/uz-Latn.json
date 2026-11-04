@@ -16,7 +16,7 @@
     "exportHint": "Bu yuklab olish uchun nusxa. O‘zgarishlar faqat yuklab olinadigan faylga ta’sir qiladi; saqlangan ma’lumotnoma o‘zgarmaydi.",
     "clickToEdit": "Tahrirlash uchun qiymat ustiga bosing. Escape tahrirlashga qaytaradi. Ctrl / ⌘ + Enter ko‘rib chiqish rejimini almashtiradi.",
     "readonly": "Saqlangan ma’lumotnoma faqat sizga va boshqarma boshlig‘iga ko‘rinadi.",
-    "aiHint": "AI lotin / kirill eksporti uchun nomlar va brendlarni avtomatik aniqlaydi. Hujjat matni boshqarmangizning AI provayderida qayta ishlanadi; surat yuborilmaydi.",
+    "aiHint": "AI lotin / kirill eksportida nomlarni saqlaydi.",
     "preparing": "Hujjat tayyorlanmoqda, nomlar tekshirilmoqda…",
     "exportError": "Hujjatni tayyorlab bo‘lmadi. Qoralamangiz saqlangan. Birozdan so‘ng qayta urinib ko‘ring yoki boshqarmaning AI sozlamalarini tekshiring.",
     "reviewHint": "Yuklab olishdan oldin matnni tekshiring. Eksport nusxasini tuzatish uchun istalgan qiymat ustiga bosing.",
@@ -49,6 +49,11 @@
       "prevJob": "Avval maktab o‘qituvchisi",
       "deathYear": "2020",
       "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy"
-    }
+    },
+    "import": "Import",
+    "importReview": "Qoralama import qilindi — saqlashdan oldin tekshiring.",
+    "undoImport": "Importni bekor qilish",
+    "importUnreadable": "8 MB gacha o‘qiladigan PDF, DOCX, ODT, RTF yoki matnli fayl tanlang. Skanerlangan PDF matn qatlamiga ega bo‘lishi kerak.",
+    "importError": "Import ishlamadi. Qoralama o‘zgarmadi; qayta urinib ko‘ring."
   }
 }

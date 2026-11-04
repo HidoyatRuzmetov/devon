@@ -35,7 +35,7 @@ for (const role of ['head', 'member'] as const) {
       expect(
         (
           await head.request.put(`/api/v1/departments/${department.departmentId}/features`, {
-            data: { features: { focus_list: true } },
+            data: { features: {} },
             headers: { 'x-csrf-token': await csrfToken(head) },
           })
         ).ok(),
@@ -98,7 +98,7 @@ for (const role of ['head', 'member'] as const) {
       await dialog.getByRole('button', { name: 'Close', exact: true }).click()
       await page.goto('/work/mine')
       await page
-        .getByRole('region', { name: 'Focus list', exact: true })
+        .getByRole('region', { name: 'Pinned', exact: true })
         .getByRole('button', { name: title, exact: true })
         .click()
       await expect(dialog).toBeVisible()

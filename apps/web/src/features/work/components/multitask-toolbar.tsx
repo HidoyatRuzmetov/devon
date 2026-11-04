@@ -8,7 +8,7 @@
 // confirm (DESIGN.md), so the bar acts immediately and offers the way back.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Archive, Check, ChevronDown, Tag, Timer, UserRound, X } from 'lucide-react'
+import { Check, ChevronDown, Tag, Timer, UserRound, X } from 'lucide-react'
 import { parseEstimateMinutes } from '@devon/contracts'
 import { useT, useLocale } from '@devon/i18n'
 import {
@@ -371,16 +371,6 @@ export function MultitaskToolbar({
         >
           <Check className="size-3.5" aria-hidden="true" />
           {t('work.bulk.markDone')}
-        </Button>
-
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={busy}
-          onClick={() => apply({ status: 'archived' }, 'work.bulk.archived')}
-        >
-          <Archive className="size-3.5" aria-hidden="true" />
-          {t('work.card.archive')}
         </Button>
 
         <Button

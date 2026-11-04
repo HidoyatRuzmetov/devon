@@ -6,6 +6,7 @@
 // token is missing, `GET /api/v1/instance` already reports `setupRequired: false`, or the `POST`
 // itself comes back 410.
 import * as React from 'react'
+import { ViewSkeleton } from '../lib/view-skeleton.js'
 import { useMutation } from '@tanstack/react-query'
 import { Check, Copy, Eye, EyeOff } from 'lucide-react'
 import { useT } from '@devon/i18n'
@@ -95,7 +96,7 @@ export function SetupRoute() {
   }
 
   if (instanceQuery.isPending) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="setup" />
   }
 
   if (instanceQuery.isError) {

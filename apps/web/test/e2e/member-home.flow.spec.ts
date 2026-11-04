@@ -4,12 +4,15 @@ import {
   authedPatch,
   authedPost,
   createApprovedDepartment,
+  csrfToken,
   examplePassword,
   loginAsSuperAdmin,
   newFlowContext,
   registerUser,
   uniqueLogin,
 } from './flow-api.js'
+
+test.use({ actionTimeout: 15_000 })
 
 test('@flow member Home owns work categories, integrated inbox and event cues on desktop and phone', async ({
   browser,
@@ -84,7 +87,7 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
       },
       { title: 'Review the consultation notes', workStage: 'todo' },
       { title: 'Submitted report', status: 'done' },
-      { title: 'Archived unfinished draft', status: 'archived' },
+      { title: 'Deleted unfinished draft', deleted: true },
     ]
     let projectCard = ''
     for (const task of tasks) {
@@ -98,14 +101,23 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
       })
       expect(created.status()).toBe(201)
       const card = (await created.json()) as { id: string }
-      expect(
-        (
-          await authedPatch(head, `/api/v1/cards/${card.id}`, {
-            ...(task.workStage ? { workStage: task.workStage } : {}),
-            ...(task.status ? { status: task.status } : {}),
-          })
-        ).status(),
-      ).toBe(200)
+      if (task.workStage || task.status)
+        expect(
+          (
+            await authedPatch(head, `/api/v1/cards/${card.id}`, {
+              ...(task.workStage ? { workStage: task.workStage } : {}),
+              ...(task.status ? { status: task.status } : {}),
+            })
+          ).status(),
+        ).toBe(200)
+      if (task.deleted)
+        expect(
+          (
+            await head.request.delete('/api/v1/cards/' + card.id, {
+              headers: { 'x-csrf-token': await csrfToken(head) },
+            })
+          ).status(),
+        ).toBe(204)
       if (task.projectId) projectCard = card.id
     }
     expect(
@@ -138,7 +150,7 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
       toDoCount: 1,
       inProgressCount: 1,
       doneCount: 1,
-      archivedCount: 1,
+      deletedCount: 1,
     })
     // Notification creation runs through the real outbox. Start the UI journey only after
     // its assignment exists, rather than depending on machine speed or the fallback poll.
@@ -173,9 +185,7 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     await expect(home).toBeVisible()
     await expect(home.getByRole('link', { name: 'Research & delivery', exact: true })).toBeVisible()
     await expect(home.getByRole('button', { name: 'Active tasks', exact: true })).toBeVisible()
-    await expect(
-      home.getByRole('button', { name: 'Completed & archived', exact: true }),
-    ).toBeVisible()
+    await expect(home.getByRole('button', { name: 'Completed', exact: true })).toBeVisible()
     await expect(
       home.getByRole('heading', { name: 'Your work assistant', exact: true }),
     ).toHaveCount(0)
@@ -183,42 +193,37 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     await expect(home.getByText('Someone else’s task', { exact: true })).toHaveCount(0)
     expect(briefingRequests).toEqual([])
     await page.screenshot({ path: testInfo.outputPath('member-home-desktop.png') })
-    await home.getByRole('button', { name: 'Archived 1', exact: true }).first().click()
-    await expect(home.getByText('Archived unfinished draft', { exact: true })).toBeVisible()
+    await home.getByRole('button', { name: 'Deleted 1', exact: true }).first().click()
+    await expect(work.getByRole('button', { name: /^Deleted unfinished draft/ })).toBeDisabled()
+    await expect(home.getByRole('link', { name: /Deleted unfinished draft/ })).toHaveCount(0)
     await expect(home.getByRole('checkbox')).toHaveCount(0)
-    await expect(home.getByLabel('Archived · Not completed')).toBeVisible()
-    await categories.getByRole('button', { name: 'Group projects 1', exact: true }).click()
-    await expect(home.getByRole('link', { name: /^Service quality review/ })).toBeVisible()
+    await categories.getByRole('button', { name: 'In progress 1', exact: true }).click()
+    await expect(work.getByText('Service quality review', { exact: true })).toBeVisible()
     await expect(
-      home.getByRole('progressbar', { name: '0 of 1 checklist items completed' }),
+      work.getByRole('progressbar', { name: '0 of 1 checklist items completed' }),
     ).toBeVisible()
-    await home.getByRole('link', { name: /^Service quality review/ }).click()
-    await expect(page.getByRole('link', { name: /Back to overview$/ })).toBeVisible()
-    await page.getByRole('link', { name: /Back to overview$/ }).click()
-    await expect(home).toBeVisible()
-    // Global totals include both origins; clearing the drill-in restores the last chosen category.
-    await categories.getByRole('button', { name: 'Group projects 1', exact: true }).click()
+    await work.getByRole('button', { name: /Prepare the evidence pack/ }).click()
+    await expect(page.getByRole('dialog', { name: 'Card details', exact: true })).toBeVisible()
+    await page.keyboard.press('Escape')
+    // Summary filters retain the last selected workflow tab.
     await home.getByRole('button', { name: 'Active tasks', exact: true }).click()
     await expect(categories.locator('[aria-pressed="true"]')).toHaveCount(0)
     await expect(work.getByText('Prepare the evidence pack', { exact: true })).toBeVisible()
     await expect(work.getByText('Review the consultation notes', { exact: true })).toBeVisible()
-    await expect(
-      work.getByRole('heading', { name: 'Individual tasks 1', exact: true }),
-    ).toBeVisible()
-    await expect(work.getByRole('heading', { name: 'Group projects 1', exact: true })).toBeVisible()
-    await home.getByRole('button', { name: 'In progress 1', exact: true }).click()
-    await expect(categories.locator('[aria-pressed="true"]')).toHaveCount(0)
+    await expect(work.getByRole('heading', { name: 'To do 1', exact: true })).toBeVisible()
+    await expect(work.getByRole('heading', { name: 'In progress 1', exact: true })).toBeVisible()
+    await home.getByRole('button', { name: 'In progress 1', exact: true }).first().click()
     await expect(work.getByText('Prepare the evidence pack', { exact: true })).toBeVisible()
     await expect(work.getByText('Review the consultation notes', { exact: true })).toHaveCount(0)
     await home.getByRole('button', { name: 'Clear In progress filter', exact: true }).click()
     await expect(
-      categories.getByRole('button', { name: 'Group projects 1', exact: true }),
+      categories.getByRole('button', { name: 'In progress 1', exact: true }),
     ).toHaveAttribute('aria-pressed', 'true')
-    await home.getByRole('button', { name: 'Completed & archived', exact: true }).click()
+    await home.getByRole('button', { name: 'Completed', exact: true }).click()
     await expect(work.getByText('Submitted report', { exact: true })).toBeVisible()
-    await expect(work.getByText('Archived unfinished draft', { exact: true })).toBeVisible()
+    await expect(work.getByText('Deleted unfinished draft', { exact: true })).toHaveCount(0)
     await expect(categories.locator('[aria-pressed="true"]')).toHaveCount(0)
-    await categories.getByRole('button', { name: 'Individual tasks 1', exact: true }).click()
+    await categories.getByRole('button', { name: 'To do 1', exact: true }).click()
     await expect(work.getByText('Prepare the evidence pack', { exact: true })).toHaveCount(0)
     await expect(work.getByText('Review the consultation notes', { exact: true })).toBeVisible()
     await expect(home.getByRole('checkbox')).toHaveCount(0)
@@ -247,8 +252,8 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     await expect(home.getByRole('combobox', { name: 'Work category', exact: true })).toBeVisible()
     await home
       .getByRole('combobox', { name: 'Work category', exact: true })
-      .selectOption('projects')
-    await expect(home.getByRole('link', { name: /^Service quality review/ })).toBeVisible()
+      .selectOption('in_progress')
+    await expect(home.getByText('Service quality review', { exact: true })).toBeVisible()
     await expect(home.getByRole('link', { name: /Research workshop/ })).toBeVisible()
     await page.screenshot({ path: testInfo.outputPath('member-home-phone.png') })
     expect(
@@ -296,7 +301,7 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     const beforeAccept = (await (
       await member.request.get('/api/v1/cards?q=assignee%3A%40me')
     ).json()) as { items: { id: string }[] }
-    expect(beforeAccept.items).toHaveLength(4)
+    expect(beforeAccept.items).toHaveLength(3)
     await quickAdd.getByRole('button', { name: 'Edit', exact: true }).click()
     await expect(composer).toHaveValue('Prepare the monthly report\nby Friday, urgent')
     await expect(composer).toBeFocused()

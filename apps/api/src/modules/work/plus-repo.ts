@@ -22,7 +22,6 @@ import type { CardDTO } from './schemas.js'
 
 /** A9: five pinned cards. More than five is a to-do list, not a focus list -- CLICKUP-RESEARCH §9's
  * own finding about "Personal Priorities". */
-export const FOCUS_MAX = 5
 
 /** A card that is not yours cannot be pinned by you, and a done card falls off the list on its own;
  * both are handled where they happen rather than by a database constraint that could not explain
@@ -30,7 +29,7 @@ export const FOCUS_MAX = 5
 type CardRefRow = {
   id: string
   title: string
-  status: 'active' | 'done' | 'archived'
+  status: 'active' | 'done'
   done_at: Date | null
   due_at: Date | null
   assignee_user_id: string | null
@@ -753,7 +752,7 @@ export async function getFocusList(
   })
 }
 
-export type AddFocusResult = { ok: true } | { ok: false; reason: 'not_found' | 'full' }
+export type AddFocusResult = { ok: true } | { ok: false; reason: 'not_found' }
 
 export async function addFocusPin(
   ctx: RequestContext,
@@ -775,10 +774,8 @@ export async function addFocusPin(
       sql`select count(*) as cnt, count(*) filter (where card_id = ${cardId}) as already
           from app.focus_pins where department_id = ${departmentId} and user_id = ${userId}`,
     )
-    const count = Number(existing[0]?.cnt ?? 0)
     const already = Number(existing[0]?.already ?? 0)
     if (already > 0) return { ok: true as const }
-    if (count >= FOCUS_MAX) return { ok: false as const, reason: 'full' as const }
     await tx.raw(sql`update app.focus_pins set position = position + 1
       where department_id = ${departmentId} and user_id = ${userId}`)
     await tx.raw(
@@ -1009,7 +1006,7 @@ export async function bulkPatchCardsInTx(
   if (patch.status !== undefined) {
     sets.push(sql`status = ${patch.status}`)
     sets.push(sql`done_at = ${patch.status === 'done' ? sql`now()` : null}`)
-    sets.push(sql`archived_at = ${patch.status === 'archived' ? sql`now()` : null}`)
+    sets.push(sql`archived_at = null`)
   }
   // Labels are a set operation, not a replacement: "add this label to the selection" must not
   // wipe the labels each card already carries, which a plain `labels = $1` would.

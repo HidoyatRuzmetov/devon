@@ -25,7 +25,11 @@ vi.mock('../../src/lib/can.js', () => ({ useCan: () => ({ allowed: state.allowed
 vi.mock('../../src/lib/session.js', () => ({
   useDepartment: () => ({ department: { role: state.role } }),
 }))
-vi.mock('../../src/lib/router.js', () => ({ navigate: state.navigate }))
+vi.mock('../../src/lib/router.js', () => ({
+  navigate: state.navigate,
+  useRoutePath: () => '/work/templates',
+  useSearchParams: () => new URLSearchParams(),
+}))
 function PrivateScreen() {
   state.mount()
   return <div>Private templates</div>

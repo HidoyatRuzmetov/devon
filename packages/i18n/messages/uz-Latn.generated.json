@@ -1678,7 +1678,6 @@
       "peekTitle": "Karta tafsilotlari",
       "markDone": "Bajarildi deb belgilash",
       "archive": "Arxivga olish",
-      "archived": "Arxivga olindi",
       "done": "Bajarildi",
       "checklistComplete": "Roʻyxat toʻliq bajarildi",
       "restore": "Tiklash",
@@ -1721,8 +1720,7 @@
     },
     "status": {
       "active": "Faol",
-      "done": "Bajarildi",
-      "archived": "Arxivlangan"
+      "done": "Bajarildi"
     },
     "activity": {
       "created": "kartani qoʻshdi",
@@ -1800,12 +1798,7 @@
       "rest": "Qolganlari",
       "emptyTitle": "Sizga hali vazifa berilmagan",
       "emptyBody": "Sizga berilgan vazifalar shu yerda koʻrinadi.",
-      "completed": "Bajarilgan",
-      "completedAndArchived": "Bajarilgan va arxivlangan"
-    },
-    "archive": {
-      "completedHint": "Arxivlangan · Bajarilgan",
-      "unfinishedHint": "Arxivlangan · Bajarilmagan"
+      "completed": "Bajarilgan"
     },
     "action": {
       "save": "Saqlash",
@@ -1989,7 +1982,6 @@
       "estimateSet": "{count} ta karta baholandi",
       "estimateCleared": "{count} ta kartaning bahosi tozalandi",
       "movedDone": "{count} ta karta bajarildi",
-      "archived": "{count} ta karta arxivlandi",
       "partial": "{count} tasiga huquqingiz yetmadi",
       "noneApplied": "Hech bir karta oʻzgarmadi",
       "failed": "Amalni bajarib boʻlmadi",
@@ -1998,21 +1990,20 @@
       "selectCard": "«{title}» kartasini tanlash"
     },
     "focus": {
-      "title": "Diqqat markazi",
-      "description": "Bugun eng muhim beshta ish.",
-      "count": "{count} / {max}",
-      "chip": "Diqqatda",
-      "pin": "Diqqat markaziga",
-      "unpin": "Diqqat markazidan olish",
-      "pinned": "Diqqat markaziga qoʻshildi",
-      "unpinned": "Diqqat markazidan olindi",
-      "full": "Diqqat markazida eng koʻpi {max} ta karta boʻladi.",
-      "failed": "Diqqat markazini yangilab boʻlmadi",
+      "title": "Mahkamlangan",
+      "description": "Mahkamlangan vazifalaringiz.",
+      "count": "{count}",
+      "chip": "Biriktirilgan",
+      "pin": "Mahkamlash",
+      "unpin": "Ajratish",
+      "pinned": "Mahkamlandi",
+      "unpinned": "Ajratildi",
+      "failed": "Biriktirilgan vazifalarni yangilab bo‘lmadi",
       "moveUp": "«{title}»ni yuqoriga surish",
       "moveDown": "«{title}»ni pastga surish",
-      "unpinCard": "«{title}»ni diqqat markazidan olish",
-      "emptyTitle": "Diqqat markazi boʻsh",
-      "emptyBody": "Kartani ochib, «Diqqat markaziga» tugmasini bosing."
+      "unpinCard": "“{title}”ni ajratish",
+      "emptyTitle": "Biriktirilgan vazifalar yo‘q",
+      "emptyBody": "Kartani oching va “Biriktirish”ni tanlang."
     },
     "templates": {
       "title": "Andozalar",
@@ -2695,10 +2686,6 @@
         "label": "Maqsadlar",
         "description": "Choraklik maqsadlar va ularning bajarilish darajasi."
       },
-      "focus_list": {
-        "label": "Diqqat markazi",
-        "description": "Har bir xodimda beshtagacha asosiy ish."
-      },
       "automations": {
         "label": "Avtomatlashtirish",
         "description": "«Muddat yaqinlashsa — eslat» kabi oddiy qoidalar."
@@ -3098,11 +3085,10 @@
     "noUnit": "Boʻlimingizni tanlang",
     "metrics": "Ishlarim haqida",
     "active": "Faol vazifalar",
-    "completed": "Bajarilgan va arxivda",
+    "completed": "Bajarilgan",
     "toDo": "Bajarish kerak",
     "inProgress": "Jarayonda",
     "done": "Bajarilgan",
-    "archived": "Arxivda",
     "panels": "Mening ishlarim",
     "myTasks": "Vazifalarim",
     "myProjects": "Loyihalarim",
@@ -3434,7 +3420,8 @@
     "commands": "Buyruqlar uchun botga /help, ish maydonini Telegramda ochish uchun /app yuboring.",
     "group": "Boshqarma guruhi uchun: botni guruhga qoʻshing, quyidan guruh kodini oling va toʻliq /connect buyrugʻini guruhga yuboring.",
     "progress": "Ulangan: {total} xodimdan {linked} nafari · {groups} ta guruh",
-    "telegramUnavailable": "Bot hozir javob bermayapti. Kiruvchi xabarlar ishlashda davom etadi. Birozdan keyin urinib koʻring yoki administratorga murojaat qiling."
+    "telegramUnavailable": "Bot hozir javob bermayapti. Kiruvchi xabarlar ishlashda davom etadi. Birozdan keyin urinib koʻring yoki administratorga murojaat qiling.",
+    "notConnected": "Hali ulanmagan: {names}"
   },
   "pages": {
     "onboarding": {
@@ -4106,7 +4093,7 @@
     "exportHint": "Bu yuklab olish uchun nusxa. O‘zgarishlar faqat yuklab olinadigan faylga ta’sir qiladi; saqlangan ma’lumotnoma o‘zgarmaydi.",
     "clickToEdit": "Tahrirlash uchun qiymat ustiga bosing. Escape tahrirlashga qaytaradi. Ctrl / ⌘ + Enter ko‘rib chiqish rejimini almashtiradi.",
     "readonly": "Saqlangan ma’lumotnoma faqat sizga va boshqarma boshlig‘iga ko‘rinadi.",
-    "aiHint": "AI lotin / kirill eksporti uchun nomlar va brendlarni avtomatik aniqlaydi. Hujjat matni boshqarmangizning AI provayderida qayta ishlanadi; surat yuborilmaydi.",
+    "aiHint": "AI lotin / kirill eksportida nomlarni saqlaydi.",
     "preparing": "Hujjat tayyorlanmoqda, nomlar tekshirilmoqda…",
     "exportError": "Hujjatni tayyorlab bo‘lmadi. Qoralamangiz saqlangan. Birozdan so‘ng qayta urinib ko‘ring yoki boshqarmaning AI sozlamalarini tekshiring.",
     "reviewHint": "Yuklab olishdan oldin matnni tekshiring. Eksport nusxasini tuzatish uchun istalgan qiymat ustiga bosing.",
@@ -4139,7 +4126,12 @@
       "prevJob": "Avval maktab o‘qituvchisi",
       "deathYear": "2020",
       "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy"
-    }
+    },
+    "import": "Import",
+    "importReview": "Qoralama import qilindi — saqlashdan oldin tekshiring.",
+    "undoImport": "Importni bekor qilish",
+    "importUnreadable": "8 MB gacha o‘qiladigan PDF, DOCX, ODT, RTF yoki matnli fayl tanlang. Skanerlangan PDF matn qatlamiga ega bo‘lishi kerak.",
+    "importError": "Import ishlamadi. Qoralama o‘zgarmadi; qayta urinib ko‘ring."
   },
   "pomodoroStudio": {
     "animation": "Qahramon animatsiyasi",
@@ -4279,7 +4271,7 @@
     "view": "Rasmni ochish"
   },
   "personnel": {
-    "private": "Maxfiy: saqlangan maʼlumotnomani faqat siz va boshqarma boshligʻingiz koʻra oladi. U Odamlar boʻlimida eʼlon qilinmaydi.",
+    "private": "Faqat siz va bo‘lim boshlig‘ingiz ko‘ra oladi.",
     "draftSaved": "Qoralama shu qurilmada saqlandi. Rahbarga taqdim etish uchun saqlang.",
     "addRow": "Qator qoʻshish",
     "protectedNames": "Oʻzgartirilmaydigan nomlar",
@@ -4363,6 +4355,20 @@
     "highlights": "Asosiy kasbiy maʼlumotlar. Toʻliq profil «Xodimlar» boʻlimida mavjud.",
     "noRecord": "Maʼlumotnoma hali saqlanmagan",
     "noRecordHint": "Xodim hali maʼlumotnomasini saqlamagan. Shaxsiy qoralama uning oʻz qurilmasida qoladi."
+  },
+  "checkinTask": {
+    "create": "Yangi vazifa",
+    "forPerson": "{name} uchun individual vazifa.",
+    "deliverables": "Natijalar",
+    "onePerLine": "Har bir satrda bitta nazorat ro‘yxati bandi",
+    "createAndAdd": "Yaratish va chekinga qo‘shish"
+  },
+  "cardActions": {
+    "alreadyGrouped": "Vazifa allaqachon guruh loyihasiga tegishli.",
+    "alreadyDone": "Vazifa allaqachon bajarilgan.",
+    "checkinProtected": "Check-in/out tarkibida. O‘chirishdan oldin natijalarini barcha ochiq davrlardan olib tashlang.",
+    "deleted": "O‘chirilgan",
+    "deletedOn": "O‘chirilgan: {date}"
   },
   "profileEdit": {
     "heading": "Profil",

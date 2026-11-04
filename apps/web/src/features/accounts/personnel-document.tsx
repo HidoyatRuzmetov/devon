@@ -10,6 +10,7 @@ import {
 import { useT } from '@devon/i18n'
 import { Camera, Plus, Trash2 } from 'lucide-react'
 import { AvatarCrop } from './avatar-crop.js'
+import { PersonnelPreview } from './personnel-preview.js'
 import './personnel-document.css'
 
 export const blankSchool = (): PersonnelData['schools'][number] => ({
@@ -138,9 +139,11 @@ function DocumentField({
   if (options)
     return (
       <select {...common}>
-        <option value="" disabled={path.endsWith('.status') || path.endsWith('.form')}>
-          {placeholder}
-        </option>
+        {!value ? (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        ) : null}
         {options.map((option) => (
           <option value={option.value} key={option.value}>
             {option.label}
@@ -306,6 +309,8 @@ export function PersonnelDocument({
     )
   }
   const current = personnelTemplate.currentJob(data)
+  if (preview)
+    return <PersonnelPreview data={data} script={script} readonly={readonly} onEdit={onEdit} />
   return (
     <div
       className={`personnel-desk ${preview ? 'is-preview' : 'is-editing'}`}
@@ -459,10 +464,6 @@ export function PersonnelDocument({
           ))}
           {add('work')}
         </section>
-        <footer className="personnel-page-footer">
-          <span>{t('personnelDocument.pageOne')}</span>
-          <span>1 / 2</span>
-        </footer>
       </article>
       <article
         className="personnel-paper personnel-family-paper"
@@ -545,10 +546,6 @@ export function PersonnelDocument({
           </table>
         </div>
         {add('relatives')}
-        <footer className="personnel-page-footer">
-          <span>{t('personnelDocument.pageTwo')}</span>
-          <span>2 / 2</span>
-        </footer>
       </article>
       {crop ? (
         <AvatarCrop

@@ -99,7 +99,7 @@ describe('live helper context and isolation', () => {
     )
     await superuserQuery(
       db,
-      `insert into app.cards(id,department_id,title,assignee_user_id,giver_user_id,created_by_user_id,project_id,project_scope,kind,status) values($1,$2,'Personal evidence assignment',$3,$3,$3,$4,'subjective','project_task','active'),($5,$2,'Finished assignment',$3,$3,$3,$4,'subjective','project_task','done'),($6,$2,'Archived assignment',$3,$3,$3,$4,'subjective','project_task','archived')`,
+      `insert into app.cards(id,department_id,title,assignee_user_id,giver_user_id,created_by_user_id,project_id,project_scope,kind,status) values($1,$2,'Personal evidence assignment',$3,$3,$3,$4,'subjective','project_task','active'),($5,$2,'Finished assignment',$3,$3,$3,$4,'subjective','project_task','done'),($6,$2,'Archived assignment',$3,$3,$3,$4,'subjective','project_task','done')`,
       [active, planningDepartment, planner, project, done, archived],
     )
     const input = await prepareFeatureInput(

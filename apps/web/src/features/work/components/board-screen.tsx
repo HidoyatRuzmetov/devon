@@ -152,6 +152,44 @@ function BoardScreenInner() {
   )
   const [scope, setScope] = useStoredPreference<BoardScope>('scope', user?.id, 'all', isBoardScope)
   const scrollerElRef = React.useRef<HTMLDivElement | null>(null)
+  React.useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const board = scrollerElRef.current
+      const target = event.target instanceof HTMLElement ? event.target : null
+      if (
+        !board ||
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        document.querySelector('[role="dialog"],[role="menu"],[role="listbox"]') ||
+        target?.closest(
+          'input,textarea,select,[contenteditable=true],[role=combobox],[role=slider],[role=tablist],[data-drag-handle]',
+        )
+      )
+        return
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
+      event.preventDefault()
+      const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight'
+      const scroller =
+        !horizontal && isMobile
+          ? (target?.closest<HTMLElement>('[data-board-column]') ??
+            [...board.querySelectorAll<HTMLElement>('[data-board-column]')].find(
+              (column) => column.dataset['boardColumn'] === activePersonId,
+            ) ??
+            board)
+          : board
+      scroller.scrollBy({
+        left: horizontal ? (event.key === 'ArrowLeft' ? -1 : 1) * (event.repeat ? 80 : 280) : 0,
+        top: horizontal ? 0 : (event.key === 'ArrowUp' ? -1 : 1) * (event.repeat ? 48 : 160),
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+      })
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isMobile, activePersonId])
   const changeScope = useScopeTransition(scope, setScope, scrollerElRef)
   const mobileNavigationTargetRef = React.useRef<string | null>(null)
   const edgeObserverRef = React.useRef<ResizeObserver | null>(null)
@@ -325,13 +363,6 @@ function BoardScreenInner() {
       )
     },
     [board, moveCard, announce, t, cardOrder, setCardOrder],
-  )
-
-  const handleMoveTo = React.useCallback(
-    (cardId: string, toUserId: string | null) => {
-      handleDropped(cardId, { kind: 'appendToColumn', toUserId })
-    },
-    [handleDropped],
   )
 
   const sourceColumns = React.useMemo(() => board?.columns ?? [], [board?.columns])
@@ -672,7 +703,6 @@ function BoardScreenInner() {
             </MultitaskToolbarSlot>
           </div>
           <div className="relative min-h-0 min-w-0 flex-1">
-            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Named scroll region supports arrow navigation outside interactive descendants. */}
             <div
               ref={setScrollerRefs}
               data-board-scope={isFiltering ? 'all' : scope}
@@ -681,35 +711,6 @@ function BoardScreenInner() {
               onScrollEnd={reconcileMobilePage}
               onPointerDownCapture={reconcileMobilePage}
               onWheelCapture={reconcileMobilePage}
-              onKeyDown={(event) => {
-                const target = event.target as HTMLElement
-                if (
-                  event.defaultPrevented ||
-                  event.altKey ||
-                  event.ctrlKey ||
-                  event.metaKey ||
-                  event.shiftKey ||
-                  target.closest(
-                    'input,textarea,select,[contenteditable=true],[role=combobox],[role=dialog],[data-drag-handle]',
-                  )
-                )
-                  return
-                if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
-                event.preventDefault()
-                const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight'
-                const scroller = horizontal
-                  ? event.currentTarget
-                  : isMobile
-                    ? (target.closest<HTMLElement>('[data-board-column]') ?? event.currentTarget)
-                    : event.currentTarget
-                scroller.scrollBy({
-                  left: horizontal ? (event.key === 'ArrowLeft' ? -1 : 1) * 280 : 0,
-                  top: horizontal ? 0 : (event.key === 'ArrowUp' ? -1 : 1) * 160,
-                  behavior: matchMedia('(prefers-reduced-motion: reduce)').matches
-                    ? 'instant'
-                    : 'smooth',
-                })
-              }}
               // The outer WorkShell owns the viewport bound. CSS shares the remaining height
               // with animated controls in the same layout pass, avoiding resize-observer lag.
               // Desktop shares one two-axis canvas; phones keep a vertical scroll per person.
@@ -740,7 +741,6 @@ function BoardScreenInner() {
                           mobile={isMobile}
                           onOpenCard={openCardPeek}
                           onDropped={handleDropped}
-                          onMoveTo={handleMoveTo}
                           onCollapsedChange={handleCollapsedChange}
                           selectedIds={selectedCardIds}
                           onCardSelectedChange={handleCardSelectedChange}
@@ -767,7 +767,6 @@ function BoardScreenInner() {
                       mobile={isMobile}
                       onOpenCard={openCardPeek}
                       onDropped={handleDropped}
-                      onMoveTo={handleMoveTo}
                       onCollapsedChange={handleCollapsedChange}
                       selectedIds={selectedCardIds}
                       onCardSelectedChange={handleCardSelectedChange}

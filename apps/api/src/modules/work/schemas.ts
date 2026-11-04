@@ -9,7 +9,7 @@ import { validOrderKey } from './ordering.js'
 const orderKeySchema = z.string().max(100).refine(validOrderKey, 'invalid order key')
 
 export const cardKindSchema = z.enum(['task', 'project_task'])
-export const cardStatusSchema = z.enum(['active', 'done', 'archived'])
+export const cardStatusSchema = z.enum(['active', 'done'])
 export const cardPrioritySchema = z.enum(['none', 'low', 'medium', 'high', 'urgent'])
 export const cardProjectScopeSchema = z.enum(['none', 'objective', 'subjective'])
 export const cardRiskSchema = z.enum(['none', 'at_risk', 'overdue'])
@@ -63,6 +63,7 @@ export const cardSchema = z.object({
   dueAt: z.string().nullable(),
   doneAt: z.string().nullable(),
   archivedAt: z.string().nullable(),
+  deletedAt: z.string().nullable().optional(),
   orderKey: z.string(),
   labels: z.array(z.string().uuid()),
   watchers: z.array(z.string().uuid()),
@@ -210,6 +211,10 @@ export const patchCardBodySchema = z
   .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' })
 
 export const cardListQuerySchema = z.object({
+  deleted: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
   projectId: z.string().uuid().optional(),
   q: z.string().max(500).optional(),
   cursor: z.string().optional(),

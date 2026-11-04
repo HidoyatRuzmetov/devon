@@ -679,13 +679,13 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
-      if (!departmentId) return reply.send({ items: [], max: plus.FOCUS_MAX })
+      if (!departmentId) return reply.send({ items: [] })
       const items = await plus.getFocusList(
         contextFromRequest(req),
         departmentId,
         req.actor!.userId,
       )
-      return reply.send({ items, max: plus.FOCUS_MAX })
+      return reply.send({ items })
     },
   )
 
@@ -701,19 +701,13 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return sendProblem(reply, 'not_found')
-      if (!(await requireFeature(req, reply, departmentId, 'focus_list'))) return
       const result = await plus.addFocusPin(
         contextFromRequest(req),
         departmentId,
         req.actor!.userId,
         req.body.cardId,
       )
-      if (!result.ok) {
-        if (result.reason === 'not_found') return sendProblem(reply, 'not_found')
-        return sendProblem(reply, 'validation_failed', {
-          errors: [{ path: 'cardId', code: 'focus_list_full' }],
-        })
-      }
+      if (!result.ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()
     },
   )

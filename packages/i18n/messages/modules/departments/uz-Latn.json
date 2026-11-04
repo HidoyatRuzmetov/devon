@@ -254,10 +254,6 @@
         "label": "Maqsadlar",
         "description": "Choraklik maqsadlar va ularning bajarilish darajasi."
       },
-      "focus_list": {
-        "label": "Diqqat markazi",
-        "description": "Har bir xodimda beshtagacha asosiy ish."
-      },
       "automations": {
         "label": "Avtomatlashtirish",
         "description": "«Muddat yaqinlashsa — eslat» kabi oddiy qoidalar."

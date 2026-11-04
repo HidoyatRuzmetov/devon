@@ -12,6 +12,7 @@ const manifest: FeatureManifest = {
     { path: '/account', component: AccountSettingsScreen, titleKey: 'accounts.settings.title' },
     ...[
       'professional',
+      'personnel',
       'notifications',
       'telegram',
       'calendar',

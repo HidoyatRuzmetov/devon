@@ -20,7 +20,6 @@ import {
 } from '@devon/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Archive,
   Bell,
   CalendarDays,
   CheckSquare,
@@ -359,7 +358,7 @@ export function PersonalCalendarView() {
       )
   }
   function itemRow(item: PersonalCalendarItem, compact = false) {
-    const Icon = item.kind === 'task' && item.status === 'archived' ? Archive : icons[item.kind]
+    const Icon = icons[item.kind]
     return (
       <button
         key={item.kind + item.id}
@@ -390,9 +389,6 @@ export function PersonalCalendarView() {
                 timeZone: 'Asia/Tashkent',
               }).format(new Date(item.startsAt))}
             </span>
-          ) : null}
-          {!compact && item.kind === 'task' && item.status === 'archived' ? (
-            <span className="block font-medium">{t('work.status.archived')}</span>
           ) : null}
           {!compact && item.status === 'waitlist' ? (
             <span className="block font-medium">{t('personalCalendar.waitlist')}</span>
@@ -449,7 +445,7 @@ export function PersonalCalendarView() {
           action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
         />
       ) : query.isPending ? (
-        <ViewSkeleton view="calendar" />
+        <ViewSkeleton view="personalCalendar" />
       ) : (
         <>
           <div

@@ -4,13 +4,13 @@ import type { Card } from '../work/api.js'
 export function taskProgress(
   cards: readonly Pick<Card, 'status' | 'doneAt' | 'checklistTotal' | 'checklistDone'>[],
 ): number {
-  const included = cards.filter((card) => card.status !== 'archived' || card.doneAt !== null)
+  const included = cards
   if (included.length === 0) return 0
   return (
     included.reduce(
       (sum, card) =>
         sum +
-        (card.status === 'done' || card.doneAt !== null
+        (card.status === 'done'
           ? 1
           : card.checklistTotal > 0
             ? card.checklistDone / card.checklistTotal

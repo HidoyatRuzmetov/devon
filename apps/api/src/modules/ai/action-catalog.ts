@@ -1,6 +1,7 @@
 import {
   aiActionBindingSchema,
   checkinAddSchema,
+  checkinCreateTaskSchema,
   checkinSelectionSchema,
   checkinLayoutWriteSchema,
   professionalProfileWriteRecordSchema,
@@ -136,6 +137,16 @@ export const ACTIONS: Record<string, Action> = {
     ),
     headOnly: true,
   },
+  'checkin.createTask': {
+    ...endpoint(
+      'POST',
+      '/checkins/cycles/:id/members/:memberUserId/tasks',
+      z.object({ id, memberUserId: id, body: checkinCreateTaskSchema }).strict(),
+      'HEAD ONLY: atomically create an individual task assigned to this person, its checklist and selected deliverables in this cycle. Use a stable operationId for retries. Allowed during locked check-in (additions only), never after checkout closes. Group tasks must be created through project actions.',
+      '/analytics',
+    ),
+    headOnly: true,
+  },
   'checkin.selection': endpoint(
     'PUT',
     '/checkins/cycles/:id/members/:memberUserId/selection',
@@ -182,23 +193,23 @@ export const ACTIONS: Record<string, Action> = {
     target,
     'Toggle watching a card for the current user. Inspect current watchers first; never toggle speculatively.',
   ),
-  'focus.add': endpoint(
+  'pin.add': endpoint(
     'POST',
     '/work/focus',
     body(addFocusBodySchema),
-    'Add an existing card to the current user’s focus list.',
+    'Pin an existing card for the current user. There is no five-card limit.',
   ),
-  'focus.remove': endpoint(
+  'pin.remove': endpoint(
     'DELETE',
     '/work/focus/:id',
     target,
-    'Remove a card from the current user’s focus list, keeping the card.',
+    'Unpin a card for the current user, keeping the card.',
   ),
-  'focus.reorder': endpoint(
+  'pin.reorder': endpoint(
     'POST',
     '/work/focus/reorder',
     body(reorderFocusBodySchema),
-    'Reorder the current user’s focus cards.',
+    'Reorder the current user’s pinned cards.',
   ),
   'dependency.add': endpoint(
     'POST',
@@ -421,7 +432,7 @@ export const ACTIONS: Record<string, Action> = {
     cardHref,
     'PATCH',
     patch(patchCardBodySchema.safeExtend({ version: z.number().int().min(1) }).strict()),
-    'Edit a card, assign it, change dates/priority/status/workStage, complete or archive it. Include its current version.',
+    'Edit a card, assign it, change dates/priority/status/workStage, mark it done or reopen it. Include its current version.',
   ),
   'card.delete': resource(
     'cards',
@@ -430,10 +441,6 @@ export const ACTIONS: Record<string, Action> = {
     target,
     'Soft-delete one specified card after explicit confirmation.',
   ),
-  'card.restore': {
-    ...resource('cards', cardHref, 'POST', target, 'Restore one archived card.'),
-    path: (a) => `/cards/${a['id']}/restore`,
-  },
   'page.create': resource(
     'pages',
     pageHref,

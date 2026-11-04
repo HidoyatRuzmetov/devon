@@ -10,9 +10,7 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 
-test('archives retain visible completion and require explicit restoration @flow', async ({
-  browser,
-}, info) => {
+test('task actions pin, complete and delete without Archive @flow', async ({ browser }, info) => {
   test.setTimeout(120_000)
   const admin = await newFlowContext(browser)
   const context = await newFlowContext(browser)
@@ -21,16 +19,16 @@ test('archives retain visible completion and require explicit restoration @flow'
     await createApprovedDepartment(context, admin, {
       headLogin: uniqueLogin('archive.head'),
       headPassword: examplePassword(),
-      departmentName: 'Archive presentation QA',
+      departmentName: 'Task actions QA',
     })
     expect((await authedPatch(context, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
     const me = (await (await context.request.get('/api/v1/me')).json()) as { user: { id: string } }
     const [unfinished, finished] = await Promise.all(
-      ['Unfinished archive', 'Completed archive'].map(async (title) => {
+      ['Active task', 'Completed task'].map(async (title) => {
         const response = await authedPost(context, '/api/v1/cards', {
           title,
           assigneeUserId: me.user.id,
-          priority: title === 'Unfinished archive' ? 'urgent' : 'high',
+          priority: title === 'Active task' ? 'urgent' : 'high',
           dueAt: '2026-10-22T12:00:00Z',
         })
         expect(response.status()).toBe(201)
@@ -40,12 +38,11 @@ test('archives retain visible completion and require explicit restoration @flow'
     expect(
       (await authedPatch(context, `/api/v1/cards/${finished!.id}`, { status: 'done' })).status(),
     ).toBe(200)
-    const archived = await Promise.all(
-      [unfinished!, finished!].map((card) =>
-        authedPatch(context, `/api/v1/cards/${card.id}`, { status: 'archived' }),
-      ),
-    )
-    for (const response of archived) expect(response.status()).toBe(200)
+    expect(
+      (
+        await authedPatch(context, `/api/v1/cards/${unfinished!.id}`, { status: 'archived' })
+      ).status(),
+    ).toBe(422)
     const page = await context.newPage()
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/work/table')
@@ -59,31 +56,31 @@ test('archives retain visible completion and require explicit restoration @flow'
     await page.goto('/work')
     await page.getByRole('button', { name: 'Board guide and display', exact: true }).click()
     await expect(page.getByRole('button', { name: /^(Roomy|Compact)$/ })).toHaveCount(0)
+    await page.keyboard.press('Escape')
+    const active = page.locator('[data-dnd-card="' + unfinished!.id + '"]')
+    await active.getByRole('button', { name: 'Card actions', exact: true }).click()
+    await expect(page.getByRole('menuitem', { name: 'Move to', exact: true })).toHaveCount(0)
+    await page.getByRole('menuitem', { name: 'Pin', exact: true }).click()
+    await expect
+      .poll(
+        async () =>
+          (await (await context.request.get('/api/v1/cards/' + unfinished!.id)).json()).focusPinned,
+      )
+      .toBe(true)
+    await page.getByRole('button', { name: 'Active task', exact: true }).click()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer.getByRole('button', { name: 'Archive', exact: true })).toHaveCount(0)
+    await expect(drawer.getByRole('button', { name: 'More actions', exact: true })).toHaveCount(0)
+    await expect(drawer.getByRole('button', { name: 'Delete', exact: true })).toBeVisible()
+    await page.keyboard.press('Escape')
     await page.goto('/work/mine')
-    await page.getByRole('button', { name: 'Completed & archived (2)' }).click()
-    for (const title of ['Unfinished archive', 'Completed archive'])
-      await expect(page.getByRole('checkbox', { name: title })).toBeDisabled()
-    await expect(page.getByRole('checkbox', { name: 'Unfinished archive' })).not.toBeChecked()
-    await expect(page.getByRole('checkbox', { name: 'Completed archive' })).toBeChecked()
-    await expect(page.getByText('Unfinished archive', { exact: true })).not.toHaveClass(
-      /line-through/,
-    )
-    await expect(page.getByText('Completed archive', { exact: true })).toHaveClass(/line-through/)
-    await expect(page.getByRole('img', { name: 'Archived · Completed' })).toBeVisible()
-    await expect(page.getByRole('img', { name: 'Archived · Not completed' })).toBeVisible()
-    expect(
-      (await page.getByText('Unfinished archive', { exact: true }).boundingBox())!.width,
-    ).toBeGreaterThan(180)
-    await page.screenshot({ path: info.outputPath('archive-desktop.png'), fullPage: true })
+    await page.getByRole('button', { name: 'Completed (1)' }).click()
+    await expect(page.getByRole('checkbox', { name: 'Completed task' })).toBeChecked()
+    await expect(page.getByText('Completed task', { exact: true })).toHaveClass(/line-through/)
+    await page.screenshot({ path: info.outputPath('done-desktop.png'), fullPage: true })
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(page.getByRole('img', { name: 'Archived · Not completed' })).toBeVisible()
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-    ).toBe(true)
-    expect(
-      (await page.getByText('Unfinished archive', { exact: true }).boundingBox())!.width,
-    ).toBeGreaterThan(180)
-    await page.screenshot({ path: info.outputPath('archive-mobile.png'), fullPage: true })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: info.outputPath('done-mobile.png'), fullPage: true })
     const axe = await new AxeBuilder({ page })
       .include('main')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -91,29 +88,6 @@ test('archives retain visible completion and require explicit restoration @flow'
     expect(axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')).toEqual(
       [],
     )
-    await page.goto('/work/archive')
-    await expect(page).toHaveURL(/\/work\/mine\?q=status%3Aarchived&completed=1$/)
-    await expect(
-      page
-        .getByRole('navigation', { name: 'Cards', exact: true })
-        .getByRole('link', { name: 'Archive', exact: true }),
-    ).toHaveCount(0)
-    await expect(page.getByRole('img', { name: 'Archived · Not completed' })).toBeVisible()
-    expect(
-      (await page.getByText('Unfinished archive', { exact: true }).boundingBox())!.width,
-    ).toBeGreaterThan(180)
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-    ).toBe(true)
-    await page.screenshot({ path: info.outputPath('archive-list-mobile.png'), fullPage: true })
-    await page.getByText('Unfinished archive', { exact: true }).click()
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: 'More actions', exact: true })
-      .click()
-    await expect(page.getByRole('button', { name: 'Restore', exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Restore', exact: true }).click()
-    await expect(page.getByRole('img', { name: 'Archived · Not completed' })).toHaveCount(0)
   } finally {
     await context.close()
     await admin.close()

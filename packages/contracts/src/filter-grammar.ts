@@ -11,7 +11,7 @@
 // (`FilterContext.resolveUserIds` / `resolveProjectIds` / ...), so the grammar itself stays a pure,
 // table-agnostic text-processing module, exactly like `permissions.ts`'s `can()`.
 //
-export type CardFilterStatus = 'active' | 'done' | 'archived'
+export type CardFilterStatus = 'active' | 'done'
 export type CompareOp = '<=' | '>=' | '<' | '>' | '='
 
 export type FilterClause =
@@ -47,7 +47,7 @@ const KNOWN_KEYS = new Set([
   'unit',
   'estimate',
 ])
-const STATUS_VALUES = new Set<CardFilterStatus>(['active', 'done', 'archived'])
+const STATUS_VALUES = new Set<CardFilterStatus>(['active', 'done'])
 const COMPARE_OPS: readonly CompareOp[] = ['<=', '>=', '<', '>', '='] // longest-first: checked in order
 
 // One match per token: `key:"quoted value"` | `key:bareValue` | `"quoted free text"` | `bareWord`.

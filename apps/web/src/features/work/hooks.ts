@@ -349,15 +349,6 @@ export function nextDoneStatus(_card: Pick<Card, 'projectScope'>): CardStatus {
   return 'done'
 }
 
-export function useRestoreCardMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (id: string) => api.restoreCard(id, csrf),
-    onSuccess: (_data, id) => invalidateCard(qc, id),
-  })
-}
-
 export function useDeleteCardMutation(undo = false) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()

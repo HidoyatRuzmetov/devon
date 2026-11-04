@@ -125,7 +125,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
       path: testInfo.outputPath('account-settings-desktop.png'),
       fullPage: true,
     })
-    await settingsNav.getByRole('link', { name: 'Professional profile', exact: true }).click()
+    await settingsNav.getByRole('link', { name: 'Résumé', exact: true }).click()
     await expect(page.getByRole('textbox', { name: 'Headline', exact: true })).toHaveValue(
       'Research analyst',
     )

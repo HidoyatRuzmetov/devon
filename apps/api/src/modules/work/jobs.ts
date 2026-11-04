@@ -74,7 +74,7 @@ function departmentContext(departmentId: string, userId: string | null): Request
 export function nextInstanceDueAt(
   rule: RecurrenceRule,
   card: {
-    status: 'active' | 'done' | 'archived'
+    status: 'active' | 'done'
     dueAt: string | null
     doneAt: string | null
     archivedAt: string | null

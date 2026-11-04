@@ -93,9 +93,9 @@ test('@flow card drawer keeps primary work reachable and board controls discover
     await page.screenshot({ path: testInfo.outputPath('drawer-desktop.png') })
     await dialog.getByRole('button', { name: 'More details', exact: true }).click()
     await expect(dialog.getByRole('button', { name: /^Giver:/ })).toBeVisible()
-    await dialog.getByRole('button', { name: 'More actions', exact: true }).click()
-    await expect(page.getByRole('button', { name: 'Archive', exact: true })).toBeVisible()
-    await page.keyboard.press('Escape')
+    await expect(dialog.getByRole('button', { name: 'More actions', exact: true })).toHaveCount(0)
+    await expect(dialog.getByRole('button', { name: 'Archive', exact: true })).toHaveCount(0)
+    await expect(dialog.getByRole('button', { name: 'Delete', exact: true }).first()).toBeVisible()
     await expect(dialog).toBeVisible()
     await page.setViewportSize({ width: 390, height: 844 })
     await scroll.evaluate((element) => {

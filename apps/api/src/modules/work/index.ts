@@ -1,5 +1,5 @@
 // Work core (TECH-SPEC §3.2/§4, EPIC-004): cards, checklist, comments, activity, labels, the People
-// board, saved views, filter grammar, archive. Every route is `{kind:'department_child'}`, scoped to
+// board, saved views, filter grammar, deletion history. Every route is `{kind:'department_child'}`, scoped to
 // `req.actor.departmentId` (this build's one active department per session -- EPIC-002 has not
 // shipped a switcher yet, see `apps/api/src/lib/actor.ts`).
 import { matchesFilterQuery, parseFilterQuery, type FilterableCard } from '@devon/contracts'
@@ -109,7 +109,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const ctx = contextFromRequest(req)
       const [members, cards, labels] = await Promise.all([
         repo.getMembers(ctx, departmentId),
-        repo.listCards(ctx, departmentId, { excludeArchived: true }),
+        repo.listCards(ctx, departmentId, {}),
         repo.getLabels(ctx, departmentId),
       ])
       const active = cards.filter((c) => c.status !== 'done')
@@ -159,7 +159,10 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!departmentId) return reply.send({ items: [], nextCursor: null })
       const ctx = contextFromRequest(req)
       const [cards, members, labels, projectNames] = await Promise.all([
-        repo.listCards(ctx, departmentId, { projectId: req.query.projectId }),
+        repo.listCards(ctx, departmentId, {
+          projectId: req.query.projectId,
+          deleted: req.query.deleted,
+        }),
         repo.getMembers(ctx, departmentId),
         repo.getLabels(ctx, departmentId),
         repo.getProjectNames(ctx, departmentId),
@@ -317,7 +320,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const departmentId = requireDepartmentId(req)!
       const ctx = contextFromRequest(req)
       const { version, ...patch } = req.body
-      // D6a/D6b: rewriting, re-dating, reassigning or archiving a colleague's card you have nothing
+      // D6a/D6b: rewriting, re-dating, reassigning or deleting a colleague's card you have nothing
       // to do with is the leak the CTO felt. The giver, the assignee, the creator and the head may;
       // everyone else gets a 403 and the board hides the affordance (`canEdit` on the DTO).
       const ownership = await requireCardOwnership(req, reply, departmentId, req.params.id)
@@ -434,33 +437,6 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         ))
       )
         return sendProblem(reply, 'not_found')
-      return reply.code(204).send()
-    },
-  )
-
-  app.post(
-    '/cards/:id/restore',
-    {
-      config: {
-        permission: {
-          action: 'update',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      const restoreOwnership = await requireCardOwnership(req, reply, departmentId, req.params.id)
-      if (!restoreOwnership.ok) return
-      const ok = await repo.restoreCard(
-        contextFromRequest(req),
-        departmentId,
-        req.params.id,
-        req.actor!.userId,
-      )
-      if (!ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()
     },
   )

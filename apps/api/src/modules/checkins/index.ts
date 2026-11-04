@@ -6,6 +6,7 @@ import {
   checkinSourceCardSchema,
   checkinSelectionSchema,
   checkinLayoutWriteSchema,
+  checkinCreateTaskSchema,
 } from '@devon/contracts'
 import type { FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
@@ -14,6 +15,8 @@ import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from '../work/context.js'
 import * as repo from './repo.js'
+import { WorkPlanError } from '../work/workflow-repo.js'
+import { workflowResultSchema } from '../work/workflow-schemas.js'
 
 const subject = (req: FastifyRequest) => ({
   kind: 'department_child' as const,
@@ -22,7 +25,7 @@ const subject = (req: FastifyRequest) => ({
 const params = z.object({ id: z.string().uuid() })
 const routes: FastifyPluginAsyncZod = async (app) => {
   app.setErrorHandler((error, _req, reply) => {
-    if (error instanceof repo.CheckinError)
+    if (error instanceof repo.CheckinError || error instanceof WorkPlanError)
       return sendProblem(reply, error.code, { errors: [{ path: 'checkin', code: error.reason }] })
     // Drizzle wraps PostgreSQL trigger failures in a query error; keep lock conflicts as 409s.
     const cause = error instanceof Error && error.cause instanceof Error ? error.cause : error
@@ -31,6 +34,38 @@ const routes: FastifyPluginAsyncZod = async (app) => {
     throw error
   })
   const memberParams = params.extend({ memberUserId: z.string().uuid() })
+  app.post(
+    '/cycles/:id/members/:memberUserId/tasks',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (req) => ({
+            kind: 'department_managed',
+            departmentId: req.actor?.departmentId ?? '',
+          }),
+        },
+      },
+      schema: {
+        params: memberParams,
+        body: checkinCreateTaskSchema,
+        response: { 201: workflowResultSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      return reply
+        .code(201)
+        .send(
+          await repo.createIndividualTask(
+            contextFromRequest(req),
+            req.params.id,
+            req.params.memberUserId,
+            req.body,
+          ),
+        )
+    },
+  )
   app.get(
     '/cycles/:id/members/:memberUserId/candidates',
     {

@@ -1,14 +1,5 @@
 import { ViewSkeleton } from '../../../lib/view-skeleton.js'
-// v1.1 SPEC §7 (A9) -- "Diqqat markazi": up to five cards pinned to the top of My tasks and Home.
-//
-// ClickUp calls this LineUp. The point is not another list -- the department already has several --
-// but a *short* one with a hard ceiling: five is small enough that re-reading it every morning is
-// free, and a ceiling is what stops it becoming a second backlog. The server owns the number and
-// returns it (`max`), so the sentence that explains a refused sixth pin and the rule that refuses it
-// can never disagree.
-//
-// Personal by design: nobody else's pins ever appear here, and pinning somebody else's card to your
-// own five is exactly the intended use.
+// Personal pins have no artificial limit and never affect another person’s ordering.
 import * as React from 'react'
 import { ArrowDown, ArrowUp, Pin, PinOff } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -31,7 +22,6 @@ import {
   useReorderFocusMutation,
 } from '../hooks-plus.js'
 import { RISK_BADGE_CLASSNAME, RISK_LABEL_KEY, isCardCompleted } from '../lib/format.js'
-import { ArchivedCardBadge } from './archived-card-badge.js'
 import type { FocusPin } from '../api-plus.js'
 
 function PinRow({
@@ -76,7 +66,6 @@ function PinRow({
         >
           {card.title}
         </button>
-        <ArchivedCardBadge card={card} />
         {card.risk !== 'none' ? (
           <Badge tone="neutral" className={RISK_BADGE_CLASSNAME[card.risk]}>
             {t(RISK_LABEL_KEY[card.risk])}
@@ -87,8 +76,7 @@ function PinRow({
             {formatDate(new Date(card.dueAt), locale)}
           </span>
         ) : null}
-        {/* Reorder by button, not only by drag: five rows is exactly the size where two arrows beat
-            a drag handle, and they work from the keyboard without any extra machinery. */}
+        {/* Personal pin ordering is also available from the keyboard. */}
         <IconButton
           aria-label={t('work.focus.moveUp', { title: card.title })}
           disabled={index === 0 || busy}
@@ -135,7 +123,6 @@ export function FocusList({
   const reorder = useReorderFocusMutation()
 
   const items = query.data?.items ?? []
-  const max = query.data?.max ?? 5
   const busy = removeFocus.isPending || reorder.isPending
 
   function move(from: number, to: number): void {
@@ -203,9 +190,7 @@ export function FocusList({
         <h3 className="flex items-center gap-1.5 text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           <Pin className="size-3.5" aria-hidden="true" />
           {t('work.focus.title')}
-          <span className="font-normal normal-case tabular-nums">
-            {t('work.focus.count', { count: items.length, max })}
-          </span>
+          <span className="font-normal normal-case tabular-nums">{items.length}</span>
         </h3>
         {body}
       </section>

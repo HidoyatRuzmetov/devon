@@ -39,7 +39,7 @@ export const miniappSessionSchema = miniappIdentitySchema.extend({
 export const miniCardSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
-  status: z.enum(['active', 'done', 'archived']),
+  status: z.enum(['active', 'done']),
   priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']),
   risk: z.enum(['none', 'at_risk', 'overdue']),
   dueAt: z.string().nullable(),
@@ -90,6 +90,7 @@ export const setupChecklistSchema = z.object({
   miniappUrl: z.string(),
   memberCount: z.number().int(),
   linkedMemberCount: z.number().int(),
+  unlinkedMembers: z.array(z.object({ userId: z.string().uuid(), name: z.string() })),
   groupCount: z.number().int(),
   steps: z.array(
     z.object({

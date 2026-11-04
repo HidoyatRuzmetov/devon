@@ -21,7 +21,6 @@ import { useCardsQuery } from '../hooks.js'
 import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
-import { ArchivedCardBadge } from './archived-card-badge.js'
 import { isCardCompleted } from '../lib/format.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import { useEventsQuery } from '../../events/hooks.js'
@@ -113,7 +112,6 @@ function DayCell({
         <span className={cn('min-w-0 flex-1 truncate', isCardCompleted(c) && 'line-through')}>
           {c.title}
         </span>
-        <ArchivedCardBadge card={c} className="py-0" />
       </button>
     )
   }
@@ -292,7 +290,7 @@ export default function CalendarScreen() {
 
   let grid: React.ReactNode
   if (cardsQuery.isPending || eventsQuery.isPending || projectsQuery.isPending) {
-    grid = <ViewSkeleton view="calendar" />
+    grid = <ViewSkeleton view="workCalendar" />
   } else if (cardsQuery.isError || eventsQuery.isError || projectsQuery.isError) {
     grid = (
       <StateView

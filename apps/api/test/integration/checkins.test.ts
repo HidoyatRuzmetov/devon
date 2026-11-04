@@ -102,6 +102,92 @@ async function read(f: Awaited<ReturnType<typeof fixture>>, cycleId = f.cycleId)
   return response.json() as Promise<CheckinBoard>
 }
 describe('check-in lifecycle and source integrity', () => {
+  it('creates an individual task and selected checklist atomically for the head, including agreed check-ins', async () => {
+    const f = await fixture()
+    const path = `/checkins/cycles/${f.cycleId}/members/${f.member.id}/tasks`
+    const input = {
+      operationId: randomUUID(),
+      title: 'Direct check-in task',
+      priority: 'urgent',
+      checklist: ['First delivery', 'Second delivery'],
+    }
+    expect((await request(f.session, path, 'POST', input)).status).toBe(403)
+    const noCsrf = { ...f.headSession, headers: { ...f.headSession.headers } }
+    delete noCsrf.headers['x-csrf-token']
+    expect((await request(noCsrf, path, 'POST', input)).status).toBe(403)
+    expect(
+      (
+        await request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+          phase: 'checkin',
+          memberUserId: f.member.id,
+        })
+      ).status,
+    ).toBe(204)
+    const response = await request(f.headSession, path, 'POST', input)
+    expect(response.status, await response.clone().text()).toBe(201)
+    const created = (await response.json()) as { id: string; checklistAdded: number }
+    expect(created.checklistAdded).toBe(2)
+    expect(await (await request(f.headSession, path, 'POST', input)).json()).toEqual(created)
+    expect((await read(f)).entries.filter((e) => e.cardId === created.id)).toHaveLength(2)
+    const card = (await (await request(f.headSession, `/cards/${created.id}`)).json()) as {
+      card: { kind: string; projectId: string | null; assigneeUserId: string; priority: string }
+    }
+    expect(card).toMatchObject({
+      kind: 'task',
+      projectId: null,
+      assigneeUserId: f.member.id,
+      priority: 'urgent',
+    })
+    expect((await request(f.headSession, `/cards/${created.id}`, 'DELETE')).status).toBe(409)
+    expect(
+      (
+        await request(f.headSession, path, 'POST', {
+          ...input,
+          operationId: randomUUID(),
+          projectId: randomUUID(),
+        })
+      ).status,
+    ).toBe(422)
+  })
+
+  it('rolls back task creation for a closed cycle or a foreign person', async () => {
+    const f = await fixture(),
+      other = await fixture(true)
+    const input = {
+      operationId: randomUUID(),
+      title: `No orphan ${randomUUID()}`,
+      checklist: ['Delivery'],
+    }
+    expect(
+      (
+        await request(
+          f.headSession,
+          `/checkins/cycles/${f.cycleId}/members/${other.member.id}/tasks`,
+          'POST',
+          input,
+        )
+      ).status,
+    ).toBeGreaterThanOrEqual(400)
+    await superuserQuery(
+      db,
+      'update app.checkin_cycles set checkin_locked_at=now(),checkout_locked_at=now() where id=$1',
+      [f.cycleId],
+    )
+    expect(
+      (
+        await request(
+          f.headSession,
+          `/checkins/cycles/${f.cycleId}/members/${f.member.id}/tasks`,
+          'POST',
+          input,
+        )
+      ).status,
+    ).toBe(409)
+    expect(
+      await superuserQuery(db, 'select id from app.cards where title=$1', [input.title]),
+    ).toHaveLength(0)
+  })
+
   it('excludes the head, removes only the check-in link, and does not duplicate an item', async () => {
     const f = await fixture()
     expect(f.board.members.map((m) => m.userId)).toEqual([f.member.id])

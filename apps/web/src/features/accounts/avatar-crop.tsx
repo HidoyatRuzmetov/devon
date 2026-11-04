@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Button, Dialog, DialogContent, IconButton } from '@devon/ui'
-import { FlipHorizontal2, RotateCcw, RotateCw } from 'lucide-react'
+import { FlipHorizontal2, RotateCwSquare, Undo2 } from 'lucide-react'
 
 export function AvatarCrop({
   file,
@@ -22,8 +22,9 @@ export function AvatarCrop({
   const [offset, setOffset] = React.useState({ x: 0, y: 0 }),
     [saving, setSaving] = React.useState(false),
     [failed, setFailed] = React.useState(false)
-  const canvas = React.useRef<HTMLCanvasElement>(null),
-    pointer = React.useRef<{ id: number; x: number; y: number } | null>(null)
+  const canvas = React.useRef<HTMLCanvasElement>(null)
+  const pointers = React.useRef(new Map<number, { x: number; y: number }>())
+  const transform = React.useRef({ zoom: 1, x: 0, y: 0 })
   const SIZE = 640,
     HEIGHT = Math.round(SIZE / aspectRatio)
   React.useEffect(() => {
@@ -52,17 +53,47 @@ export function AvatarCrop({
       URL.revokeObjectURL(url)
     }
   }, [file])
-  function bounds(next: { x: number; y: number }) {
+  function bounds(next: { x: number; y: number }, nextZoom = zoom) {
     if (!image) return { x: 0, y: 0 }
     const w = rotation % 180 ? image.naturalHeight : image.naturalWidth,
       h = rotation % 180 ? image.naturalWidth : image.naturalHeight
-    const scale = Math.max(SIZE / w, HEIGHT / h) * zoom
+    const scale = Math.max(SIZE / w, HEIGHT / h) * nextZoom
     return {
       x: Math.max(-(w * scale - SIZE) / 2, Math.min((w * scale - SIZE) / 2, next.x)),
       y: Math.max(-(h * scale - HEIGHT) / 2, Math.min((h * scale - HEIGHT) / 2, next.y)),
     }
   }
   const clamped = bounds(offset)
+  transform.current = { zoom, ...clamped }
+  function applyTransform(nextZoom: number, point: { x: number; y: number }) {
+    const boundedZoom = Math.max(1, Math.min(4, nextZoom))
+    const next = bounds(point, boundedZoom)
+    transform.current = { zoom: boundedZoom, ...next }
+    setZoom(boundedZoom)
+    setOffset(next)
+  }
+  // Trackpad pinch is ctrl+wheel. Non-passive handling prevents browser page zoom.
+  React.useEffect(() => {
+    const element = canvas.current
+    if (!element) return
+    const wheel = (event: WheelEvent) => {
+      event.preventDefault()
+      if (!image || saving || failed) return
+      const rect = element.getBoundingClientRect()
+      const old = transform.current
+      const nextZoom = Math.max(1, Math.min(4, old.zoom * Math.exp(-event.deltaY * 0.008)))
+      const x = ((event.clientX - rect.left - rect.width / 2) * SIZE) / rect.width
+      const y = ((event.clientY - rect.top - rect.height / 2) * HEIGHT) / rect.height
+      applyTransform(nextZoom, {
+        x: x + ((old.x - x) * nextZoom) / old.zoom,
+        y: y + ((old.y - y) * nextZoom) / old.zoom,
+      })
+    }
+    element.addEventListener('wheel', wheel, { passive: false })
+    return () => element.removeEventListener('wheel', wheel)
+    // Gesture state comes from the ref, including batched pointer moves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [image, rotation, saving, failed, HEIGHT])
   React.useEffect(() => {
     setOffset({ x: clamped.x, y: clamped.y })
   }, [clamped.x, clamped.y])
@@ -84,6 +115,8 @@ export function AvatarCrop({
     context.restore()
   }, [image, zoom, rotation, flip, clamped.x, clamped.y, HEIGHT])
   function reset() {
+    pointers.current.clear()
+    transform.current = { zoom: 1, x: 0, y: 0 }
     setZoom(1)
     setRotation(0)
     setFlip(false)
@@ -96,123 +129,8 @@ export function AvatarCrop({
         if (!open && !saving) onClose()
       }}
     >
-      <DialogContent title={t('photoEditor.title')} className="max-w-120">
-        <p className="my-3 text-small text-muted-foreground">
-          {t(aspectRatio === 1 ? 'photoEditor.hint' : 'personnel.photoHint')}
-        </p>
-        <div
-          className="relative mx-auto w-full max-w-72 overflow-hidden rounded-lg bg-muted"
-          style={{ aspectRatio }}
-        >
-          <canvas
-            ref={canvas}
-            width={SIZE}
-            height={HEIGHT}
-            role="img"
-            aria-label={t('photoEditor.preview')}
-            className="h-full w-full touch-none cursor-grab active:cursor-grabbing"
-            onPointerDown={(e) => {
-              if (saving) return
-              e.currentTarget.setPointerCapture(e.pointerId)
-              pointer.current = { id: e.pointerId, x: e.clientX, y: e.clientY }
-            }}
-            onPointerMove={(e) => {
-              const p = pointer.current
-              if (!p || p.id !== e.pointerId) return
-              const scale = SIZE / e.currentTarget.getBoundingClientRect().width
-              setOffset(
-                bounds({
-                  x: clamped.x + (e.clientX - p.x) * scale,
-                  y: clamped.y + (e.clientY - p.y) * scale,
-                }),
-              )
-              pointer.current = { id: p.id, x: e.clientX, y: e.clientY }
-            }}
-            onPointerUp={() => {
-              pointer.current = null
-            }}
-            onPointerCancel={() => {
-              pointer.current = null
-            }}
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 border border-white/60"
-          >
-            <div className="absolute inset-x-1/3 inset-y-0 border-x border-white/30" />
-            <div className="absolute inset-y-1/3 inset-x-0 border-y border-white/30" />
-            {aspectRatio === 1 ? (
-              <div className="absolute inset-0 rounded-full border border-white/50 shadow-[0_0_0_4rem_#00000025]" />
-            ) : null}
-          </div>
-        </div>
-        {failed ? (
-          <p role="alert" className="mt-3 text-small text-destructive">
-            {t('photoEditor.error')}
-          </p>
-        ) : null}
-        <fieldset disabled={!image || saving || failed} className="mt-4 space-y-3">
-          <label className="flex items-center gap-3 text-small">
-            {t('photoEditor.zoom')}
-            <input
-              className="min-w-0 flex-1 accent-primary"
-              type="range"
-              min="1"
-              max="4"
-              step="0.01"
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-            />
-            <output className="w-12 text-right tabular-nums">{Math.round(zoom * 100)}%</output>
-          </label>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex gap-1">
-              <IconButton
-                aria-label={t('photoEditor.rotate')}
-                onClick={() => {
-                  setRotation((r) => (r + 90) % 360)
-                  setOffset({ x: 0, y: 0 })
-                }}
-              >
-                <RotateCw />
-              </IconButton>
-              <IconButton
-                aria-label={t('photoEditor.flip')}
-                aria-pressed={flip}
-                onClick={() => setFlip(!flip)}
-              >
-                <FlipHorizontal2 />
-              </IconButton>
-              <IconButton aria-label={t('photoEditor.reset')} onClick={reset}>
-                <RotateCcw />
-              </IconButton>
-            </div>
-            <div
-              className="flex items-center gap-1"
-              role="group"
-              aria-label={t('photoEditor.position')}
-            >
-              {(['left', 'up', 'down', 'right'] as const).map((direction, index) => (
-                <IconButton
-                  key={direction}
-                  aria-label={t(`photoEditor.${direction}`)}
-                  onClick={() =>
-                    setOffset(
-                      bounds({
-                        x:
-                          clamped.x + (direction === 'left' ? -20 : direction === 'right' ? 20 : 0),
-                        y: clamped.y + (direction === 'up' ? -20 : direction === 'down' ? 20 : 0),
-                      }),
-                    )
-                  }
-                >
-                  {['←', '↑', '↓', '→'][index]}
-                </IconButton>
-              ))}
-            </div>
-          </div>
-        </fieldset>
-        <div className="mt-5 flex justify-end gap-2">
+      <DialogContent title={t('photoEditor.title')} className="max-w-120" showClose={false}>
+        <div className="my-4 flex justify-between gap-2">
           <Button variant="ghost" disabled={saving} onClick={onClose}>
             {t('checkins.cancel')}
           </Button>
@@ -236,6 +154,108 @@ export function AvatarCrop({
             {t('photoEditor.apply')}
           </Button>
         </div>
+
+        <div
+          className="relative mx-auto w-full max-w-88 overflow-hidden rounded-xl bg-muted shadow-inner"
+          style={{ aspectRatio }}
+        >
+          <canvas
+            ref={canvas}
+            width={SIZE}
+            height={HEIGHT}
+            role="img"
+            aria-label={t('photoEditor.preview')}
+            className="h-full w-full touch-none cursor-grab active:cursor-grabbing"
+            onPointerDown={(e) => {
+              if (saving || !image || failed || e.button !== 0 || pointers.current.size >= 2) return
+              e.preventDefault()
+              e.currentTarget.setPointerCapture(e.pointerId)
+              pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+            }}
+            onPointerMove={(e) => {
+              const previous = pointers.current.get(e.pointerId)
+              if (!previous || saving) return
+              e.preventDefault()
+              const before = [...pointers.current.values()]
+              pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+              const rect = e.currentTarget.getBoundingClientRect()
+              const scale = SIZE / rect.width
+              const old = transform.current
+              if (before.length === 2) {
+                const after = [...pointers.current.values()]
+                const distance = (points: typeof before) =>
+                  Math.hypot(points[0]!.x - points[1]!.x, points[0]!.y - points[1]!.y)
+                const nextZoom = Math.max(
+                  1,
+                  Math.min(4, (old.zoom * distance(after)) / Math.max(1, distance(before))),
+                )
+                const center = (points: typeof before) => ({
+                  x: ((points[0]!.x + points[1]!.x) / 2 - rect.left - rect.width / 2) * scale,
+                  y: ((points[0]!.y + points[1]!.y) / 2 - rect.top - rect.height / 2) * scale,
+                })
+                const a = center(before),
+                  b = center(after)
+                applyTransform(nextZoom, {
+                  x: b.x + ((old.x - a.x) * nextZoom) / old.zoom,
+                  y: b.y + ((old.y - a.y) * nextZoom) / old.zoom,
+                })
+              } else {
+                applyTransform(old.zoom, {
+                  x: old.x + (e.clientX - previous.x) * scale,
+                  y: old.y + (e.clientY - previous.y) * scale,
+                })
+              }
+            }}
+            onPointerUp={(e) => {
+              pointers.current.delete(e.pointerId)
+            }}
+            onPointerCancel={(e) => {
+              pointers.current.delete(e.pointerId)
+            }}
+            onLostPointerCapture={(e) => {
+              pointers.current.delete(e.pointerId)
+            }}
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 border border-white/60"
+          >
+            <div className="absolute inset-x-1/3 inset-y-0 border-x border-white/30" />
+            <div className="absolute inset-y-1/3 inset-x-0 border-y border-white/30" />
+            {aspectRatio === 1 ? (
+              <div className="absolute inset-0 rounded-full border border-white/50 shadow-[0_0_0_4rem_#00000025]" />
+            ) : null}
+          </div>
+        </div>
+        {failed ? (
+          <p role="alert" className="mt-3 text-small text-destructive">
+            {t('photoEditor.error')}
+          </p>
+        ) : null}
+        <fieldset
+          disabled={!image || saving || failed}
+          className="mt-5 flex justify-center gap-6 border-t border-border pt-4"
+        >
+          <IconButton
+            aria-label={t('photoEditor.rotate')}
+            onClick={() => {
+              setRotation((r) => (r + 90) % 360)
+              setOffset({ x: 0, y: 0 })
+            }}
+          >
+            <RotateCwSquare />
+          </IconButton>
+          <IconButton
+            aria-label={t('photoEditor.flip')}
+            aria-pressed={flip}
+            onClick={() => setFlip(!flip)}
+          >
+            <FlipHorizontal2 />
+          </IconButton>
+          <IconButton aria-label={t('photoEditor.reset')} onClick={reset}>
+            <Undo2 />
+          </IconButton>
+        </fieldset>
       </DialogContent>
     </Dialog>
   )

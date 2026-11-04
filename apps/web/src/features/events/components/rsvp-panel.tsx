@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // The "Are you going?" form plus the attendee list (TECH-SPEC §3.4: "change or cancel any time
 // before the deadline"). One panel because the two are the same mental unit for a viewer: "who's
@@ -9,7 +10,6 @@ import {
   Button,
   Celebrate,
   Field,
-  Skeleton,
   StateView,
   Textarea,
   cn,
@@ -127,12 +127,7 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
 
   let attendeesBody: React.ReactNode
   if (rsvpQuery.isPending) {
-    attendeesBody = (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    )
+    attendeesBody = <ViewSkeleton view="eventAttendees" />
   } else if (rsvpQuery.isError) {
     attendeesBody = (
       <StateView

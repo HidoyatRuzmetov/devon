@@ -120,7 +120,7 @@ async function appendChecklist(
   })
   return additions.length
 }
-async function once(
+export async function withWorkOperation(
   ctx: RequestContext,
   operationId: string,
   input: unknown,
@@ -151,13 +151,24 @@ async function once(
     return result
   })
 }
+/** Shared atomic creation; callers add their domain writes in the same transaction. */
+export async function createCardWithChecklistInTx(
+  ctx: RequestContext,
+  tx: Tx,
+  create: NonNullable<CardChecklistPlan['create']>,
+  checklist: PlannedChecklist,
+) {
+  const card = await createCardInTx(ctx, tx, createInput(ctx, create))
+  const checklistAdded = await appendChecklist(tx, ctx, card.id, checklist)
+  return { card, checklistAdded }
+}
 export async function applyCardChecklistPlan(
   ctx: RequestContext,
   actor: Actor,
   operationId: string,
   input: CardChecklistPlan,
 ): Promise<WorkflowResult> {
-  return once(ctx, operationId, { kind: 'cardChecklist', input }, async (tx) => {
+  return withWorkOperation(ctx, operationId, { kind: 'cardChecklist', input }, async (tx) => {
     // Shared with normal card creation, so concurrent "create if missing" cannot race a plain create.
     await lockCardOrder(tx, ctx.departmentId!)
     let cardId = input.existingCardId,
@@ -210,7 +221,7 @@ export async function assignMany(
 ): Promise<WorkflowResult> {
   if (ctx.departmentRole !== 'head' || ctx.viewAs)
     throw new WorkPlanError('forbidden', 'head_required')
-  return once(ctx, operationId, { kind: 'assignMany', input }, async (tx) => {
+  return withWorkOperation(ctx, operationId, { kind: 'assignMany', input }, async (tx) => {
     await lockCardOrder(tx, ctx.departmentId!)
     const recipients = [...new Set(input.recipientUserIds)].sort()
     await lockActiveCardTargets(tx, ctx.departmentId!, recipients)

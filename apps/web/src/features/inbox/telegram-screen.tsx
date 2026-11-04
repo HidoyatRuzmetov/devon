@@ -465,13 +465,20 @@ function SetupGuide({ departmentId }: { departmentId: string | null }) {
       </details>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
         {setup.data ? (
-          <p className="text-small text-muted-foreground">
+          <div className="space-y-1 text-small text-muted-foreground">
             {t('integrationSetup.progress', {
               linked: setup.data.linkedMemberCount,
               total: setup.data.memberCount,
               groups: setup.data.groupCount,
             })}
-          </p>
+            {setup.data.unlinkedMembers.length ? (
+              <p className="text-caption">
+                {t('integrationSetup.notConnected', {
+                  names: setup.data.unlinkedMembers.map((member) => member.name).join(', '),
+                })}
+              </p>
+            ) : null}
+          </div>
         ) : null}
         <Button size="sm" variant="secondary" onClick={() => navigate('/account/notifications')}>
           {t('inbox.preferences.title')}

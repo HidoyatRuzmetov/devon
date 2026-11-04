@@ -1,3 +1,4 @@
+import { loadingViewForRoute } from '../../lib/route-loading.js'
 import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from './settings-section.js'
 // Account settings share one shell. Each URL selects a focused pane, with related forms grouped
@@ -47,7 +48,8 @@ import {
 import { AppearanceSection } from './appearance-section.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { describeUserAgent } from './device-label.js'
-import { ProfessionalSettings } from './personnel-record-section.js'
+import { PersonnelRecordSection } from './personnel-record-section.js'
+import { ProfessionalProfileSection } from './professional-profile-section.js'
 import { ProfileSection } from './profile-section.js'
 import { SettingsNavigation } from './settings-navigation.js'
 
@@ -709,7 +711,7 @@ function DeleteAccountSection() {
       description={t('accounts.delete.warning')}
     >
       {statusQuery.isPending ? (
-        <ViewSkeleton view="settings" />
+        <ViewSkeleton view="accountDelete" />
       ) : statusQuery.isError ? (
         <StateView
           kind="error"
@@ -816,7 +818,10 @@ export default function AccountSettingsScreen() {
   let pane: React.ReactNode
   switch (adminRestricted ? '/account' : path) {
     case '/account/professional':
-      pane = <ProfessionalSettings />
+      pane = <ProfessionalProfileSection />
+      break
+    case '/account/personnel':
+      pane = <PersonnelRecordSection />
       break
     case '/account/notifications':
       pane = <PreferencesScreen embedded />
@@ -880,7 +885,15 @@ export default function AccountSettingsScreen() {
           aria-label={t('settings.content')}
           className="flex min-w-0 flex-1 flex-col gap-4 [&_[id]]:scroll-mt-20"
         >
-          <React.Suspense fallback={<ViewSkeleton view="appearance" />}>{pane}</React.Suspense>
+          <React.Suspense
+            fallback={
+              <ViewSkeleton
+                view={loadingViewForRoute(path, new URLSearchParams(window.location.search))}
+              />
+            }
+          >
+            {pane}
+          </React.Suspense>
         </section>
       </div>
     </div>

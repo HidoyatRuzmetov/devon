@@ -101,7 +101,7 @@ export default function EventsScreen() {
   }
 
   if (eventsQuery.isPending) {
-    return <ViewSkeleton view="events" />
+    return <ViewSkeleton view={view === 'calendar' ? 'eventCalendar' : 'events'} />
   }
 
   if (eventsQuery.isError) {

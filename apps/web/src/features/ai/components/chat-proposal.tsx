@@ -393,7 +393,7 @@ function ProposalEditor({
   const enums: Record<string, string[]> = {
     priority: ['none', 'low', 'medium', 'high', 'urgent'],
     workStage: ['todo', 'in_progress'],
-    status: ['active', 'done', 'archived'],
+    status: ['active', 'done'],
     state: ['pending', 'done', 'blocked'],
   }
   if (typeof value === 'string' && enums[field])

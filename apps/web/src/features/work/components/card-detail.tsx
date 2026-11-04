@@ -21,9 +21,6 @@ import {
   initialsFromName,
   Input,
   labelChipColors,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   RISE_PX,
   Select,
   Shake,
@@ -35,7 +32,6 @@ import {
   useReducedMotion,
 } from '@devon/ui'
 import {
-  Archive,
   Check,
   ChevronDown,
   Circle,
@@ -44,7 +40,6 @@ import {
   EyeOff,
   FolderKanban,
   Link2,
-  MoreHorizontal,
   Pencil,
   Pin,
   PinOff,
@@ -86,14 +81,13 @@ import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { useCheckinChange, useCheckins } from '../../analytics/checkins-api.js'
 import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
-import { ArchivedCardBadge } from './archived-card-badge.js'
 import { CardAttachments } from './card-attachments.js'
 import { CardLinkLabel } from './card-link-label.js'
 import { ChecklistRow } from './checklist-row.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
 import type { CardPriority, MemberSummary } from '../api.js'
-import { useAddFocusMutation, useFocusListQuery, useRemoveFocusMutation } from '../hooks-plus.js'
+import { useAddFocusMutation, useRemoveFocusMutation } from '../hooks-plus.js'
 import {
   nextDoneStatus,
   useAddChecklistItemMutation,
@@ -108,7 +102,6 @@ import {
   useMembers,
   usePatchCardMutation,
   usePatchChecklistItemMutation,
-  useRestoreCardMutation,
   useToggleWatcherMutation,
   useUnfurlMutation,
 } from '../hooks.js'
@@ -168,7 +161,6 @@ export function CardDetailContent({
   const { user } = useSession()
   const isDark = useIsDarkTheme()
   const patchCard = usePatchCardMutation()
-  const restoreCard = useRestoreCardMutation()
   const deleteCard = useDeleteCardMutation()
   const undoDelete = useDeleteCardMutation(true)
   const toggleWatcher = useToggleWatcherMutation()
@@ -176,7 +168,6 @@ export function CardDetailContent({
   const unfurl = useUnfurlMutation()
   // A9 -- the focus list ("Diqqat markazi"). Personal, so it needs no `canEdit`: pinning somebody
   // else's card to *your own* five is exactly the point.
-  const focusList = useFocusListQuery()
   const addFocus = useAddFocusMutation()
   const removeFocus = useRemoveFocusMutation()
 
@@ -386,16 +377,6 @@ export function CardDetailContent({
     })
   }
 
-  async function archiveNow() {
-    await patchCard.mutateAsync({ id: card!.id, patch: { status: 'archived' } })
-    toastWithUndo({
-      message: t('work.card.archived'),
-      undoLabel: t('action.undo'),
-      onUndo: () => void restoreCard.mutateAsync(card!.id),
-    })
-    onClose?.()
-  }
-
   async function addLink() {
     const url = linkInput.trim()
     if (!url || !canEdit || linkWritePending.current || patchCard.isPending) return
@@ -562,7 +543,6 @@ export function CardDetailContent({
     translateAi.reset()
   }
 
-  const focusMax = focusList.data?.max ?? 5
   const pinned = card.focusPinned === true
   function togglePin(): void {
     if (pinned) {
@@ -570,10 +550,6 @@ export function CardDetailContent({
         onSuccess: () => toast.success(t('work.focus.unpinned')),
         onError: () => toast.error(t('work.focus.failed')),
       })
-      return
-    }
-    if ((focusList.data?.items.length ?? 0) >= focusMax) {
-      toast.error(t('work.focus.full', { max: focusMax }))
       return
     }
     addFocus.mutate(card!.id, {
@@ -632,69 +608,15 @@ export function CardDetailContent({
                 {!card.projectId ? <ConvertProjectDialog cardId={card.id} iconOnly /> : null}
                 <IconButton
                   aria-label={t('work.action.delete')}
-                  tooltip={t('work.action.delete')}
+                  tooltip={t(
+                    card.deletionProtected ? 'cardActions.checkinProtected' : 'work.action.delete',
+                  )}
                   disabled={card.deletionProtected || deleteCard.isPending}
                   onClick={() => void deleteNow()}
-                  className="text-destructive"
+                  className="text-destructive disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Trash2 />
                 </IconButton>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <IconButton
-                      aria-label={t('cardRefinement.actions')}
-                      tooltip={t('cardRefinement.actions')}
-                    >
-                      <MoreHorizontal aria-hidden="true" />
-                    </IconButton>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="end"
-                    aria-label={t('cardRefinement.actions')}
-                    className="w-64 space-y-1 p-2"
-                  >
-                    <p className="px-2 py-1 text-caption font-medium text-muted-foreground">
-                      {t('cardRefinement.actions')}
-                    </p>
-                    {card.status !== 'archived' ? (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="w-full justify-start"
-                        disabled={patchCard.isPending}
-                        onClick={() => void archiveNow()}
-                      >
-                        <Archive className="size-4" aria-hidden="true" />
-                        {t('work.card.archive')}
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="w-full justify-start"
-                        disabled={restoreCard.isPending}
-                        onClick={() => void restoreCard.mutateAsync(card.id)}
-                      >
-                        <Archive className="size-4" aria-hidden="true" />
-                        {t('work.card.restore')}
-                      </Button>
-                    )}
-                    <div className="border-t border-border pt-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="w-full justify-start text-destructive"
-                        loading={deleteCard.isPending}
-                        disabled={card.deletionProtected}
-                        onClick={() => void deleteNow()}
-                        title={t('work.deletion.hint')}
-                      >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                        {t('work.action.delete')}
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
               </>
             ) : null}
             {onClose ? (
@@ -725,32 +647,28 @@ export function CardDetailContent({
           </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
-          {card.status === 'archived' ? (
-            <ArchivedCardBadge card={card} />
-          ) : (
-            <Badge
-              tone={
-                card.status === 'done'
-                  ? 'success'
-                  : card.workStage === 'in_progress'
-                    ? 'info'
-                    : 'neutral'
-              }
-            >
-              {card.status === 'done' ? (
-                <Check className="size-3.5" aria-hidden="true" />
-              ) : card.workStage === 'in_progress' ? (
-                <CircleDot className="size-3.5" aria-hidden="true" />
-              ) : (
-                <Circle className="size-3.5" aria-hidden="true" />
-              )}
-              {t(
-                card.status === 'active'
-                  ? `portal.stage.${card.workStage ?? 'todo'}`
-                  : `work.status.${card.status}`,
-              )}
-            </Badge>
-          )}
+          <Badge
+            tone={
+              card.status === 'done'
+                ? 'success'
+                : card.workStage === 'in_progress'
+                  ? 'info'
+                  : 'neutral'
+            }
+          >
+            {card.status === 'done' ? (
+              <Check className="size-3.5" aria-hidden="true" />
+            ) : card.workStage === 'in_progress' ? (
+              <CircleDot className="size-3.5" aria-hidden="true" />
+            ) : (
+              <Circle className="size-3.5" aria-hidden="true" />
+            )}
+            {t(
+              card.status === 'active'
+                ? `portal.stage.${card.workStage ?? 'todo'}`
+                : `work.status.${card.status}`,
+            )}
+          </Badge>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {canEdit && card.status === 'active' ? (
               <>

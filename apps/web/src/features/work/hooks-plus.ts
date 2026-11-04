@@ -282,7 +282,7 @@ export function useAddFocusMutation() {
           ...(qc.getQueryData<Board>(BOARD_KEY)?.columns.flatMap((col) => col.cards) ?? []),
           ...(qc.getQueryData<Board>(BOARD_KEY)?.unassigned ?? []),
         ].find((item) => item.id === cardId)
-      if (previous && card && !already && previous.items.length < previous.max) {
+      if (previous && card && !already) {
         qc.setQueryData<api.FocusList>(FOCUS_KEY, {
           ...previous,
           items: [

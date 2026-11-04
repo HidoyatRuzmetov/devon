@@ -66,7 +66,7 @@ export type MiniappSession = MiniappIdentity & { csrfToken: string }
 export type MiniappCard = {
   id: string
   title: string
-  status: 'active' | 'done' | 'archived'
+  status: 'active' | 'done'
   priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
   risk: 'none' | 'at_risk' | 'overdue'
   dueAt: string | null

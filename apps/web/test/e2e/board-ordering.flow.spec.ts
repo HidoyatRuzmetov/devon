@@ -45,7 +45,7 @@ test('@flow native card drags remain stable across columns and personal focus ri
     expect(
       (
         await head.request.put(`/api/v1/departments/${department.departmentId}/features`, {
-          data: { features: { focus_list: true } },
+          data: { features: {} },
           headers: { 'x-csrf-token': await csrfToken(head) },
         })
       ).ok(),
@@ -82,6 +82,14 @@ test('@flow native card drags remain stable across columns and personal focus ri
         .evaluateAll((cards) => cards.map((card) => card.getAttribute('data-dnd-card')))
     await expect(column(headId).locator('[data-dnd-card]')).toHaveCount(3)
     expect(await positions(headId)).toEqual(headCards.map((card) => card.id))
+    // No click or focus on the scrollbar is needed for board navigation.
+    await page.setViewportSize({ width: 900, height: 900 })
+    const scroller = page.locator('.devon-board-scroller')
+    await page.keyboard.press('ArrowRight')
+    await expect.poll(() => scroller.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0)
+    await page.keyboard.press('ArrowLeft')
+    await expect.poll(() => scroller.evaluate((el) => el.scrollLeft)).toBe(0)
+    await page.setViewportSize({ width: 1920, height: 1080 })
     const columnOrder = await page
       .locator('[data-dnd-column]')
       .evaluateAll((columns) => columns.map((column) => column.getAttribute('data-dnd-column')))
@@ -197,10 +205,10 @@ test('@flow native card drags remain stable across columns and personal focus ri
       .locator(`[data-dnd-card="${headCards[1]!.id}"]`)
       .getByRole('button', { name: headCards[1]!.title, exact: true })
       .click()
-    await page.getByRole('button', { name: 'Add to focus', exact: true }).click()
+    await page.getByRole('button', { name: 'Pin', exact: true }).click()
     await expect.poll(() => positions(headId)).toEqual([headCards[1]!.id, headCards[0]!.id])
     allowFocus()
-    await expect(page.getByRole('button', { name: 'Remove from focus', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Unpin', exact: true })).toBeVisible()
     await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
     await page.unroute('**/api/v1/work/focus')
     const memberPage = await member.newPage()
@@ -214,12 +222,12 @@ test('@flow native card drags remain stable across columns and personal focus ri
       .locator(`[data-dnd-card="${memberCards[1]!.id}"]`)
       .getByRole('button', { name: memberCards[1]!.title, exact: true })
       .click()
-    await memberPage.getByRole('button', { name: 'Add to focus', exact: true }).click()
+    await memberPage.getByRole('button', { name: 'Pin', exact: true }).click()
     await expect(memberColumn.locator('[data-dnd-card]').first()).toHaveAttribute(
       'data-dnd-card',
       memberCards[1]!.id,
     )
-    await memberPage.getByRole('button', { name: 'Remove from focus', exact: true }).click()
+    await memberPage.getByRole('button', { name: 'Unpin', exact: true }).click()
     await expect(memberColumn.locator('[data-dnd-card]').last()).toHaveAttribute(
       'data-dnd-card',
       memberCards[1]!.id,

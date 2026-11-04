@@ -247,7 +247,7 @@ const boardPeekSchema = z.object({
     z.object({
       id: z.string(),
       title: z.string(),
-      status: z.enum(['active', 'done', 'archived']),
+      status: z.enum(['active', 'done']),
       priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']),
       risk: z.enum(['none', 'at_risk', 'overdue']),
       dueAt: z.string().nullable(),
@@ -286,7 +286,7 @@ const cardDetailSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.object({ format: z.string(), text: z.string() }).nullable(),
-  status: z.enum(['active', 'done', 'archived']),
+  status: z.enum(['active', 'done']),
   priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']),
   risk: z.enum(['none', 'at_risk', 'overdue']),
   dueAt: z.string().nullable(),

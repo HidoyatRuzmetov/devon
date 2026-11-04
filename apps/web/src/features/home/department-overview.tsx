@@ -96,7 +96,13 @@ export function DepartmentOverview({ header }: { header: React.ReactNode }) {
   }, [])
   const events = useEventsQuery(range)
   const queries = [membersQuery, unitsQuery, board, projectsQuery]
-  if (queries.some((q) => q.isPending)) return <ViewSkeleton view="overview" />
+  if (queries.some((q) => q.isPending))
+    return (
+      <>
+        {header}
+        <ViewSkeleton view="headHome" />
+      </>
+    )
   if (queries.some((q) => q.isError))
     return (
       <StateView

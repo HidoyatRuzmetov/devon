@@ -22,6 +22,8 @@ export type ActorCtx = {
   requestId: string
   userId: string
   role: Role
+  departmentRole?: 'head' | 'member'
+  viewAs?: boolean
   ip: string
   userAgent: string
 }
@@ -33,7 +35,8 @@ function deptRequestContext(actor: ActorCtx, departmentId: string | null): Reque
     actorRole: actor.role,
     departmentId,
     actingForUserId: null,
-    viewAs: false,
+    departmentRole: actor.departmentRole ?? null,
+    viewAs: actor.viewAs ?? false,
     ip: actor.ip,
     userAgent: actor.userAgent,
   }
@@ -652,6 +655,8 @@ export async function unassignUnitRole(
 type MemberRow = {
   email: string | null
   professional_profile: unknown
+  resume_updated_at: string | null
+  personnel_updated_at: string | null
   user_id: string
   given_name: string
   family_name: string
@@ -668,6 +673,11 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
     const rows = await tx.raw<MemberRow>(sql`
       select
         u.id as user_id, u.given_name, u.family_name, u.patronymic, u.title, u.avatar_key, u.email, u.professional_profile,
+        u.professional_profile_updated_at::text as resume_updated_at,
+        case when app.current_department_role()='head' and not app.is_view_as() then
+          (select p.updated_at::text from app.personnel_records p
+            where p.department_id=m.department_id and p.owner_user_id=u.id)
+          else null end as personnel_updated_at,
         m.role as membership_role, ur.unit_id, ur.role as unit_role
       from app.memberships m
       join app.users u on u.id = m.user_id and u.deleted_at is null
@@ -685,6 +695,8 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
       avatarKey: r.avatar_key,
       email: r.email,
       professionalProfile: professionalProfileSchema.parse(r.professional_profile ?? {}),
+      resumeUpdatedAt: r.resume_updated_at,
+      personnelUpdatedAt: r.personnel_updated_at,
       membershipRole: r.membership_role,
       unitId: r.unit_id,
       unitRole: r.unit_role,

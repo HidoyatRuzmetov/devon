@@ -32,13 +32,11 @@ import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
 import { FocusList } from './focus-list.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
-import { ArchivedCardBadge } from './archived-card-badge.js'
 
 function MineRow({ card, locale }: { card: Card; locale: Locale }) {
   const t = useT()
   const patchCard = usePatchCardMutation()
   const done = isCardCompleted(card)
-  const archived = card.status === 'archived'
   return (
     <HoverLift className="rounded-md">
       <PressScale>
@@ -48,7 +46,7 @@ function MineRow({ card, locale }: { card: Card; locale: Locale }) {
               list -- `celebrate` gives it the coin-sized burst on check. */}
           <Checkbox
             checked={done}
-            disabled={archived || card.canEdit === false || patchCard.isPending}
+            disabled={card.canEdit === false || patchCard.isPending}
             className="mt-0.5 shrink-0 sm:mt-0"
             onCheckedChange={(v) =>
               patchCard.mutate({ id: card.id, patch: { status: v === true ? 'done' : 'active' } })
@@ -71,7 +69,6 @@ function MineRow({ card, locale }: { card: Card; locale: Locale }) {
               {card.title}
             </span>
             <span className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
-              <ArchivedCardBadge card={card} />
               {card.priority !== 'none' ? (
                 <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
                   {t(PRIORITY_LABEL_KEY[card.priority])}
@@ -230,7 +227,7 @@ export default function MineScreen() {
         />
         <Group
           groupKey="completed"
-          titleKey="work.mine.completedAndArchived"
+          titleKey="work.mine.completed"
           cards={completed}
           locale={locale}
           animateKey={combinedQuery}

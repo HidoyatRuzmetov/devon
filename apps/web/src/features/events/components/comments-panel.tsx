@@ -1,3 +1,4 @@
+import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // Event discussion (TECH-SPEC §3.4 `event_comments`). Flat, newest-last, no threading -- matches the
 // scale of a department-wide event thread, not a project's activity feed.
@@ -19,7 +20,6 @@ import {
   Button,
   IconButton,
   initialsFromName,
-  Skeleton,
   SparkleButton,
   StateView,
   Swap,
@@ -335,15 +335,7 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
           into the thread itself. `<Swap>` keeps both layers in one grid cell while they trade, so
           the composer above never shifts, and drops the skeleton once its fade is done, so a thread
           with a single comment settles to one row rather than holding a two-row gap. */}
-      <Swap
-        pending={commentsQuery.isPending}
-        fallback={
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-14 w-full" />
-            <Skeleton className="h-14 w-full" />
-          </div>
-        }
-      >
+      <Swap pending={commentsQuery.isPending} fallback={<ViewSkeleton view="eventComments" />}>
         {commentsBody}
       </Swap>
     </div>

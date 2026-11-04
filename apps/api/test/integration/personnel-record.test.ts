@@ -52,7 +52,7 @@ afterAll(async () => {
 it('prepares exports only for owner/head, preserves AI-identified names and never stores private prompts', async () => {
   await superuserQuery(
     db,
-    `insert into app.ai_department_settings(department_id,budget_uzs_per_month,flags) values($1,1000000,'{"semantic_ask":true}')`,
+    `insert into app.ai_department_settings(department_id,budget_uzs_per_month,flags) values($1,1000000,'{"semantic_ask":true}') on conflict(department_id) do update set flags=excluded.flags`,
     [departmentId],
   )
   const response = (names: string[]): ChatCompletionResult => ({
@@ -185,4 +185,94 @@ it('keeps private records owner/head-only, preserves revisions and never publish
   expect((await request(owner, '', { version: 1, data: { ...data, party: 'йўқ' } })).status).toBe(
     200,
   )
+})
+
+it('imports source-supported fields into a response only, requires CSRF and leaves saved records unchanged', async () => {
+  await superuserQuery(
+    db,
+    `insert into app.ai_department_settings(department_id,budget_uzs_per_month,flags) values($1,1000000,'{"semantic_ask":true}') on conflict(department_id) do update set flags=excluded.flags`,
+    [departmentId],
+  )
+  const data = {
+    fio: 'Karimov Sardor',
+    party: '',
+    degree: '',
+    title: '',
+    languages: '',
+    awards: '',
+    deputy: '',
+  }
+  const model = new MockProvider({
+    script: [
+      {
+        content: null,
+        reasoningContent: null,
+        finishReason: 'tool_calls',
+        usage: { promptTokens: 50, completionTokens: 80, totalTokens: 130 },
+        toolCalls: [
+          {
+            id: randomUUID(),
+            name: 'import_personnel_record',
+            argumentsJson: JSON.stringify({
+              data,
+              evidence: [{ path: 'fio', quote: data.fio }],
+              warnings: ['Birth date was not provided.'],
+            }),
+          },
+        ],
+      },
+    ],
+  })
+  __setProviderForTests(model)
+  const before = await (await request(owner)).json()
+  const payload = { name: 'record.txt', content: Buffer.from('Karimov Sardor').toString('base64') }
+  const send = (headers = owner.headers, body: unknown = payload) =>
+    fetch(server.baseUrl + '/api/v1/accounts/personnel-record/import', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    })
+  const noCsrf = { ...owner.headers }
+  delete noCsrf['x-csrf-token']
+  expect((await send(noCsrf)).status).toBe(403)
+  expect((await send(owner.headers, { ...payload, ownerUserId: ownerId })).status).toBe(422)
+  const imported = await send()
+  expect(imported.status, await imported.clone().text()).toBe(200)
+  expect(imported.headers.get('cache-control')).toBe('no-store')
+  expect(await imported.json()).toMatchObject({
+    data: { fio: 'Karimov Sardor', photo: null, birthDate: '' },
+    warnings: ['Birth date was not provided.'],
+  })
+  expect(await (await request(owner)).json()).toEqual(before)
+  expect(model.calls).toHaveLength(1)
+  __setProviderForTests(null)
+})
+
+it('exposes independent resume and personnel revision dates only to permitted viewers', async () => {
+  const roster = async (actor: Session) => {
+    const response = await fetch(
+      server.baseUrl + '/api/v1/departments/' + departmentId + '/roster',
+      { headers: actor.headers },
+    )
+    expect(response.status).toBe(200)
+    const rows = (await response.json()) as {
+      userId: string
+      resumeUpdatedAt: string | null
+      personnelUpdatedAt: string | null
+    }[]
+    return rows.find((row) => row.userId === ownerId)!
+  }
+  const before = await roster(head)
+  expect(before.personnelUpdatedAt).toBeTruthy()
+  expect((await roster(peer)).personnelUpdatedAt).toBeNull()
+  await superuserQuery(
+    db,
+    "update app.users set professional_profile='{}'::jsonb, title='Revision date test' where id=$1",
+    [ownerId],
+  )
+  const updated = await roster(head)
+  expect(updated.resumeUpdatedAt).toBeTruthy()
+  expect(updated.personnelUpdatedAt).toBe(before.personnelUpdatedAt)
+  await superuserQuery(db, "update app.users set locale='en' where id=$1", [ownerId])
+  expect((await roster(head)).resumeUpdatedAt).toBe(updated.resumeUpdatedAt)
 })

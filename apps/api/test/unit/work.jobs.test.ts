@@ -33,8 +33,8 @@ const base: RecurringCardRow = {
   labels: [],
   estimateMin: null,
   dueAt: oldDue,
-  status: 'archived',
-  doneAt: null,
+  status: 'done',
+  doneAt: completed,
   archivedAt: completed,
   recurrence: rule,
   recurrenceSeriesId: 'card',
@@ -51,7 +51,7 @@ beforeEach(() => {
 
 describe('recurrence dates follow the selected workflow', () => {
   it.each([
-    { status: 'archived' as const, doneAt: null, archivedAt: completed },
+    { status: 'done' as const, doneAt: completed, archivedAt: completed },
     { status: 'done' as const, doneAt: completed, archivedAt: null },
   ])(
     'counts after-done from actual $status completion, not its overdue date',

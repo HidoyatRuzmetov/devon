@@ -83,12 +83,17 @@ function Table({ columns = 5, rows = 6 }: { columns?: number; rows?: number }) {
     </div>
   )
 }
-function Calendar() {
+function Calendar({ toolbar = true }: { toolbar?: boolean }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-9 w-28" />
+      {toolbar ? (
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-9 w-28" />
+        </div>
+      ) : null}
+      <div className="grid grid-cols-7 gap-4 rounded-t-lg border border-border bg-muted/40 p-3">
+        {times(7, () => line('w-12'))}
       </div>
       <div className="grid grid-cols-7 overflow-hidden rounded-lg border border-border">
         {times(35, (i) => (
@@ -100,6 +105,95 @@ function Calendar() {
         ))}
       </div>
     </div>
+  )
+}
+function Dashboard({ head = false }: { head?: boolean }) {
+  return (
+    <div className="space-y-3">
+      <div
+        className={`grid gap-3 ${head ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 lg:grid-cols-3'}`}
+      >
+        {times(head ? 4 : 3, () => (
+          <div className="flex h-28 flex-col justify-between rounded-lg border border-border p-3.5">
+            {line('w-32')}
+            <Skeleton className="h-7 w-16" />
+            {line('w-3/4')}
+          </div>
+        ))}
+      </div>
+      <div className="grid min-h-[calc(100dvh-300px)] gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="rounded-lg border border-border p-4">
+          <div className="flex gap-3 border-b border-border pb-4">
+            <Skeleton className="h-7 w-28" />
+            <Skeleton className="h-7 w-20" />
+          </div>
+          <Rows avatar count={7} />
+        </div>
+        <div className="grid grid-rows-[1.4fr_1fr] gap-3">
+          <div className="rounded-lg border border-border p-3">
+            <div className="flex flex-wrap justify-between gap-3 border-b border-border pb-3">
+              {line('w-28')}
+              <Skeleton className="h-8 w-64" />
+            </div>
+            <Rows controls count={4} />
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            {line('w-40')}
+            <Rows count={3} />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+function PersonnelSkeleton() {
+  return (
+    <>
+      <div className="flex h-16 items-center justify-between rounded-xl border border-border p-3">
+        <Skeleton className="h-5 w-40" />
+        <div className="flex gap-2">
+          {times(3, () => (
+            <Skeleton className="h-8 w-20" />
+          ))}
+        </div>
+      </div>
+      {line('w-64')}
+      <div className="space-y-7 rounded-2xl bg-muted/40 p-4 sm:p-7">
+        <div className="mx-auto min-h-280 max-w-198.5 border border-border bg-card px-6 py-14 sm:pl-19 sm:pr-10">
+          <div className="mb-6 flex gap-8">
+            <div className="flex-1 space-y-5 pt-2">
+              <Skeleton className="mx-auto h-5 w-36" />
+              <Skeleton className="h-7 w-full" />
+              <div className="space-y-2 pt-6">
+                {line('w-4/5')}
+                {line('w-full')}
+              </div>
+            </div>
+            <Skeleton className="h-38 w-28 shrink-0" />
+          </div>
+          <Fields count={6} />
+          <div className="my-5">
+            <Fields count={1} />
+          </div>
+          <Fields count={2} />
+          <div className="my-5 space-y-4">
+            {times(3, () => (
+              <div className="space-y-2">
+                {line('w-3/4')}
+                <Skeleton className="h-7 w-full" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="mx-auto mb-5 h-5 w-48" />
+          <Rows count={3} />
+        </div>
+        <div className="mx-auto min-h-280 max-w-198.5 border border-border bg-card px-6 py-14 sm:pl-19 sm:pr-10">
+          <Skeleton className="mx-auto mb-3 h-5 w-72" />
+          <Skeleton className="mx-auto mb-7 h-5 w-32" />
+          <Table columns={5} rows={5} />
+        </div>
+      </div>
+    </>
   )
 }
 function Stats({ count = 4 }: { count?: number }) {
@@ -118,11 +212,187 @@ function Stats({ count = 4 }: { count?: number }) {
 
 /** Each name describes the actual view being awaited. Shared pieces preserve real row/field sizes. */
 const layouts = {
+  headHome: <Dashboard head />,
+  personnel: <PersonnelSkeleton />,
+  projects: (
+    <div className="grid gap-3 lg:grid-cols-2">
+      {times(4, () => (
+        <div className="space-y-4 rounded-lg border border-border p-5">
+          <div className="flex justify-between">
+            <Skeleton className="h-5 w-3/5" />
+            <Skeleton className="h-5 w-16" />
+          </div>
+          {line('w-4/5')}
+          {line('w-2/3')}
+          <Skeleton className="h-2 w-full rounded-full" />
+          <Rows count={1} />
+          <div className="flex justify-between">
+            <Skeleton className="h-7 w-24 rounded-full" />
+            <Skeleton className="h-5 w-20" />
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+  eventDetail: (
+    <div className="space-y-5">
+      <Skeleton className="h-28 w-full rounded-md sm:h-36" />
+      <div className="flex flex-wrap justify-between gap-3">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-56" />
+          {line('w-40')}
+        </div>
+        <Skeleton className="h-9 w-36" />
+      </div>
+      <div className="flex gap-4">
+        <Skeleton className="h-5 w-36" />
+        <Skeleton className="h-5 w-36" />
+      </div>
+      <div className="space-y-2">
+        {line('w-full')}
+        {line('w-3/4')}
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {times(7, () => (
+          <Skeleton className="h-10 w-16" />
+        ))}
+      </div>
+      <div className="space-y-4 rounded-md border border-border p-4">
+        {line('w-40')}
+        <div className="flex gap-2">
+          {times(3, () => (
+            <Skeleton className="h-9 w-20 rounded-full" />
+          ))}
+        </div>
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-9 w-24" />
+      </div>
+      <Rows avatar count={3} />
+    </div>
+  ),
+  eventAttendees: <Rows avatar count={3} />,
+  eventComments: (
+    <div className="space-y-3">
+      {times(2, () => (
+        <div className="flex gap-3 rounded-lg border border-border p-3">
+          <Skeleton className="size-8 shrink-0 rounded-full" />
+          <div className="flex-1 space-y-3">
+            <div className="flex justify-between">
+              {line('w-28')}
+              {line('w-16')}
+            </div>
+            {line('w-full')}
+            {line('w-3/4')}
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+  eventItems: (
+    <div className="space-y-3">
+      {times(4, () => (
+        <div className="flex gap-4 rounded-lg border border-border p-4">
+          <Skeleton className="size-5" />
+          <div className="flex-1 space-y-3">
+            {line('w-3/4')}
+            {line('w-1/2')}
+          </div>
+          <Skeleton className="h-8 w-24" />
+        </div>
+      ))}
+    </div>
+  ),
+  projectTasks: (
+    <div className="space-y-3">
+      <div className="flex gap-3">
+        <Skeleton className="h-9 flex-1" />
+        <Skeleton className="h-9 w-24" />
+      </div>
+      <Rows controls count={5} />
+    </div>
+  ),
+  personalCalendar: <Calendar toolbar={false} />,
+  workCalendar: <Calendar toolbar={false} />,
+  eventCalendar: <Calendar />,
+  progress: (
+    <>
+      <div className="flex justify-end gap-3">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-10 w-48" />
+      </div>
+      <Table columns={7} rows={10} />
+    </>
+  ),
+  login: (
+    <div className="mx-auto max-w-96 space-y-6">
+      <Skeleton className="h-9 w-48" />
+      <Fields count={2} />
+      <Skeleton className="h-11 w-full" />
+      {line('w-3/4')}
+    </div>
+  ),
+  signup: (
+    <div className="mx-auto max-w-lg space-y-6">
+      <Skeleton className="h-9 w-56" />
+      <Fields count={6} />
+      <Skeleton className="h-11 w-full" />
+    </div>
+  ),
+  setup: (
+    <div className="mx-auto max-w-lg space-y-6">
+      <Skeleton className="h-9 w-56" />
+      <Fields count={5} />
+      <Skeleton className="h-11 w-40" />
+    </div>
+  ),
+  faq: (
+    <div className="mx-auto max-w-4xl space-y-5">
+      <Skeleton className="h-11 w-full" />
+      {times(6, () => (
+        <div className="flex items-center justify-between rounded-lg border border-border p-5">
+          {line('w-3/4')}
+          <Skeleton className="size-5" />
+        </div>
+      ))}
+    </div>
+  ),
+  accountDelete: (
+    <div className="space-y-4 rounded-lg border border-border p-5">
+      <Skeleton className="h-6 w-56" />
+      {line('w-full')}
+      {line('w-2/3')}
+      <Skeleton className="h-10 w-40" />
+    </div>
+  ),
+  departmentRequest: (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <Fields count={3} />
+      <Skeleton className="h-28 w-full" />
+      <Skeleton className="h-10 w-40" />
+      <Rows count={2} />
+    </div>
+  ),
+  deletedTasks: (
+    <div className="space-y-3">
+      <Skeleton className="h-10 w-72" />
+      <Rows controls count={7} />
+    </div>
+  ),
+  notFound: (
+    <div className="mx-auto max-w-sm space-y-5 py-12">
+      <Skeleton className="mx-auto size-12" />
+      <Skeleton className="mx-auto h-7 w-56" />
+      <Skeleton className="mx-auto h-10 w-36" />
+    </div>
+  ),
   checkin: (
     <>
-      <div className="flex justify-between gap-4">
-        <Skeleton className="h-10 w-56" />
-        <Skeleton className="h-10 w-56" />
+      <div className="flex flex-wrap justify-between gap-3">
+        <Skeleton className="h-10 w-48" />
+        <div className="flex gap-3">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-56" />
+        </div>
       </div>
       <div className="flex items-center gap-4 py-3">
         <Skeleton className="size-16 rounded-full" />
@@ -133,7 +403,18 @@ const layouts = {
         <Skeleton className="h-16 w-28" />
         <Skeleton className="h-9 w-20" />
       </div>
-      <Tiles count={4} />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,24rem),1fr))] gap-3">
+        {times(4, () => (
+          <div className="space-y-3 rounded-xl border border-border p-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="size-6" />
+              <Skeleton className="h-5 flex-1" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+            <Rows count={3} controls />
+          </div>
+        ))}
+      </div>
     </>
   ),
   people: (
@@ -345,18 +626,7 @@ const layouts = {
       </div>
     </>
   ),
-  memberHome: (
-    <>
-      <Stats count={3} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Rows count={4} />
-        <div className="space-y-5">
-          <Skeleton className="h-32 w-full" />
-          <Rows count={2} />
-        </div>
-      </div>
-    </>
-  ),
+  memberHome: <Dashboard />,
   health: (
     <>
       <Stats />
@@ -623,7 +893,8 @@ const layouts = {
   ),
 } satisfies Record<string, ReactNode>
 
-export function ViewSkeleton({ view }: { view: keyof typeof layouts }) {
+export type LoadingView = keyof typeof layouts
+export function ViewSkeleton({ view }: { view: LoadingView }) {
   const t = useT()
   return (
     <div

@@ -315,7 +315,6 @@ export const focusListSchema = z.object({
   items: z.array(focusPinSchema),
   /** Five is the ceiling; it arrives from the server so the copy that explains a refused sixth pin
    * and the rule that refuses it are the same number. */
-  max: z.number().int(),
 })
 export type FocusList = z.infer<typeof focusListSchema>
 

@@ -15,12 +15,21 @@ describe('member Home data', () => {
     fetchCards
       .mockReset()
       .mockResolvedValueOnce({ items: [{ id: 'first' }], nextCursor: 'second-page' })
+      .mockResolvedValueOnce({
+        items: [{ id: 'deleted', deletedAt: '2026-11-04' }],
+        nextCursor: null,
+      })
       .mockResolvedValueOnce({ items: [{ id: 'last' }], nextCursor: null })
-    expect(await fetchMemberHomeCards()).toEqual([{ id: 'first' }, { id: 'last' }])
-    expect(fetchCards).toHaveBeenNthCalledWith(2, {
+    expect(await fetchMemberHomeCards()).toEqual([
+      { id: 'first' },
+      { id: 'last' },
+      { id: 'deleted', deletedAt: '2026-11-04' },
+    ])
+    expect(fetchCards).toHaveBeenNthCalledWith(3, {
       q: 'assignee:@me',
       limit: 100,
       cursor: 'second-page',
+      deleted: false,
     })
   })
   it('stops fetching after account navigation cancels the query', async () => {
@@ -64,18 +73,16 @@ describe('member Home data', () => {
       make('individual', 'active', null),
       make('project', 'active', 'group', 'in_progress'),
       make('done-project', 'done', 'group'),
-      make('archived-individual', 'archived', null),
+      { ...make('deleted-individual', 'active', null), deletedAt: '2026-11-04' },
     ]
-    expect(memberCardsForCategory(cards, 'individual', 'all').map((c) => c.id)).toEqual([
-      'individual',
-    ])
-    expect(memberCardsForCategory(cards, 'projects', 'in_progress').map((c) => c.id)).toEqual([
+    expect(memberCardsForCategory(cards, 'todo', 'all').map((c) => c.id)).toEqual(['individual'])
+    expect(memberCardsForCategory(cards, 'in_progress', 'in_progress').map((c) => c.id)).toEqual([
       'project',
     ])
-    expect(memberCardsForCategory(cards, 'individual', 'in_progress')).toEqual([])
+    expect(memberCardsForCategory(cards, 'todo', 'in_progress')).toEqual([])
     expect(memberCardsForCategory(cards, 'done', 'todo').map((c) => c.id)).toEqual(['done-project'])
-    expect(memberCardsForCategory(cards, 'archived', 'all').map((c) => c.id)).toEqual([
-      'archived-individual',
+    expect(memberCardsForCategory(cards, 'deleted', 'all').map((c) => c.id)).toEqual([
+      'deleted-individual',
     ])
   })
 })

@@ -1678,7 +1678,6 @@
       "peekTitle": "Card details",
       "markDone": "Mark done",
       "archive": "Archive",
-      "archived": "Card archived",
       "done": "Card done",
       "checklistComplete": "Checklist complete",
       "restore": "Restore",
@@ -1721,8 +1720,7 @@
     },
     "status": {
       "active": "Active",
-      "done": "Done",
-      "archived": "Archived"
+      "done": "Done"
     },
     "activity": {
       "created": "created the card",
@@ -1800,12 +1798,7 @@
       "rest": "Everything else",
       "emptyTitle": "Nothing assigned to you",
       "emptyBody": "Cards assigned to you will show up here.",
-      "completed": "Completed",
-      "completedAndArchived": "Completed & archived"
-    },
-    "archive": {
-      "completedHint": "Archived · Completed",
-      "unfinishedHint": "Archived · Not completed"
+      "completed": "Completed"
     },
     "action": {
       "save": "Save",
@@ -1989,7 +1982,6 @@
       "estimateSet": "{count} cards estimated",
       "estimateCleared": "Estimate cleared on {count} cards",
       "movedDone": "{count} cards marked done",
-      "archived": "{count} cards archived",
       "partial": "{count} were not yours to change",
       "noneApplied": "No card was changed",
       "failed": "The action could not be completed",
@@ -1998,21 +1990,20 @@
       "selectCard": "Select the card “{title}”"
     },
     "focus": {
-      "title": "Focus list",
-      "description": "The five things that matter most today.",
-      "count": "{count} / {max}",
-      "chip": "In focus",
-      "pin": "Add to focus",
-      "unpin": "Remove from focus",
-      "pinned": "Added to your focus list",
-      "unpinned": "Removed from your focus list",
-      "full": "A focus list holds at most {max} cards.",
-      "failed": "Could not update the focus list",
+      "title": "Pinned",
+      "description": "Your pinned tasks.",
+      "count": "{count}",
+      "chip": "Pinned",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "pinned": "Pinned",
+      "unpinned": "Unpinned",
+      "failed": "Could not update pinned tasks",
       "moveUp": "Move “{title}” up",
       "moveDown": "Move “{title}” down",
-      "unpinCard": "Remove “{title}” from focus",
-      "emptyTitle": "Your focus list is empty",
-      "emptyBody": "Open a card and choose “Add to focus”."
+      "unpinCard": "Unpin “{title}”",
+      "emptyTitle": "No pinned tasks",
+      "emptyBody": "Open a card and choose “Pin”."
     },
     "templates": {
       "title": "Templates",
@@ -2695,10 +2686,6 @@
         "label": "Goals",
         "description": "Quarterly goals and how far along they are."
       },
-      "focus_list": {
-        "label": "Focus list",
-        "description": "Up to five headline items per person."
-      },
       "automations": {
         "label": "Automations",
         "description": "Simple rules like “due date approaching — remind me”."
@@ -3098,11 +3085,10 @@
     "noUnit": "Choose your unit",
     "metrics": "My work overview",
     "active": "Active tasks",
-    "completed": "Completed & archived",
+    "completed": "Completed",
     "toDo": "To do",
     "inProgress": "In progress",
     "done": "Done",
-    "archived": "Archived",
     "panels": "My workspace",
     "myTasks": "My tasks",
     "myProjects": "My projects",
@@ -3434,7 +3420,8 @@
     "commands": "Send /help in the bot for commands, or /app to open your workspace inside Telegram.",
     "group": "For a department group: add the bot to your group, get a group connection code below, then paste the full /connect command into the group.",
     "progress": "Connected: {linked} of {total} people · {groups} groups",
-    "telegramUnavailable": "The bot cannot be reached right now. Your inbox still works. Try again shortly or contact your administrator."
+    "telegramUnavailable": "The bot cannot be reached right now. Your inbox still works. Try again shortly or contact your administrator.",
+    "notConnected": "Not connected: {names}"
   },
   "pages": {
     "onboarding": {
@@ -4106,7 +4093,7 @@
     "exportHint": "This is your export copy. Changes here affect only the downloaded file; your record stays unchanged.",
     "clickToEdit": "Click any value to edit it. Escape returns to editing. Ctrl / ⌘ + Enter switches preview.",
     "readonly": "Saved record. Available only to you and the department head.",
-    "aiHint": "AI identifies names and brands automatically for Latin / Cyrillic export. Document text is processed by your department’s AI provider; your photo is excluded.",
+    "aiHint": "AI preserves names for Latin / Cyrillic export.",
     "preparing": "Preparing your document and checking names…",
     "exportError": "Document preparation is unavailable. Your draft is safe. Try again shortly or check the department’s AI settings.",
     "reviewHint": "Review the wording before downloading. Click any value to correct the export copy.",
@@ -4139,7 +4126,12 @@
       "prevJob": "Avval maktab o‘qituvchisi",
       "deathYear": "2020",
       "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy"
-    }
+    },
+    "import": "Import",
+    "importReview": "Imported draft — review before saving.",
+    "undoImport": "Undo import",
+    "importUnreadable": "Use a readable PDF, DOCX, ODT, RTF or text file up to 8 MB. Scanned PDFs need a text layer.",
+    "importError": "Import unavailable. Your draft is unchanged; try again."
   },
   "pomodoroStudio": {
     "animation": "Character animation",
@@ -4279,7 +4271,7 @@
     "view": "View photo"
   },
   "personnel": {
-    "private": "Private: only you and your department head can read the saved personnel record. It is never published in People.",
+    "private": "Private: visible only to you and your department head.",
     "draftSaved": "Draft saved on this device. Save to share with your department head.",
     "addRow": "Add entry",
     "protectedNames": "Names to keep unchanged",
@@ -4363,6 +4355,20 @@
     "highlights": "Selected professional highlights. The complete profile is available in People.",
     "noRecord": "No personnel record yet",
     "noRecordHint": "This person has not saved a personnel record. Their private draft stays on their own device."
+  },
+  "checkinTask": {
+    "create": "New task",
+    "forPerson": "Individual task for {name}.",
+    "deliverables": "Deliverables",
+    "onePerLine": "One checklist item per line",
+    "createAndAdd": "Create and add to check-in"
+  },
+  "cardActions": {
+    "alreadyGrouped": "This task already belongs to a group project.",
+    "alreadyDone": "This task is already done.",
+    "checkinProtected": "Used in check-in/out. Remove its deliverables from every unlocked period before deleting.",
+    "deleted": "Deleted",
+    "deletedOn": "Deleted {date}"
   },
   "profileEdit": {
     "heading": "Profile",

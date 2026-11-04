@@ -1,7 +1,8 @@
 import { FEATURES, type AppActionId, type FeatureKey } from '@devon/contracts'
 import { useT } from '@devon/i18n'
-import { PageHeader, RouteSkeleton, StateView } from '@devon/ui'
+import { PageHeader, StateView } from '@devon/ui'
 import type * as React from 'react'
+import { RouteLoading } from './route-loading.js'
 import { useCan } from './can.js'
 import { useFeatures } from './features.js'
 import { navigate } from './router.js'
@@ -23,7 +24,7 @@ export function DepartmentFeatureScreen({
   const { features, isLoading, isError, retry } = useFeatures()
   const permission = useCan(action)
   const { department } = useDepartment()
-  if (isLoading) return <RouteSkeleton label={t('shell.loading.route')} />
+  if (isLoading) return <RouteLoading />
   if (!permission.allowed)
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey={deniedBodyKey} />
   if (isError)

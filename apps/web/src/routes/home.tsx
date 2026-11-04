@@ -2,6 +2,7 @@
 // the honest content is always one of the three empty variants once the session/instance queries
 // resolve (design.md: "nothing yet, and here is how you will find it when there is").
 import * as React from 'react'
+import { ViewSkeleton } from '../lib/view-skeleton.js'
 import { useT, useLocale } from '@devon/i18n'
 import { StateView } from '@devon/ui'
 import { useForcedState } from '../lib/forced-state.js'
@@ -34,7 +35,7 @@ export function HomeRoute() {
   }
 
   if (!settled) {
-    return <StateView kind="loading" titleKey="state.loading" />
+    return <ViewSkeleton view="memberHome" />
   }
 
   if (!online && !user) {

@@ -29,6 +29,7 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/ai/briefing/refresh',
   'POST /api/v1/cards/assign-many',
   'POST /api/v1/checkins/cycles/:id/lock',
+  'POST /api/v1/checkins/cycles/:id/members/:memberUserId/tasks',
   'POST /api/v1/telegram/group-message',
 ]
 
@@ -39,6 +40,7 @@ const AUTHENTICATED_ROUTES: readonly string[] = [
   'GET /api/v1/accounts/personnel-record',
   // The handler enforces owner/head membership before private text reaches the AI provider.
   'POST /api/v1/accounts/personnel-record/prepare-export',
+  'POST /api/v1/accounts/personnel-record/import',
   // EPIC-018 realtime (v1.1 SPEC §10). "May this signed-in person open a WebSocket at all" is not a
   // department question: the connection carries no department of its own, and every *channel* on it
   // is authorised separately -- `POST /realtime/subscribe-token` runs `can()` per channel, and

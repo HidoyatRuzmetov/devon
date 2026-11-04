@@ -44,7 +44,6 @@ export interface BoardColumnProps {
   filterKey?: string
   onOpenCard: (cardId: string) => void
   onDropped: (draggedCardId: string, spec: CardDropSpec) => void
-  onMoveTo: (cardId: string, toUserId: string | null) => void
   /** Lets the board report a "showing N of M" affordance for its collapse toggles without lifting
    * the (per-viewer, `localStorage`-backed) collapsed state itself out of each column. */
   onCollapsedChange?: (columnKey: string, collapsed: boolean) => void
@@ -97,7 +96,6 @@ export function BoardColumn({
   filterKey,
   onOpenCard,
   onDropped,
-  onMoveTo,
   onCollapsedChange,
   mobile = false,
   selectedIds,
@@ -329,7 +327,6 @@ export function BoardColumn({
                   projects={allProjects}
                   onOpen={onOpenCard}
                   onDropped={onDropped}
-                  onMoveTo={onMoveTo}
                   selected={selectedIds?.has(card.id) ?? false}
                   selectionActive={selectionActive}
                   rejected={rejectedCardId === card.id}

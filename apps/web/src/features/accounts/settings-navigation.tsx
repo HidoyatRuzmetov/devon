@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   Fingerprint,
+  FileUser,
   Send,
   ShieldCheck,
   Sparkles,
@@ -19,7 +20,8 @@ export const SETTINGS_GROUPS = [
     labelKey: 'accounts.settings.profile',
     items: [
       { path: '/account', labelKey: 'settings.accountProfile', icon: UserRound },
-      { path: '/account/professional', labelKey: 'portal.profile.title', icon: Fingerprint },
+      { path: '/account/professional', labelKey: 'profileChoices.resume', icon: Fingerprint },
+      { path: '/account/personnel', labelKey: 'profileChoices.record', icon: FileUser },
     ],
   },
   {

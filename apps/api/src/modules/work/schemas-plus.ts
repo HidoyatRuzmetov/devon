@@ -185,13 +185,10 @@ export const focusPinSchema = z.object({
 })
 export const focusListSchema = z.object({
   items: z.array(focusPinSchema),
-  /** A9: five is the ceiling, returned rather than hard-coded in the client so the copy that
-   * explains a refused sixth pin and the rule that refuses it are the same number. */
-  max: z.number().int(),
 })
 export const addFocusBodySchema = z.object({ cardId: z.string().uuid() })
 export const reorderFocusBodySchema = z.object({
-  cardIds: z.array(z.string().uuid()).max(5),
+  cardIds: z.array(z.string().uuid()),
 })
 
 export const dependencyParamsSchema = z.object({

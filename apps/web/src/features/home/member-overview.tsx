@@ -15,13 +15,12 @@ import {
   strikethroughClass,
 } from '@devon/ui'
 import {
-  Archive,
+  Trash2,
   ArrowRight,
   CalendarDays,
   CheckCheck,
   Circle,
   CircleDot,
-  FolderKanban,
   Users,
   X,
 } from 'lucide-react'
@@ -33,7 +32,6 @@ import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
 import { fetchMembers, fetchUnitsOverview } from '../structure/api.js'
 import { fetchPersonalOverview } from '../analytics/api.js'
 import { fetchCards, type Card } from '../work/api.js'
-import { ArchivedCardBadge } from '../work/components/archived-card-badge.js'
 import { openCardPeek } from '../work/lib/open-card-peek.js'
 import { isCardCompleted, PRIORITY_ORDER } from '../work/lib/format.js'
 import { useProjectsQuery } from '../projects/hooks.js'
@@ -41,19 +39,26 @@ import { useEventsQuery } from '../events/hooks.js'
 import { HomeWorkspace, HOME_METRIC_INTERACTION } from './home-workspace.js'
 
 const drill = (path: string) => `${path}${path.includes('?') ? '&' : '?'}from=overview`
-export type WorkCategory = 'individual' | 'projects' | 'done' | 'archived'
+export type WorkCategory = 'todo' | 'in_progress' | 'done' | 'deleted'
 type ActiveStage = 'all' | 'todo' | 'in_progress'
 
 /** Follow the real API cursor: counts and deadlines must not silently stop at the first 100 cards.
  * Only the viewer's assignments are loaded. Cancellation prevents a departed account from fetching
  * more pages; the scoped query key prevents a late response appearing in another account. */
 export async function fetchMemberHomeCards(signal?: AbortSignal): Promise<Card[]> {
+  const partitions = await Promise.all([
+    fetchMemberCardPartition(false, signal),
+    fetchMemberCardPartition(true, signal),
+  ])
+  return partitions.flat()
+}
+async function fetchMemberCardPartition(deleted: boolean, signal?: AbortSignal): Promise<Card[]> {
   const items: Card[] = []
   const seen = new Set<string>()
   let cursor: string | undefined
   do {
     signal?.throwIfAborted()
-    const page = await fetchCards({ q: 'assignee:@me', limit: 100, cursor })
+    const page = await fetchCards({ q: 'assignee:@me', limit: 100, cursor, deleted })
     items.push(...page.items)
     if (!page.nextCursor) break
     if (seen.has(page.nextCursor)) throw new Error('Repeated card cursor')
@@ -96,8 +101,11 @@ function MemberTask({ card, projectTitle }: { card: Card; projectTitle?: string 
     >
       <button
         type="button"
-        onClick={() => openCardPeek(card.id)}
-        className="flex min-h-10 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={() => {
+          if (!card.deletedAt) openCardPeek(card.id)
+        }}
+        disabled={Boolean(card.deletedAt)}
+        className="disabled:cursor-default flex min-h-10 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="min-w-0 flex-1">
           {projectTitle ? (
@@ -112,7 +120,7 @@ function MemberTask({ card, projectTitle }: { card: Card; projectTitle?: string 
             {card.title}
           </span>
           <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
-            {card.status === 'active' ? (
+            {!card.deletedAt && card.status === 'active' ? (
               <span className="inline-flex items-center gap-1">
                 {card.workStage === 'in_progress' ? (
                   <CircleDot className="size-3 text-primary" aria-hidden="true" />
@@ -122,7 +130,11 @@ function MemberTask({ card, projectTitle }: { card: Card; projectTitle?: string 
                 {t(card.workStage === 'in_progress' ? 'homeMember.inProgress' : 'homeMember.toDo')}
               </span>
             ) : null}
-            <ArchivedCardBadge card={card} />
+            {card.deletedAt ? (
+              <span>
+                {t('cardActions.deletedOn', { date: formatDate(new Date(card.deletedAt), locale) })}
+              </span>
+            ) : null}
             {card.dueAt ? (
               <span
                 className={cn(
@@ -166,10 +178,12 @@ export function memberCardsForCategory(
 ): Card[] {
   return sortMemberTasks(
     cards.filter((card) => {
-      if (category === 'done' || category === 'archived') return card.status === category
+      if (category === 'deleted') return Boolean(card.deletedAt)
+      if (card.deletedAt) return false
+      if (category === 'done') return card.status === 'done'
       return (
         card.status === 'active' &&
-        Boolean(card.projectId) === (category === 'projects') &&
+        (card.workStage ?? 'todo') === category &&
         (stage === 'all' || (card.workStage ?? 'todo') === stage)
       )
     }),
@@ -190,15 +204,15 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
   type Selection = {
     panel: 'inbox' | 'work'
     category: WorkCategory
-    lastActiveCategory: 'individual' | 'projects'
+    lastActiveCategory: 'todo' | 'in_progress'
     stage: ActiveStage
     summary: 'active' | 'completed' | null
   }
   const saved = qc.getQueryData<Selection>(selectionKey)
   const [panel, setPanel] = React.useState<'inbox' | 'work'>(saved?.panel ?? 'work')
-  const [category, setCategory] = React.useState<WorkCategory>(saved?.category ?? 'individual')
-  const [lastActiveCategory, setLastActiveCategory] = React.useState<'individual' | 'projects'>(
-    saved?.lastActiveCategory ?? 'individual',
+  const [category, setCategory] = React.useState<WorkCategory>(saved?.category ?? 'todo')
+  const [lastActiveCategory, setLastActiveCategory] = React.useState<'todo' | 'in_progress'>(
+    saved?.lastActiveCategory ?? 'todo',
   )
   const [stage, setStage] = React.useState<ActiveStage>(saved?.stage ?? 'all')
   const [summary, setSummary] = React.useState<'active' | 'completed' | null>(
@@ -252,16 +266,15 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
     () => createUnitPalette(units.data?.units ?? []),
     [units.data?.units],
   )
-  const myProjects = (projects.data ?? []).filter(
-    (project) =>
-      project.status !== 'archived' &&
-      (project.ownerUserId === me.user.id ||
-        project.members.includes(me.user.id) ||
-        allCards.some((card) => card.projectId === project.id)),
-  )
   const upcoming = [
     ...allCards
-      .filter((card) => card.status === 'active' && card.dueAt && new Date(card.dueAt) <= range.to)
+      .filter(
+        (card) =>
+          !card.deletedAt &&
+          card.status === 'active' &&
+          card.dueAt &&
+          new Date(card.dueAt) <= range.to,
+      )
       .map((card) => ({
         id: card.id,
         title: card.title,
@@ -283,32 +296,16 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
       })),
   ].sort((a, b) => Date.parse(a.date) - Date.parse(b.date))
   const tasks = memberCardsForCategory(allCards, category, stage)
-  const individualCount = memberCardsForCategory(allCards, 'individual', stage).length
-  const projectCards = memberCardsForCategory(allCards, 'projects', stage)
-  const projectCardsById = new Map(
-    myProjects.map((project) => [
-      project.id,
-      projectCards.filter((card) => card.projectId === project.id),
-    ]),
-  )
-  // Match the task order: nearest assignment (or project deadline), then its priority and title.
-  const orderedProjects = [...myProjects].sort((a, b) => {
-    const aCard = projectCardsById.get(a.id)?.[0],
-      bCard = projectCardsById.get(b.id)?.[0]
-    const aDate = aCard?.dueAt ?? (a.targetOn ? `${a.targetOn}T23:59:59` : null)
-    const bDate = bCard?.dueAt ?? (b.targetOn ? `${b.targetOn}T23:59:59` : null)
-    if (aDate !== bDate) {
-      if (!aDate) return 1
-      if (!bDate) return -1
-      return Date.parse(aDate) - Date.parse(bDate)
-    }
-    const priority =
-      (aCard ? PRIORITY_ORDER.indexOf(aCard.priority) : PRIORITY_ORDER.length) -
-      (bCard ? PRIORITY_ORDER.indexOf(bCard.priority) : PRIORITY_ORDER.length)
-    return priority || a.title.localeCompare(b.title)
-  })
+  const individualCount = memberCardsForCategory(allCards, 'todo', stage).length
+  const projectCards = memberCardsForCategory(allCards, 'in_progress', stage)
   const count = counts.data
-  if (queries.some((query) => query.isPending)) return <ViewSkeleton view="memberHome" />
+  if (queries.some((query) => query.isPending))
+    return (
+      <>
+        {header}
+        <ViewSkeleton view="memberHome" />
+      </>
+    )
   if (queries.some((query) => query.isError))
     return (
       <StateView
@@ -326,7 +323,7 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
     setPanel('work')
     setCategory(value)
     setSummary(null)
-    if (value === 'individual' || value === 'projects') setLastActiveCategory(value)
+    if (value === 'todo' || value === 'in_progress') setLastActiveCategory(value)
     else setStage('all')
   }
   function showActive(value: ActiveStage) {
@@ -536,7 +533,7 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
             <ArrowRight className="size-4 text-muted-foreground" aria-hidden="true" />
           </button>
           <span className="font-display text-3xl leading-none tabular-nums">
-            {(count?.doneCount ?? 0) + (count?.archivedCount ?? 0)}
+            {count?.doneCount ?? 0}
           </span>
           <div className="flex items-center gap-2 text-caption text-muted-foreground">
             <button
@@ -549,11 +546,11 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
             </button>
             <button
               type="button"
-              onClick={() => showCategory('archived')}
+              onClick={() => showCategory('deleted')}
               className="relative z-10 inline-flex min-h-7 cursor-pointer items-center gap-1 rounded-sm px-1 transition-colors hover:bg-accent hover:text-primary"
             >
-              <Archive className="size-3" aria-hidden="true" />
-              {t('homeMember.archived')} <strong>{count?.archivedCount ?? 0}</strong>
+              <Trash2 className="size-3" aria-hidden="true" />
+              {t('cardActions.deleted')} <strong>{count?.deletedCount ?? 0}</strong>
             </button>
           </div>
         </section>
@@ -577,10 +574,10 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
             >
               {(
                 [
-                  ['individual', t('homeRefinement.individual'), individualCount],
-                  ['projects', t('homeRefinement.projects'), projectCards.length],
+                  ['todo', t('homeMember.toDo'), individualCount],
+                  ['in_progress', t('homeMember.inProgress'), projectCards.length],
                   ['done', t('homeMember.done'), count?.doneCount ?? 0],
-                  ['archived', t('homeMember.archived'), count?.archivedCount ?? 0],
+                  ['deleted', t('cardActions.deleted'), count?.deletedCount ?? 0],
                 ] as const
               ).map(([value, label, amount]) => (
                 <button
@@ -618,17 +615,17 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
                   )}
                 </option>
               ) : null}
-              <option value="individual">
-                {t('homeRefinement.individual')} · {individualCount}
+              <option value="todo">
+                {t('homeMember.toDo')} · {individualCount}
               </option>
-              <option value="projects">
-                {t('homeRefinement.projects')} · {projectCards.length}
+              <option value="in_progress">
+                {t('homeMember.inProgress')} · {projectCards.length}
               </option>
               <option value="done">
                 {t('homeMember.done')} · {count?.doneCount ?? 0}
               </option>
-              <option value="archived">
-                {t('homeMember.archived')} · {count?.archivedCount ?? 0}
+              <option value="deleted">
+                {t('cardActions.deleted')} · {count?.deletedCount ?? 0}
               </option>
             </select>
             {summary || stage !== 'all' ? (
@@ -669,21 +666,21 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
             {summary ? (
               <div className="space-y-3">
                 {(summary === 'completed'
-                  ? (['done', 'archived'] as const)
-                  : (['individual', 'projects'] as const)
+                  ? (['done'] as const)
+                  : (['todo', 'in_progress'] as const)
                 ).map((origin) => {
                   const rows = memberCardsForCategory(allCards, origin, stage)
                   return (
                     <section key={origin}>
                       <h3 className="px-2 py-1.5 text-caption font-semibold text-muted-foreground">
                         {t(
-                          origin === 'individual'
-                            ? 'homeRefinement.individual'
-                            : origin === 'projects'
-                              ? 'homeRefinement.projects'
+                          origin === 'todo'
+                            ? 'homeMember.toDo'
+                            : origin === 'in_progress'
+                              ? 'homeMember.inProgress'
                               : origin === 'done'
                                 ? 'homeMember.done'
-                                : 'homeMember.archived',
+                                : 'cardActions.deleted',
                         )}{' '}
                         <span className="tabular-nums">{rows.length}</span>
                       </h3>
@@ -701,54 +698,6 @@ export function MemberOverview({ header }: { header: React.ReactNode }) {
                     </section>
                   )
                 })}
-              </div>
-            ) : category === 'projects' ? (
-              <div className="space-y-3">
-                {orderedProjects.map((project) => (
-                  <section
-                    key={project.id}
-                    className="rounded-md border border-border bg-accent/25 p-2"
-                  >
-                    <RouterLink
-                      href={drill(`/projects/view?id=${project.id}`)}
-                      className="flex min-h-10 items-center gap-2 rounded-sm px-1 text-primary hover:bg-accent"
-                    >
-                      <FolderKanban className="size-4 shrink-0" aria-hidden="true" />
-                      <span
-                        className="min-w-0 flex-1 truncate text-small font-semibold"
-                        title={project.title}
-                      >
-                        {project.title}
-                      </span>
-                      <ProgressRing
-                        value={project.progress * 100}
-                        size={28}
-                        strokeWidth={3}
-                        label={t('homeMember.projectProgress', { title: project.title })}
-                      />
-                      <ArrowRight className="size-3.5 shrink-0" aria-hidden="true" />
-                    </RouterLink>
-                    <div className="mt-1 flex flex-col gap-1.5">
-                      {(projectCardsById.get(project.id) ?? []).map((card) => (
-                        <MemberTask key={card.id} card={card} />
-                      ))}
-                      {!projectCardsById.get(project.id)?.length ? (
-                        <p className="px-1 py-2 text-caption text-muted-foreground">
-                          {t(
-                            stage === 'all'
-                              ? 'homeMember.noProjectTasks'
-                              : 'homeRefinement.noMatchingAssignments',
-                          )}
-                        </p>
-                      ) : null}
-                    </div>
-                  </section>
-                ))}
-                {!orderedProjects.length ? (
-                  <p className="p-3 text-small text-muted-foreground">
-                    {t('homeMember.noProjects')}
-                  </p>
-                ) : null}
               </div>
             ) : (
               <div className="flex flex-col gap-1.5">

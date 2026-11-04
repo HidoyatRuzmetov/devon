@@ -5,10 +5,7 @@ import { avatarUrl } from '../../../lib/avatar.js'
 // custom drag-image preview -- the browser tracks it against the real pointer for free, so this is
 // a genuine pointer-following preview, not a fake one); a touch pointer never fires native HTML5
 // drag events at all, so it runs a second, hand-rolled pointer path (`lib/touch-drag.ts`) with a
-// long-press-to-lift gesture and its own floating preview (`touch-drag-preview.tsx`). `MoveToMenu`
-// below is the keyboard-operable equivalent of both (TECH-SPEC "works with mouse and keyboard"),
-// reachable from the same card without a pointer, and every path calls the identical `onDropped`/
-// `onMoveTo` props so `useAnnounce()`'s live region reports the same sentence regardless of input.
+// long-press-to-lift gesture and its own floating preview (`touch-drag-preview.tsx`). Keyboard users can open the card to change its assignee.
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { motion } from 'motion/react'
@@ -27,8 +24,6 @@ import {
 import {
   Flag,
   FolderKanban,
-  Ellipsis,
-  CheckSquare,
   Eye,
   Link2,
   ListChecks,
@@ -46,20 +41,14 @@ import {
   Checkbox,
   Chip,
   cn,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
   HoverLift,
-  IconButton,
   LivePulse,
   PressScale,
   Shake,
   initialsFromName,
   useReducedMotion,
 } from '@devon/ui'
+import { CardActionsMenu } from './card-actions-menu.js'
 import { RouterLink } from '../../../lib/router.js'
 import { unitColorClass } from '../../../lib/unit-palette.js'
 import { formatDurationShort } from '../lib/estimate.js'
@@ -67,7 +56,6 @@ import type { Card, Label, MemberSummary } from '../api.js'
 import type { Project } from '../../projects/api.js'
 import { PRIORITY_LABEL_KEY, RISK_LABEL_KEY, fullName, isCardCompleted } from '../lib/format.js'
 import { touchDrag } from '../lib/touch-drag.js'
-import { ArchivedCardBadge } from './archived-card-badge.js'
 
 /** A touch drag lifts after this long a press -- long enough that a scroll gesture (which moves the
  * finger within a few pixels almost immediately) never gets mistaken for a lift, short enough that
@@ -105,7 +93,6 @@ export interface CardTileProps {
   projects?: readonly Project[]
   onOpen: (cardId: string) => void
   onDropped: (draggedCardId: string, spec: CardDropSpec) => void
-  onMoveTo: (cardId: string, toUserId: string | null) => void
   /** v1.1 SPEC §7 (A8). Omit both to get a tile with no selection affordance at all -- the archive
    * and any future read-only board keep exactly the v1.0 tile. When they are supplied the checkbox
    * is revealed on hover/focus, or permanently once anything in the board is selected, which is the
@@ -179,7 +166,6 @@ export function CardTile({
   projects = [],
   onOpen,
   onDropped,
-  onMoveTo,
   selected = false,
   onSelectedChange,
   selectionActive = false,
@@ -451,19 +437,7 @@ export function CardTile({
           {card.title}
         </button>
         <div className="absolute right-1 top-1 z-10">
-          {canMove || onSelectedChange ? (
-            <MoveToMenu
-              card={card}
-              members={members}
-              unitPalette={unitPalette}
-              onMoveTo={onMoveTo}
-              canMove={canMove}
-              selected={selected}
-              {...(onSelectedChange
-                ? { onSelectCard: () => onSelectedChange(!selected, false) }
-                : {})}
-            />
-          ) : null}
+          <CardActionsMenu card={card} />
         </div>
       </div>
 
@@ -505,26 +479,22 @@ export function CardTile({
               : 'text-muted-foreground',
           )}
         >
-          {card.status === 'archived' ? (
-            <ArchivedCardBadge card={card} />
-          ) : (
-            <>
-              <span aria-hidden="true">
-                {card.status === 'active' && card.workStage === 'in_progress'
-                  ? '◐'
-                  : card.status === 'done'
-                    ? '✓'
-                    : '○'}
-              </span>
-              <span>
-                {t(
-                  card.status === 'active'
-                    ? `portal.stage.${card.workStage ?? 'todo'}`
-                    : `work.status.${card.status}`,
-                )}
-              </span>
-            </>
-          )}
+          <>
+            <span aria-hidden="true">
+              {card.status === 'active' && card.workStage === 'in_progress'
+                ? '◐'
+                : card.status === 'done'
+                  ? '✓'
+                  : '○'}
+            </span>
+            <span>
+              {t(
+                card.status === 'active'
+                  ? `portal.stage.${card.workStage ?? 'todo'}`
+                  : `work.status.${card.status}`,
+              )}
+            </span>
+          </>
           <LiveSignalStrip cardId={card.id} />
         </div>
 
@@ -729,86 +699,5 @@ export function CardTile({
         />
       ) : null}
     </motion.div>
-  )
-}
-
-/** Keyboard/no-pointer path for exactly the same move a mouse drag performs (TECH-SPEC "works with
- * mouse and keyboard"): jumps the card to the top of a chosen member's column, or unassigned. Less
- * granular than a mouse drop's exact insertion point, but reaches every column and every card a
- * pointer can, with a fully-labelled, arrow-key-navigable menu. */
-function MoveToMenu({
-  card,
-  members,
-  unitPalette,
-  onMoveTo,
-  canMove,
-  selected,
-  onSelectCard,
-}: {
-  card: Card
-  members: readonly MemberSummary[]
-  unitPalette: ReadonlyMap<string, string>
-  onMoveTo: (cardId: string, toUserId: string | null) => void
-  canMove: boolean
-  selected: boolean
-  onSelectCard?: () => void
-}) {
-  const t = useT()
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <IconButton
-          className="md:size-6"
-          aria-label={t('portal.cards.actions')}
-          tooltip={t('portal.cards.actions')}
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <Ellipsis className="size-4" aria-hidden="true" />
-        </IconButton>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="max-h-80 overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {onSelectCard ? (
-          <DropdownMenuItem onSelect={onSelectCard}>
-            <CheckSquare className="size-4" aria-hidden="true" />
-            {t(selected ? 'portal.cards.deselect' : 'portal.cards.select')}
-          </DropdownMenuItem>
-        ) : null}
-        {canMove ? (
-          <>
-            <DropdownMenuLabel>{t('work.card.moveTo')}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => onMoveTo(card.id, null)}
-              disabled={card.assigneeUserId === null}
-            >
-              <MoveRight className="size-4 text-muted-foreground" aria-hidden="true" />
-              {t('work.field.unassigned')}
-            </DropdownMenuItem>
-            {members.map((m) => (
-              <DropdownMenuItem
-                key={m.userId}
-                onSelect={() => onMoveTo(card.id, m.userId)}
-                disabled={card.assigneeUserId === m.userId}
-              >
-                <Avatar
-                  size="sm"
-                  src={avatarUrl(m.avatarKey, 64)}
-                  alt={fullName(m)}
-                  initials={initialsFromName(m.givenName, m.familyName)}
-                  hueSeed={m.unitId ?? (m.role === 'head' ? 'department' : 'unassigned')}
-                  className={unitColorClass(unitPalette, m.unitId, m.role === 'head')}
-                />
-                {fullName(m)}
-              </DropdownMenuItem>
-            ))}
-          </>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }

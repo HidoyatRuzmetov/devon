@@ -347,7 +347,16 @@ const structurePlugin: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req, reply) =>
-      guarded(reply, () => repo.listMembers(actorCtx(req), req.params.departmentId)),
+      guarded(reply, () =>
+        repo.listMembers(
+          {
+            ...actorCtx(req),
+            departmentRole: roleInDepartment(req, req.params.departmentId),
+            viewAs: req.actor!.viewAs != null,
+          },
+          req.params.departmentId,
+        ),
+      ),
   )
 }
 
