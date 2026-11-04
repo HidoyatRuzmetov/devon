@@ -334,7 +334,7 @@ function SidebarItem({
         active
           ? 'text-sidebar-foreground'
           : 'text-sidebar-foreground/75 hover:bg-sidebar-accent/60',
-        collapsed && 'justify-center px-0',
+        collapsed && 'justify-center gap-0 px-0',
       )}
     >
       {/* UI-OVERHAUL.md §3 "Sidebar active item": the fill is one object that *moves* between rows
@@ -356,10 +356,9 @@ function SidebarItem({
       {/* wraps rather than truncates -- design.md §3.5 anti-truncation contract */}
       <span
         data-shell-label
-        className={cn(
-          'relative min-w-0 flex-1 text-left [overflow-wrap:anywhere]',
-          collapsed && 'sr-only',
-        )}
+        className={
+          collapsed ? 'sr-only' : 'relative min-w-0 flex-1 text-left [overflow-wrap:anywhere]'
+        }
       >
         {label}
       </span>

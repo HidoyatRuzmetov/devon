@@ -184,6 +184,13 @@
 .personnel-input:disabled {
   opacity: 0.7;
 }
+.personnel-input[aria-invalid='true'] {
+  border-color: #b42335;
+  background: #fff6f7;
+}
+.personnel-input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px #b4233526;
+}
 .personnel-value {
   display: block;
   width: 100%;

@@ -55,7 +55,21 @@ test('real data loading follows each layout and imported personnel records requi
     }
     /* eslint-enable no-restricted-syntax */
     await page.goto('/account/personnel')
+    const portrait = await page.evaluate(() => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 30
+      canvas.height = 40
+      return canvas.toDataURL('image/jpeg').split(',')[1]!
+    })
+    await page.locator('.personnel-portrait input[type=file]').setInputFiles({
+      name: 'portrait.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from(portrait, 'base64'),
+    })
+    await page.getByRole('dialog').getByRole('button', { name: 'Use photo', exact: true }).click()
+    await expect(page.locator('.personnel-portrait img')).toBeVisible()
     const data = personnelDataSchema.parse({
+      militaryRank: 'yo‘q',
       fio: 'Karimov Sardor Akmalovich',
       birthDate: '1995-05-12',
       birthPlace: 'Toshkent shahri',

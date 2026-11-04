@@ -2,6 +2,8 @@
 
 Cards are edited individually in their drawer. Board and table selection checkboxes, the bulk-action toolbar and its write/undo API routes have been removed. Checklist completion and check-in deliverable selection remain separate workflows.
 
+Check-in selection lists only active, undeleted source tasks; completed or deleted tasks already recorded remain in the saved check-in history. Personnel saves require a photo and an explicit military-rank entry, and validation targets the exact field and original row. Import preserves parenthesized previous occupations for retired relatives. Collapsed navigation labels do not occupy icon layout space.
+
 ## Check-in flow
 
 ```mermaid

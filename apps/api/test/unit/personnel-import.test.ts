@@ -20,6 +20,47 @@ const draft = (extra: Record<string, unknown> = {}) =>
     warnings: [],
   })
 describe('personnel import source evidence', () => {
+  it.each(['Retired', 'Нафақада', 'Пенсияда', 'Na pensii', 'Пенсионер'])(
+    'keeps the complete previous occupation after %s',
+    (status) => {
+      const previous = 'Cola kompaniyasi (Uzbekistan) bosh mutaxassisi'
+      const occupation = `${status} (${previous})`
+      const tables = [
+        [
+          ['Qarindoshligi', 'Familiyasi ismi', 'Tug‘ilgan yili va joyi', 'Ish joyi', 'Turar joyi'],
+          ['Отаси', 'Karimov Akmal', '', occupation, ''],
+        ],
+      ]
+      const result = draft({
+        relatives: [
+          {
+            rel: '',
+            name: 'Karimov Akmal',
+            year: '',
+            place: '',
+            status: '',
+            job: '',
+            prevJob: '',
+            deathYear: '',
+            address: '',
+          },
+        ],
+      })
+      result.evidence.push({ path: 'relatives.0.name', quote: 'Karimov Akmal' })
+      const validated = validatePersonnelImport(
+        'Karimov Sardor ' + tables.flat(2).join(' '),
+        result,
+        { tables },
+      )
+      expect(validated.ok).toBe(true)
+      if (validated.ok)
+        expect(validated.output.data.relatives[0]).toMatchObject({
+          status: 'retired',
+          prevJob: previous,
+          job: '',
+        })
+    },
+  )
   it('restores complete cells by unique relative name even when AI rows are reordered', () => {
     const tables = [
       [

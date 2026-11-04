@@ -6,6 +6,7 @@ import {
   preserveNames,
   toLatin,
   type PersonnelData,
+  type PersonnelIssue,
 } from '@devon/contracts'
 import { useT } from '@devon/i18n'
 import { Camera, Plus, Trash2 } from 'lucide-react'
@@ -79,6 +80,7 @@ type FieldProps = {
   type?: 'date' | 'year'
   display?: string
   compact?: boolean
+  errorId?: string | undefined
 }
 function DocumentField({
   path,
@@ -93,6 +95,7 @@ function DocumentField({
   type,
   display,
   compact,
+  errorId,
 }: FieldProps) {
   const ref = React.useRef<HTMLTextAreaElement>(null)
   React.useLayoutEffect(() => {
@@ -138,9 +141,15 @@ function DocumentField({
   const common = {
     'aria-label': label,
     'data-field-path': path,
+    'aria-invalid': errorId ? true : undefined,
+    'aria-describedby': errorId,
     value,
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-      onChange(e.target.value),
+    onChange: (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    ) => {
+      e.target.setCustomValidity('')
+      onChange(e.target.value)
+    },
     className: 'personnel-input',
     disabled: readonly,
   }
@@ -195,6 +204,7 @@ export function PersonnelDocument({
   readonly,
   script,
   onEdit,
+  errors = [],
 }: {
   data: PersonnelData
   onChange: (data: PersonnelData) => void
@@ -202,6 +212,7 @@ export function PersonnelDocument({
   readonly: boolean
   script: 'latin' | 'cyrillic'
   onEdit: (path: string) => void
+  errors?: PersonnelIssue[]
 }) {
   const t = useT(),
     [crop, setCrop] = React.useState<File | null>(null)
@@ -242,6 +253,11 @@ export function PersonnelDocument({
         readonly={readonly}
         onChange={(v) => update(path, v)}
         onEdit={onEdit}
+        errorId={
+          errors.some((issue) => issue.path === path)
+            ? `personnel-issue-${errors.findIndex((issue) => issue.path === path)}`
+            : undefined
+        }
         {...(options ? { options } : {})}
         {...(display !== undefined ? { display } : {})}
         {...(key === 'birthDate'
@@ -348,7 +364,15 @@ export function PersonnelDocument({
             ) : (
               <div className="personnel-photo-empty">
                 <Camera size={25} />
-                <span>3 × 4</span>
+                <span
+                  className={
+                    errors.some((issue) => issue.path === 'photo') ? 'text-destructive' : undefined
+                  }
+                >
+                  {errors.find((issue) => issue.path === 'photo')?.msg
+                    ? wording(errors.find((issue) => issue.path === 'photo')!.msg)
+                    : '3 × 4'}
+                </span>
               </div>
             )}
             {!readonly ? (

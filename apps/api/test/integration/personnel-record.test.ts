@@ -130,6 +130,8 @@ function request(actor: Session, suffix = '', data?: unknown) {
 }
 const valid = () =>
   personnelDataSchema.parse({
+    photo: 'data:image/jpeg;base64,/9j/2Q==',
+    militaryRank: 'yo‘q',
     fio: 'Karimov Sardor Akmalovich',
     birthDate: '1995-05-12',
     birthPlace: 'Toshkent shahri',
@@ -163,6 +165,13 @@ it('keeps private records owner/head-only, preserves revisions and never publish
   const data = valid()
   expect(personnelTemplate.validate(data).errors).toEqual([])
   expect((await request(owner)).status).toBe(200)
+  for (const missing of [{ photo: null }, { militaryRank: '' }]) {
+    const refused = await request(owner, '', { version: 0, data: { ...data, ...missing } })
+    expect(refused.status).toBe(422)
+    expect(await refused.json()).toMatchObject({
+      errors: [expect.objectContaining({ path: Object.keys(missing)[0] })],
+    })
+  }
   const saved = await request(owner, '', { version: 0, data })
   expect(saved.status, await saved.clone().text()).toBe(200)
   expect(((await saved.json()) as { version: number }).version).toBe(1)

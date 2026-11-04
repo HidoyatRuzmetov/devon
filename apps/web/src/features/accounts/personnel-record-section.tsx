@@ -221,18 +221,39 @@ function PersonnelEditor({
         target?.scrollIntoView({ block: 'center', behavior: 'instant' })
       })
   }
-  function focusIssue(id: string) {
+  function focusIssue(issue: PersonnelIssue, showError = true) {
     if (editingAllowed) setPreview(false)
     requestAnimationFrame(() => {
-      const target = form.current?.querySelector<HTMLElement>(`[data-validation-id="${id}"]`)
-      target?.scrollIntoView({ block: 'center', behavior: 'instant' })
-      target?.querySelector<HTMLElement>('input,textarea,select')?.focus({ preventScroll: true })
+      const scope = form.current?.querySelector<HTMLElement>(
+        `[data-validation-id="${CSS.escape(issue.id)}"]`,
+      )
+      const target =
+        (issue.path &&
+          form.current?.querySelector<HTMLElement>(
+            `[data-field-path="${CSS.escape(issue.path)}"]`,
+          )) ||
+        scope?.querySelector<HTMLElement>('input:not([type="file"]),textarea,select,button') ||
+        scope
+      target?.focus({ preventScroll: true })
+      target?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' })
+      if (
+        showError &&
+        (target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement)
+      ) {
+        // Anchor the browser's accessible error message to the exact input, not the whole row.
+        target.setCustomValidity(
+          locale === 'en' || locale === 'uz-Latn' ? toLatin(issue.msg) : issue.msg,
+        )
+        target.reportValidity()
+      }
     })
   }
   function check(value = data) {
     const result = personnelTemplate.validate(value)
     setIssues(result)
-    if (result.errors.length) focusIssue(result.errors[0]!.id)
+    if (result.errors.length) focusIssue(result.errors[0]!)
     return result.errors.length === 0
   }
   function back() {
@@ -246,6 +267,7 @@ function PersonnelEditor({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Document shortcuts bubble from its native controls; retain form semantics and restore focus when preview replaces the focused input.
     <form
       ref={form}
+      noValidate
       className="personnel-workspace space-y-4 pt-3"
       onSubmit={(event) => {
         event.preventDefault()
@@ -432,8 +454,9 @@ function PersonnelEditor({
             <button
               type="button"
               key={`${issue.id}:${index}`}
+              id={`personnel-issue-${index}`}
               className={`block text-left text-small ${index < issues.errors.length ? 'text-destructive' : 'text-muted-foreground'}`}
-              onClick={() => focusIssue(issue.id)}
+              onClick={() => focusIssue(issue, index < issues.errors.length)}
             >
               {locale === 'en' || locale === 'uz-Latn' ? toLatin(issue.msg) : issue.msg}
             </button>
@@ -445,6 +468,7 @@ function PersonnelEditor({
           data={exportReview?.data ?? data}
           preview={preview}
           readonly={!editingAllowed}
+          errors={issues?.errors ?? []}
           script={
             exportReview?.script ?? (locale === 'ru' || locale === 'uz-Cyrl' ? 'cyrillic' : 'latin')
           }

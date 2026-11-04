@@ -367,7 +367,7 @@ export async function candidates(
         order by i.order_key,i.created_at,i.id) from app.card_checklist_items i where i.card_id=c.id and i.deleted_at is null
           and coalesce(i.assignee_user_id,c.assignee_user_id)=${memberUserId}),'[]'::jsonb) as checklist
       from app.cards c left join app.projects p on p.id=c.project_id and p.deleted_at is null
-      where c.deleted_at is null and
+      where c.deleted_at is null and c.status='active' and c.done_at is null and
         (c.assignee_user_id=${memberUserId} or exists(select 1 from app.card_checklist_items i
           where i.card_id=c.id and i.assignee_user_id=${memberUserId} and i.deleted_at is null))
       order by case c.priority when 'urgent' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end,c.created_at,c.id`)
@@ -412,6 +412,7 @@ export async function saveSelection(
         order by un.sort,un.id limit 1) unit on true
       left join app.projects p on p.id=c.project_id and p.deleted_at is null
       where i.id=any(${sql.param(addIds)}::uuid[]) and m.user_id=${memberUserId} and i.deleted_at is null and c.deleted_at is null
+        and c.status='active' and c.done_at is null
         and m.deleted_at is null and m.status='active' and m.role<>'head'
       on conflict(cycle_id,checklist_item_id) do update set removed_at=null,updated_at=now(),version=app.checkin_entries.version+1,
         text=case when app.checkin_entries.removed_at is null then app.checkin_entries.text else excluded.text end,

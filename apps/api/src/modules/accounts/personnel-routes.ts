@@ -195,7 +195,10 @@ export const personnelRoutes: FastifyPluginAsyncZod = async (app) => {
       const validation = personnelTemplate.validate(req.body.data)
       if (validation.errors.length)
         return sendProblem(reply, 'validation_failed', {
-          errors: validation.errors.map((issue) => ({ path: issue.id, code: 'personnel_invalid' })),
+          errors: validation.errors.map((issue) => ({
+            path: issue.path ?? issue.id,
+            code: 'personnel_invalid',
+          })),
         })
       const result = await savePersonnelRecord(ctx, req.body.data, req.body.version)
       return result ?? sendProblem(reply, 'conflict')

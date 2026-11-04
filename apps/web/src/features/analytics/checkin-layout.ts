@@ -11,6 +11,8 @@ export function checkinTasks(
     if (editing || entries.some((e) => e.cardId === source.id))
       tasks.set(source.id, { ...source, entries: [], sourceAvailable: true })
   for (const entry of entries) {
+    // Completed/deleted source tasks stay in the saved record, never in the selection editor.
+    if (editing && !tasks.has(entry.cardId)) continue
     if (!tasks.has(entry.cardId))
       tasks.set(entry.cardId, {
         id: entry.cardId,

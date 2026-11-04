@@ -61,6 +61,16 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
         return card
       }),
     )
+    const completed = await authedPost(head, '/api/v1/cards', {
+      title: 'Already completed',
+      assigneeUserId: me.user.id,
+    })
+    expect(completed.status()).toBe(201)
+    const completedId = ((await completed.json()) as { id: string }).id
+    await authedPost(head, `/api/v1/cards/${completedId}/checklist`, { text: 'Old delivery' })
+    expect(
+      (await authedPatch(head, `/api/v1/cards/${completedId}`, { status: 'done' })).status(),
+    ).toBe(200)
     const page = await head.newPage()
     await page.setViewportSize({ width: 1440, height: 1000 })
     await page.goto('/analytics?member=' + me.user.id)
@@ -69,6 +79,7 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
       1,
     )
     await expect(page.locator('.checkin-task')).toHaveCount(3)
+    await expect(page.getByText('Already completed', { exact: true })).toHaveCount(0)
     await page
       .getByRole('button', { name: 'Urgent research: First deliverable', exact: true })
       .click()
@@ -170,6 +181,16 @@ test('check-in selection, grouped tasks, progress, timer and drawers work on des
     expect(
       (await (await head.request.get('/api/v1/cards/' + created.id)).json()).projectId,
     ).toBeNull()
+    expect(
+      (await authedPatch(head, `/api/v1/cards/${created.id}`, { status: 'done' })).status(),
+    ).toBe(200)
+    await page.reload()
+    const completedRecord = page.locator('.checkin-task', { hasText: 'Created during check-in' })
+    await expect(completedRecord).toHaveCount(1)
+    await page.getByRole('button', { name: 'Choose deliverables', exact: true }).click()
+    await expect(completedRecord).toHaveCount(0)
+    await page.getByRole('button', { name: 'Save selection', exact: true }).click()
+    await expect(completedRecord).toHaveCount(1)
     // Let the selection exit/layout spring settle before installing the synthetic timer clock.
     await page.waitForTimeout(600)
     await page.clock.install()

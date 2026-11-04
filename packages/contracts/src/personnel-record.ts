@@ -101,6 +101,7 @@ export const personnelWriteSchema = z
   .strict()
 export const personnelIssueSchema = z.object({
   id: z.string(),
+  path: z.string().optional(),
   msg: z.string(),
   missing: z.boolean().optional(),
 })

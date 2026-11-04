@@ -55,6 +55,13 @@ test('personnel record edits on two paper pages, previews in place and exports a
     await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Preview', exact: true })).toBeFocused()
     const data = personnelDataSchema.parse({
+      photo: await page.evaluate(() => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 3
+        canvas.height = 4
+        return canvas.toDataURL('image/jpeg')
+      }),
+      militaryRank: 'yo‘q',
       fio: 'Karimov Sardor Akmalovich',
       birthDate: '1990-03-15',
       birthPlace: 'Toshkent shahri, Yunusobod tumani',
@@ -212,6 +219,36 @@ test('personnel record edits on two paper pages, previews in place and exports a
     expect(a11y.violations.filter((v) => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual(
       [],
     )
+    const widths = [1440, 390]
+    for (let index = 0; index < widths.length; index++) {
+      await page.setViewportSize({ width: widths[index]!, height: 900 })
+      const address = page.locator('[data-field-path="relatives.1.address"]')
+      await address.fill('')
+      await page.getByRole('button', { name: 'Preview', exact: true }).click()
+      await page.getByRole('button', { name: 'Save', exact: true }).click()
+      await expect(address).toBeFocused()
+      await expect(address).toHaveAttribute('aria-invalid', 'true')
+      expect(
+        await address.evaluate((element: HTMLTextAreaElement) => element.validationMessage),
+      ).not.toBe('')
+      const visible = await address.evaluate((element) => {
+        const rect = element.getBoundingClientRect()
+        const toolbar = document.querySelector('.personnel-toolbar')!.getBoundingClientRect()
+        const footer = document
+          .querySelector('.personnel-workspace')!
+          .lastElementChild!.getBoundingClientRect()
+        return (
+          rect.top >= toolbar.bottom &&
+          rect.bottom <= footer.top &&
+          rect.left >= 0 &&
+          rect.right <= innerWidth
+        )
+      })
+      expect(visible).toBe(true)
+      await page.screenshot({ path: testInfo.outputPath(`exact-error-${widths[index]}.png`) })
+      await address.fill(data.relatives[1]!.address)
+      await expect(address).not.toHaveAttribute('aria-invalid', 'true')
+    }
   } finally {
     await Promise.all([admin.close(), head.close()])
   }

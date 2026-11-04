@@ -417,10 +417,7 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
       .y,
   )
   await simpleTile.hover()
-  await simpleTile.getByRole('checkbox').check()
-  await expect(simpleTile.getByRole('checkbox')).toBeChecked()
-  await simpleTile.getByRole('checkbox').click()
-  await expect(simpleTile.getByRole('checkbox')).not.toBeChecked()
+  await expect(simpleTile.getByRole('checkbox')).toHaveCount(0)
   await page.getByRole('button', { name: 'Sort cards: Manual', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'Attention first', exact: true }).click()
   await expect(

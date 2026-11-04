@@ -1142,15 +1142,26 @@ function validate(d) {
         label + ': «-нинг» қўшимчаси ишлатилмайди: «' + n[0].trim() + '» эмас, «' + n[1] + '».',
       )
   }
+  function issueTarget(id) {
+    var match = /^(school|work|rel)-(\d+)\.(\w+)$/.exec(id)
+    var lists = { school: 'schools', work: 'work', rel: 'relatives' }
+    if (match)
+      return {
+        id: match[1] + '-' + match[2],
+        path: lists[match[1]] + '.' + match[2] + '.' + match[3],
+      }
+    var first = { schools: 'schools.0.name', work: 'work.0.text', relatives: 'relatives.0.name' }
+    return { id: id, path: first[id] || id }
+  }
   function err(id, msg) {
     errors.push({
-      id: id,
+      ...issueTarget(id),
       msg: msg,
       missing: /(тўлдирилмаган|танланмаган|кўрсатилмаган)\.$/.test(msg),
     })
   }
   function warn(id, msg) {
-    warnings.push({ id: id, msg: msg })
+    warnings.push({ ...issueTarget(id), msg: msg })
   }
   function latinCheck() {
     return false
@@ -1218,6 +1229,7 @@ function validate(d) {
 
   /* 1. Personal */
   nameCheck('fio', 'Ф.И.Ш.', d.fio, true)
+  if (!clean(d.photo)) err('photo', 'Фото киритилмаган.')
   if (clean(d.photoError)) err('photo', 'Фото: ' + clean(d.photoError))
   if (!d.birthDate) err('birthDate', 'Туғилган санаси тўлдирилмаган.')
   else if (by && (by < 1930 || by > yr - 14)) err('birthDate', 'Туғилган санасини текширинг.')
@@ -1233,26 +1245,30 @@ function validate(d) {
   })
   if (clean(d.eduLevel) && !/^ўрта$/.test(clean(d.eduLevel)) && !schools.length)
     err('schools', 'Тамомлаган ўқув юрти кўрсатилмаган.')
-  schools.forEach(function (s, i) {
-    var id = 'school-' + i,
-      lab = 'Тамомлаган (' + (i + 1) + ')'
-    if (!yearOk(s.year)) err(id, lab + ': тамомлаган йилини 4 рақам билан ёзинг.')
+  schools.forEach(function (s) {
+    var index = d.schools.indexOf(s),
+      id = 'school-' + index,
+      lab = 'Тамомлаган (' + (index + 1) + ')'
+    if (!yearOk(s.year)) err(id + '.year', lab + ': тамомлаган йилини 4 рақам билан ёзинг.')
     else if (by && +s.year < by + 15)
-      warn(id, lab + ': тамомлаган йили туғилган йилга тўғри келмайди. Текширинг.')
-    else if (+s.year > yr + 6) err(id, lab + ': тамомлаган йилини текширинг.')
+      warn(id + '.year', lab + ': тамомлаган йили туғилган йилга тўғри келмайди. Текширинг.')
+    else if (+s.year > yr + 6) err(id + '.year', lab + ': тамомлаган йилини текширинг.')
     var xc = extraCapitals(s.name)
     if (xc.length >= 2)
       warn(
-        id,
+        id + '.name',
         lab +
           ': номда ортиқча бош ҳарфлар бор («' +
           xc.join('», «') +
           '»). Диплом бўйича ёзинг, масалан: «Тошкент ахборот технологиялари университети».',
       )
-    if (!clean(s.name)) err(id, lab + ': ўқув юрти номи тўлдирилмаган.')
-    else if (!abbrCheck(id, lab, s.name, null, true) && clean(s.name).split(' ').length < 2)
-      warn(id, lab + ': ўқув юртининг номини диплом бўйича тўлиқ ёзинг.')
-    if (!clean(s.form) && !s.master) err(id, lab + ': таълим шаклини танланг.')
+    if (!clean(s.name)) err(id + '.name', lab + ': ўқув юрти номи тўлдирилмаган.')
+    else if (
+      !abbrCheck(id + '.name', lab, s.name, null, true) &&
+      clean(s.name).split(' ').length < 2
+    )
+      warn(id + '.name', lab + ': ўқув юртининг номини диплом бўйича тўлиқ ёзинг.')
+    if (!clean(s.form) && !s.master) err(id + '.form', lab + ': таълим шаклини танланг.')
   })
   abbrCheck('specialty', 'Мутахассислиги', d.specialty, null, true)
   if (
@@ -1266,6 +1282,8 @@ function validate(d) {
     )
 
   /* 3. Other */
+  if (!clean(d.militaryRank))
+    err('militaryRank', 'Ҳарбий унвони тўлдирилмаган. Унвон бўлмаса, «йўқ» деб ёзинг.')
   var lang = clean(d.languages)
   latinCheck('languages', 'Чет тиллари', lang)
   if (/(қозоқ|қирғиз|тожик|туркман)/i.test(lang))
@@ -1282,27 +1300,28 @@ function validate(d) {
     return clean(w.text) || clean(w.from)
   })
   if (!work.length) err('work', 'Меҳнат фаолияти тўлдирилмаган.')
-  work.forEach(function (w, i) {
-    var id = 'work-' + i,
-      lab = 'Меҳнат фаолияти (' + (i + 1) + ')'
+  work.forEach(function (w) {
+    var index = d.work.indexOf(w),
+      id = 'work-' + index,
+      lab = 'Меҳнат фаолияти (' + (index + 1) + ')'
     var startYear = workStartYear(w)
-    if (!yearOk(startYear)) err(id, lab + ': бошланган йилни 4 рақам билан ёзинг.')
+    if (!yearOk(startYear)) err(id + '.from', lab + ': бошланган йилни 4 рақам билан ёзинг.')
     else {
       if (by && +w.from < by + 14)
-        warn(id, lab + ': бошланган йил туғилган йилга тўғри келмайди. Текширинг.')
-      if (+w.from > yr) err(id, lab + ': бошланган йил келажакда.')
+        warn(id + '.from', lab + ': бошланган йил туғилган йилга тўғри келмайди. Текширинг.')
+      if (+w.from > yr) err(id + '.from', lab + ': бошланган йил келажакда.')
     }
     if (!w.current && clean(w.to) && !yearOk(w.to))
-      err(id, lab + ': тугаган йилни 4 рақам билан ёзинг.')
+      err(id + '.to', lab + ': тугаган йилни 4 рақам билан ёзинг.')
     if (!w.current && yearOk(w.to) && yearOk(w.from) && +w.to < +w.from)
-      err(id, lab + ': тугаган йил бошланган йилдан олдин.')
-    if (!clean(w.text)) err(id, lab + ': иш жойи ва лавозими тўлдирилмаган.')
-    abbrCheck(id, lab, w.text)
-    jobStyle(id, lab, w.text)
+      err(id + '.to', lab + ': тугаган йил бошланган йилдан олдин.')
+    if (!clean(w.text)) err(id + '.text', lab + ': иш жойи ва лавозими тўлдирилмаган.')
+    abbrCheck(id + '.text', lab, w.text)
+    jobStyle(id + '.text', lab, w.text)
     var xcw = extraCapitals(w.text)
     if (xcw.length >= 2)
       warn(
-        id,
+        id + '.text',
         lab +
           ': ортиқча бош ҳарфлар бор («' +
           xcw.join('», «') +
@@ -1310,7 +1329,7 @@ function validate(d) {
       )
     if (clean(w.text) && noPosition(w.text))
       err(
-        id,
+        id + '.text',
         lab +
           ': лавозими кўрсатилмаган. Ташкилот номидан кейин лавозимни ёзинг (масалан, «... бош мутахассиси» ёки «... талабаси»).',
       )
@@ -1351,22 +1370,23 @@ function validate(d) {
   })
   if (!rels.length) err('relatives', 'Яқин қариндошлар кўрсатилмаган.')
   var seen = {}
-  rels.forEach(function (r, i) {
-    var id = 'rel-' + i,
+  rels.forEach(function (r) {
+    var index = d.relatives.indexOf(r),
+      id = 'rel-' + index,
       rel = clean(r.rel),
-      lab = (rel || 'Қариндош') + ' (' + (i + 1) + '-қатор)'
-    if (!rel) err(id, lab + ': қариндошлиги танланмаган.')
+      lab = (rel || 'Қариндош') + ' (' + (index + 1) + '-қатор)'
+    if (!rel) err(id + '.rel', lab + ': қариндошлиги танланмаган.')
     if (UNIQUE_REL.indexOf(rel) >= 0) {
-      if (seen[rel]) err(id, lab + ': «' + rel + '» икки марта кўрсатилган.')
+      if (seen[rel]) err(id + '.rel', lab + ': «' + rel + '» икки марта кўрсатилган.')
       seen[rel] = true
     }
-    nameCheck(id, lab, r.name, false)
+    nameCheck(id + '.name', lab, r.name, false)
     var gd = genderOf(r.name)
     if (gd && rel) {
       var want = MALE_REL.indexOf(rel) >= 0 ? 'm' : FEMALE_REL.indexOf(rel) >= 0 ? 'f' : null
       if (want && gd.g !== want) {
         ;(gd.sure ? err : warn)(
-          id,
+          id + '.name',
           lab +
             ': исм-шарифи ' +
             (gd.g === 'f' ? 'аёл' : 'эркак') +
@@ -1377,11 +1397,11 @@ function validate(d) {
       }
     }
     if (!yearOk(r.year) || +r.year < 1900 || +r.year > yr)
-      err(id, lab + ': туғилган йилини 4 рақам билан ёзинг.')
+      err(id + '.year', lab + ': туғилган йилини 4 рақам билан ёзинг.')
     else if (by) {
       if (PARENT_REL.indexOf(rel) >= 0 && +r.year > by - 14)
         err(
-          id,
+          id + '.year',
           lab +
             ': туғилган йили сизнинг туғилган йилингизга тўғри келмайди (' +
             r.year +
@@ -1391,7 +1411,7 @@ function validate(d) {
         )
       if (CHILD_REL.indexOf(rel) >= 0 && +r.year < by + 14)
         err(
-          id,
+          id + '.year',
           lab +
             ': туғилган йили сизнинг туғилган йилингизга тўғри келмайди (' +
             r.year +
@@ -1400,18 +1420,24 @@ function validate(d) {
             '). Текширинг.',
         )
     }
-    placeCheck(id, lab + ', туғилган жойи', r.place)
-    if (!clean(r.status)) err(id, lab + ': ҳозирги ҳолатини танланг.')
+    placeCheck(id + '.place', lab + ', туғилган жойи', r.place)
+    if (!clean(r.status)) err(id + '.status', lab + ': ҳозирги ҳолатини танланг.')
     var prev = ['retired', 'dead', 'unemployed'].indexOf(r.status) >= 0 ? clean(r.prevJob) : '',
       job = (r.status || 'work') === 'work' ? clean(r.job) : ''
     if (r.status !== 'work' && /^уй бекаси$/i.test(prev))
-      err(id, lab + ': «Ҳозирги ҳолати»дан «Уй бекаси»ни танланг (у «Вақтинча ишламайди» эмас).')
+      err(
+        id + '.prevJob',
+        lab + ': «Ҳозирги ҳолати»дан «Уй бекаси»ни танланг (у «Вақтинча ишламайди» эмас).',
+      )
     if (r.status !== 'work' && prev && noPosition(prev))
-      err(id, lab + ': аввалги лавозими кўрсатилмаган. Ташкилот номидан кейин лавозимни ёзинг.')
+      err(
+        id + '.prevJob',
+        lab + ': аввалги лавозими кўрсатилмаган. Ташкилот номидан кейин лавозимни ёзинг.',
+      )
     var rp = parts(r.name)
     if (clean(r.name).split(' ').length >= 3 && !rp.suffix && !/(вич|вна|ична)$/i.test(rp.patr))
       warn(
-        id,
+        id + '.name',
         lab +
           ': отасининг исми тўлиқ эмас («' +
           rp.patr +
@@ -1419,57 +1445,59 @@ function validate(d) {
       )
     if (r.status !== 'work' && /(пенсия|вафот|ишламайди)/i.test(prev))
       err(
-        id,
+        id + '.prevJob',
         lab +
           ': «Аввалги иш жойи» майдонига фақат лавозим ёзилади («Пенсияда», «вафот этган» сўзларисиз). Бу сўзлар файлга ўзи қўшилади.',
       )
     if (r.status !== 'work' && /^\(|\)$/.test(prev))
-      warn(id, lab + ': қавс ёзиш шарт эмас, у файлга ўзи қўйилади.')
+      warn(id + '.prevJob', lab + ': қавс ёзиш шарт эмас, у файлга ўзи қўйилади.')
     if (/(илгари|бўлган)/i.test(prev) || /(илгари|бўлган)/i.test(job))
       err(
-        id,
+        id + (r.status === 'work' ? '.job' : '.prevJob'),
         lab +
           ': «илгари», «бўлган» сўзларисиз ёзинг. Аввалги лавозимни қавс ичида тўлиқ кўрсатинг.',
       )
     if (r.status === 'work') {
-      if (!job) err(id, lab + ': иш жойи ва лавозими тўлдирилмаган.')
+      if (!job) err(id + '.job', lab + ': иш жойи ва лавозими тўлдирилмаган.')
       else {
         if (/^\(.*\)$/.test(job))
           err(
-            id,
+            id + '.job',
             lab +
               ': лавозим қавс ичида ёзилган. Агар пенсияда, ишламайди ёки вафот этган бўлса, «Ҳозирги ҳолати»дан танланг; қавс ўзи қўйилади.',
           )
         if (/(пенсия|нафақа|вафот)/i.test(job))
-          err(id, lab + ': «Ҳозирги ҳолати»дан «Пенсияда» ёки «Вафот этган»ни танланг.')
+          err(id + '.job', lab + ': «Ҳозирги ҳолати»дан «Пенсияда» ёки «Вафот этган»ни танланг.')
         if (/ишламайди/i.test(job))
-          err(id, lab + ': «Ҳозирги ҳолати»дан «Вақтинча ишламайди»ни танланг.')
+          err(id + '.job', lab + ': «Ҳозирги ҳолати»дан «Вақтинча ишламайди»ни танланг.')
         var jobBad = /^\(.*\)$/.test(job) || /(пенсия|нафақа|вафот|ишламайди)/i.test(job)
         if (!jobBad && job.split(' ').length < 2 && !/[A-Za-z]/.test(job))
-          warn(id, lab + ': иш жойи ва лавозимини тўлиқ ёзинг.')
+          warn(id + '.job', lab + ': иш жойи ва лавозимини тўлиқ ёзинг.')
       }
-      abbrCheck(id, lab, job)
-      jobStyle(id, lab, job)
+      abbrCheck(id + '.job', lab, job)
+      jobStyle(id + '.job', lab, job)
       if (job && noPosition(job))
-        err(id, lab + ': лавозими кўрсатилмаган. Ташкилот номидан кейин лавозимни ёзинг.')
-      if (/^уй бекаси$/i.test(job)) err(id, lab + ': «Ҳозирги ҳолати»дан «Уй бекаси»ни танланг.')
+        err(id + '.job', lab + ': лавозими кўрсатилмаган. Ташкилот номидан кейин лавозимни ёзинг.')
+      if (/^уй бекаси$/i.test(job))
+        err(id + '.job', lab + ': «Ҳозирги ҳолати»дан «Уй бекаси»ни танланг.')
     } else if (r.status === 'retired' || r.status === 'dead') {
-      if (!prev) err(id, lab + ': аввалги иш жойи ва лавозими тўлиқ кўрсатилиши керак.')
-      abbrCheck(id, lab, prev.replace(/^\(|\)$/g, ''))
-    } else abbrCheck(id, lab, prev.replace(/^\(|\)$/g, ''))
+      if (!prev)
+        err(id + '.prevJob', lab + ': аввалги иш жойи ва лавозими тўлиқ кўрсатилиши керак.')
+      abbrCheck(id + '.prevJob', lab, prev.replace(/^\(|\)$/g, ''))
+    } else abbrCheck(id + '.prevJob', lab, prev.replace(/^\(|\)$/g, ''))
     if (r.status === 'dead') {
-      if (!yearOk(r.deathYear)) err(id, lab + ': вафот этган йилини кўрсатинг.')
+      if (!yearOk(r.deathYear)) err(id + '.deathYear', lab + ': вафот этган йилини кўрсатинг.')
       else if (+r.deathYear < +r.year || +r.deathYear > yr)
-        err(id, lab + ': вафот этган йилини текширинг.')
+        err(id + '.deathYear', lab + ': вафот этган йилини текширинг.')
     } else {
       var a = clean(r.address)
-      if (!a) err(id, lab + ': турар жойи тўлдирилмаган.')
+      if (!a) err(id + '.address', lab + ': турар жойи тўлдирилмаган.')
       else {
-        abbrCheck(id, lab + ', турар жойи', a, ['уй'], true)
+        abbrCheck(id + '.address', lab + ', турар жойи', a, ['уй'], true)
         if (!/(вилоят|шаҳри|Қорақалпоғистон)/i.test(a))
-          warn(id, lab + ': турар жойида вилоят ёки шаҳар номи тўлиқ кўрсатилмаган.')
+          warn(id + '.address', lab + ': турар жойида вилоят ёки шаҳар номи тўлиқ кўрсатилмаган.')
         if (!/уй/i.test(a))
-          warn(id, lab + ': турар жойида уй рақами кўрсатилмаган (масалан, «5-уй»).')
+          warn(id + '.address', lab + ': турар жойида уй рақами кўрсатилмаган (масалан, «5-уй»).')
       }
     }
   })
@@ -1505,18 +1533,18 @@ function validate(d) {
   }
   if (fatherRow >= 0)
     agree(
-      'rel-' + fatherRow,
+      'rel-' + d.relatives.indexOf(rels[fatherRow]) + '.name',
       'Отаси',
       parts(rels[fatherRow].name).first,
       'отангизнинг исми',
       me.patr,
       'Ф.И.Ш.ингизда',
     )
-  rels.forEach(function (r, i) {
+  rels.forEach(function (r) {
     if (['Акаси', 'Укаси', 'Опаси', 'Синглиси'].indexOf(r.rel) >= 0)
       agree(
-        'rel-' + i,
-        r.rel + ' (' + (i + 1) + '-қатор)',
+        'rel-' + d.relatives.indexOf(r) + '.name',
+        r.rel + ' (' + (d.relatives.indexOf(r) + 1) + '-қатор)',
         parts(r.name).patr,
         'унинг отасининг исми',
         me.patr,
@@ -1524,8 +1552,8 @@ function validate(d) {
       )
     if (CHILD_REL.indexOf(r.rel) >= 0 && genderOf(d.fio) && genderOf(d.fio).g === 'm')
       agree(
-        'rel-' + i,
-        r.rel + ' (' + (i + 1) + '-қатор)',
+        'rel-' + d.relatives.indexOf(r) + '.name',
+        r.rel + ' (' + (d.relatives.indexOf(r) + 1) + '-қатор)',
         parts(r.name).patr,
         'фарзандингизнинг отасининг исми',
         me.first,
@@ -1534,7 +1562,7 @@ function validate(d) {
   })
   if (fil >= 0 && spouseRow >= 0)
     agree(
-      'rel-' + spouseRow,
+      'rel-' + d.relatives.indexOf(rels[spouseRow]) + '.name',
       'Турмуш ўртоғи',
       parts(rels[spouseRow].name).patr,
       'турмуш ўртоғингизнинг отасининг исми',

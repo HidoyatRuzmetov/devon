@@ -62,6 +62,9 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
     }
   }, [choices, selectionKey])
   const committed = new Set(entries.map((e) => e.checklistItemId))
+  const eligible = new Set(
+    candidates.data?.flatMap((card) => card.checklist.map((item) => item.id)),
+  )
   const selected = (id: string) =>
     (locked && committed.has(id)) || (choices[id] ?? committed.has(id))
   const [lockReview, setLockReview] = React.useState(false),
@@ -86,7 +89,9 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
     mode,
     pendingOrder ?? storedLayout?.cardIds ?? [],
   )
-  const dirty = Object.entries(choices).some(([id, value]) => value !== committed.has(id))
+  const dirty = Object.entries(choices).some(
+    ([id, value]) => eligible.has(id) && value !== committed.has(id),
+  )
   React.useEffect(() => {
     if (!dirty) return
     const beforeUnload = (e: BeforeUnloadEvent) => {
@@ -134,10 +139,13 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
         memberUserId: member.userId,
         body: {
           addItemIds: Object.entries(choices)
-            .filter(([id, value]) => value && !committed.has(id))
+            .filter(([id, value]) => value && eligible.has(id) && !committed.has(id))
             .map(([id]) => id),
           removeEntryIds: entries
-            .filter((e) => choices[e.checklistItemId] === false && !locked)
+            .filter(
+              (e) =>
+                eligible.has(e.checklistItemId) && choices[e.checklistItemId] === false && !locked,
+            )
             .map((e) => e.id),
         },
       },

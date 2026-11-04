@@ -102,6 +102,30 @@ async function read(f: Awaited<ReturnType<typeof fixture>>, cycleId = f.cycleId)
   return response.json() as Promise<CheckinBoard>
 }
 describe('check-in lifecycle and source integrity', () => {
+  it('excludes completed and deleted tasks from selection without removing saved history', async () => {
+    const f = await fixture()
+    const entryId = await add(f)
+    const deleted = await fixture()
+    expect((await request(f.session, `/cards/${deleted.cardId}`, 'DELETE')).status).toBe(204)
+    expect(
+      (await request(f.session, `/cards/${f.cardId}`, 'PATCH', { status: 'done' })).status,
+    ).toBe(200)
+    const base = `/checkins/cycles/${f.cycleId}/members/${f.member.id}`
+    const response = await request(f.session, `${base}/candidates`)
+    expect(response.status).toBe(200)
+    const ids = ((await response.json()) as { id: string }[]).map((card) => card.id)
+    expect(ids).not.toContain(f.cardId)
+    expect(ids).not.toContain(deleted.cardId)
+    expect(
+      (
+        await request(f.session, `${base}/selection`, 'PUT', {
+          addItemIds: [f.itemId],
+          removeEntryIds: [],
+        })
+      ).status,
+    ).toBe(409)
+    expect((await read(f)).entries.some((entry) => entry.id === entryId)).toBe(true)
+  })
   it('creates an individual task and selected checklist atomically for the head, including agreed check-ins', async () => {
     const f = await fixture()
     const path = `/checkins/cycles/${f.cycleId}/members/${f.member.id}/tasks`
