@@ -56,64 +56,69 @@ test('collapsed sidebar centers every icon inside its button @flow', async ({ br
 })
 
 type SidebarFrame = { rail: number; page: number; iconX: number; overflow: number }
-type SamplingWindow = Window & { sidebarSamples?: Promise<SidebarFrame[]> }
+type SamplingWindow = Window & { sidebarTransition?: Promise<Animation> }
 
 async function sampleSidebarToggle(page: Page) {
   await expect(page.locator('[data-sidebar-collapsed]')).toBeVisible()
   await expect(page.locator('[data-devon-page-transition]').first()).toBeVisible()
   await expect(page.locator('aside .devon-nav-scroller a[href] svg').first()).toBeVisible()
-  // Arm sampling before sending the keyboard event; concurrent evaluate/key requests can race.
+  // Pause the real CSS transition as React commits the shortcut. CI can skip rendering whole
+  // animation frames under load, so inspect its actual 0/25/50/75/100% geometry deterministically.
   await page.evaluate(() => {
-    ;(window as SamplingWindow).sidebarSamples = new Promise<SidebarFrame[]>((resolve, reject) => {
-      const samples: Array<{
-        rail: number
-        page: number
-        iconX: number
-        overflow: number
-      }> = []
-      const start = performance.now()
-      const initialCollapsed = document
-        .querySelector('[data-sidebar-collapsed]')!
-        .getAttribute('data-sidebar-collapsed')
-      const targetWidth = initialCollapsed === 'true' ? 264 : 64
-      function sample() {
-        const sidebar = document.querySelector('aside')
-        const page = document.querySelector('[data-devon-page-transition]')
-        const glyph = document.querySelector('aside .devon-nav-scroller a[href] svg')
-        if (!sidebar || !page || !glyph) {
-          reject(new Error(`Sidebar disappeared during resize at ${location.pathname}`))
+    const sidebar = document.querySelector('[data-sidebar-collapsed]')!
+    void sidebar.getBoundingClientRect()
+    ;(window as SamplingWindow).sidebarTransition = new Promise<Animation>((resolve, reject) => {
+      const observer = new MutationObserver(() => {
+        observer.disconnect()
+        clearTimeout(timeout)
+        const animation = sidebar
+          .getAnimations()
+          .find((entry) => entry instanceof CSSTransition && entry.transitionProperty === 'width')
+        if (!animation) {
+          reject(new Error(`Sidebar has no width transition at ${location.pathname}`))
           return
         }
-        const rail = sidebar.getBoundingClientRect()
-        const content = page.getBoundingClientRect()
-        const icon = glyph.getBoundingClientRect()
-        samples.push({
-          rail: rail.width,
-          page: content.width,
-          iconX: icon.x + icon.width / 2,
-          overflow: document.documentElement.scrollWidth - window.innerWidth,
-        })
-        const changed =
-          document
-            .querySelector('[data-sidebar-collapsed]')!
-            .getAttribute('data-sidebar-collapsed') !== initialCollapsed
-        // CI may deliver the keyboard event later than a local browser. End on the actual
-        // settled geometry, never on a fixed delay measured before the key was even pressed.
-        if (changed && Math.abs(rail.width - targetWidth) < 0.1) resolve(samples)
-        else if (performance.now() - start > 10_000)
-          reject(new Error(`Sidebar did not finish resizing at ${location.pathname}`))
-        else requestAnimationFrame(sample)
-      }
-      requestAnimationFrame(sample)
+        animation.pause()
+        resolve(animation)
+      })
+      const timeout = setTimeout(() => {
+        observer.disconnect()
+        reject(new Error(`Sidebar shortcut did not change state at ${location.pathname}`))
+      }, 10_000)
+      observer.observe(sidebar, { attributes: true, attributeFilter: ['data-sidebar-collapsed'] })
     })
   })
   await page.keyboard.press('Control+b')
   return page.evaluate(async () => {
     const state = window as SamplingWindow
     try {
-      return await state.sidebarSamples!
+      const animation = await state.sidebarTransition!
+      await animation.ready
+      const duration = Number(animation.effect!.getComputedTiming().duration)
+      if (duration < 100) throw new Error('Sidebar transition unexpectedly disabled')
+      const samples: SidebarFrame[] = []
+      for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
+        animation.currentTime = duration * progress
+        // eslint-disable-next-line no-restricted-syntax -- Flush each sampled animation position before measuring.
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+        const rail = document.querySelector('aside')!.getBoundingClientRect()
+        const content = document
+          .querySelector('[data-devon-page-transition]')!
+          .getBoundingClientRect()
+        const icon = document
+          .querySelector('aside .devon-nav-scroller a[href] svg')!
+          .getBoundingClientRect()
+        samples.push({
+          rail: rail.width,
+          page: content.width,
+          iconX: icon.x + icon.width / 2,
+          overflow: document.documentElement.scrollWidth - innerWidth,
+        })
+      }
+      animation.finish()
+      return samples
     } finally {
-      delete state.sidebarSamples
+      delete state.sidebarTransition
     }
   })
 }
@@ -133,6 +138,7 @@ test('sidebar reflows wide workspaces in both directions without a width cap or 
     })
     await authedPatch(head, '/api/v1/me', { locale: 'en' })
     const page = await head.newPage()
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
     await page.setViewportSize({ width: 1920, height: 1080 })
     for (const route of [
       '/work',
