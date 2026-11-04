@@ -54,6 +54,8 @@
     "importReview": "Imported draft — review before saving.",
     "undoImport": "Undo import",
     "importUnreadable": "Use a readable PDF, DOCX, ODT, RTF or text file up to 8 MB. Scanned PDFs need a text layer.",
-    "importError": "Import unavailable. Your draft is unchanged; try again."
+    "importError": "Import unavailable. Your draft is unchanged; try again.",
+    "importUnverified": "The file was read, but its details could not be verified. Your draft is unchanged.",
+    "importFieldUnverified": "Review {field} — not verified from the file."
   }
 }

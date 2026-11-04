@@ -30,6 +30,7 @@ import {
   AiBudgetExceededError,
   AiFeatureDisabledError,
   AiInputValidationError,
+  AiImportUnverifiedError,
   AiRunFailedError,
   AiUnavailableError,
 } from './errors.js'
@@ -421,6 +422,9 @@ export async function importPersonnelRecordForActor(
     throw new AiUnavailableError('circuit_open')
   }
   const schema = personnelImportToolSchema
+  let validationAttempt = 0
+  let unverifiedFields: string[] = []
+  let lastCandidate: z.infer<typeof schema> | null = null
   const result = await runAiGateway({
     provider: getProvider(),
     config: aiConfig,
@@ -442,8 +446,23 @@ export async function importPersonnelRecordForActor(
       schema,
       parameters: z.toJSONSchema(schema, { target: 'draft-7', io: 'output' }),
     },
-    validate: (output) => validatePersonnelImport(source, output),
+    validate: (output) => {
+      lastCandidate = output
+      const verdict = validatePersonnelImport(source, output, {
+        allowPartial: ++validationAttempt > 1,
+      })
+      if (verdict.ok) unverifiedFields = verdict.unverifiedFields
+      return verdict
+    },
   })
+  // A malformed corrective reply must not discard the first schema-valid extraction.
+  // Recheck that candidate against the source and remove unsupported fields before returning it.
+  const partial =
+    !result.ok && result.meta.status === 'schema_invalid_after_retry' && lastCandidate
+      ? validatePersonnelImport(source, lastCandidate, { allowPartial: true })
+      : null
+  const imported = result.ok ? result.data : partial?.ok ? partial.output : null
+  if (partial?.ok) unverifiedFields = partial.unverifiedFields
   recordAiRunMetrics('semantic_ask', result.meta)
   if (result.meta.status === 'provider_error')
     aiBreaker.fail(new Error('personnel_import_provider_failed'))
@@ -474,12 +493,18 @@ export async function importPersonnelRecordForActor(
       },
     })
   })
-  if (!result.ok)
+  if (!imported && ['schema_invalid_after_retry', 'empty_after_retry'].includes(result.meta.status))
+    throw new AiImportUnverifiedError()
+  if (!imported)
     throw new AiRunFailedError(
       'Could not extract a verified personnel record',
       result.meta.status === 'timeout' ? 'timeout' : 'failed',
     )
-  return { data: personnelDataSchema.parse(result.data.data), warnings: result.data.warnings }
+  return {
+    data: personnelDataSchema.parse(imported.data),
+    warnings: imported.warnings,
+    unverifiedFields,
+  }
 }
 
 /**

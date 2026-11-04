@@ -164,6 +164,7 @@ function PersonnelEditor({
     onError: () => setExportError(true),
   })
   const [importWarnings, setImportWarnings] = React.useState<string[]>([])
+  const [unverifiedFields, setUnverifiedFields] = React.useState<string[]>([])
   const importer = useMutation({
     mutationFn: async (file: File) => {
       if (file.size > 8 * 1024 * 1024 || !/\.(pdf|docx|odt|rtf|txt|md|html|htm)$/i.test(file.name))
@@ -184,6 +185,7 @@ function PersonnelEditor({
     onMutate: () => setImportError(null),
     onSuccess: (result) => {
       setImportWarnings(result.warnings)
+      setUnverifiedFields(result.unverifiedFields)
       setImportUndo(structuredClone(data))
       draft.update(() => ({ ...result.data, photo: data.photo }))
       setPreview(false)
@@ -192,9 +194,11 @@ function PersonnelEditor({
     },
     onError: (error) =>
       setImportError(
-        error instanceof ApiError && error.status === 422
-          ? 'personnelDocument.importUnreadable'
-          : 'personnelDocument.importError',
+        error instanceof ApiError && error.errors.some((issue) => issue.code === 'ai_unverified')
+          ? 'personnelDocument.importUnverified'
+          : error instanceof ApiError && error.status === 422
+            ? 'personnelDocument.importUnreadable'
+            : 'personnelDocument.importError',
       ),
   })
   const busy = save.isPending || prepare.isPending || importer.isPending
@@ -338,10 +342,23 @@ function PersonnelEditor({
           ) : null}
         </div>
       </div>
-      {importWarnings.length ? (
+      {importWarnings.length || unverifiedFields.length ? (
         <div role="status" className="rounded-md border border-border bg-accent p-3 text-small">
           <p className="font-medium">{t('personnelDocument.importReview')}</p>
           <ul className="mt-2 list-disc pl-5">
+            {unverifiedFields.map((path) => (
+              <li key={path}>
+                <button
+                  type="button"
+                  className="text-left underline underline-offset-2"
+                  onClick={() => edit(path)}
+                >
+                  {t('personnelDocument.importFieldUnverified', {
+                    field: t(`personnel.fields.${path.split('.').at(-1)}`),
+                  })}
+                </button>
+              </li>
+            ))}
             {importWarnings.map((warning, index) => (
               <li key={index}>{warning}</li>
             ))}
@@ -367,6 +384,8 @@ function PersonnelEditor({
             onClick={() => {
               draft.update(() => importUndo)
               setImportUndo(null)
+              setImportWarnings([])
+              setUnverifiedFields([])
             }}
           >
             {t('personnelDocument.undoImport')}

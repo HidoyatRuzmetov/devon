@@ -276,3 +276,71 @@ it('exposes independent resume and personnel revision dates only to permitted vi
   await superuserQuery(db, "update app.users set locale='en' where id=$1", [ownerId])
   expect((await roster(head)).resumeUpdatedAt).toBe(updated.resumeUpdatedAt)
 })
+
+it('returns verified partial imports after repair and distinguishes wholly unverified output', async () => {
+  const response = (fio: string): ChatCompletionResult => ({
+    content: null,
+    reasoningContent: null,
+    finishReason: 'tool_calls',
+    usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
+    toolCalls: [
+      {
+        id: randomUUID(),
+        name: 'import_personnel_record',
+        argumentsJson: JSON.stringify({
+          data: { fio, birthPlace: 'Invented place' },
+          evidence: [
+            { path: 'fio', quote: fio },
+            { path: 'birthPlace', quote: 'Invented place' },
+          ],
+          warnings: [],
+        }),
+      },
+    ],
+  })
+  const send = () =>
+    fetch(server.baseUrl + '/api/v1/accounts/personnel-record/import', {
+      method: 'POST',
+      headers: peer.headers,
+      body: JSON.stringify({
+        name: 'record.txt',
+        content: Buffer.from('Karimov Sardor').toString('base64'),
+      }),
+    })
+  const before = await (await request(peer)).json()
+  const model = new MockProvider({
+    script: [response('Karimov Sardor'), response('Karimov Sardor')],
+  })
+  __setProviderForTests(model)
+  const imported = await send()
+  expect(imported.status, await imported.clone().text()).toBe(200)
+  expect(await imported.json()).toMatchObject({
+    data: { fio: 'Karimov Sardor', birthPlace: '' },
+    unverifiedFields: ['birthPlace'],
+  })
+  expect(model.calls).toHaveLength(2)
+  expect(await (await request(peer)).json()).toEqual(before)
+  __setProviderForTests(
+    new MockProvider({ script: [response('Invented Name'), response('Invented Name')] }),
+  )
+  const failed = await send()
+  expect(failed.status).toBe(422)
+  expect(await failed.json()).toMatchObject({ errors: [{ path: 'file', code: 'ai_unverified' }] })
+  expect(await (await request(peer)).json()).toEqual(before)
+  __setProviderForTests(null)
+  const malformed = response('Karimov Sardor')
+  malformed.toolCalls[0]!.argumentsJson = JSON.stringify({
+    data: { fio: 'Karimov Sardor' },
+    evidence: [{ field: 'fio', quote: 'Karimov Sardor' }],
+    warnings: [],
+  })
+  __setProviderForTests(new MockProvider({ script: [response('Karimov Sardor'), malformed] }))
+  const recovered = await send()
+  expect(recovered.status, await recovered.clone().text()).toBe(200)
+  expect(await recovered.json()).toMatchObject({
+    data: { fio: 'Karimov Sardor', birthPlace: '' },
+    unverifiedFields: ['birthPlace'],
+  })
+  expect(await (await request(peer)).json()).toEqual(before)
+  __setProviderForTests(null)
+})

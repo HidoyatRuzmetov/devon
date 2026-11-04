@@ -4131,7 +4131,9 @@
     "importReview": "Qoralama import qilindi — saqlashdan oldin tekshiring.",
     "undoImport": "Importni bekor qilish",
     "importUnreadable": "8 MB gacha o‘qiladigan PDF, DOCX, ODT, RTF yoki matnli fayl tanlang. Skanerlangan PDF matn qatlamiga ega bo‘lishi kerak.",
-    "importError": "Import ishlamadi. Qoralama o‘zgarmadi; qayta urinib ko‘ring."
+    "importError": "Import ishlamadi. Qoralama o‘zgarmadi; qayta urinib ko‘ring.",
+    "importUnverified": "Fayl o‘qildi, ammo ma’lumotlarni tasdiqlab bo‘lmadi. Qoralama o‘zgarmadi.",
+    "importFieldUnverified": "«{field}» maydonini tekshiring — ma’lumot fayldan tasdiqlanmadi."
   },
   "pomodoroStudio": {
     "animation": "Qahramon animatsiyasi",

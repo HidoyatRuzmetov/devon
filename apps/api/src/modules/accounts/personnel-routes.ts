@@ -24,6 +24,7 @@ import {
   AiBudgetExceededError,
   AiFeatureDisabledError,
   AiInputValidationError,
+  AiImportUnverifiedError,
   AiRunFailedError,
   AiUnavailableError,
 } from '../ai/errors.js'
@@ -78,6 +79,10 @@ export const personnelRoutes: FastifyPluginAsyncZod = async (app) => {
         if (controller.signal.aborted) return
         return await importPersonnelRecordForActor(ctx, source.text, controller.signal)
       } catch (error) {
+        if (error instanceof AiImportUnverifiedError)
+          return sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'file', code: 'ai_unverified' }],
+          })
         if (error instanceof AiFeatureDisabledError || error instanceof AiBudgetExceededError)
           return sendProblem(reply, 'forbidden')
         if (error instanceof AiInputValidationError) return sendProblem(reply, 'validation_failed')

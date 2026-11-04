@@ -40,7 +40,7 @@ export const personnelDataSchema = z
           .object({
             year: z.string().max(4),
             name: field,
-            form: z.enum(STUDY_FORMS),
+            form: z.enum(STUDY_FORMS).or(z.literal('')),
             master: z.boolean(),
           })
           .strict(),
@@ -70,7 +70,9 @@ export const personnelDataSchema = z
             name: field,
             year: z.string().max(4),
             place: field,
-            status: z.enum(['work', 'retired', 'unemployed', 'dead', 'housewife']),
+            status: z
+              .enum(['work', 'retired', 'unemployed', 'dead', 'housewife'])
+              .or(z.literal('')),
             job: field,
             prevJob: field,
             deathYear: z.string().max(4),
@@ -130,4 +132,5 @@ export const personnelImportRequestSchema = z
 export const personnelImportResponseSchema = z.object({
   data: personnelDataSchema,
   warnings: z.array(z.string().max(500)).max(30),
+  unverifiedFields: z.array(z.string().max(120)).max(1500).default([]),
 })

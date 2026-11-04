@@ -86,7 +86,13 @@ test('real data loading follows each layout and imported personnel records requi
     })
     // The provider is isolated here; real parser/evidence/privacy checks are integration-tested.
     await page.route('**/api/v1/accounts/personnel-record/import', (route) =>
-      route.fulfill({ json: { data, warnings: ['Please review the employment dates.'] } }),
+      route.fulfill({
+        json: {
+          data,
+          warnings: ['Please review the employment dates.'],
+          unverifiedFields: ['degree'],
+        },
+      }),
     )
     await page
       .getByRole('textbox', { name: 'Full legal name', exact: true })
@@ -103,6 +109,8 @@ test('real data loading follows each layout and imported personnel records requi
     await expect(
       page.getByText('Please review the employment dates.', { exact: true }),
     ).toBeVisible()
+    await page.getByRole('button', { name: /Review Academic degree/ }).click()
+    await expect(page.getByRole('textbox', { name: 'Academic degree', exact: true })).toBeFocused()
     expect(
       (await (await head.request.get('/api/v1/accounts/personnel-record')).json()).version,
     ).toBe(0)

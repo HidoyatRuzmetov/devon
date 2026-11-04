@@ -67,6 +67,8 @@ Profile photo controls include crop, pan, zoom, rotate, mirror and reset. The av
 
 Import sits between Save and Preview. PDF with extractable text, DOCX, ODT, RTF, text, Markdown and HTML are scanned and parsed before reaching the configured department AI provider. Each populated field must be supported by a quote in the extracted document; missing or ambiguous facts remain blank. Scanned-only PDFs and incomplete extraction are rejected. Import changes the recoverable local draft, with Undo, warnings and review; only Save publishes the private record. Review remains required because automated parsing cannot guarantee linguistic correctness.
 
+Import correction recognizes Uzbek date suffixes and table-cell quotations. Missing study mode or employment status remains unset. After a corrective AI reply, any still-unsupported fields are blanked and linked for review while verified content is retained; a malformed correction cannot discard an earlier usable extraction. A wholly unverified answer has its own message rather than a provider-outage message. No document content is written to diagnostic logs.
+
 The preview uses the supplied HTML's A4 geometry, type sizes, table and photo dimensions, without decorative footers or page numbers. It scales uniformly on narrow screens. Résumé and personnel downloads show separate saved revision dates; unknown historical dates are omitted instead of fabricated. Personnel dates are restricted to the real department head. The head's Latin/Cyrillic menu opens the same AI-assisted export review used by the owner. Trackpad and two-finger touch gestures zoom the crop without zooming the browser. Rotate, flip and reset are the three controls below it.
 
 ## Task lifecycle and loading

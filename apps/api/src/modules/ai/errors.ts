@@ -48,6 +48,14 @@ export class AiInputValidationError extends Error {
   }
 }
 
+/** The file was readable, but the model could not produce any source-supported draft. */
+export class AiImportUnverifiedError extends Error {
+  constructor() {
+    super('No verified personnel draft could be extracted')
+    this.name = 'AiImportUnverifiedError'
+  }
+}
+
 /** H8.1 graceful degradation: the `ai` circuit breaker (`lib/resilience/registry.ts`) is currently
  * open after repeated GLM failures. Thrown *before* the provider is ever called (no trace, no budget
  * spent, no waiting out a timeout that is certain to fail) -- mapped to the same 503 `maintenance`

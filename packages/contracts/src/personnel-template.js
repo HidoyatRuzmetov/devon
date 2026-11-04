@@ -1237,6 +1237,7 @@ function validate(d) {
     if (!clean(s.name)) err(id, lab + ': ўқув юрти номи тўлдирилмаган.')
     else if (!abbrCheck(id, lab, s.name, null, true) && clean(s.name).split(' ').length < 2)
       warn(id, lab + ': ўқув юртининг номини диплом бўйича тўлиқ ёзинг.')
+    if (!clean(s.form)) err(id, lab + ': таълим шаклини танланг.')
   })
   abbrCheck('specialty', 'Мутахассислиги', d.specialty, null, true)
   if (
@@ -1400,6 +1401,7 @@ function validate(d) {
         )
     }
     placeCheck(id, lab + ', туғилган жойи', r.place)
+    if (!clean(r.status)) err(id, lab + ': ҳозирги ҳолатини танланг.')
     var prev = ['retired', 'dead', 'unemployed'].indexOf(r.status) >= 0 ? clean(r.prevJob) : '',
       job = (r.status || 'work') === 'work' ? clean(r.job) : ''
     if (r.status !== 'work' && /^уй бекаси$/i.test(prev))

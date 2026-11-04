@@ -45,4 +45,71 @@ describe('personnel import source evidence', () => {
       )
     }
   })
+  it('never creates negative biographical claims from omitted form defaults', () => {
+    const result = personnelImportToolSchema.parse({
+      data: { fio: 'Karimov Sardor' },
+      evidence: [{ path: 'fio', quote: 'Karimov Sardor' }],
+      warnings: [],
+    })
+    expect(result.data.party).toBe('')
+    expect(result.data.degree).toBe('')
+    expect(validatePersonnelImport('Karimov Sardor', result).ok).toBe(true)
+  })
+  it('recognizes source-supported Uzbek date suffixes and bracketed evidence paths', () => {
+    const result = draft({
+      birthDate: '1995-05-12',
+      work: [
+        {
+          from: '2026',
+          to: '',
+          current: true,
+          since: '2026-11-03',
+          months: '',
+          text: 'Test markazi',
+        },
+      ],
+    })
+    result.evidence.push(
+      { path: 'data.birthDate', quote: '1995 йил 12 майда' },
+      { path: 'data.work[0].from', quote: '2026 йил 3 ноябрдан ҳозирга қадар' },
+      { path: 'work[0].current', quote: '2026 йил 3 ноябрдан ҳозирга қадар' },
+      { path: 'work[0].since', quote: '2026 йил 3 ноябрдан ҳозирга қадар' },
+      { path: 'work[0].text', quote: 'Test markazi' },
+    )
+    expect(
+      validatePersonnelImport(
+        'Karimov Sardor 1995 йил 12 майда 2026 йил 3 ноябрдан ҳозирга қадар Test markazi',
+        result,
+      ).ok,
+    ).toBe(true)
+  })
+  it('keeps verified facts in a partial draft and blanks every unsupported value', () => {
+    const result = draft({
+      birthPlace: 'London',
+      schools: [{ year: '2017', name: 'Test universiteti', form: 'кундузги', master: true }],
+    })
+    result.evidence.push(
+      { path: 'birthPlace', quote: 'London' },
+      { path: 'schools.0.year', quote: '2017 Test universiteti' },
+      { path: 'schools.0.name', quote: '2017 Test universiteti' },
+      { path: 'schools.0.form', quote: '2017 Test universiteti' },
+      { path: 'schools.0.master', quote: '2017 Test universiteti' },
+    )
+    const source = 'Karimov Sardor 2017 Test universiteti'
+    expect(validatePersonnelImport(source, result).ok).toBe(false)
+    const partial = validatePersonnelImport(source, result, { allowPartial: true })
+    expect(partial.ok).toBe(true)
+    if (!partial.ok) return
+    expect(partial.output.data).toMatchObject({
+      fio: 'Karimov Sardor',
+      birthPlace: '',
+      schools: [{ name: 'Test universiteti', form: '', master: false }],
+    })
+    expect(partial.unverifiedFields).toEqual(['birthPlace', 'schools.0.form', 'schools.0.master'])
+    expect(result.data.birthPlace).toBe('London')
+  })
+  it('refuses empty output even when unsupported rows existed in the answer', () => {
+    const result = draft({ fio: 'Invented Name' })
+    expect(validatePersonnelImport('No biography', result, { allowPartial: true }).ok).toBe(false)
+  })
 })
