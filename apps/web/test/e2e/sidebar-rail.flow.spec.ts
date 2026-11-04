@@ -55,47 +55,67 @@ test('collapsed sidebar centers every icon inside its button @flow', async ({ br
   }
 })
 
+type SidebarFrame = { rail: number; page: number; iconX: number; overflow: number }
+type SamplingWindow = Window & { sidebarSamples?: Promise<SidebarFrame[]> }
+
 async function sampleSidebarToggle(page: Page) {
   await expect(page.locator('[data-sidebar-collapsed]')).toBeVisible()
   await expect(page.locator('[data-devon-page-transition]').first()).toBeVisible()
   await expect(page.locator('aside .devon-nav-scroller a[href] svg').first()).toBeVisible()
-  const frames = page.evaluate(
-    () =>
-      new Promise<Array<{ rail: number; page: number; iconX: number; overflow: number }>>(
-        (resolve, reject) => {
-          const samples: Array<{
-            rail: number
-            page: number
-            iconX: number
-            overflow: number
-          }> = []
-          const start = performance.now()
-          function sample() {
-            const sidebar = document.querySelector('aside')
-            const page = document.querySelector('[data-devon-page-transition]')
-            const glyph = document.querySelector('aside .devon-nav-scroller a[href] svg')
-            if (!sidebar || !page || !glyph) {
-              reject(new Error(`Sidebar disappeared during resize at ${location.pathname}`))
-              return
-            }
-            const rail = sidebar.getBoundingClientRect()
-            const content = page.getBoundingClientRect()
-            const icon = glyph.getBoundingClientRect()
-            samples.push({
-              rail: rail.width,
-              page: content.width,
-              iconX: icon.x + icon.width / 2,
-              overflow: document.documentElement.scrollWidth - window.innerWidth,
-            })
-            if (performance.now() - start < 450) requestAnimationFrame(sample)
-            else resolve(samples)
-          }
-          requestAnimationFrame(sample)
-        },
-      ),
-  )
+  // Arm sampling before sending the keyboard event; concurrent evaluate/key requests can race.
+  await page.evaluate(() => {
+    ;(window as SamplingWindow).sidebarSamples = new Promise<SidebarFrame[]>((resolve, reject) => {
+      const samples: Array<{
+        rail: number
+        page: number
+        iconX: number
+        overflow: number
+      }> = []
+      const start = performance.now()
+      const initialCollapsed = document
+        .querySelector('[data-sidebar-collapsed]')!
+        .getAttribute('data-sidebar-collapsed')
+      const targetWidth = initialCollapsed === 'true' ? 264 : 64
+      function sample() {
+        const sidebar = document.querySelector('aside')
+        const page = document.querySelector('[data-devon-page-transition]')
+        const glyph = document.querySelector('aside .devon-nav-scroller a[href] svg')
+        if (!sidebar || !page || !glyph) {
+          reject(new Error(`Sidebar disappeared during resize at ${location.pathname}`))
+          return
+        }
+        const rail = sidebar.getBoundingClientRect()
+        const content = page.getBoundingClientRect()
+        const icon = glyph.getBoundingClientRect()
+        samples.push({
+          rail: rail.width,
+          page: content.width,
+          iconX: icon.x + icon.width / 2,
+          overflow: document.documentElement.scrollWidth - window.innerWidth,
+        })
+        const changed =
+          document
+            .querySelector('[data-sidebar-collapsed]')!
+            .getAttribute('data-sidebar-collapsed') !== initialCollapsed
+        // CI may deliver the keyboard event later than a local browser. End on the actual
+        // settled geometry, never on a fixed delay measured before the key was even pressed.
+        if (changed && Math.abs(rail.width - targetWidth) < 0.1) resolve(samples)
+        else if (performance.now() - start > 10_000)
+          reject(new Error(`Sidebar did not finish resizing at ${location.pathname}`))
+        else requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+    })
+  })
   await page.keyboard.press('Control+b')
-  return frames
+  return page.evaluate(async () => {
+    const state = window as SamplingWindow
+    try {
+      return await state.sidebarSamples!
+    } finally {
+      delete state.sidebarSamples
+    }
+  })
 }
 
 test('sidebar reflows wide workspaces in both directions without a width cap or icon swing @flow', async ({
