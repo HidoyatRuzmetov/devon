@@ -18,6 +18,7 @@ WORKDIR /repo
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
+COPY apps/miniapp/package.json apps/miniapp/package.json
 COPY packages/ai/package.json packages/ai/package.json
 COPY packages/config/package.json packages/config/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
@@ -30,6 +31,7 @@ COPY packages/contracts packages/contracts
 COPY packages/i18n packages/i18n
 COPY packages/ui packages/ui
 COPY apps/web apps/web
+COPY apps/miniapp apps/miniapp
 # No `.env` is present in a Docker build context (H1.1 -- secrets never in the repo, and this file's
 # COPY list above never includes one); `apps/web/src/vite.config.ts`'s own `loadEnv()` call tolerates
 # a missing file and falls back to `process.env`/defaults -- pass build-time public config with
@@ -37,6 +39,7 @@ COPY apps/web apps/web
 # value baked into the bundle (none are required today: the SPA reads `/api/v1/instance` at runtime
 # for everything environment-specific, per TECH-SPEC).
 RUN pnpm --filter @devon/web build
+RUN NODE_ENV=production pnpm --filter @devon/miniapp build
 
 FROM ${NGINX_IMAGE} AS runtime
 # nginx 1.30.6 fixes CVE-2026-15176, CVE-2026-93479 and CVE-2026-97205, with matching
@@ -52,6 +55,7 @@ USER 101
 # master (H17.1/H18.1). Caddy's `infra/Caddyfile` proxies to `web:8080` (not `:80`) to match.
 COPY infra/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
+COPY --from=build /repo/apps/miniapp/dist /usr/share/nginx/html/miniapp
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=5 \
   CMD wget -q -O- http://127.0.0.1:8080/ >/dev/null || exit 1

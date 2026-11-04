@@ -40,6 +40,10 @@ what production differs from dev in, and for the build step itself.
   of Caddy's own offline-friendly internal CA (`CADDY_TLS_MODE=internal`, the air-gap-safe default --
   browsers will warn on first visit until that CA is trusted, same as any self-signed setup).
 - `git clone` of this repository onto the host, e.g. under `/opt/devon`.
+- Public Telegram Mini Apps require a publicly trusted certificate. Set `CADDY_TLS_POLICY=public`
+  for Caddy-managed Let's Encrypt certificates, including public IP addresses (the `shortlived`
+  profile, renewed automatically). Ports 80/443 must be reachable for ACME validation. The default
+  `configured` policy preserves the existing `CADDY_TLS_MODE` behavior for private installations.
 
 ## 2. Configure `.env`
 
@@ -56,6 +60,7 @@ POSTGRES_MIGRATOR_PASSWORD=<random>     # devon_migrator role password, used onl
 CSRF_SECRET=<random, not the .env.example value>
 DEVON_PUBLIC_URL=https://work.<your-ministry-domain>
 CADDY_TLS_MODE=internal                 # or omit + set DEVON_TLS_CERT_FILE/DEVON_TLS_KEY_FILE
+CADDY_TLS_POLICY=configured             # public for internet-facing Telegram Mini Apps
 NODE_ENV=production
 CLAMAV_MODE=clamd                       # apps/api refuses NODE_ENV=production with CLAMAV_MODE=off
 ```

@@ -99,6 +99,15 @@ The authorized education/position announcement was sent once with receipt `4826b
 
 ## Validation
 
+November 4 Mini App outage: the production web image omitted `apps/miniapp/dist`, and the shared
+proxy policy blocked Telegram's SDK and framing. The image now builds and serves the separate
+`/miniapp/` shell, with noncached HTML, immutable assets and real 404s for missing bundles. Only the
+Mini App permits Telegram's official SDK and Telegram Web embedding. Public deployments can use
+`CADDY_TLS_POLICY=public` for automatically renewed, publicly trusted IP/domain certificates.
+Deployment checks exercise the built image and refuse a release whose Mini App route falls back
+to the web SPA. Local validation covers the real SDK, a synthetic launch/session exchange, scoped
+proxy headers and all 25 deployment/rollback cases. Renovate credentials are not runtime inputs.
+
 Local verification includes 1,132 database migration checks; check-in, calendar, private-record and Telegram authorization integration tests; 52 AI context/action integration tests; browser flows for grouped selections, timers, drawers, draft recovery, photo cropping/lightboxes, head downloads, unit filtering and attendee calendars; desktop/mobile accessibility checks; and rendered Latin/Cyrillic personnel documents plus one-/two-page résumé samples. The November 4 revision additionally verifies source-supported personnel import, independent document dates and privacy, Telegram unconnected names, unlimited pinning, archived-task preservation, direct check-in creation, trackpad/touch crop gestures, keyboard board scrolling, and real slow-network loading states. Release CI and production readiness remain mandatory.
 
 Terminology and crop references: [official higher education services](https://my.gov.uz/en/life-situations/069371c8-defc-41bf-ac89-eb01013bd7d1), [Uzbek academic degree regulation](https://lex.uz/uz/docs/3213407?otherlang=4), [official position terminology](https://nqaae.uz/en/structure/rahimboyev-sardor-qahramonovich), and [Telegram photo editor](https://translated.telegram.org/blog/photo-editor-and-passcodes).

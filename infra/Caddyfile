@@ -26,6 +26,20 @@
 	}
 }
 
+(tls-configured) {
+	tls {$CADDY_TLS_MODE:internal}
+}
+
+# Public Telegram clients cannot trust the private CA used by offline installations.
+# Caddy obtains and renews Let's Encrypt's short-lived IP/domain certificates itself.
+(tls-public) {
+	tls {
+		issuer acme {
+			profile shortlived
+		}
+	}
+}
+
 {$DEVON_PUBLIC_URL:localhost} {
 	encode zstd gzip
 
@@ -34,7 +48,7 @@
 	# this single line with `tls {$DEVON_TLS_CERT_FILE} {$DEVON_TLS_KEY_FILE}` (infra/README.md);
 	# removing the directive entirely switches to Caddy's public ACME path, which needs real internet
 	# and a public DNS name and therefore only makes sense off an air-gapped network.
-	tls {$CADDY_TLS_MODE:internal}
+	import tls-{$CADDY_TLS_POLICY:configured}
 
 	# --- Security headers (HARDENING H1.10, H1.5) ------------------------------------------------
 	# Set once for every response this site serves. `apps/api` sets its own, stricter set on its own
@@ -50,7 +64,6 @@
 		X-Content-Type-Options "nosniff"
 		# Both halves of the same control: the header for pre-CSP2 user agents, `frame-ancestors`
 		# (below, in the CSP) for everything current.
-		X-Frame-Options "DENY"
 		Referrer-Policy "no-referrer"
 		Cross-Origin-Opener-Policy "same-origin"
 		Cross-Origin-Resource-Policy "same-origin"
@@ -77,8 +90,14 @@
 	# `connect-src` is `'self'` plus whatever `DEVON_CSP_CONNECT_EXTRA` names -- set it to the MinIO
 	# public endpoint when `STORAGE_DRIVER=s3`, because the browser then PUTs avatar bytes straight to
 	# a presigned URL on that origin (`apps/web/src/lib/api-client.ts`'s `uploadFile`).
-	@spa not path /api/* /healthz /readyz /realtime/*
+	@not_miniapp not path /miniapp /miniapp/*
+	header @not_miniapp X-Frame-Options "DENY"
+	@spa not path /api/* /healthz /readyz /realtime/* /miniapp /miniapp/*
 	header @spa Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' {$DEVON_CSP_CONNECT_EXTRA:} ; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; frame-src 'none'; child-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+	# Permit only Telegram's official SDK and Telegram Web's embedding origin on this surface.
+	# The main portal retains its no-external-scripts, no-framing policy above.
+	@miniapp path /miniapp /miniapp/*
+	header @miniapp Content-Security-Policy "default-src 'self'; script-src 'self' https://telegram.org/js/telegram-web-app.js; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; frame-src 'none'; child-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self' https://web.telegram.org; upgrade-insecure-requests"
 
 	# H6.3: source maps are built (`sourcemap: command === 'build'`, apps/web/src/vite.config.ts) and
 	# are 11 MB of readable application source. They belong in the error tracker, never on the public

@@ -79,7 +79,13 @@ case "$name" in
     fi ;;
   flock|sleep) exit 0 ;;
   seq) echo 1 ;;
-  curl) [ "$SCENARIO" != readiness-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ] ;;
+  curl)
+    [ "$SCENARIO" != readiness-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ] || exit 22
+    if [[ "$*" == *'/miniapp/' ]]; then
+      if [ "$SCENARIO" = miniapp-missing ]; then echo '<html>web SPA</html>'
+      else echo '<script src="/miniapp/assets/index-fixture.js"></script>'
+      fi
+    fi ;;
   docker)
     if [[ "$*" == *'ps --status running postgres'* ]]; then
       case "$SCENARIO" in stopped|orphan-volume|initial) ;; *) echo devon-postgres ;; esac
@@ -147,6 +153,15 @@ test('successful backup permits migration, readiness and atomic release recordin
   assert.equal(result.manifest, 'candidate manifest')
   assert.equal(result.proxyLoaded, 'candidate proxy')
   assert.ok(result.calls.indexOf('--force-recreate') > result.calls.indexOf(' api web caddy'))
+})
+
+test('missing Mini App rolls back even when the API readiness endpoint succeeds', () => {
+  const result = deploy('miniapp-missing')
+  assert.notEqual(result.status, 0)
+  assert.match(result.output, /Mini App shell gate failed/)
+  assert.match(result.calls, /api web caddy image=old-api/)
+  assert.equal(result.state, previous)
+  assert.equal(result.proxyLoaded, 'previous proxy')
 })
 
 for (const scenario of ['backup-failed', 'backup-start-failed', 'stopped', 'orphan-volume']) {

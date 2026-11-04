@@ -237,6 +237,15 @@ if ! wait_ready; then
   exit 1
 fi
 
+# /readyz checks the API, not which HTML the proxy serves. A web-SPA fallback at this path
+# strands Telegram on its loading screen even with every container reported healthy.
+if ! curl --fail --silent --show-error --insecure --max-time 15 \
+  "${DEVON_PUBLIC_URL%/}/miniapp/" | grep -q '/miniapp/assets/'; then
+  echo "[deploy] Mini App shell gate failed" >&2
+  rollback_images || true
+  exit 1
+fi
+
 tmp_state="${STATE_FILE}.tmp"
 umask 027
 {

@@ -98,6 +98,7 @@ jobs:
           echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker build --pull -f apps/api/Dockerfile -t "${image_root}-api:${RELEASE_SHA}" .
           docker build --pull -f apps/web/Dockerfile -t "${image_root}-web:${RELEASE_SHA}" .
+          node scripts/check-miniapp-image.mjs "${image_root}-web:${RELEASE_SHA}"
           for image in "${image_root}-api:${RELEASE_SHA}" "${image_root}-web:${RELEASE_SHA}"; do
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
               -v devon-trivy-cache:/root/.cache/trivy aquasec/trivy:0.74.0 \
