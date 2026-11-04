@@ -159,7 +159,11 @@ export function MemberCard({
     />
   )
   const period = (
-    item: { startYear: number | null; endYear: number | null; current: boolean },
+    item: {
+      startYear: number | null
+      endYear: number | null
+      current: boolean
+    },
     studying = false,
   ) =>
     [
@@ -252,14 +256,16 @@ export function MemberCard({
               onClick={resume}
               title={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
               aria-label={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
-              className="flex min-w-0 w-full flex-col items-start whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
+              className="flex min-w-0 w-full items-center justify-center whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
             >
-              <span>{t('profileChoices.resume')}</span>
-              {member.resumeUpdatedAt ? (
-                <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
-                  {updatedDate(member.resumeUpdatedAt, false)}
-                </span>
-              ) : null}
+              <span className="flex flex-col items-start">
+                <span>{t('profileChoices.resume')}</span>
+                {member.resumeUpdatedAt ? (
+                  <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
+                    {updatedDate(member.resumeUpdatedAt, false)}
+                  </span>
+                ) : null}
+              </span>
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -267,20 +273,22 @@ export function MemberCard({
                   type="button"
                   title={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
                   aria-label={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
-                  className="relative flex min-w-0 w-full flex-col items-start whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors before:absolute before:inset-y-1 before:-left-[3px] before:w-px before:bg-border hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
+                  className="relative flex min-w-0 w-full items-center justify-center whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors before:absolute before:inset-y-1 before:-left-[3px] before:w-px before:bg-border hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
                 >
-                  <span className="inline-flex items-center gap-1 @max-[300px]/profile:gap-0.5">
-                    {t('profileChoices.record')}
-                    <ChevronDown
-                      className="size-3 shrink-0 @max-[300px]/profile:size-2.5"
-                      aria-hidden="true"
-                    />
-                  </span>
-                  {member.personnelUpdatedAt ? (
-                    <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
-                      {updatedDate(member.personnelUpdatedAt, false)}
+                  <span className="flex flex-col items-start">
+                    <span className="inline-flex items-center gap-1 @max-[300px]/profile:gap-0.5">
+                      {t('profileChoices.record')}
+                      <ChevronDown
+                        className="size-3 shrink-0 @max-[300px]/profile:size-2.5"
+                        aria-hidden="true"
+                      />
                     </span>
-                  ) : null}
+                    {member.personnelUpdatedAt ? (
+                      <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
+                        {updatedDate(member.personnelUpdatedAt, false)}
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -354,8 +362,16 @@ export function MemberCard({
                   )}
                 >
                   {[
-                    { label: t('profileEdit.email'), value: member.email, icon: Mail },
-                    { label: t('portal.profile.phone'), value: profile.phone, icon: Phone },
+                    {
+                      label: t('profileEdit.email'),
+                      value: member.email,
+                      icon: Mail,
+                    },
+                    {
+                      label: t('portal.profile.phone'),
+                      value: profile.phone,
+                      icon: Phone,
+                    },
                     ...(profile.location
                       ? [
                           {
