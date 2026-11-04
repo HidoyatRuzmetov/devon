@@ -1,22 +1,8 @@
-// Adapted from the personnel form supplied by the user. Formatting and validation rules are retained.
+// Layout authority: the annotated Эшматов Word sample supplied on 2026-11-04.
+// The user's later instruction overrides its employment dates: years only.
 
 /* Маълумотнома generator: builds a .docx (Office Open XML) with no libraries.
    Layout mirrors the reference file: Times New Roman 11, margins 1.5/1/1/2 cm. */
-
-var MONTHS_FROM = [
-  'январдан',
-  'февралдан',
-  'мартдан',
-  'апрелдан',
-  'майдан',
-  'июндан',
-  'июлдан',
-  'августдан',
-  'сентябрдан',
-  'октябрдан',
-  'ноябрдан',
-  'декабрдан',
-]
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -43,12 +29,10 @@ function rpr(o) {
 /* Quotation marks in the document: “...” (« » are only used inside the form's logic). */
 function displayQuotes(s) {
   return String(s == null ? '' : s)
-    .replace(/«/g, '“')
-    .replace(/»/g, '”')
 }
 function run(text, o) {
   var parts = displayQuotes(text)
-    .replace(/(\d)-(?=[А-Яа-яЁёЎўҚқҒғҲҳ])/g, '$1\u0001')
+    .replace(/(\d)-(?=[A-Za-zА-Яа-яЁёЎўҚқҒғҲҳ])/g, '$1\u0001')
     .split('\u0001')
   return (
     '<w:r>' +
@@ -92,7 +76,7 @@ function empty(sz) {
   return para('', { sz: sz || 22 })
 }
 
-var COL2 = 4320 // second column position (twips), as in the reference
+var COL2 = 4228 // measured tab stop in the authoritative Word sample (twips)
 var PHOTO_GAP = 1204 // right indent next to the photo
 
 function labelPair(a, b) {
@@ -121,9 +105,9 @@ function fmtDate(iso) {
   return m ? m[3] + '.' + m[2] + '.' + m[1] : clean(iso)
 }
 function fmtSince(iso) {
-  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '')
+  var m = /^(\d{4})(?:-\d{2}-\d{2})?$/.exec(iso || '')
   if (!m) return ''
-  return m[1] + ' йил ' + parseInt(m[3], 10) + ' ' + MONTHS_FROM[parseInt(m[2], 10) - 1] + ':'
+  return m[1] + ' йилдан:'
 }
 function eduLines(schools) {
   var list = (schools || []).filter(function (s) {
@@ -140,12 +124,18 @@ function eduLines(schools) {
     return t + (i < list.length - 1 ? ',' : '')
   })
 }
+function workStartYear(w) {
+  return /^\d{4}$/.test(clean(w.from))
+    ? clean(w.from)
+    : w.current
+      ? (w.since || '').slice(0, 4)
+      : clean(w.from)
+}
 function workPeriod(w) {
-  var from = w.current && /^\d{4}/.test(w.since || '') ? w.since.slice(0, 4) : clean(w.from),
-    to = clean(w.to),
-    months = clean(w.months)
+  var from = workStartYear(w),
+    to = clean(w.to)
   if (w.current) return from + ' й. - ҳ.в.'
-  if (!to || to === from) return from + ' й.' + (months ? ' ' + months : '')
+  if (!to || to === from) return from + ' й.'
   return from + '-' + to + ' йй.'
 }
 function workLine(w) {
@@ -170,14 +160,29 @@ function relWorkLines(r) {
   }
 }
 function relBirthLines(r) {
-  var parts = clean(r.place)
+  var parts = relativeBirthPlace(r)
     .split(/\s*,\s*/)
     .filter(Boolean)
-  var lines = [clean(r.year) + ' йил' + (parts.length ? ',' : '')]
+  var lines = clean(r.year) ? [clean(r.year) + ' йил' + (parts.length ? ',' : '')] : []
   parts.forEach(function (p, i) {
     lines.push(p + (i < parts.length - 1 ? ',' : ''))
   })
   return lines
+}
+// Older imported drafts sometimes kept the birth year in both fields. Remove only
+// the exact matching year prefix; never strip years occurring inside a place name.
+function relativeBirthPlace(r) {
+  var place = clean(r.place),
+    year = clean(r.year)
+  if (!/^\d{4}$/.test(year)) return place
+  var prefix = new RegExp(
+    '^' +
+      year +
+      '(?!\\d)\\s*[-–]?\\s*(?:йил(?:и)?|й\\.|yil(?:i)?|y\\.|год(?:а)?|г\\.)?\\s*[,;:]?\\s*',
+    'i',
+  )
+  while (prefix.test(place)) place = place.replace(prefix, '')
+  return place
 }
 
 /* ---------- Uzbek Latin -> Cyrillic (runs in the browser, no internet) ---------- */
@@ -666,7 +671,7 @@ function currentJob(d) {
 }
 
 /* ---------- table ---------- */
-var GRID = [1304, 2268, 1871, 2268, 2495]
+var GRID = [1260, 2160, 1980, 2860, 2267]
 var BORDER =
   '<w:tcBorders>' +
   ['top', 'left', 'bottom', 'right']
@@ -675,7 +680,7 @@ var BORDER =
     })
     .join('') +
   '</w:tcBorders>'
-function cell(w, lines, bold) {
+function cell(w, lines, bold, span) {
   lines = (lines || ['']).filter(function (l, i) {
     return l !== '' || i === 0
   })
@@ -683,6 +688,7 @@ function cell(w, lines, bold) {
     .map(function (l) {
       return (
         '<w:p><w:pPr><w:jc w:val="center"/>' +
+        (w === GRID[0] ? '<w:ind w:left="-108" w:right="-108"/>' : '') +
         rpr({ b: bold }) +
         '</w:pPr>' +
         (l ? run(l, { b: bold }) : '') +
@@ -694,6 +700,7 @@ function cell(w, lines, bold) {
     '<w:tc><w:tcPr><w:tcW w:w="' +
     w +
     '" w:type="dxa"/>' +
+    (span ? '<w:gridSpan w:val="' + span + '"/>' : '') +
     BORDER +
     '<w:vAlign w:val="center"/></w:tcPr>' +
     ps +
@@ -711,15 +718,15 @@ function row(cells, header) {
 }
 function relTable(rels) {
   var x =
-    '<w:tbl><w:tblPr><w:tblW w:w="10206" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/>' +
-    '<w:tblCellMar><w:top w:w="28" w:type="dxa"/><w:left w:w="57" w:type="dxa"/><w:bottom w:w="28" w:type="dxa"/><w:right w:w="57" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>' +
+    '<w:tbl><w:tblPr><w:tblW w:w="10527" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/>' +
+    '<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>' +
     GRID.map(function (g) {
       return '<w:gridCol w:w="' + g + '"/>'
     }).join('') +
     '</w:tblGrid>'
   x += row(
     [
-      cell(GRID[0], ['Қариндош-лиги'], true),
+      cell(GRID[0], ['Қариндош-', 'лиги'], true),
       cell(GRID[1], ['Фамилияси, исми', 'ва отасининг исми'], true),
       cell(GRID[2], ['Туғилган йили', 'ва жойи'], true),
       cell(GRID[3], ['Иш жойи ва лавозими'], true),
@@ -732,8 +739,9 @@ function relTable(rels) {
       cell(GRID[0], [clean(r.rel)], true),
       cell(GRID[1], [clean(r.name)]),
       cell(GRID[2], relBirthLines(r)),
-      cell(GRID[3], relWorkLines(r)),
-      cell(GRID[4], [r.status === 'dead' ? '' : clean(r.address)]),
+      ...(r.status === 'dead'
+        ? [cell(GRID[3] + GRID[4], relWorkLines(r), false, 2)]
+        : [cell(GRID[3], relWorkLines(r)), cell(GRID[4], [clean(r.address)])]),
     ])
   })
   return x + '</w:tbl>'
@@ -781,7 +789,7 @@ function documentXml(d) {
   b += empty(24)
   var cj = currentJob(d)
   if (cj) {
-    var since = fmtSince(cj.since)
+    var since = fmtSince(workStartYear(cj))
     if (since) b += para(run(since), { right: 2547, keepNext: true })
     b += para(run(clean(cj.text), { b: true }), { right: 2547, b: true })
   }
@@ -801,7 +809,9 @@ function documentXml(d) {
   b +=
     labelPair('Илмий даражаси:', 'Илмий унвони:') +
     valuePair(clean(d.degree) || 'йўқ', [clean(d.title) || 'йўқ'])
-  b += labelBlock('Қайси чет тилларини билади:', clean(d.languages))
+  b +=
+    labelPair('Қайси чет тилларини билади:', 'Ҳарбий унвони:') +
+    valuePair(clean(d.languages), [clean(d.militaryRank)])
   b += labelBlock('Давлат мукофотлари билан тақдирланганми (қанақа):', clean(d.awards))
   b += para(
     run(
@@ -810,7 +820,7 @@ function documentXml(d) {
     ),
     { before: 160, keepNext: true },
   )
-  b += para(run(clean(d.deputy) || 'йўқ'))
+  b += para(run(clean(d.deputy) || 'йўқ'), { left: 1414, hanging: 1414 })
   b += empty(16)
   b += para(run('МЕҲНАТ ФАОЛИЯТИ', { b: true, sz: 28 }), { jc: 'center', sz: 28, keepNext: true })
   b += empty(16)
@@ -827,7 +837,7 @@ function documentXml(d) {
     sz: 24,
   })
   b += para(run('МАЪЛУМОТ', { b: true, sz: 24 }), { jc: 'center', sz: 24 })
-  b += empty(22)
+  b += empty(24)
   b += relTable(
     (d.relatives || []).filter(function (r) {
       return clean(r.name)
@@ -835,7 +845,7 @@ function documentXml(d) {
   )
   b += empty(6)
   b +=
-    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="851" w:right="567" w:bottom="567" w:left="1134" w:header="0" w:footer="0" w:gutter="0"/><w:cols w:space="720"/><w:docGrid w:linePitch="360"/></w:sectPr>'
+    '<w:sectPr><w:pgSz w:w="11905" w:h="16837"/><w:pgMar w:top="851" w:right="567" w:bottom="567" w:left="1134" w:header="720" w:footer="720" w:gutter="0"/><w:cols w:space="720"/><w:docGrid w:linePitch="360"/></w:sectPr>'
   return (
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ' +
@@ -1237,7 +1247,7 @@ function validate(d) {
     if (!clean(s.name)) err(id, lab + ': ўқув юрти номи тўлдирилмаган.')
     else if (!abbrCheck(id, lab, s.name, null, true) && clean(s.name).split(' ').length < 2)
       warn(id, lab + ': ўқув юртининг номини диплом бўйича тўлиқ ёзинг.')
-    if (!clean(s.form)) err(id, lab + ': таълим шаклини танланг.')
+    if (!clean(s.form) && !s.master) err(id, lab + ': таълим шаклини танланг.')
   })
   abbrCheck('specialty', 'Мутахассислиги', d.specialty, null, true)
   if (
@@ -1258,7 +1268,7 @@ function validate(d) {
       'languages',
       'Қўшни давлат тиллари ёзилмайди. Фақат мукаммал биладиган тилларни қолдиринг.',
     )
-  ;['degree', 'title', 'awards', 'deputy'].forEach(function (k) {
+  ;['degree', 'title', 'militaryRank', 'awards', 'deputy'].forEach(function (k) {
     abbrCheck(k, 'Майдон', d[k], ['й'])
   })
 
@@ -1270,7 +1280,8 @@ function validate(d) {
   work.forEach(function (w, i) {
     var id = 'work-' + i,
       lab = 'Меҳнат фаолияти (' + (i + 1) + ')'
-    if (!yearOk(w.from)) err(id, lab + ': бошланган йилни 4 рақам билан ёзинг.')
+    var startYear = workStartYear(w)
+    if (!yearOk(startYear)) err(id, lab + ': бошланган йилни 4 рақам билан ёзинг.')
     else {
       if (by && +w.from < by + 14)
         warn(id, lab + ': бошланган йил туғилган йилга тўғри келмайди. Текширинг.')
@@ -1280,23 +1291,7 @@ function validate(d) {
       err(id, lab + ': тугаган йилни 4 рақам билан ёзинг.')
     if (!w.current && yearOk(w.to) && yearOk(w.from) && +w.to < +w.from)
       err(id, lab + ': тугаган йил бошланган йилдан олдин.')
-    if (w.current && clean(w.months))
-      warn(
-        id,
-        lab +
-          ': «Ҳозиргача» белгиланганда ойлар файлга чиқмайди. Ойлар фақат бир йил ичидаги иш учун ёзилади.',
-      )
-    if (!w.current && clean(w.months) && yearOk(w.to) && w.to !== w.from)
-      warn(
-        id,
-        lab +
-          ': ойлар фақат бир йил ичидаги иш учун ёзилади. Бир неча йиллик ишда файлга чиқмайди.',
-      )
     if (!clean(w.text)) err(id, lab + ': иш жойи ва лавозими тўлдирилмаган.')
-    if (w.current && !/^\d{4}-\d{2}-\d{2}$/.test(w.since || ''))
-      err(id, lab + ': ҳозирги ишга кирган санаси тўлдирилмаган.')
-    else if (w.current && yearOk(w.from) && w.since.slice(0, 4) !== clean(w.from))
-      err(id, lab + ': «Йилдан» ва ишга кирган санаси бир хил йил бўлиши керак.')
     abbrCheck(id, lab, w.text)
     jobStyle(id, lab, w.text)
     var xcw = extraCapitals(w.text)
@@ -1571,6 +1566,9 @@ export {
   fmtSince,
   eduLines,
   workLine,
+  workStartYear,
+  workPeriod,
+  relativeBirthPlace,
   relWorkLines,
   relBirthLines,
 }

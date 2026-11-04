@@ -42,6 +42,20 @@ it('exports a valid stored ZIP and escapes reviewed text after conversion', () =
   const data = personnelDataSchema.parse({
     fio: 'Karimov Sardor Akmalovich',
     specialty: 'B&O <engineering>',
+    militaryRank: 'капитан',
+    relatives: [
+      {
+        rel: 'Отаси',
+        name: 'Karimov Akmal Anvarovich',
+        year: '1965',
+        place: 'Тошкент шаҳри',
+        status: 'dead',
+        job: '',
+        prevJob: 'Мактаб ўқитувчиси',
+        deathYear: '2020',
+        address: '',
+      },
+    ],
   })
   const bytes = personnelTemplate.buildDocx(
     { ...data, photo: null },
@@ -65,6 +79,11 @@ it('exports a valid stored ZIP and escapes reviewed text after conversion', () =
   }
   const xml = files.get('word/document.xml')!
   expect(xml).toContain('R&amp;D &lt;engineering&gt;')
+  expect(xml).toContain('Ҳарбий унвони:')
+  expect(xml).toContain('капитан')
+  expect(xml).toContain('<w:tblW w:w="10527" w:type="dxa"/>')
+  expect(xml).toContain('<w:gridSpan w:val="2"/>')
+  expect(xml).toContain('<w:tab w:val="left" w:pos="4228"/>')
   expect(
     new DOMParser().parseFromString(xml, 'application/xml').getElementsByTagName('parsererror'),
   ).toHaveLength(0)
@@ -74,4 +93,44 @@ it('exports a valid stored ZIP and escapes reviewed text after conversion', () =
 it('rejects impossible dates before private records reach the database', () => {
   expect(personnelDataSchema.safeParse({ birthDate: '1995-02-30' }).success).toBe(false)
   expect(personnelDataSchema.safeParse({ birthDate: 'not-a-date' }).success).toBe(false)
+})
+
+it('follows year-only employment and emits a relative birth year just once for legacy drafts', () => {
+  const data = personnelDataSchema.parse({
+    work: [
+      {
+        from: '2026',
+        to: '2026',
+        current: false,
+        since: '',
+        months: 'mart–avgust',
+        text: 'Test markazi mutaxassisi',
+      },
+    ],
+    relatives: [
+      {
+        rel: 'Отаси',
+        name: 'Test Akmal Anvarovich',
+        year: '1978',
+        place: '1978 йил, 1978 йил, Тошкент шаҳри',
+        status: 'work',
+        job: 'Test markazi мутахассиси',
+        prevJob: '',
+        deathYear: '',
+        address: 'Тошкент шаҳри',
+      },
+    ],
+  })
+  expect(personnelTemplate.workLine(data.work[0]!)).toBe('2026 й. - Test markazi mutaxassisi')
+  expect(personnelTemplate.workLine({ ...data.work[0]!, current: true, since: '2025-03-15' })).toBe(
+    '2026 й. - ҳ.в. - Test markazi mutaxassisi',
+  )
+  expect(personnelTemplate.fmtSince('2026-03-15')).toBe('2026 йилдан:')
+  expect(personnelTemplate.relBirthLines(data.relatives[0]!)).toEqual([
+    '1978 йил,',
+    'Тошкент шаҳри',
+  ])
+  expect(
+    personnelTemplate.relativeBirthPlace({ ...data.relatives[0]!, place: '19780 қишлоғи' }),
+  ).toBe('19780 қишлоғи')
 })

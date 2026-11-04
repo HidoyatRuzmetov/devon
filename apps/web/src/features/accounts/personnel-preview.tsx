@@ -7,7 +7,7 @@ import {
 } from '@devon/contracts'
 import { useT } from '@devon/i18n'
 
-/** The supplied HTML's paper geometry. Only field values are interactive; no document chrome. */
+/** The approved annotated Word sample, without its editorial notes or instructions. */
 export function PersonnelPreview({
   data,
   script,
@@ -63,7 +63,10 @@ export function PersonnelPreview({
         {current ? (
           <>
             <div style={{ paddingRight: 170 }}>
-              {field(`work.${currentIndex}.since`, wording(template.fmtSince(current.since)))}
+              {field(
+                `work.${currentIndex}.from`,
+                wording(template.fmtSince(template.workStartYear(current))),
+              )}
             </div>
             <div style={{ paddingRight: 170 }}>
               <strong>{field(`work.${currentIndex}.text`, current.text)}</strong>
@@ -108,9 +111,14 @@ export function PersonnelPreview({
           field('degree', data.degree),
           field('title', data.title),
         )}
+        {pair(
+          'Қайси чет тилларини билади:',
+          'Ҳарбий унвони:',
+          field('languages', data.languages),
+          field('militaryRank', data.militaryRank),
+        )}
         {(
           [
-            ['languages', 'Қайси чет тилларини билади:'],
             ['awards', 'Давлат мукофотлари билан тақдирланганми (қанақа):'],
             [
               'deputy',
@@ -122,7 +130,9 @@ export function PersonnelPreview({
             <div>
               <strong>{wording(label)}</strong>
             </div>
-            {field(key, data[key])}
+            <div className={key === 'deputy' ? 'paper-deputy' : undefined}>
+              {field(key, data[key])}
+            </div>
           </div>
         ))}
         <div className="paper-center paper-title" style={{ margin: '14px 0 10px' }}>
@@ -147,14 +157,14 @@ export function PersonnelPreview({
         <div className="paper-center paper-subtitle">{wording('МАЪЛУМОТ')}</div>
         <table className="paper-relatives">
           <colgroup>
-            {[12.4, 21.6, 17.8, 21.6, 23.8].map((width, i) => (
-              <col key={i} style={{ width: `${width}%` }} />
+            {[1260, 2160, 1980, 2860, 2267].map((width, i) => (
+              <col key={i} style={{ width: `${(width / 10527) * 100}%` }} />
             ))}
           </colgroup>
           <thead>
             <tr>
               {[
-                'Қариндош-лиги',
+                'Қариндош-\nлиги',
                 'Фамилияси, исми\nва отасининг исми',
                 'Туғилган йили\nва жойи',
                 'Иш жойи ва лавозими',
@@ -181,7 +191,7 @@ export function PersonnelPreview({
                       ),
                     )}
                   </td>
-                  <td>
+                  <td colSpan={relative.status === 'dead' ? 2 : 1}>
                     {field(
                       `relatives.${i}.${relative.status === 'work' ? 'job' : 'status'}`,
                       formatted(template.relWorkLines(relative).filter(Boolean).join('\n'), [
@@ -190,11 +200,9 @@ export function PersonnelPreview({
                       ]),
                     )}
                   </td>
-                  <td>
-                    {relative.status === 'dead'
-                      ? ''
-                      : field(`relatives.${i}.address`, relative.address)}
-                  </td>
+                  {relative.status !== 'dead' ? (
+                    <td>{field(`relatives.${i}.address`, relative.address)}</td>
+                  ) : null}
                 </tr>
               ) : null,
             )}

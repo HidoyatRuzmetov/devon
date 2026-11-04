@@ -491,6 +491,7 @@
   position: relative;
 }
 .template-paper {
+  position: relative;
   transform-origin: top left;
   width: 794px;
   min-height: 1123px;
@@ -499,8 +500,8 @@
   color: #000;
   padding: 57px 38px 38px 76px;
   font:
-    14.67px/1.2 'Tinos',
-    'Times New Roman',
+    14.6667px/1.15 'Times New Roman',
+    'Tinos',
     Times,
     serif;
   box-shadow: 0 1px 3px #0000002e;
@@ -518,23 +519,22 @@
 }
 .template-paper .paper-two {
   display: grid;
-  grid-template-columns: 288px 1fr;
-  margin-top: 10px;
+  grid-template-columns: 281.8667px 1fr;
+  margin-top: 10.6667px;
   align-items: start;
 }
 .template-paper .paper-block {
-  margin-top: 10px;
+  margin-top: 10.6667px;
 }
 .template-paper .paper-heading {
   padding-right: 80px;
 }
 .template-paper .paper-photo {
-  float: right;
+  position: absolute;
+  top: 56.4px;
+  right: 68px;
   width: 113px;
   height: 151px;
-  margin-top: -4px;
-  margin-right: 30px;
-  margin-left: 10px;
   background: #e8ebef;
   display: grid;
   place-items: center;
@@ -547,20 +547,21 @@
   object-fit: cover;
 }
 .template-paper .paper-work {
-  padding-left: 99px;
-  text-indent: -99px;
-  margin-bottom: 5px;
+  padding-left: 99.0667px;
+  text-indent: -99.0667px;
+  margin-bottom: 5.3333px;
 }
 .template-paper table {
   border-collapse: collapse;
-  width: 100%;
+  width: 701.8px;
+  margin-left: -10.7667px;
   table-layout: fixed;
-  margin-top: 14px;
+  margin-top: 18.4px;
 }
 .template-paper td,
 .template-paper th {
-  border: 1px solid #000;
-  padding: 2px 4px;
+  border: 0.6667px solid #000;
+  padding: 0 7.2px;
   text-align: center;
   vertical-align: middle;
   font-size: 14.67px;
@@ -590,6 +591,25 @@
   outline: 2px solid #8aa9cc;
   outline-offset: 2px;
   border-radius: 2px;
+}
+.template-paper .paper-work .paper-edit {
+  display: block;
+  width: 100%;
+  text-indent: -99.0667px;
+}
+.template-paper .paper-deputy {
+  padding-left: 94.2667px;
+  text-indent: -94.2667px;
+}
+.template-paper .paper-deputy .paper-edit {
+  display: block;
+  width: 100%;
+  text-indent: -94.2667px;
+}
+.template-paper .paper-relatives th:first-child,
+.template-paper .paper-relatives td:first-child {
+  padding-left: 0;
+  padding-right: 0;
 }
 .template-paper .paper-placeholder {
   color: #9aa3ae;

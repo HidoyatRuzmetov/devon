@@ -12,6 +12,9 @@ export function fmtDate(value: string): string
 export function fmtSince(value: string): string
 export function eduLines(schools: PersonnelData['schools']): string[]
 export function workLine(work: PersonnelData['work'][number]): string
+export function workStartYear(work: PersonnelData['work'][number]): string
+export function workPeriod(work: PersonnelData['work'][number]): string
+export function relativeBirthPlace(relative: PersonnelData['relatives'][number]): string
 export function relWorkLines(relative: PersonnelData['relatives'][number]): string[]
 export function relBirthLines(relative: PersonnelData['relatives'][number]): string[]
 export function buildDocx(

@@ -73,11 +73,16 @@ export const personnelRoutes: FastifyPluginAsyncZod = async (app) => {
       try {
         const verdict = await clamavBreaker.execute(() => app.storage.scanner.scan(bytes))
         if (verdict.verdict === 'infected') return sendProblem(reply, 'validation_failed')
-        const source = await extractFileText(bytes, req.body.name)
+        const source = await extractFileText(bytes, req.body.name, 20_000, true)
         // Never pass a truncated or unreadable document as a complete extraction.
         if (source.status !== 'read') return sendProblem(reply, 'validation_failed')
         if (controller.signal.aborted) return
-        return await importPersonnelRecordForActor(ctx, source.text, controller.signal)
+        return await importPersonnelRecordForActor(
+          ctx,
+          source.text,
+          controller.signal,
+          source.tables,
+        )
       } catch (error) {
         if (error instanceof AiImportUnverifiedError)
           return sendProblem(reply, 'validation_failed', {

@@ -235,7 +235,8 @@ export function MemberCard({
         </button>
         {!compact && department?.role === 'head' ? (
           <div
-            className="mx-4 flex flex-wrap items-center gap-1 border-t border-border py-2"
+            className="mx-4 grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1.35fr)] items-center gap-1 border-t border-border py-1"
+            data-testid="people-document-downloads"
             role="group"
             aria-label={t('peopleDownloads.label')}
           >
@@ -243,21 +244,32 @@ export function MemberCard({
             <button
               type="button"
               onClick={resume}
-              className="rounded-md px-2 py-1.5 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
+              title={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
+              className="flex min-w-0 flex-col items-start justify-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-[12px] font-medium leading-4 text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
             >
-              {t('profileChoices.resume')}
-              {updatedDate(member.resumeUpdatedAt)}
+              <span>{t('profileChoices.resume')}</span>
+              {member.resumeUpdatedAt ? (
+                <span className="text-[11px] font-normal leading-none text-muted-foreground">
+                  {updatedDate(member.resumeUpdatedAt)}
+                </span>
+              ) : null}
             </button>
-            <span aria-hidden="true" className="h-3 border-l border-border" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
+                  title={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
+                  className="flex min-w-0 flex-col items-start justify-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-[12px] font-medium leading-4 text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring"
                 >
-                  {t('profileChoices.record')}
-                  {updatedDate(member.personnelUpdatedAt)}
-                  <ChevronDown className="size-3" />
+                  <span className="flex w-full items-center justify-between gap-1">
+                    {t('profileChoices.record')}
+                    <ChevronDown className="size-3 shrink-0" aria-hidden="true" />
+                  </span>
+                  {member.personnelUpdatedAt ? (
+                    <span className="text-[11px] font-normal leading-none text-muted-foreground">
+                      {updatedDate(member.personnelUpdatedAt)}
+                    </span>
+                  ) : null}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

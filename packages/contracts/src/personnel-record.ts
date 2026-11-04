@@ -32,6 +32,7 @@ export const personnelDataSchema = z
     degree: field.default('йўқ'),
     title: field.default('йўқ'),
     languages: field.default('йўқ'),
+    militaryRank: field.default(''),
     awards: field.default('йўқ'),
     deputy: field.default('йўқ'),
     schools: z

@@ -137,6 +137,17 @@ test('real data loading follows each layout and imported personnel records requi
       person.getByRole('button', { name: /^Personnel record \([A-Z][a-z]+ \d{1,2}, \d{4}\)$/ }),
     ).toBeVisible()
     await page.screenshot({ path: info.outputPath('separate-download-dates.png') })
+    const downloads = person.getByTestId('people-document-downloads')
+    const boxes = await downloads.locator('button').evaluateAll((elements) =>
+      elements.map((el) => ({
+        top: el.getBoundingClientRect().top,
+        height: el.getBoundingClientRect().height,
+        whiteSpace: getComputedStyle(el).whiteSpace,
+      })),
+    )
+    expect(boxes).toHaveLength(2)
+    expect(boxes[0]!.top).toBe(boxes[1]!.top)
+    expect(boxes.every((box) => box.whiteSpace === 'nowrap')).toBe(true)
   } finally {
     await head.close()
     await admin.close()

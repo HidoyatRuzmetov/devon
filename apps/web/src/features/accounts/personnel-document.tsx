@@ -16,7 +16,7 @@ import './personnel-document.css'
 export const blankSchool = (): PersonnelData['schools'][number] => ({
   year: '',
   name: '',
-  form: 'кундузги',
+  form: '',
   master: false,
 })
 export const blankWork = (): PersonnelData['work'][number] => ({
@@ -52,6 +52,7 @@ const labels: Record<string, string> = {
   degree: 'Илмий даражаси:',
   title: 'Илмий унвони:',
   languages: 'Қайси чет тилларини билади:',
+  militaryRank: 'Ҳарбий унвони:',
   awards: 'Давлат мукофотлари билан тақдирланганми (қанақа):',
   deputy:
     'Халқ депутатлари республика, вилоят, шаҳар ва туман Кенгаши депутатими ёки бошқа сайланадиган органларнинг аъзосими (тўлиқ кўрсатилиши лозим):',
@@ -104,14 +105,21 @@ function DocumentField({
     const element = ref.current
     if (!element) return
     let width = element.clientWidth
+    let frame = 0
     const observer = new ResizeObserver(() => {
       if (element.clientWidth === width) return
       width = element.clientWidth
-      element.style.height = '0px'
-      element.style.height = String(element.scrollHeight + 2) + 'px'
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        element.style.height = '0px'
+        element.style.height = String(element.scrollHeight + 2) + 'px'
+      })
     })
     observer.observe(element)
-    return () => observer.disconnect()
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
   }, [preview])
   const shown = display ?? options?.find((option) => option.value === value)?.label ?? value
   if (preview)
@@ -220,19 +228,23 @@ export function PersonnelDocument({
       example = key === 'name' && parts[0] === 'schools' ? 'school' : key
     let value: unknown = data
     for (const part of parts) value = (value as Record<string, unknown>)[part]
+    if (key === 'from' && parts[0] === 'work')
+      value = personnelTemplate.workStartYear(data.work[Number(parts[1])]!)
     return (
       <DocumentField
         path={path}
         label={t(`personnel.fields.${key}`)}
         value={String(value ?? '')}
-        placeholder={t(`personnelDocument.examples.${example}`)}
+        placeholder={
+          options ? t('personnelDocument.choose') : t(`personnelDocument.examples.${example}`)
+        }
         preview={preview}
         readonly={readonly}
         onChange={(v) => update(path, v)}
         onEdit={onEdit}
         {...(options ? { options } : {})}
         {...(display !== undefined ? { display } : {})}
-        {...(['birthDate', 'since'].includes(key)
+        {...(key === 'birthDate'
           ? { type: 'date' as const }
           : ['year', 'from', 'to', 'deathYear'].includes(key)
             ? { type: 'year' as const }
@@ -325,7 +337,7 @@ export function PersonnelDocument({
               <div className="personnel-current">
                 {composed(
                   `work.${data.work.lastIndexOf(current)}.text`,
-                  `${wording(personnelTemplate.fmtSince(current.since))}\n${current.text}`,
+                  `${wording(personnelTemplate.fmtSince(personnelTemplate.workStartYear(current)))}\n${current.text}`,
                 )}
               </div>
             ) : null}
@@ -421,7 +433,10 @@ export function PersonnelDocument({
           {block('degree')}
           {block('title')}
         </div>
-        {block('languages')}
+        <div className="personnel-pairs">
+          {block('languages')}
+          {block('militaryRank')}
+        </div>
         {block('awards')}
         {block('deputy')}
         <section className="personnel-employment" data-validation-id="work">
@@ -440,21 +455,18 @@ export function PersonnelDocument({
               ) : (
                 <>
                   <div className="personnel-work-dates">
-                    {work.current ? (
-                      field(`work.${i}.since`)
-                    ) : (
+                    {field(`work.${i}.from`)}
+                    {!work.current ? (
                       <>
-                        {field(`work.${i}.from`)}
                         <span aria-hidden="true">—</span>
                         {field(`work.${i}.to`)}
                       </>
-                    )}
+                    ) : null}
                   </div>
                   <div className="personnel-work-description">
                     {field(`work.${i}.text`)}
                     <div className="personnel-entry-options">
                       {check(`work.${i}.current`, work.current)}
-                      {!work.current && work.from === work.to ? field(`work.${i}.months`) : null}
                     </div>
                   </div>
                 </>

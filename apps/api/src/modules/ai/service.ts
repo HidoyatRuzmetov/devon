@@ -396,6 +396,7 @@ export async function importPersonnelRecordForActor(
   ctx: RequestContext,
   source: string,
   signal: AbortSignal,
+  tables: string[][][] = [],
 ) {
   if (!hasApiKey(aiConfig) && !providerIsTestOverride)
     throw new AiRunFailedError('provider_unavailable')
@@ -450,6 +451,7 @@ export async function importPersonnelRecordForActor(
       lastCandidate = output
       const verdict = validatePersonnelImport(source, output, {
         allowPartial: ++validationAttempt > 1,
+        tables,
       })
       if (verdict.ok) unverifiedFields = verdict.unverifiedFields
       return verdict
@@ -459,7 +461,7 @@ export async function importPersonnelRecordForActor(
   // Recheck that candidate against the source and remove unsupported fields before returning it.
   const partial =
     !result.ok && result.meta.status === 'schema_invalid_after_retry' && lastCandidate
-      ? validatePersonnelImport(source, lastCandidate, { allowPartial: true })
+      ? validatePersonnelImport(source, lastCandidate, { allowPartial: true, tables })
       : null
   const imported = result.ok ? result.data : partial?.ok ? partial.output : null
   if (partial?.ok) unverifiedFields = partial.unverifiedFields

@@ -20,6 +20,59 @@ const draft = (extra: Record<string, unknown> = {}) =>
     warnings: [],
   })
 describe('personnel import source evidence', () => {
+  it('restores complete cells by unique relative name even when AI rows are reordered', () => {
+    const tables = [
+      [
+        ['Qarindoshligi', 'Familiyasi ismi', 'Tug‘ilgan yili va joyi', 'Ish joyi', 'Turar joyi'],
+        [
+          'Отаси',
+          'Karimov Akmal',
+          '1965 yil, Samarqand shahri',
+          'Maktab o‘qituvchisi',
+          'Toshkent shahri, Navoiy ko‘chasi, 12-uy',
+        ],
+        [
+          'Онаси',
+          'Karimova Dilbar',
+          '1967 yil, Buxoro shahri',
+          'Uy bekasi',
+          'Buxoro shahri, 20-uy',
+        ],
+      ],
+    ]
+    const relative = {
+      rel: 'Отаси',
+      name: 'Karimov Akmal',
+      year: '1965',
+      place: '1965 yil, Samarqand shahri',
+      status: 'work',
+      job: 'Maktab o‘qituvchisi',
+      prevJob: '',
+      deathYear: '',
+      address: '',
+    }
+    const result = draft({ relatives: [relative] })
+    for (const [key, value] of Object.entries(relative))
+      if (value)
+        result.evidence.push({
+          path: `relatives.0.${key}`,
+          quote: key === 'status' ? relative.job : value,
+        })
+    const source = 'Karimov Sardor ' + tables.flat(2).join(' ')
+    const validated = validatePersonnelImport(source, result, { tables })
+    expect(validated.ok).toBe(true)
+    if (!validated.ok) return
+    expect(validated.output.data.relatives[0]).toMatchObject({
+      year: '1965',
+      place: 'Samarqand shahri',
+      address: 'Toshkent shahri, Navoiy ko‘chasi, 12-uy',
+    })
+    expect(result.data.relatives[0]!.address).toBe('')
+    const ambiguous = validatePersonnelImport(source, result, {
+      tables: [[...tables[0]!, tables[0]![1]!]],
+    })
+    expect(ambiguous.ok && ambiguous.output.data.relatives[0]!.address).toBe('')
+  })
   it('accepts exact source facts, leaves missing fields blank and does not invent a photo', () => {
     const result = validatePersonnelImport('Karimov Sardor', draft())
     expect(result.ok).toBe(true)

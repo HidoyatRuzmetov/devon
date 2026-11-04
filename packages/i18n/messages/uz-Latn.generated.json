@@ -4125,7 +4125,8 @@
       "job": "Maktab o‘qituvchisi",
       "prevJob": "Avval maktab o‘qituvchisi",
       "deathYear": "2020",
-      "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy"
+      "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy",
+      "militaryRank": "kapitan yoki yo‘q"
     },
     "import": "Import",
     "importReview": "Qoralama import qilindi — saqlashdan oldin tekshiring.",
@@ -4133,7 +4134,8 @@
     "importUnreadable": "8 MB gacha o‘qiladigan PDF, DOCX, ODT, RTF yoki matnli fayl tanlang. Skanerlangan PDF matn qatlamiga ega bo‘lishi kerak.",
     "importError": "Import ishlamadi. Qoralama o‘zgarmadi; qayta urinib ko‘ring.",
     "importUnverified": "Fayl o‘qildi, ammo ma’lumotlarni tasdiqlab bo‘lmadi. Qoralama o‘zgarmadi.",
-    "importFieldUnverified": "«{field}» maydonini tekshiring — ma’lumot fayldan tasdiqlanmadi."
+    "importFieldUnverified": "«{field}» maydonini tekshiring — ma’lumot fayldan tasdiqlanmadi.",
+    "choose": "Tanlang…"
   },
   "pomodoroStudio": {
     "animation": "Qahramon animatsiyasi",
@@ -4314,7 +4316,8 @@
       "job": "Ish joyi va lavozimi",
       "prevJob": "Avvalgi ish joyi va lavozimi",
       "deathYear": "Vafot etgan yil",
-      "address": "Turar joyi"
+      "address": "Turar joyi",
+      "militaryRank": "Harbiy unvoni"
     },
     "sections": {
       "personal": "Shaxsiy maʼlumotlar",

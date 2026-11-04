@@ -2,6 +2,22 @@ import { describe, expect, it } from 'vitest'
 import { extractFileText } from '../../src/modules/ai/file-text.js'
 
 describe('isolated assistant attachment extraction', () => {
+  it('keeps wrapped personnel cells intact without borrowing text from adjacent columns', async () => {
+    const result = await extractFileText(
+      Buffer.from(
+        '<table><tr><th>Name</th><th>Address</th></tr><tr><td>Karimov<br>Akmal</td><td>Toshkent shahri<br>Navoiy ko‘chasi, 12-uy</td></tr></table>',
+      ),
+      'record.html',
+      20_000,
+      true,
+    )
+    expect(result.status).toBe('read')
+    expect(result.tables?.[0]?.[1]).toEqual([
+      'Karimov Akmal',
+      'Toshkent shahri Navoiy ko‘chasi, 12-uy',
+    ])
+    expect(result.text).toContain('CELL 2: Toshkent shahri Navoiy ko‘chasi, 12-uy')
+  })
   it('reads a phonebook HTML document as text without executing scripts or loading remote assets', async () => {
     const result = await extractFileText(
       Buffer.from(

@@ -114,7 +114,8 @@
       "job": "Current employer and position",
       "prevJob": "Previous employer and position",
       "deathYear": "Year of death",
-      "address": "Residential address"
+      "address": "Residential address",
+      "militaryRank": "Military rank"
     },
     "sections": {
       "personal": "Personal details",

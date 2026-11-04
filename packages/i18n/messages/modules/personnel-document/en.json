@@ -48,7 +48,8 @@
       "job": "Maktab o‘qituvchisi",
       "prevJob": "Avval maktab o‘qituvchisi",
       "deathYear": "2020",
-      "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy"
+      "address": "Toshkent shahri, Navoiy ko‘chasi, 12-uy",
+      "militaryRank": "kapitan yoki yo‘q"
     },
     "import": "Import",
     "importReview": "Imported draft — review before saving.",
@@ -56,6 +57,7 @@
     "importUnreadable": "Use a readable PDF, DOCX, ODT, RTF or text file up to 8 MB. Scanned PDFs need a text layer.",
     "importError": "Import unavailable. Your draft is unchanged; try again.",
     "importUnverified": "The file was read, but its details could not be verified. Your draft is unchanged.",
-    "importFieldUnverified": "Review {field} — not verified from the file."
+    "importFieldUnverified": "Review {field} — not verified from the file.",
+    "choose": "Choose…"
   }
 }

@@ -28,6 +28,11 @@ test('personnel record edits on two paper pages, previews in place and exports a
     await page.setViewportSize({ width: 1440, height: 1100 })
     await page.goto('/account/professional')
     await page.getByRole('link', { name: 'Personnel record', exact: true }).click()
+    await expect(page.getByRole('combobox', { name: 'Study mode', exact: true })).toHaveValue('')
+    await expect(page.getByRole('combobox', { name: 'Study mode', exact: true })).toContainText(
+      'Choose…',
+    )
+    await expect(page.getByRole('textbox', { name: 'Military rank', exact: true })).toBeVisible()
     await expect(
       page.getByRole('textbox', { name: 'Academic degree', exact: true }),
     ).toHaveAttribute('placeholder', /PhD/)
@@ -80,9 +85,9 @@ test('personnel record edits on two paper pages, previews in place and exports a
           from: '2020',
           to: '',
           current: true,
-          since: '2020-01-01',
+          since: '',
           months: '',
-          text: 'Raqamli texnologiyalar vazirligi bosh mutaxassisi',
+          text: 'Raqamli texnologiyalar vazirligi huzuridagi Raqamli hukumat loyihalarini boshqarish markazi iqtisodiy rivojlanish va moliyaviy texnologiyalar tahlili bo‘limi bosh mutaxassisi',
         },
       ],
       relatives: [
@@ -133,6 +138,18 @@ test('personnel record edits on two paper pages, previews in place and exports a
       fullPage: true,
     })
     await page.getByRole('button', { name: 'Preview', exact: true }).click()
+    const workLines = await page
+      .locator('.paper-work .paper-edit')
+      .last()
+      .evaluate((el) => {
+        const range = document.createRange()
+        range.selectNodeContents(el)
+        return Array.from(range.getClientRects())
+          .filter((r) => r.width > 0)
+          .map((r) => ({ left: r.left, top: r.top }))
+      })
+    expect(workLines.length).toBeGreaterThan(1)
+    expect(workLines[1]!.left - workLines[0]!.left).toBeGreaterThan(90)
     await page.screenshot({
       path: testInfo.outputPath('document-preview-desktop.png'),
       fullPage: true,
