@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 import {
   authedPatch,
   createApprovedDepartment,
+  csrfToken,
   examplePassword,
   loginAsSuperAdmin,
   newFlowContext,
@@ -126,7 +127,36 @@ test('real data loading follows each layout and imported personnel records requi
       )
       .toBe(1)
     expect(
-      (await authedPatch(head, '/api/v1/accounts/profile', { givenName: 'Updated' })).status(),
+      (
+        await authedPatch(head, '/api/v1/accounts/profile', {
+          givenName: 'Sardor',
+          familyName: 'Karimov',
+        })
+      ).status(),
+    ).toBe(200)
+    expect(
+      (
+        await head.request.put('/api/v1/accounts/professional-profile', {
+          headers: { 'x-csrf-token': await csrfToken(head) },
+          data: {
+            version: 1,
+            profile: {
+              headline: 'Research analyst with 7 years of experience',
+              phone: '+998 00 000 00 00',
+              education: [
+                {
+                  institution: 'Example University',
+                  degree: 'master',
+                  field: 'Artificial Intelligence and Machine Learning',
+                  startYear: 2020,
+                  endYear: 2022,
+                  current: false,
+                },
+              ],
+            },
+          },
+        })
+      ).status(),
     ).toBe(200)
     await page.goto('/people')
     const person = page.locator('[data-member-id="' + me.user.id + '"]')
@@ -160,11 +190,13 @@ test('real data loading follows each layout and imported personnel records requi
         size.scroll <= size.client,
         `Download controls at ${width}px: ${JSON.stringify(size)}`,
       ).toBe(true)
+      await person.screenshot({ path: info.outputPath(`download-card-${width}.png`) })
     }
     await checkDownloadWidth(390)
     await checkDownloadWidth(320)
     await page.setViewportSize({ width: 1440, height: 1000 })
     await page.screenshot({ path: info.outputPath('balanced-download-dates.png') })
+    await person.screenshot({ path: info.outputPath('download-card-desktop.png') })
   } finally {
     await head.close()
     await admin.close()

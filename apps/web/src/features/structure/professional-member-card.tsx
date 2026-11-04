@@ -245,19 +245,22 @@ export function MemberCard({
         </button>
         {!compact && department?.role === 'head' ? (
           <div
-            className="mx-4 grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] items-start gap-1.5 border-t border-border py-1 @max-[300px]/profile:mx-3 @max-[300px]/profile:gap-1"
+            className="relative grid grid-cols-2 before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border"
             data-testid="people-document-downloads"
             role="group"
             aria-label={t('peopleDownloads.label')}
           >
-            <Download className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <button
               type="button"
               onClick={resume}
               title={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
               aria-label={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
-              className="flex min-w-0 w-full items-center justify-center whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
+              className="flex min-h-11 min-w-0 w-full items-center gap-2 whitespace-nowrap px-4 py-1.5 text-left text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_9%,var(--color-card))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring @max-[320px]/profile:px-2 @max-[280px]/profile:gap-1 @max-[280px]/profile:px-1.5 @max-[280px]/profile:text-[11px]"
             >
+              <Download
+                className="size-4 shrink-0 text-primary/75 @max-[280px]/profile:size-3.5"
+                aria-hidden="true"
+              />
               <span className="flex flex-col items-start">
                 <span>{t('profileChoices.resume')}</span>
                 {member.resumeUpdatedAt ? (
@@ -273,8 +276,12 @@ export function MemberCard({
                   type="button"
                   title={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
                   aria-label={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
-                  className="relative flex min-w-0 w-full items-center justify-center whitespace-nowrap rounded-md px-1 py-1 text-caption font-medium text-primary transition-colors before:absolute before:inset-y-1 before:-left-[3px] before:w-px before:bg-border hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
+                  className="relative flex min-h-11 min-w-0 w-full items-center gap-2 whitespace-nowrap px-4 py-1.5 text-left text-caption font-medium text-primary transition-colors before:pointer-events-none before:absolute before:inset-y-2.5 before:left-0 before:w-px before:bg-border hover:bg-[color-mix(in_oklab,var(--profile-unit)_9%,var(--color-card))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring @max-[320px]/profile:px-2 @max-[280px]/profile:gap-1 @max-[280px]/profile:px-1.5 @max-[280px]/profile:text-[11px]"
                 >
+                  <Download
+                    className="size-4 shrink-0 text-primary/75 @max-[280px]/profile:size-3.5"
+                    aria-hidden="true"
+                  />
                   <span className="flex flex-col items-start">
                     <span className="inline-flex items-center gap-1 @max-[300px]/profile:gap-0.5">
                       {t('profileChoices.record')}

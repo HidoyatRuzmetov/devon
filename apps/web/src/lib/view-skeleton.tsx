@@ -444,9 +444,16 @@ const layouts = {
                   {line('w-1/2')}
                   {line('w-4/5')}
                 </div>
-                <div className="flex gap-3 border-t border-border pt-3">
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-5 w-28" />
+                <div className="grid grid-cols-2 gap-4 border-t border-border pt-2">
+                  {times(2, () => (
+                    <div className="flex min-h-8 items-center gap-2">
+                      <Skeleton className="size-4 shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        {line('w-4/5')}
+                        <Skeleton className="h-2 w-3/5" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
