@@ -98,7 +98,7 @@ function ActiveCardActions({ card }: { card: Card }) {
             denied ?? (card.projectId ? t('cardActions.alreadyGrouped') : undefined),
           )}
           {item(
-            t('work.bulk.markDone'),
+            t('work.card.markDone'),
             <Check className="size-4" />,
             () => patch.mutate({ id: card.id, patch: { status: 'done', version: card.version } }),
             denied ?? (card.status === 'done' ? t('cardActions.alreadyDone') : undefined),

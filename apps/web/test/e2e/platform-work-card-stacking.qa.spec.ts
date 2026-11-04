@@ -6,7 +6,6 @@ import { test, expect } from '@playwright/test'
 import { authedPatch, authedPost, flowClientHeaders, login } from './flow-api.js'
 import { FLOW_WEB_BASE_URL } from './flow-env.js'
 import { setTextScale, settleCapture, waitForLoadedRoute } from './platform-capture.js'
-import { selectBoardCard } from './board-test-actions.js'
 
 const examplePassword = 'Ishonchli#2026'
 function label(locale: string, key: string): string {
@@ -45,70 +44,50 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
           const response = await authedPost(context, '/api/v1/cards', { title, kind: 'task' })
           expect(response.status()).toBe(201)
           const { id } = (await response.json()) as { id: string }
-          const companionResponse = await authedPost(context, '/api/v1/cards', {
-            title: `Selection companion ${randomUUID().slice(0, 8)}`,
-            kind: 'task',
-          })
-          expect(companionResponse.status()).toBe(201)
-          const companion = (await companionResponse.json()) as { id: string }
           const page = await context.newPage()
           await page.goto('/work')
           await waitForLoadedRoute(page, '/work')
           await setTextScale(page, environment.scale)
           const tile = page.locator(`[data-dnd-card="${id}"]`)
-          const checkbox = tile.getByRole('checkbox')
           const titleButton = tile.getByRole('button', { name: title, exact: true })
-          await expect(checkbox).not.toBeChecked()
-          await selectBoardCard(
-            page,
-            page.locator(`[data-dnd-card="${companion.id}"]`),
-            label(locale, 'portal.cards.select'),
-          )
-          await tile.hover()
-          await checkbox.check()
-          await expect(checkbox).toBeChecked()
-          await checkbox.uncheck()
-          // Programmatic entry on Title, then native Tab through Actions to the selection control.
+          const actions = tile.getByRole('button', {
+            name: label(locale, 'portal.cards.actions'),
+            exact: true,
+          })
+          await expect(tile.getByRole('checkbox')).toHaveCount(0)
           await titleButton.focus()
           await page.keyboard.press('Tab')
-          await expect(
-            tile.getByRole('button', { name: label(locale, 'portal.cards.actions'), exact: true }),
-          ).toBeFocused()
-          await page.keyboard.press('Tab')
-          await expect(checkbox).toBeFocused()
+          await expect(actions).toBeFocused()
           await settleCapture(page, false)
-          const geometry = await checkbox.evaluate((element) => {
+          const geometry = await actions.evaluate((element) => {
             const column = element.closest('[data-dnd-column]')?.parentElement
             const header = column?.firstElementChild
             const card = element.closest('[data-dnd-card]')
             const isolated = card?.closest('.isolate')
             return {
-              checkbox: element.getBoundingClientRect().toJSON(),
+              actions: element.getBoundingClientRect().toJSON(),
               header: header?.getBoundingClientRect().toJSON(),
-              margin: getComputedStyle(element).scrollMarginTop,
               isolated: isolated ? getComputedStyle(isolated).isolation : null,
-              hitRole: document
-                .elementFromPoint(
-                  element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2,
-                  element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2,
-                )
-                ?.closest('[role]')
-                ?.getAttribute('role'),
+              hitTarget:
+                document
+                  .elementFromPoint(
+                    element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2,
+                    element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2,
+                  )
+                  ?.closest('button') === element,
             }
           })
           expect(geometry.isolated).toBe('isolate')
-          expect(parseFloat(geometry.margin)).toBeGreaterThanOrEqual(geometry.header!.height + 7)
-          expect(geometry.checkbox.top).toBeGreaterThanOrEqual(geometry.header!.bottom + 1)
-          expect(geometry.hitRole).toBe('checkbox')
-          await page.keyboard.press('Space')
-          await expect(checkbox).toBeChecked()
-          await page.keyboard.press('Space')
-          await expect(checkbox).not.toBeChecked()
+          expect(geometry.actions.top).toBeGreaterThanOrEqual(geometry.header!.bottom + 1)
+          expect(geometry.hitTarget).toBe(true)
+          await actions.press('Enter')
+          await expect(page.getByRole('menu')).toBeVisible()
+          await page.keyboard.press('Escape')
+          await expect(actions).toBeFocused()
           if (environment.touch) {
-            await checkbox.tap()
-            await expect(checkbox).toBeChecked()
-            await checkbox.tap()
-            await expect(checkbox).not.toBeChecked()
+            await actions.tap()
+            await expect(page.getByRole('menu')).toBeVisible()
+            await page.keyboard.press('Escape')
           }
           await titleButton.click()
           await expect(
@@ -123,7 +102,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
             await expect(page.getByRole('dialog')).toBeVisible()
             await page.keyboard.press('Escape')
           }
-          await checkbox.focus()
+          await actions.focus()
           const runtime = await tile.evaluate((element) => ({
             unit4: getComputedStyle(document.documentElement).getPropertyValue('--color-unit-4'),
             avatars: [...element.querySelectorAll('[class*="bg-unit-"]')].map((avatar) => ({

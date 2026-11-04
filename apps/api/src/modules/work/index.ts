@@ -846,7 +846,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
-  // v1.1 SPEC §7 -- dependencies, estimates and the time log, recurrence, templates, the bulk bar,
+  // v1.1 SPEC §7 -- dependencies, estimates and the time log, recurrence, templates,
   // the focus list, reminders, capacity, the workload grid and the department's goals. Registered
   // on this same instance (a plain call, not a nested `app.register`) so every route it adds is
   // seen by the root `onRoute` permission guard exactly like the ones above.

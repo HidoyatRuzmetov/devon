@@ -4,7 +4,6 @@ import { resolve } from 'node:path'
 import { test, expect, type BrowserContext, type Locator, type Page } from '@playwright/test'
 import { authedPatch, authedPost, login, newFlowContext } from './flow-api.js'
 import { settleCapture, waitForLoadedRoute } from './platform-capture.js'
-import { selectBoardCard } from './board-test-actions.js'
 import type { CardDependencies, CardReminder } from '../../src/features/work/api-plus.js'
 
 const examplePassword = 'Ishonchli#2026'
@@ -60,12 +59,6 @@ async function pickDependency(page: Page, panel: Locator, title: string) {
   await page.getByPlaceholder(label('work.dependencies.pickSearch'), { exact: true }).fill(title)
   return page.getByRole('option', { name: title, exact: true })
 }
-async function selectCard(page: Page, id: string) {
-  const tile = page.locator(`[data-dnd-card="${id}"]`)
-  await tile.hover()
-  await selectBoardCard(page, tile)
-}
-
 test('@qa dependency CRUD cancel refusal loop and blocked state', async ({ browser }) => {
   test.setTimeout(180_000)
   const context = await newFlowContext(browser)
@@ -305,77 +298,6 @@ test('@qa recurrence read-only controls stay disabled', async ({ browser }) => {
     )
   } finally {
     await Promise.all([head.close(), member.close()])
-  }
-})
-
-test('@qa bulk response retains newer selection', async ({ browser }) => {
-  const context = await newFlowContext(browser)
-  try {
-    await login(context, { login: 'demo.boshliq', password: examplePassword })
-    expect((await authedPatch(context, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
-    const suffix = randomUUID().slice(0, 8)
-    const ids = [
-      await card(context, `QA bulk first ${suffix}`),
-      await card(context, `QA bulk second ${suffix}`),
-      await card(context, `QA bulk next ${suffix}`),
-    ]
-    const page = await context.newPage()
-    await page.goto('/work')
-    await waitForLoadedRoute(page, '/work')
-    await selectCard(page, ids[0]!)
-    await selectCard(page, ids[1]!)
-    const toolbar = page.getByRole('toolbar', {
-      name: label('work.bulk.toolbarLabel'),
-      exact: true,
-    })
-    let release: (() => void) | undefined
-    const held = new Promise<void>((resolveHeld) => {
-      release = resolveHeld
-    })
-    let arrived: (() => void) | undefined
-    const arrival = new Promise<void>((resolveArrival) => {
-      arrived = resolveArrival
-    })
-    await page.route('**/api/v1/cards/bulk', async (route) => {
-      const response = await route.fetch()
-      arrived?.()
-      await held
-      await route.fulfill({ response })
-    })
-    await toolbar.getByRole('button', { name: label('work.bulk.priority'), exact: true }).click()
-    await page.getByRole('menuitem', { name: label('work.priority.high'), exact: true }).click()
-    await arrival
-    await page.screenshot({ path: test.info().outputPath('bulk-pending-controls.png') })
-    await expect
-      .soft(toolbar.getByRole('button', { name: label('work.bulk.due'), exact: true }))
-      .toBeDisabled()
-    await selectCard(page, ids[2]!)
-    release?.()
-    await expect(
-      page.getByText(label('work.bulk.prioritySet', { count: 2 }), { exact: true }),
-    ).toBeVisible()
-    for (const id of ids.slice(0, 2))
-      expect((await (await context.request.get(`/api/v1/cards/${id}`)).json()).priority).toBe(
-        'high',
-      )
-    expect((await (await context.request.get(`/api/v1/cards/${ids[2]}`)).json()).priority).toBe(
-      'none',
-    )
-    const screenshot = test.info().outputPath('bulk-response-newer-selection.png')
-    await page.screenshot({ path: screenshot })
-    appendFileSync(
-      test.info().outputPath('captures.jsonl'),
-      JSON.stringify({
-        state: 'bulk-response-newer-selection',
-        screenshot,
-        pixelInspected: false,
-        finiteAnimationsSettled: false,
-      }) + '\n',
-    )
-    await expect(page.locator(`[data-dnd-card="${ids[2]}"]`).getByRole('checkbox')).toBeChecked()
-    await expect(toolbar).toContainText(label('work.bulk.selectedCount', { count: 1 }))
-  } finally {
-    await context.close()
   }
 })
 

@@ -6,13 +6,12 @@
 // "what v1.1 added" keeps both files readable and makes the diff for this package one new file plus
 // a handful of added lines, instead of one 500-line file nobody can review.
 import {
-  MAX_ESTIMATE_MINUTES,
   MAX_TIME_LOG_MINUTES,
   workTemplateKindSchema,
   workTemplateScopeSchema,
 } from '@devon/contracts'
 import { z } from 'zod'
-import { cardPrioritySchema, cardRiskSchema, cardStatusSchema } from './schemas.js'
+import { cardRiskSchema, cardStatusSchema } from './schemas.js'
 
 /** A card as a *reference*: what a dependency list, a blocked chip, a focus pin and a goal
  * breakdown all need, with none of the weight of the full DTO. */
@@ -82,55 +81,6 @@ export const cardReminderListSchema = z.array(cardReminderSchema)
 export const createReminderBodySchema = z.object({
   remindAt: z.string().datetime(),
   note: z.string().max(300).optional(),
-})
-
-/**
- * A8 -- the multitask toolbar, as one request for the whole selection.
- *
- * The table view already had a bulk bar, and it fired one PATCH per card through `Promise.all`:
- * forty transactions, forty audit rows written one at a time, forty independent chances of a partial
- * result nobody can explain, and no way to undo the set as a set. One endpoint fixes all four -- and
- * returns the previous values so the undo toast puts every card back exactly, which is the house
- * rule (undo over confirm) rather than a confirmation dialog before the action.
- */
-export const bulkCardPatchBodySchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(200),
-  patch: z
-    .object({
-      assigneeUserId: z.string().uuid().nullable(),
-      priority: cardPrioritySchema,
-      dueAt: z.string().datetime().nullable(),
-      status: cardStatusSchema,
-      estimateMin: z.number().int().min(1).max(MAX_ESTIMATE_MINUTES).nullable(),
-      addLabelIds: z.array(z.string().uuid()).max(20),
-      removeLabelIds: z.array(z.string().uuid()).max(20),
-    })
-    .partial()
-    .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' }),
-})
-
-export const bulkUndoEntrySchema = z.object({
-  id: z.string().uuid(),
-  assigneeUserId: z.string().uuid().nullable(),
-  priority: cardPrioritySchema,
-  dueAt: z.string().nullable(),
-  status: cardStatusSchema,
-  estimateMin: z.number().int().nullable(),
-  labels: z.array(z.string().uuid()),
-})
-
-export const bulkCardResultSchema = z.object({
-  updated: z.array(z.string().uuid()),
-  /** Ids the server refused because this viewer does not own them -- the toast names the count, so
-   * a member never wonders why twelve of fifteen moved. */
-  forbidden: z.array(z.string().uuid()),
-  notFound: z.array(z.string().uuid()),
-  /** Per-card previous values, so the undo toast can put every one of them back exactly. */
-  undo: z.array(bulkUndoEntrySchema),
-})
-
-export const bulkUndoBodySchema = z.object({
-  entries: z.array(bulkUndoEntrySchema).min(1).max(200),
 })
 
 export const workTemplateSchema = z.object({

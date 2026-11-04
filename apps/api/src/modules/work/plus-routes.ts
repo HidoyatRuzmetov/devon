@@ -1,5 +1,5 @@
 // v1.1 SPEC §7 -- the work-plus routes: dependencies, estimates and the light time log, recurring
-// cards, templates, the multitask toolbar, the workload grid, the focus list, reminders, per-person
+// cards, templates, the workload grid, the focus list, reminders, per-person
 // capacity and the department's goals.
 //
 // Registered by `index.ts` with a plain call on the same Fastify instance (never a nested
@@ -34,9 +34,6 @@ import * as plus from './plus-repo.js'
 import * as repo from './repo.js'
 import {
   addFocusBodySchema,
-  bulkCardPatchBodySchema,
-  bulkCardResultSchema,
-  bulkUndoBodySchema,
   cardDependenciesSchema,
   cardReminderListSchema,
   cardTimeLogSchema,
@@ -394,101 +391,6 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       )
       if (!ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()
-    },
-  )
-
-  // -------------------------------------------------------------------------------------------
-  // A8 -- the multitask toolbar
-  // -------------------------------------------------------------------------------------------
-
-  app.post(
-    '/cards/bulk',
-    {
-      config: {
-        permission: {
-          action: 'update',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        body: bulkCardPatchBodySchema,
-        response: { 200: bulkCardResultSchema },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      const isHead = isHeadOf(req.actor, departmentId)
-      const me = req.actor!.userId
-      const result = await plus.bulkPatchCards(
-        contextFromRequest(req),
-        departmentId,
-        req.body.ids,
-        req.body.patch,
-        me,
-        // The same decision `can(actor, 'update', {kind:'owned'})` makes for a single card, applied
-        // per row inside the one transaction -- the bulk bar is a shortcut for the user, never a
-        // shortcut around the rule.
-        (ownerUserIds) => isHead || ownerUserIds.includes(me),
-      )
-      return reply.type('application/json').send(result)
-    },
-  )
-
-  app.post(
-    '/cards/bulk/undo',
-    {
-      config: {
-        permission: {
-          action: 'update',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        body: bulkUndoBodySchema,
-        response: { 200: bulkCardResultSchema },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      const isHead = isHeadOf(req.actor, departmentId)
-      const me = req.actor!.userId
-      const ctx = contextFromRequest(req)
-      // Undo is not a special power: it is the same bulk write with the previous values, so it goes
-      // through the identical ownership check. A card that has since been reassigned away from you
-      // simply refuses, and the toast says how many came back.
-      const result = await withContext(ctx, async (tx) => {
-        const results: plus.BulkResult[] = []
-        // Every entry uses this exact transaction; a later invalid target rolls back earlier ones.
-        for (const entry of req.body.entries) {
-          results.push(
-            // nosemgrep: query-in-loop -- Up to200 entries may repeat a card; its next ownership/version check depends on the preceding restore in this transaction, and any invalid target must stop and roll back all writes.
-            await plus.bulkPatchCardsInTx(
-              tx,
-              departmentId,
-              [entry.id],
-              {
-                assigneeUserId: entry.assigneeUserId,
-                priority: entry.priority,
-                dueAt: entry.dueAt,
-                status: entry.status,
-                estimateMin: entry.estimateMin,
-                restoreLabelIds: entry.labels,
-              },
-              me,
-              (ownerUserIds) => isHead || ownerUserIds.includes(me),
-            ),
-          )
-        }
-        return {
-          updated: results.flatMap((r) => r.updated),
-          forbidden: results.flatMap((r) => r.forbidden),
-          notFound: results.flatMap((r) => r.notFound),
-          undo: [],
-        }
-      })
-      return reply.send(result)
     },
   )
 

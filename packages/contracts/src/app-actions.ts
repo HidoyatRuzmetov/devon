@@ -330,9 +330,6 @@ export const APP_ACTIONS = {
     action: 'update',
     subject: 'department_managed',
   },
-  /** A8: the bulk bar acts card by card; each card is still checked with `work.card.edit`, so this
-   * id only decides whether the bar exists at all. */
-  'work.bulk.edit': { area: 'work', action: 'update', subject: 'department_child' },
   /** A9: the focus list ("Diqqat markazi") is the viewer's own pinned five. */
   'work.focus.manage': { area: 'work', action: 'update', subject: 'personal' },
   /** 7.4: a reminder is something you set for yourself on a card you can see. */

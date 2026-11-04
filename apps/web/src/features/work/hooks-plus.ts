@@ -167,30 +167,6 @@ export function useDeleteReminderMutation(cardId: string) {
   })
 }
 
-// --- A8 the bulk bar ----------------------------------------------------------------------------------
-
-/** The whole selection in one request. The result carries the *previous* values of every card it
- * touched, which is what the undo toast sends back -- undo over confirm (DESIGN.md), so the bar acts
- * immediately and offers the way back rather than asking first. */
-export function useBulkPatchMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: ({ ids, patch }: { ids: string[]; patch: api.BulkCardPatch }) =>
-      api.bulkPatchCards(ids, patch, csrf),
-    onSuccess: () => invalidateCardSurfaces(qc),
-  })
-}
-
-export function useBulkUndoMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (entries: api.BulkUndoEntry[]) => api.undoBulkPatch(entries, csrf),
-    onSuccess: () => invalidateCardSurfaces(qc),
-  })
-}
-
 // --- 7.2 templates -------------------------------------------------------------------------------------
 
 export function useWorkTemplatesQuery(

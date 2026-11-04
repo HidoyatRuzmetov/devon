@@ -36,9 +36,7 @@ export type QuickAssignTarget = {
 }
 
 export type QuickAssignSubmit = {
-  /** One id from a row action, many from the bulk bar (SPEC §4.3 "Selection + bulk bar: assign task
-   * to many"). One shape, so the sheet and its caller never disagree about how many desks this
-   * lands on. */
+  /** The people receiving the new task, supplied by the caller. */
   assigneeUserIds: string[]
   title: string
   dueAt: string | null

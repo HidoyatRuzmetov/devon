@@ -40,7 +40,7 @@ export function EstimateField({
   const [draft, setDraft] = React.useState(() => (value ? formatDuration(value, t) : ''))
   const [focused, setFocused] = React.useState(false)
 
-  // Re-sync when the card changes underneath (another tab, an automation, a bulk edit) -- but never
+  // Re-sync when the card changes underneath (another tab or an automation) -- but never
   // while this field has focus, which would yank the text out from under the person typing.
   React.useEffect(() => {
     if (!focused) setDraft(value ? formatDuration(value, t) : '')

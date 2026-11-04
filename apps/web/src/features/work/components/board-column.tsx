@@ -48,11 +48,6 @@ export interface BoardColumnProps {
    * the (per-viewer, `localStorage`-backed) collapsed state itself out of each column. */
   onCollapsedChange?: (columnKey: string, collapsed: boolean) => void
   mobile?: boolean
-  /** v1.1 SPEC §7 (A8) -- the board's multitask selection, owned by the board and passed straight
-   * through to each tile. Omit `onSelectedChange` and the tiles render with no checkbox at all. */
-  selectedIds?: ReadonlySet<string>
-  onCardSelectedChange?: (cardId: string, selected: boolean, shiftKey: boolean) => void
-  selectionActive?: boolean
   /** The card whose move the server just refused, if any -- that tile shakes itself back into place
    * rather than silently reappearing where it started. Owned by the board (the mutation lives
    * there), passed through. */
@@ -98,9 +93,6 @@ export function BoardColumn({
   onDropped,
   onCollapsedChange,
   mobile = false,
-  selectedIds,
-  onCardSelectedChange,
-  selectionActive = false,
   rejectedCardId = null,
   onRejectionShown,
 }: BoardColumnProps) {
@@ -327,16 +319,8 @@ export function BoardColumn({
                   projects={allProjects}
                   onOpen={onOpenCard}
                   onDropped={onDropped}
-                  selected={selectedIds?.has(card.id) ?? false}
-                  selectionActive={selectionActive}
                   rejected={rejectedCardId === card.id}
                   {...(onRejectionShown ? { onRejectedDone: onRejectionShown } : {})}
-                  {...(onCardSelectedChange
-                    ? {
-                        onSelectedChange: (selected: boolean, shiftKey: boolean) =>
-                          onCardSelectedChange(card.id, selected, shiftKey),
-                      }
-                    : {})}
                 />
               </StaggerItem>
             ))}

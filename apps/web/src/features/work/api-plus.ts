@@ -1,5 +1,5 @@
 // v1.1 SPEC §7 -- the work module's client for everything v1.1 added on top of a card: estimates and
-// the light time log (A3), dependencies (A10), reminders (7.4), the bulk bar (A8), templates (7.2),
+// the light time log (A3), dependencies (A10), reminders (7.4), templates (7.2),
 // the focus list (A9), capacity + workload (A4) and goals (A11).
 //
 // A second api file rather than a longer `api.ts`, for the same reason the server split
@@ -9,7 +9,7 @@
 import { recurrenceRuleSchema, workTemplateKindSchema } from '@devon/contracts'
 import { z } from 'zod'
 import { apiClient } from '../../lib/api-client.js'
-import { cardPrioritySchema, cardRiskSchema, cardStatusSchema } from './api.js'
+import { cardRiskSchema, cardStatusSchema } from './api.js'
 
 /** Every create in this file answers `201 { id }` and every update/delete answers `204` -- the
  * house shape (`api.ts`'s own `idResultSchema`). The caller re-reads through its query rather than
@@ -177,52 +177,6 @@ export async function deleteCardReminder(
     `/api/v1/cards/${encodeURIComponent(cardId)}/reminders/${encodeURIComponent(reminderId)}`,
     csrfToken,
   )
-}
-
-// --- A8 the bulk bar -------------------------------------------------------------------------------
-
-export const bulkUndoEntrySchema = z.object({
-  id: z.string(),
-  assigneeUserId: z.string().nullable(),
-  priority: cardPrioritySchema,
-  dueAt: z.string().nullable(),
-  status: cardStatusSchema,
-  estimateMin: z.number().int().nullable(),
-  labels: z.array(z.string()),
-})
-export type BulkUndoEntry = z.infer<typeof bulkUndoEntrySchema>
-
-export const bulkCardResultSchema = z.object({
-  updated: z.array(z.string()),
-  forbidden: z.array(z.string()),
-  notFound: z.array(z.string()),
-  undo: z.array(bulkUndoEntrySchema),
-})
-export type BulkCardResult = z.infer<typeof bulkCardResultSchema>
-
-export type BulkCardPatch = Partial<{
-  assigneeUserId: string | null
-  priority: z.infer<typeof cardPrioritySchema>
-  dueAt: string | null
-  status: z.infer<typeof cardStatusSchema>
-  estimateMin: number | null
-  addLabelIds: string[]
-  removeLabelIds: string[]
-}>
-
-export function bulkPatchCards(
-  ids: string[],
-  patch: BulkCardPatch,
-  csrfToken: string,
-): Promise<BulkCardResult> {
-  return apiClient.post('/api/v1/cards/bulk', { ids, patch }, bulkCardResultSchema, csrfToken)
-}
-
-export function undoBulkPatch(
-  entries: BulkUndoEntry[],
-  csrfToken: string,
-): Promise<BulkCardResult> {
-  return apiClient.post('/api/v1/cards/bulk/undo', { entries }, bulkCardResultSchema, csrfToken)
 }
 
 // --- 7.2 templates ---------------------------------------------------------------------------------

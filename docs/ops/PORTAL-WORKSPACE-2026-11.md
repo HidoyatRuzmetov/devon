@@ -1,5 +1,7 @@
 # Check-in workspace and professional records
 
+Cards are edited individually in their drawer. Board and table selection checkboxes, the bulk-action toolbar and its write/undo API routes have been removed. Checklist completion and check-in deliverable selection remain separate workflows.
+
 ## Check-in flow
 
 ```mermaid

@@ -1,8 +1,7 @@
 import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 // Table view (TECH-SPEC §5): every card the current `?q=` filter matches, one row each, row-
 // virtualised (TanStack Virtual -- exact pinned version, `apps/web/package.json`) behind a sticky
-// header, with column sort, row checkboxes and a bulk action bar (assign/label/archive, archive
-// undoable), and inline edit on title/assignee/due -- the same `usePatchCardMutation`
+// header, column sorting, and inline edit on title/assignee/due -- the same `usePatchCardMutation`
 // the card peek uses, so an edit here and an edit there are optimistic the same way. Built on CSS grid
 // plain `div`s rather than a real HTML table: a virtualised row needs `position: absolute` for its
 // transform-based offset, which browsers do not reliably honour on a genuine table-row element.
@@ -10,11 +9,11 @@ import * as React from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { AlertCircle, ArrowDown, ArrowUp, ArrowUpDown, Clock3 } from 'lucide-react'
 import { useT, useLocale } from '@devon/i18n'
-import { Badge, Checkbox, DatePicker, Input, Select, StateView, cn } from '@devon/ui'
+import { Badge, DatePicker, Input, Select, StateView, cn } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
-import { useCardsQuery, useLabelsQuery, useMembers, usePatchCardMutation } from '../hooks.js'
+import { useCardsQuery, useMembers, usePatchCardMutation } from '../hooks.js'
 import {
   PRIORITY_LABEL_KEY,
   RISK_BADGE_CLASSNAME,
@@ -27,7 +26,6 @@ import {
 const RISK_ICON = { AlertCircle, Clock3 } as const
 import { MemberPicker } from './member-picker.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
-import { MultitaskToolbar, MultitaskToolbarSlot, useCardSelection } from './multitask-toolbar.js'
 import { WorkShell } from './work-shell.js'
 import type { Card, CardPriority, MemberSummary } from '../api.js'
 
@@ -59,7 +57,7 @@ type SortState = { field: SortField; dir: 'asc' | 'desc' }
 // plain text by default and only look like controls on hover/focus (`TableRow` below), so the
 // assignee/priority/due/status columns need less width than a permanently-bordered control did --
 // that freed width, plus the unused strip, goes to the title column's `minmax` floor.
-const GRID_COLUMNS = '40px minmax(300px,1fr) 180px 120px 260px 140px'
+const GRID_COLUMNS = 'minmax(300px,1fr) 180px 120px 260px 140px'
 
 function toDateInputValue(iso: string | null): Date | undefined {
   return iso ? new Date(iso) : undefined
@@ -113,8 +111,7 @@ function SortHeader({
 const MOBILE_ROW_HEIGHT = 64
 
 export default function TableScreen() {
-  // H4.1/H4.2: virtualised, up to 100 sorted/selectable rows re-rendering on every sort, filter,
-  // selection and bulk-action tick -- a measured hot spot, opted into the compiler individually
+  // H4.1/H4.2: virtualised, up to 100 sorted rows re-rendering on every sort and filter -- a measured hot spot, opted into the compiler individually
   // (`vite.config.ts`'s note) rather than via a blanket `compiler: true`.
   'use memo'
   const t = useT()
@@ -122,7 +119,6 @@ export default function TableScreen() {
   const q = search.get('q') ?? ''
   const cardsQuery = useCardsQuery({ q: q || undefined, limit: 100 })
   const members = useMembers()
-  const labels = useLabelsQuery().data ?? []
   const [sort, setSort] = React.useState<SortState | null>(null)
   const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(280)
   // Motion verdict F6: the scroll element is *state*, not a ref, so `VirtualRows` below re-renders
@@ -174,31 +170,6 @@ export default function TableScreen() {
     })
   }
 
-  // v1.1 SPEC §7 (A8): selection lives in the shared `useCardSelection` hook, which prunes itself
-  // whenever the underlying list changes shape (a filter narrows it, a poll removes an archived
-  // card) so the toolbar never acts on a row that is no longer on screen.
-  const sortedIds = React.useMemo(() => sorted.map((c) => c.id), [sorted])
-  const { selected, toggle: toggleRow, selectRange, selectAll, clear } = useCardSelection(sortedIds)
-  // Shift-click range select needs to know which row the last plain click landed on.
-  const lastClickedRef = React.useRef<string | null>(null)
-
-  // Stable, so the memoised rows below are not re-rendered by a fresh closure on every scroll tick.
-  const onRowToggle = React.useCallback(
-    (id: string, checked: boolean, shiftKey: boolean): void => {
-      if (shiftKey && lastClickedRef.current) {
-        selectRange(lastClickedRef.current, id, sortedIds)
-        return
-      }
-      lastClickedRef.current = id
-      toggleRow(id, checked)
-    },
-    [selectRange, toggleRow, sortedIds],
-  )
-
-  function toggleAll(checked: boolean): void {
-    selectAll(checked, sortedIds)
-  }
-
   let body: React.ReactNode
   if (cardsQuery.isPending) {
     body = <ViewSkeleton view="table" />
@@ -216,22 +187,20 @@ export default function TableScreen() {
       <StateView kind="empty" titleKey="work.table.emptyTitle" bodyKey="work.table.emptyBody" />
     )
   } else {
-    const allSelected = selected.size > 0 && selected.size === sorted.length
-    const someSelected = selected.size > 0 && !allSelected
     body = (
       <div
         ref={setScrollerEl}
         className="overflow-auto rounded-md border border-border"
         style={{ height: scrollerHeight }}
       >
-        {/* `minWidth: 1020` is exactly the desktop grid's own column widths -- forcing that on a
+        {/* `minWidth: 980` is exactly the desktop grid's own column widths -- forcing that on a
             390px viewport is what made the mobile table "a horizontally-scrolled data grid" (round3
             #30); `MobileTableRow`'s stacked layout needs no fixed width at all, so it is simply
             omitted below `md`. */}
         <div
           role="table"
           aria-label={t('work.view.table')}
-          style={isDesktop ? { minWidth: 1020 } : undefined}
+          style={isDesktop ? { minWidth: 980 } : undefined}
         >
           {isDesktop ? (
             <div
@@ -239,13 +208,6 @@ export default function TableScreen() {
               className="sticky top-0 z-10 grid items-center gap-2 border-b border-border bg-card px-2"
               style={{ gridTemplateColumns: GRID_COLUMNS, height: 40 }}
             >
-              <div role="columnheader">
-                <Checkbox
-                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                  onCheckedChange={(v) => toggleAll(v === true)}
-                  aria-label={t('work.table.selectAll')}
-                />
-              </div>
               <SortHeader
                 field="title"
                 label={t('work.field.title')}
@@ -281,13 +243,6 @@ export default function TableScreen() {
               className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2"
             >
               <div role="columnheader">
-                <Checkbox
-                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                  onCheckedChange={(v) => toggleAll(v === true)}
-                  aria-label={t('work.table.selectAll')}
-                />
-              </div>
-              <div role="columnheader">
                 <Select
                   aria-label={t('work.table.sort.label')}
                   value={sort ? `${sort.field}:${sort.dir}` : ''}
@@ -311,8 +266,6 @@ export default function TableScreen() {
           <VirtualRows
             sorted={sorted}
             members={members}
-            selected={selected}
-            onToggle={onRowToggle}
             rowHeight={rowHeight}
             isDesktop={isDesktop}
             scrollEl={scrollEl}
@@ -326,20 +279,6 @@ export default function TableScreen() {
     <>
       <WorkShell filterLayout="table">
         <div className="flex h-full flex-col gap-2">
-          <div className="relative flex items-center gap-2">
-            {/* round2 SEV2: the bulk bar used to simply appear the instant a row was checked --
-                sliding up from the header's bottom edge (springSettle, the same spring the app's
-                sheets settle with) reads as "this appeared because you selected something" instead
-                of a layout flicker. */}
-            <MultitaskToolbarSlot show={selected.size > 0}>
-              <MultitaskToolbar
-                ids={[...selected]}
-                members={members}
-                labels={labels}
-                onClear={clear}
-              />
-            </MultitaskToolbarSlot>
-          </div>
           <div className="min-h-0 flex-1">{body}</div>
         </div>
       </WorkShell>
@@ -362,16 +301,12 @@ export default function TableScreen() {
 function VirtualRows({
   sorted,
   members,
-  selected,
-  onToggle,
   rowHeight,
   isDesktop,
   scrollEl,
 }: {
   sorted: Card[]
   members: MemberSummary[]
-  selected: ReadonlySet<string>
-  onToggle: (id: string, checked: boolean, shiftKey: boolean) => void
   rowHeight: number
   isDesktop: boolean
   scrollEl: HTMLDivElement | null
@@ -394,8 +329,6 @@ function VirtualRows({
             key={card.id}
             card={card}
             members={members}
-            checked={selected.has(card.id)}
-            onToggle={onToggle}
             top={vRow.start}
             height={vRow.size}
           />
@@ -404,8 +337,6 @@ function VirtualRows({
             key={card.id}
             card={card}
             members={members}
-            checked={selected.has(card.id)}
-            onToggle={onToggle}
             top={vRow.start}
             height={vRow.size}
           />
@@ -418,30 +349,21 @@ function VirtualRows({
 const TableRow = React.memo(function TableRow({
   card,
   members,
-  checked,
-  onToggle,
   top,
   height,
 }: {
   card: Card
   members: MemberSummary[]
-  checked: boolean
-  /** Takes the row's own id, so the parent can hand down one stable callback for every row instead
-   * of a fresh closure per row per render -- which is what makes the `React.memo` around this
-   * component actually hold while the list scrolls (motion verdict F6). */
-  onToggle: (id: string, checked: boolean, shiftKey: boolean) => void
   top: number
   height: number
 }) {
   // H4.1/H4.2: one instance per visible virtualised row (up to ~20 on screen at once), re-rendering
-  // on every parent sort/selection tick even when this row's own card is unchanged -- a measured hot
+  // on every parent sort or filter change even when this row's own card is unchanged -- a measured hot
   // spot, opted into the compiler individually (`vite.config.ts`'s note).
   'use memo'
   const t = useT()
   const locale = useLocale()
   const patchCard = usePatchCardMutation()
-  // Radix's `onCheckedChange` gives no event, so shift is captured on the pointerdown before it.
-  const shiftRef = React.useRef(false)
   const [title, setTitle] = React.useState(card.title)
   React.useEffect(() => setTitle(card.title), [card.title])
   // round2 SEV1: the title cell used to be an `<Input>` at all times, which cannot ellipsize -- a
@@ -511,16 +433,6 @@ const TableRow = React.memo(function TableRow({
           className="absolute inset-y-1 left-0 w-0.75 rounded-full bg-destructive"
         />
       ) : null}
-      <div role="cell">
-        <Checkbox
-          checked={checked}
-          onPointerDown={(e) => {
-            shiftRef.current = e.shiftKey
-          }}
-          onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
-          aria-label={card.title}
-        />
-      </div>
       <div role="cell" className="min-w-0">
         {editingTitle ? (
           <Input
@@ -619,29 +531,21 @@ const TableRow = React.memo(function TableRow({
  * instead of the five-column grid `TableRow` renders. Read-only by design -- a phone list item that
  * opens the full editable card peek on tap is the established mobile pattern (Files, Mail, every
  * native list), and it sidesteps the five separate hover-to-edit affordances `TableRow` has room for
- * but a 390px row does not. Selection (the checkbox, bulk bar) still works exactly like the desktop
- * row -- mobile bulk-archiving/assigning a filtered set is a real, common use of this screen. */
+ * but a 390px row does not. */
 const MobileTableRow = React.memo(function MobileTableRow({
   card,
   members,
-  checked,
-  onToggle,
   top,
   height,
 }: {
   card: Card
   members: MemberSummary[]
-  checked: boolean
-  /** See `TableRow`'s own note: one stable callback for every row. */
-  onToggle: (id: string, checked: boolean, shiftKey: boolean) => void
   top: number
   height: number
 }) {
   // H4.1/H4.2: same virtualised-row hot spot as `TableRow`, for the mobile layout.
   'use memo'
   const t = useT()
-  // Radix's `onCheckedChange` gives no event, so shift is captured on the pointerdown before it.
-  const shiftRef = React.useRef(false)
   const assignee = members.find((m) => m.userId === card.assigneeUserId)
   const metaParts = [
     assignee ? fullName(assignee) : t('work.field.unassigned'),
@@ -652,7 +556,7 @@ const MobileTableRow = React.memo(function MobileTableRow({
 
   function onRowClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement
-    if (target.closest('input, button, [role="checkbox"]')) return
+    if (target.closest('input, button')) return
     openCardPeek(card.id)
   }
 
@@ -684,16 +588,6 @@ const MobileTableRow = React.memo(function MobileTableRow({
           className="absolute inset-y-1 left-0 w-0.75 rounded-full bg-destructive"
         />
       ) : null}
-      <div role="cell">
-        <Checkbox
-          checked={checked}
-          onPointerDown={(e) => {
-            shiftRef.current = e.shiftKey
-          }}
-          onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
-          aria-label={card.title}
-        />
-      </div>
       <div role="cell" className="min-w-0 flex-1">
         <p
           className={cn(

@@ -47,6 +47,25 @@ test('task actions pin, complete and delete without Archive @flow', async ({ bro
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/work/table')
     await expect(page.getByRole('heading', { name: 'Cards', exact: true })).toBeVisible()
+    // The same page changes viewport and opens/closes a drawer, so these steps are sequential.
+    const tableWidths = [1440, 390]
+    for (let index = 0; index < tableWidths.length; index++) {
+      const width = tableWidths[index]!
+      await page.setViewportSize({ width, height: 900 })
+      const row = page.getByRole('row').filter({ hasText: 'Active task' })
+      await expect(row).toBeVisible()
+      await expect(page.getByRole('checkbox')).toHaveCount(0)
+      if (width === 1440) await expect(page.getByRole('columnheader')).toHaveCount(5)
+      await row.focus()
+      await row.press('Enter')
+      await expect(page.getByRole('dialog')).toBeVisible()
+      await expect(
+        page.getByRole('dialog').getByRole('textbox', { name: 'Title', exact: true }),
+      ).toHaveValue('Active task')
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+    }
+    await page.setViewportSize({ width: 1440, height: 900 })
     await expect(page.getByRole('button', { name: /^(Compact|Comfortable)$/ })).toHaveCount(0)
     await expect(
       page

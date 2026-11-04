@@ -814,7 +814,7 @@ const layouts = {
       </div>
     </>
   ),
-  table: <Table columns={6} rows={8} />,
+  table: <Table columns={5} rows={8} />,
   focus: (
     <div className="space-y-4">
       <div className="flex justify-between">

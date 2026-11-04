@@ -64,7 +64,6 @@ import { SparkleButton } from '@devon/ui'
 import { BoardColumn } from './board-column.js'
 import { BoardNavigation } from './board-navigation.js'
 import './board-scroller.css'
-import { MultitaskToolbar, MultitaskToolbarSlot, useCardSelection } from './multitask-toolbar.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { NewCardDialog } from './new-card-dialog.js'
 import { TouchDragPreviewLayer } from './touch-drag-preview.js'
@@ -415,48 +414,6 @@ function BoardScreenInner() {
     })
   }, [orderedColumns])
 
-  // v1.1 SPEC §7 (A8) -- the board's own multitask selection. The ordered id list is column by
-  // column, top to bottom, which is exactly the order the columns are rendered in, so a shift-click
-  // range covers what the eye expects rather than whatever order the API happened to return.
-  //
-  // Declared above the loading/error/empty returns below, because a hook may not be called
-  // conditionally: while the board is still loading the list is simply empty, which is correct.
-  const visibleCardIds = React.useMemo(
-    () => [
-      ...groups
-        .flatMap((group) => group.columns)
-        .filter((col) => isMobile || !collapsedByColumn[col.member.userId])
-        .flatMap((col) =>
-          orderBoardCards(col.cards.filter(filterCard), cardOrder).map((c) => c.id),
-        ),
-      ...(!isMobile && collapsedByColumn['unassigned']
-        ? []
-        : orderBoardCards((board?.unassigned ?? []).filter(filterCard), cardOrder).map(
-            (c) => c.id,
-          )),
-    ],
-    [groups, collapsedByColumn, filterCard, cardOrder, board?.unassigned, isMobile],
-  )
-  const {
-    selected: selectedCardIds,
-    toggle: toggleCardSelected,
-    selectRange: selectCardRange,
-    clear: clearSelection,
-  } = useCardSelection(visibleCardIds)
-  const lastSelectedRef = React.useRef<string | null>(null)
-
-  const handleCardSelectedChange = React.useCallback(
-    (cardId: string, selected: boolean, shiftKey: boolean) => {
-      if (shiftKey && lastSelectedRef.current) {
-        selectCardRange(lastSelectedRef.current, cardId, visibleCardIds)
-        return
-      }
-      lastSelectedRef.current = cardId
-      toggleCardSelected(cardId, selected)
-    },
-    [selectCardRange, toggleCardSelected, visibleCardIds],
-  )
-
   if (boardQuery.isPending) {
     return (
       <WorkShell filterLayout="people_board" hideMeControl>
@@ -688,20 +645,6 @@ function BoardScreenInner() {
         </div>
 
         <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {/* A8: the multitask toolbar takes over this row the moment anything is selected, sliding up
-            on the same spring the table's does -- one bar, one behaviour, two screens. */}
-          <div className="shrink-0">
-            <MultitaskToolbarSlot show={selectedCardIds.size > 0}>
-              <div className="pb-2">
-                <MultitaskToolbar
-                  ids={[...selectedCardIds]}
-                  members={board.members}
-                  labels={board.labels}
-                  onClear={clearSelection}
-                />
-              </div>
-            </MultitaskToolbarSlot>
-          </div>
           <div className="relative min-h-0 min-w-0 flex-1">
             <div
               ref={setScrollerRefs}
@@ -742,9 +685,6 @@ function BoardScreenInner() {
                           onOpenCard={openCardPeek}
                           onDropped={handleDropped}
                           onCollapsedChange={handleCollapsedChange}
-                          selectedIds={selectedCardIds}
-                          onCardSelectedChange={handleCardSelectedChange}
-                          selectionActive={selectedCardIds.size > 0}
                           rejectedCardId={rejectedCardId}
                           onRejectionShown={clearRejection}
                         />
@@ -768,9 +708,6 @@ function BoardScreenInner() {
                       onOpenCard={openCardPeek}
                       onDropped={handleDropped}
                       onCollapsedChange={handleCollapsedChange}
-                      selectedIds={selectedCardIds}
-                      onCardSelectedChange={handleCardSelectedChange}
-                      selectionActive={selectedCardIds.size > 0}
                       rejectedCardId={rejectedCardId}
                       onRejectionShown={clearRejection}
                     />

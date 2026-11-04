@@ -2,7 +2,6 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { WORK_TITLE_MAX } from '@devon/contracts'
-import { selectBoardCard } from './board-test-actions.js'
 import {
   authedPatch,
   authedPost,
@@ -30,14 +29,7 @@ const groupLabels = {
   ru: 'Создать группу',
   en: 'Create group',
 }
-const selectLabels = {
-  'uz-Latn': 'Kartochkani tanlash',
-  'uz-Cyrl': 'Карточкани танлаш',
-  ru: 'Выбрать карточку',
-  en: 'Select card',
-}
-
-test('@flow visual controls: date alignment, contextual selection, milestone editing and group conversion', async ({
+test('@flow visual controls: date alignment, individual card controls, milestone editing and group conversion', async ({
   browser,
 }) => {
   test.setTimeout(matrix ? 360_000 : 180_000)
@@ -71,12 +63,6 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     })
     expect(response.status()).toBe(201)
     const card = (await response.json()) as { id: string; dueAt: string }
-    const companionResponse = await authedPost(head, '/api/v1/cards', {
-      title: 'Selection companion',
-      assigneeUserId: me.user.id,
-    })
-    expect(companionResponse.status()).toBe(201)
-    const companion = (await companionResponse.json()) as { id: string }
     await authedPost(head, `/api/v1/cards/${card.id}/checklist`, {
       text: 'Maʼlumotlarni tekshirish',
     })
@@ -143,75 +129,16 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
             path: join(captureRoot, `${phase}-card-${width}-${theme}-${locale}.png`),
           })
           if (phase !== 'before') {
-            await expect(tile.getByRole('checkbox')).not.toBeChecked()
+            await expect(tile.getByRole('checkbox')).toHaveCount(0)
             await expect(tile.locator('.lucide-calendar-clock')).toHaveCount(0)
             await expect(tile.locator('time')).toHaveAttribute('datetime', card.dueAt)
-            // The compact idle metadata is one aligned row. Selection adds an accessible checkbox
-            // target and may wrap that row; it must keep the date visible without clipping.
+            // The compact metadata stays aligned without a selection column.
             const idleDateAlignment = await tile.locator('time').evaluate((date) => {
               const dateRect = date.getBoundingClientRect()
               const rowRect = date.parentElement!.getBoundingClientRect()
               return Math.abs(dateRect.y + dateRect.height / 2 - rowRect.y - rowRect.height / 2)
             })
             expect(idleDateAlignment).toBeLessThanOrEqual(1)
-            // Selecting another card reveals this unchecked target, preserving the outline contrast
-            // and hit-area checks while entering bulk selection through its focusable checkbox.
-            await selectBoardCard(
-              page,
-              page.locator(`[data-dnd-card="${companion.id}"]`),
-              selectLabels[locale],
-            )
-            await expect(tile.getByRole('checkbox')).not.toBeChecked()
-            const positions = await tile.evaluate((element) => {
-              const date = element.querySelector('time')!
-              const dateRect = date.getBoundingClientRect()
-              const cardRect = element.getBoundingClientRect()
-              const selection = element.querySelector('[role="checkbox"]')!.getBoundingClientRect()
-              const menu = element
-                .querySelector('button[aria-haspopup="menu"]')!
-                .getBoundingClientRect()
-              const checkboxBox = element.querySelector('[data-slot="checkbox-box"]')!
-              const colors = getComputedStyle(checkboxBox)
-              const canvas = document.createElement('canvas')
-              canvas.width = canvas.height = 1
-              const context = canvas.getContext('2d')!
-              const luminance = (color: string) => {
-                context.fillStyle = color
-                context.fillRect(0, 0, 1, 1)
-                const rgb = Array.from(context.getImageData(0, 0, 1, 1).data)
-                  .slice(0, 3)
-                  .map((channel) => {
-                    const value = channel / 255
-                    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
-                  })
-                return rgb[0]! * 0.2126 + rgb[1]! * 0.7152 + rgb[2]! * 0.0722
-              }
-              const border = luminance(colors.borderTopColor)
-              const background = luminance(colors.backgroundColor)
-              return {
-                outlineContrast:
-                  (Math.max(border, background) + 0.05) / (Math.min(border, background) + 0.05),
-                dateVisible:
-                  dateRect.width > 0 &&
-                  dateRect.height > 0 &&
-                  dateRect.left >= cardRect.left &&
-                  dateRect.right <= cardRect.right &&
-                  date.scrollWidth <= date.clientWidth,
-                overlap:
-                  selection.left < menu.right &&
-                  selection.right > menu.left &&
-                  selection.top < menu.bottom &&
-                  selection.bottom > menu.top,
-                targetWidth: selection.width,
-                targetHeight: selection.height,
-              }
-            })
-            expect(positions.dateVisible).toBe(true)
-            expect(positions.overlap).toBe(false)
-            expect(positions.outlineContrast).toBeGreaterThanOrEqual(3)
-            // Engines can report a 24px CSS target as23.999969px after layout transforms.
-            expect(positions.targetWidth).toBeGreaterThanOrEqual(24 - 0.01)
-            expect(positions.targetHeight).toBeGreaterThanOrEqual(24 - 0.01)
           }
           await page.goto(`/projects/view?id=${project.id}`)
           await expect(page.getByRole('heading', { name: projectTitle, exact: true })).toBeVisible()
@@ -284,51 +211,12 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     }
     if (phase === 'before') return
 
-    // Selection and the expanded checkbox hit area must not open the card detail.
+    // No hidden selection controls on hover/focus; individual actions remain keyboard accessible.
     await page.goto('/work')
-    const selectable = page.locator(`[data-dnd-card="${card.id}"]`)
-    await selectable.hover()
-    await expect(selectable.getByRole('checkbox')).not.toBeChecked()
-    const finalLocale = locales[locales.length - 1]!
-    const selection = await selectBoardCard(page, selectable, selectLabels[finalLocale])
-    await expect(selection).toBeChecked()
-    await expect
-      .poll(() =>
-        page
-          .locator('main [role="toolbar"]')
-          .evaluate((el) => getComputedStyle(el.parentElement!).opacity),
-      )
-      .toBe('1')
-    const bulkToolbar = page.locator('main [role="toolbar"]')
-    const actions = bulkToolbar.locator('button[aria-expanded][aria-controls]')
-    await expect(actions).toHaveAttribute('aria-expanded', 'false')
-    expect((await bulkToolbar.boundingBox())!.height).toBeLessThanOrEqual(64)
-    await actions.click()
-    await expect(actions).toHaveAttribute('aria-expanded', 'true')
-    await expect(bulkToolbar.locator('button[aria-haspopup="menu"]').first()).toBeVisible()
-    await page.screenshot({
-      path: join(captureRoot, 'after-board-selected-expanded-320.png'),
-      fullPage: true,
-    })
-    await actions.click()
-    await expect(actions).toHaveAttribute('aria-expanded', 'false')
-    const selectedGeometry = await selectable.evaluate((element) => {
-      const check = element.querySelector('[role="checkbox"]')!.getBoundingClientRect()
-      const toolbar = document.querySelector('main [role="toolbar"]')!.getBoundingClientRect()
-      return { toolbarBottom: toolbar.bottom, checkboxTop: check.top }
-    })
-    expect(selectedGeometry.toolbarBottom).toBeLessThanOrEqual(selectedGeometry.checkboxTop)
-    await page.screenshot({
-      path: join(captureRoot, 'after-board-selected-320.png'),
-      fullPage: true,
-    })
-    await expect(page.getByRole('dialog')).toHaveCount(0)
-    await expect(page.getByRole('menu')).toHaveCount(0)
-    expect(new URL(page.url()).pathname).toBe('/work')
-    // Clearing selection keeps the keyboard-accessible checkbox available.
-    await selection.click()
-    await expect(selection).not.toBeChecked()
-    const movement = selectable.locator('button[aria-haspopup="menu"]')
+    const tile = page.locator(`[data-dnd-card="${card.id}"]`)
+    await tile.hover()
+    await expect(tile.getByRole('checkbox')).toHaveCount(0)
+    const movement = tile.locator('button[aria-haspopup="menu"]')
     await movement.focus()
     await movement.press('Enter')
     await expect(page.getByRole('menu')).toBeVisible()

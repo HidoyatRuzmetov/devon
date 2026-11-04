@@ -38,7 +38,6 @@ import { useT, useLocale, formatDate } from '@devon/i18n'
 import { useCardSignals } from '../../../lib/realtime/index.js'
 import {
   Avatar,
-  Checkbox,
   Chip,
   cn,
   HoverLift,
@@ -93,15 +92,6 @@ export interface CardTileProps {
   projects?: readonly Project[]
   onOpen: (cardId: string) => void
   onDropped: (draggedCardId: string, spec: CardDropSpec) => void
-  /** Omit both for a read-only tile without selection. When supplied, the checkbox
-   * is revealed on hover/focus, or permanently once anything in the board is selected, which is the
-   * pattern every list of this kind uses (Jakob's Law) and which keeps a 26-column board from
-   * growing 300 permanent checkboxes. */
-  selected?: boolean
-  onSelectedChange?: (selected: boolean, shiftKey: boolean) => void
-  /** True while *any* card on the board is selected -- pins every checkbox visible so the selection
-   * can be extended without hunting for hover targets. */
-  selectionActive?: boolean
   /** Set for a beat when a move this card just made was refused by the server and rolled back.
    * Without it the optimistic move simply un-happened between two frames, which reads as the drag
    * having missed rather than as the server having said no (DESIGN.md §10 "rollback shake"). */
@@ -165,9 +155,6 @@ export function CardTile({
   projects = [],
   onOpen,
   onDropped,
-  selected = false,
-  onSelectedChange,
-  selectionActive = false,
   rejected = false,
   onRejectedDone,
 }: CardTileProps) {
@@ -175,7 +162,6 @@ export function CardTile({
   const reducedMotion = useReducedMotion()
   const ref = React.useRef<HTMLDivElement | null>(null)
   const [isDragging, setIsDragging] = React.useState(false)
-  const shiftRef = React.useRef(false)
   const [closestEdge, setClosestEdge] = React.useState<Edge | null>(null)
   const touchLift = React.useRef<{
     timer: number | null
@@ -394,7 +380,6 @@ export function CardTile({
         card.projectId
           ? 'border-primary/25 bg-accent border-l-2 border-l-primary/65'
           : 'border-border bg-card',
-        selected && 'border-primary ring-1 ring-primary',
       )}
     >
       {activeLabels.length > 0 ? (
@@ -441,30 +426,6 @@ export function CardTile({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground">
-        {onSelectedChange ? (
-          <span
-            className={cn(
-              'relative z-10 shrink-0 transition-opacity duration-(--dur-micro)',
-              selected || selectionActive
-                ? 'opacity-100'
-                : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100',
-            )}
-          >
-            <Checkbox
-              checked={selected}
-              size="sm"
-              aria-label={t('work.bulk.selectCard', { title: card.title })}
-              onClick={(event) => event.stopPropagation()}
-              onKeyDown={(event) => event.stopPropagation()}
-              onPointerDown={(event) => {
-                event.stopPropagation()
-                shiftRef.current = event.shiftKey
-              }}
-              onCheckedChange={(value) => onSelectedChange(value === true, shiftRef.current)}
-            />
-          </span>
-        ) : null}
-
         <div
           className={cn(
             'flex items-center gap-1 text-caption',

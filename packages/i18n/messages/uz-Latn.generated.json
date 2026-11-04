@@ -1739,17 +1739,9 @@
       "open": "Ochish",
       "emptyTitle": "Karta topilmadi",
       "emptyBody": "Filtrni oʻzgartiring yoki yangi karta qoʻshing.",
-      "selectAll": "Barchasini tanlash",
       "sort": {
         "label": "Saralash",
         "none": "Saralanmagan"
-      },
-      "bulk": {
-        "selectedCount": "{count} ta tanlandi",
-        "assign": "Biriktirish",
-        "addLabel": "Yorliq qoʻshish",
-        "archived": "{count} ta karta arxivlandi",
-        "clear": "Tanlovni tozalash"
       }
     },
     "timeline": {
@@ -1960,34 +1952,6 @@
       "inPast": "Oʻtgan vaqtga eslatma qoʻyib boʻlmaydi.",
       "sent": "Yuborilgan",
       "pending": "Kutilmoqda"
-    },
-    "bulk": {
-      "toolbarLabel": "Tanlangan kartalar ustida amallar",
-      "selectedCount": "{count} ta tanlandi",
-      "assign": "Biriktirish",
-      "label": "Yorliq",
-      "addLabel": "Yorliq qoʻshish",
-      "removeLabel": "Yorliqni olib tashlash",
-      "priority": "Muhimlik",
-      "due": "Muddat",
-      "estimate": "Baho",
-      "clearEstimate": "Bahoni tozalash",
-      "markDone": "Bajarildi",
-      "clear": "Tanlovni tozalash",
-      "assigned": "{count} ta karta biriktirildi",
-      "labelAdded": "{count} ta kartaga yorliq qoʻshildi",
-      "labelRemoved": "{count} ta kartadan yorliq olib tashlandi",
-      "prioritySet": "{count} ta kartaning muhimligi oʻzgardi",
-      "dueSet": "{count} ta kartaning muddati oʻzgardi",
-      "estimateSet": "{count} ta karta baholandi",
-      "estimateCleared": "{count} ta kartaning bahosi tozalandi",
-      "movedDone": "{count} ta karta bajarildi",
-      "partial": "{count} tasiga huquqingiz yetmadi",
-      "noneApplied": "Hech bir karta oʻzgarmadi",
-      "failed": "Amalni bajarib boʻlmadi",
-      "undone": "Qaytarildi",
-      "undoFailed": "Qaytarib boʻlmadi",
-      "selectCard": "«{title}» kartasini tanlash"
     },
     "focus": {
       "title": "Mahkamlangan",

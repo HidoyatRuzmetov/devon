@@ -1,5 +1,5 @@
 // v1.1 SPEC §7 (A3) -- rendering an estimate / a logged duration, shared by the card sheet, the
-// tile chip, the table cell, the workload grid and the bulk bar.
+// tile chip, the table cell and the workload grid.
 //
 // The *parsing* half lives in `@devon/contracts` (`parseEstimateMinutes`), because the server has to
 // understand the same four locales' words the field accepts. The *formatting* half is here, because

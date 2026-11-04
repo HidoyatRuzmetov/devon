@@ -1739,17 +1739,9 @@
       "open": "Open",
       "emptyTitle": "No cards found",
       "emptyBody": "Adjust the filter or add a new card.",
-      "selectAll": "Select all",
       "sort": {
         "label": "Sort",
         "none": "Unsorted"
-      },
-      "bulk": {
-        "selectedCount": "{count} selected",
-        "assign": "Assign",
-        "addLabel": "Add label",
-        "archived": "{count} card(s) archived",
-        "clear": "Clear selection"
       }
     },
     "timeline": {
@@ -1960,34 +1952,6 @@
       "inPast": "A reminder cannot be set in the past.",
       "sent": "Sent",
       "pending": "Pending"
-    },
-    "bulk": {
-      "toolbarLabel": "Actions on the selected cards",
-      "selectedCount": "{count} selected",
-      "assign": "Assign",
-      "label": "Label",
-      "addLabel": "Add a label",
-      "removeLabel": "Remove a label",
-      "priority": "Priority",
-      "due": "Due",
-      "estimate": "Estimate",
-      "clearEstimate": "Clear the estimate",
-      "markDone": "Mark done",
-      "clear": "Clear selection",
-      "assigned": "{count} cards assigned",
-      "labelAdded": "Label added to {count} cards",
-      "labelRemoved": "Label removed from {count} cards",
-      "prioritySet": "Priority changed on {count} cards",
-      "dueSet": "Due date changed on {count} cards",
-      "estimateSet": "{count} cards estimated",
-      "estimateCleared": "Estimate cleared on {count} cards",
-      "movedDone": "{count} cards marked done",
-      "partial": "{count} were not yours to change",
-      "noneApplied": "No card was changed",
-      "failed": "The action could not be completed",
-      "undone": "Undone",
-      "undoFailed": "Could not undo",
-      "selectCard": "Select the card “{title}”"
     },
     "focus": {
       "title": "Pinned",

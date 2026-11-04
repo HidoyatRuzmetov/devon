@@ -6,7 +6,6 @@ import AxeBuilder from '@axe-core/playwright'
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { authedPatch, authedPost, login, newFlowContext } from './flow-api.js'
 import { setTextScale, settleCapture, waitForLoadedRoute } from './platform-capture.js'
-import { selectBoardCard } from './board-test-actions.js'
 
 const examplePassword = 'Ishonchli#2026'
 function label(locale: string, key: string): string {
@@ -190,38 +189,6 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
           }
           await page.keyboard.press('Escape')
           await expect(dialog).not.toBeVisible()
-          const tile = page.locator(`[data-dnd-card="${id}"]`)
-          await selectBoardCard(page, tile, label(locale, 'portal.cards.select'))
-          const toolbar = page.getByRole('toolbar', {
-            name: label(locale, 'work.bulk.toolbarLabel'),
-            exact: true,
-          })
-          await expect(toolbar).toBeVisible()
-          if (environment.width < 768)
-            await toolbar
-              .getByRole('button', { name: label(locale, 'cmd.group.actions'), exact: true })
-              .click()
-          const priority = toolbar.getByRole('button', {
-            name: label(locale, 'work.bulk.priority'),
-            exact: true,
-          })
-          await priority.focus()
-          await capture(
-            page,
-            toolbar,
-            `bulk-${environment.width}-${environment.height}-text${environment.scale * 100}`,
-            { locale, theme, ...environment },
-          )
-          await priority.press('Enter')
-          await expect(
-            page.getByRole('menuitem', { name: label(locale, 'work.priority.high'), exact: true }),
-          ).toBeVisible()
-          await page.keyboard.press('Escape')
-          await expect(priority).toBeFocused()
-          await toolbar
-            .getByRole('button', { name: label(locale, 'work.bulk.clear'), exact: true })
-            .click()
-          await expect(toolbar).not.toBeVisible()
         }
         expect(errors).toEqual([])
       } finally {
