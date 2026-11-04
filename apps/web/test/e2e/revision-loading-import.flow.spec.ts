@@ -178,7 +178,6 @@ test('real data loading follows each layout and imported personnel records requi
     )
     expect(boxes).toHaveLength(2)
     expect(boxes[0]!.top).toBe(boxes[1]!.top)
-    expect(Math.abs(boxes[0]!.width - boxes[1]!.width)).toBeLessThan(1)
     expect(boxes.every((box) => box.whiteSpace === 'nowrap')).toBe(true)
     const checkDownloadWidth = async (width: number) => {
       await page.setViewportSize({ width, height: 844 })

@@ -547,9 +547,13 @@
   object-fit: cover;
 }
 .template-paper .paper-work {
-  padding-left: 99.0667px;
-  text-indent: -99.0667px;
+  display: grid;
+  grid-template-columns: 99.0667px minmax(0, 1fr);
+  align-items: baseline;
   margin-bottom: 5.3333px;
+}
+.template-paper .paper-work-period {
+  white-space: nowrap;
 }
 .template-paper table {
   border-collapse: collapse;
@@ -592,10 +596,9 @@
   outline-offset: 2px;
   border-radius: 2px;
 }
-.template-paper .paper-work .paper-edit {
+.template-paper .paper-work-description .paper-edit {
   display: block;
   width: 100%;
-  text-indent: -99.0667px;
 }
 .template-paper .paper-deputy {
   padding-left: 94.2667px;

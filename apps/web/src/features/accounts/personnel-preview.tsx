@@ -141,10 +141,10 @@ export function PersonnelPreview({
         {data.work.map((work, i) =>
           work.text ? (
             <div key={i} className="paper-work">
-              {field(
-                `work.${i}.text`,
-                formatted(template.workLine(work), [work.text, work.months]),
-              )}
+              <span className="paper-work-period">
+                {field(`work.${i}.from`, wording(template.workPeriod(work)) + ' -')}
+              </span>
+              <div className="paper-work-description">{field(`work.${i}.text`, work.text)}</div>
             </div>
           ) : null,
         )}

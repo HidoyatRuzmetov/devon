@@ -43,6 +43,16 @@ it('exports a valid stored ZIP and escapes reviewed text after conversion', () =
     fio: 'Karimov Sardor Akmalovich',
     specialty: 'B&O <engineering>',
     militaryRank: 'капитан',
+    work: [
+      {
+        from: '2026',
+        to: '2026',
+        current: false,
+        since: '',
+        months: '',
+        text: 'Test markazi mutaxassisi',
+      },
+    ],
     relatives: [
       {
         rel: 'Отаси',
@@ -84,6 +94,13 @@ it('exports a valid stored ZIP and escapes reviewed text after conversion', () =
   expect(xml).toContain('<w:tblW w:w="10527" w:type="dxa"/>')
   expect(xml).toContain('<w:gridSpan w:val="2"/>')
   expect(xml).toContain('<w:tab w:val="left" w:pos="4228"/>')
+  const document = new DOMParser().parseFromString(xml, 'application/xml')
+  const employment = [...document.getElementsByTagName('w:p')].find((p) =>
+    p.textContent?.includes('Test markazi mutaxassisi'),
+  )!
+  expect(employment.textContent).toContain('2026-2026 йй. -')
+  expect(employment.getElementsByTagName('w:tab')).toHaveLength(2)
+  expect(employment.getElementsByTagName('w:tab')[0]?.getAttribute('w:pos')).toBe('1486')
   expect(
     new DOMParser().parseFromString(xml, 'application/xml').getElementsByTagName('parsererror'),
   ).toHaveLength(0)
@@ -121,7 +138,7 @@ it('follows year-only employment and emits a relative birth year just once for l
       },
     ],
   })
-  expect(personnelTemplate.workLine(data.work[0]!)).toBe('2026 й. - Test markazi mutaxassisi')
+  expect(personnelTemplate.workLine(data.work[0]!)).toBe('2026-2026 йй. - Test markazi mutaxassisi')
   expect(personnelTemplate.workLine({ ...data.work[0]!, current: true, since: '2025-03-15' })).toBe(
     '2026 й. - ҳ.в. - Test markazi mutaxassisi',
   )

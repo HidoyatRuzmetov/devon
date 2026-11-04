@@ -135,7 +135,7 @@ function workPeriod(w) {
   var from = workStartYear(w),
     to = clean(w.to)
   if (w.current) return from + ' й. - ҳ.в.'
-  if (!to || to === from) return from + ' й.'
+  if (!to) return from + ' й.'
   return from + '-' + to + ' йй.'
 }
 function workLine(w) {
@@ -829,7 +829,12 @@ function documentXml(d) {
       return clean(w.text)
     })
     .forEach(function (w) {
-      b += para(run(workLine(w)), { after: 80, left: 1486, hanging: 1486 })
+      b += para(run(workPeriod(w) + ' -') + tabRun() + run(clean(w.text)), {
+        after: 80,
+        tabs: [1486],
+        left: 1486,
+        hanging: 1486,
+      })
     })
   b += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'
   b += para(run(fio + 'нинг яқин қариндошлари ҳақида', { b: true, sz: 24 }), {

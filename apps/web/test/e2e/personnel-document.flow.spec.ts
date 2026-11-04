@@ -74,15 +74,15 @@ test('personnel record edits on two paper pages, previews in place and exports a
       ],
       work: [
         {
-          from: '2012',
-          to: '2020',
+          from: '2026',
+          to: '2026',
           current: false,
           since: '',
           months: '',
           text: 'Cola kompaniyasi yetakchi mutaxassisi',
         },
         {
-          from: '2020',
+          from: '2026',
           to: '',
           current: true,
           since: '',
@@ -139,17 +139,20 @@ test('personnel record edits on two paper pages, previews in place and exports a
     })
     await page.getByRole('button', { name: 'Preview', exact: true }).click()
     const workLines = await page
-      .locator('.paper-work .paper-edit')
-      .last()
-      .evaluate((el) => {
-        const range = document.createRange()
-        range.selectNodeContents(el)
-        return Array.from(range.getClientRects())
-          .filter((r) => r.width > 0)
-          .map((r) => ({ left: r.left, top: r.top }))
-      })
-    expect(workLines.length).toBeGreaterThan(1)
-    expect(workLines[1]!.left - workLines[0]!.left).toBeGreaterThan(90)
+      .locator('.paper-work-description .paper-edit')
+      .evaluateAll((elements) =>
+        elements.map((el) => {
+          const range = document.createRange()
+          range.selectNodeContents(el)
+          return Array.from(range.getClientRects())
+            .filter((r) => r.width > 0)
+            .map((r) => ({ left: r.left, top: r.top }))
+        }),
+      )
+    expect(workLines[1]!.length).toBeGreaterThan(1)
+    const starts = workLines.flat().map((r) => r.left)
+    expect(Math.max(...starts) - Math.min(...starts)).toBeLessThan(1)
+    await expect(page.locator('.paper-work-period').first()).toContainText('2026-2026')
     await page.screenshot({
       path: testInfo.outputPath('document-preview-desktop.png'),
       fullPage: true,

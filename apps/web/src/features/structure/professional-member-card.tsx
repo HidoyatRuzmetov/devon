@@ -91,7 +91,7 @@ export function MemberCard({
   const { department } = useDepartment()
   const [recordOpen, setRecordOpen] = React.useState(false)
   const [recordScript, setRecordScript] = React.useState<'latin' | 'cyrillic'>('latin')
-  const updatedDate = (value?: string | null, brackets = true) => {
+  const updatedDate = (value?: string | null) => {
     if (!value) return ''
     const date = new Intl.DateTimeFormat(locale, {
       month: 'short',
@@ -99,7 +99,7 @@ export function MemberCard({
       year: 'numeric',
       timeZone: 'Asia/Tashkent',
     }).format(new Date(value))
-    return brackets ? ` (${date})` : date
+    return ` (${date})`
   }
   const [photoOpen, setPhotoOpen] = React.useState(false)
   const profile = member.professionalProfile ?? professionalProfileSchema.parse({})
@@ -245,30 +245,25 @@ export function MemberCard({
         </button>
         {!compact && department?.role === 'head' ? (
           <div
-            className="relative grid grid-cols-2 before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border"
+            className="mx-4 grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1.35fr)] items-center gap-1 border-t border-border py-1 @max-[300px]/profile:mx-3"
             data-testid="people-document-downloads"
             role="group"
             aria-label={t('peopleDownloads.label')}
           >
+            <Download className="mr-1 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <button
               type="button"
               onClick={resume}
               title={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
               aria-label={`${t('profileChoices.resume')}${updatedDate(member.resumeUpdatedAt)}`}
-              className="flex min-h-11 min-w-0 w-full items-center gap-2 whitespace-nowrap px-4 py-1.5 text-left text-caption font-medium text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_9%,var(--color-card))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring @max-[320px]/profile:px-2 @max-[280px]/profile:gap-1 @max-[280px]/profile:px-1.5 @max-[280px]/profile:text-[11px]"
+              className="flex min-w-0 flex-col items-start justify-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-[12px] font-medium leading-4 text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
             >
-              <Download
-                className="size-4 shrink-0 text-primary/75 @max-[280px]/profile:size-3.5"
-                aria-hidden="true"
-              />
-              <span className="flex flex-col items-start">
-                <span>{t('profileChoices.resume')}</span>
-                {member.resumeUpdatedAt ? (
-                  <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
-                    {updatedDate(member.resumeUpdatedAt, false)}
-                  </span>
-                ) : null}
-              </span>
+              <span>{t('profileChoices.resume')}</span>
+              {member.resumeUpdatedAt ? (
+                <span className="text-[11px] font-normal leading-none text-muted-foreground">
+                  {updatedDate(member.resumeUpdatedAt)}
+                </span>
+              ) : null}
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -276,26 +271,17 @@ export function MemberCard({
                   type="button"
                   title={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
                   aria-label={`${t('profileChoices.record')}${updatedDate(member.personnelUpdatedAt)}`}
-                  className="relative flex min-h-11 min-w-0 w-full items-center gap-2 whitespace-nowrap px-4 py-1.5 text-left text-caption font-medium text-primary transition-colors before:pointer-events-none before:absolute before:inset-y-2.5 before:left-0 before:w-px before:bg-border hover:bg-[color-mix(in_oklab,var(--profile-unit)_9%,var(--color-card))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring @max-[320px]/profile:px-2 @max-[280px]/profile:gap-1 @max-[280px]/profile:px-1.5 @max-[280px]/profile:text-[11px]"
+                  className="flex min-w-0 flex-col items-start justify-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-[12px] font-medium leading-4 text-primary transition-colors hover:bg-[color-mix(in_oklab,var(--profile-unit)_12%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-ring @max-[300px]/profile:px-0 @max-[300px]/profile:text-[11px]"
                 >
-                  <Download
-                    className="size-4 shrink-0 text-primary/75 @max-[280px]/profile:size-3.5"
-                    aria-hidden="true"
-                  />
-                  <span className="flex flex-col items-start">
-                    <span className="inline-flex items-center gap-1 @max-[300px]/profile:gap-0.5">
-                      {t('profileChoices.record')}
-                      <ChevronDown
-                        className="size-3 shrink-0 @max-[300px]/profile:size-2.5"
-                        aria-hidden="true"
-                      />
-                    </span>
-                    {member.personnelUpdatedAt ? (
-                      <span className="text-[11px] font-normal leading-[14px] text-muted-foreground">
-                        {updatedDate(member.personnelUpdatedAt, false)}
-                      </span>
-                    ) : null}
+                  <span className="flex w-full items-center justify-between gap-1">
+                    {t('profileChoices.record')}
+                    <ChevronDown className="size-3 shrink-0" aria-hidden="true" />
                   </span>
+                  {member.personnelUpdatedAt ? (
+                    <span className="text-[11px] font-normal leading-none text-muted-foreground">
+                      {updatedDate(member.personnelUpdatedAt)}
+                    </span>
+                  ) : null}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
