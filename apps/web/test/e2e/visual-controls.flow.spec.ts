@@ -143,7 +143,7 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
             path: join(captureRoot, `${phase}-card-${width}-${theme}-${locale}.png`),
           })
           if (phase !== 'before') {
-            await expect(tile.getByRole('checkbox')).toHaveCount(0)
+            await expect(tile.getByRole('checkbox')).not.toBeChecked()
             await expect(tile.locator('.lucide-calendar-clock')).toHaveCount(0)
             await expect(tile.locator('time')).toHaveAttribute('datetime', card.dueAt)
             // The compact idle metadata is one aligned row. Selection adds an accessible checkbox
@@ -155,7 +155,7 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
             })
             expect(idleDateAlignment).toBeLessThanOrEqual(1)
             // Selecting another card reveals this unchecked target, preserving the outline contrast
-            // and hit-area checks while entering bulk selection through the actual actions menu.
+            // and hit-area checks while entering bulk selection through its focusable checkbox.
             await selectBoardCard(
               page,
               page.locator(`[data-dnd-card="${companion.id}"]`),
@@ -284,11 +284,11 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     }
     if (phase === 'before') return
 
-    // Menu selection and the expanded checkbox hit area must not open the card detail.
+    // Selection and the expanded checkbox hit area must not open the card detail.
     await page.goto('/work')
     const selectable = page.locator(`[data-dnd-card="${card.id}"]`)
     await selectable.hover()
-    await expect(selectable.getByRole('checkbox')).toHaveCount(0)
+    await expect(selectable.getByRole('checkbox')).not.toBeChecked()
     const finalLocale = locales[locales.length - 1]!
     const selection = await selectBoardCard(page, selectable, selectLabels[finalLocale])
     await expect(selection).toBeChecked()
@@ -325,10 +325,9 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.getByRole('menu')).toHaveCount(0)
     expect(new URL(page.url()).pathname).toBe('/work')
-    // The last selected checkbox unmounts immediately. A real click followed by the disappearance
-    // assertion observes that contract; uncheck() waits for an unchecked node that no longer exists.
+    // Clearing selection keeps the keyboard-accessible checkbox available.
     await selection.click()
-    await expect(selection).toHaveCount(0)
+    await expect(selection).not.toBeChecked()
     const movement = selectable.locator('button[aria-haspopup="menu"]')
     await movement.focus()
     await movement.press('Enter')
@@ -396,12 +395,10 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     await authedPatch(head, '/api/v1/me', { locale: 'en' })
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(`/work/card?id=${card.id}`)
-    await page.getByRole('button', { name: 'More actions', exact: true }).click()
     const groupAction = page
       .getByRole('button', { name: 'Create group', exact: true })
       .and(page.locator('[aria-haspopup="dialog"]'))
     await expect(groupAction).toBeVisible()
-    await page.keyboard.press('Escape')
     const cardTitleField = page.getByRole('textbox', { name: 'Title', exact: true })
     await expect(cardTitleField).toHaveValue(cardTitle)
     await expect
@@ -426,7 +423,6 @@ test('@flow visual controls: date alignment, contextual selection, milestone edi
     await expect
       .poll(() => cardTitleField.evaluate((el) => el.scrollHeight - el.clientHeight))
       .toBeLessThanOrEqual(1)
-    await page.getByRole('button', { name: 'More actions', exact: true }).click()
     const conversionDialog = page.getByRole('dialog', { name: 'Create group', exact: true })
     await groupAction.click()
     await expect(conversionDialog).toContainText('personal card in the new group project')

@@ -58,7 +58,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
           const tile = page.locator(`[data-dnd-card="${id}"]`)
           const checkbox = tile.getByRole('checkbox')
           const titleButton = tile.getByRole('button', { name: title, exact: true })
-          await expect(checkbox).toHaveCount(0)
+          await expect(checkbox).not.toBeChecked()
           await selectBoardCard(
             page,
             page.locator(`[data-dnd-card="${companion.id}"]`),

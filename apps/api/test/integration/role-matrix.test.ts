@@ -141,11 +141,11 @@ describe('owner-set writes: a bystander cannot touch a colleague’s card (D6)',
     expect(res.status).toBe(403)
   })
 
-  it('a member may not archive it', async () => {
+  it('a member may not complete a colleague’s card', async () => {
     const res = await fetch(`${baseUrl}/api/v1/cards/${cardId}`, {
       method: 'PATCH',
       headers: member.headers,
-      body: JSON.stringify({ status: 'archived' }),
+      body: JSON.stringify({ status: 'done' }),
     })
     expect(res.status).toBe(403)
   })

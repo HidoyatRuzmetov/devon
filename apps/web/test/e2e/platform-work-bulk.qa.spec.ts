@@ -181,9 +181,7 @@ test('@qa bulk label undo restores mixed original labels', async ({ browser }) =
   }
 })
 
-test('@qa bulk assignment priority estimate due status archive refusal and clear', async ({
-  browser,
-}) => {
+test('@qa bulk assignment priority estimate due status refusal and clear', async ({ browser }) => {
   test.setTimeout(240_000)
   const context = await newFlowContext(browser)
   try {
@@ -286,19 +284,15 @@ test('@qa bulk assignment priority estimate due status archive refusal and clear
     expect((await read(context, ids[0]!)).dueAt).not.toBeNull()
     await undo(page)
     expect((await read(context, ids[1]!)).dueAt).toBeNull()
-    for (const [action, status] of [
-      ['work.bulk.markDone', 'done'],
-      ['work.card.archive', 'archived'],
-    ]) {
-      toolbar = await select(page, ids)
-      changed = page.waitForResponse((r) => r.url().endsWith('/cards/bulk') && r.status() === 200)
-      await toolbar.getByRole('button', { name: label(action!), exact: true }).click()
-      await changed
-      expect((await read(context, ids[0]!)).status).toBe(status)
-      expect((await read(context, ids[1]!)).status).toBe(status)
-      await undo(page)
-      expect((await read(context, ids[0]!)).status).toBe('active')
-    }
+    toolbar = await select(page, ids)
+    await expect(toolbar.getByRole('button', { name: 'Archive', exact: true })).toHaveCount(0)
+    changed = page.waitForResponse((r) => r.url().endsWith('/cards/bulk') && r.status() === 200)
+    await toolbar.getByRole('button', { name: label('work.bulk.markDone'), exact: true }).click()
+    await changed
+    expect((await read(context, ids[0]!)).status).toBe('done')
+    expect((await read(context, ids[1]!)).status).toBe('done')
+    await undo(page)
+    expect((await read(context, ids[0]!)).status).toBe('active')
     await page.reload()
     await waitForLoadedRoute(page, '/work')
     expect((await read(context, ids[0]!)).status).toBe('active')

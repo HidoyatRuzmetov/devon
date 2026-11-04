@@ -179,6 +179,15 @@
       "roles": ["head", "member"]
     },
     {
+      "path": "/account/personnel",
+      "name": "account",
+      "slug": "accountpersonnel",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "accounts.settings.title",
+      "roles": ["head", "member"]
+    },
+    {
       "path": "/account/calendar",
       "name": "account",
       "slug": "accountcalendar",
@@ -286,16 +295,6 @@
       "auth": "session",
       "chrome": "app",
       "heading": "work.templates.title",
-      "roles": ["head", "member"]
-    },
-    {
-      "path": "/work/archive",
-      "redirect": "/work/mine",
-      "name": "work",
-      "slug": "workarchive",
-      "auth": "session",
-      "chrome": "app",
-      "heading": "work.title",
       "roles": ["head", "member"]
     },
     {

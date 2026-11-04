@@ -32,7 +32,7 @@ flowchart TD
     R -->|Yes| F
     R -->|No| S[Reject addition]
     F -->|Head: New card| T[Individual task title, priority and checklist]
-    E -->|Head: New task| T
+    E -->|Head: New card| T
     T --> U{Person active and checkout open?}
     U -->|Yes| V[Create source task and select its checklist in one transaction]
     V --> F

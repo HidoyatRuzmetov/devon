@@ -24,6 +24,7 @@ export function CardActionsMenu({ card }: { card: Card }) {
     <IconButton
       className="md:size-6"
       aria-label={t('portal.cards.actions')}
+      aria-haspopup="menu"
       tooltip={t('portal.cards.actions')}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {

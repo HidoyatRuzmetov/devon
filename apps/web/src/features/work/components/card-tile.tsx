@@ -93,8 +93,7 @@ export interface CardTileProps {
   projects?: readonly Project[]
   onOpen: (cardId: string) => void
   onDropped: (draggedCardId: string, spec: CardDropSpec) => void
-  /** v1.1 SPEC §7 (A8). Omit both to get a tile with no selection affordance at all -- the archive
-   * and any future read-only board keep exactly the v1.0 tile. When they are supplied the checkbox
+  /** Omit both for a read-only tile without selection. When supplied, the checkbox
    * is revealed on hover/focus, or permanently once anything in the board is selected, which is the
    * pattern every list of this kind uses (Jakob's Law) and which keeps a 26-column board from
    * growing 300 permanent checkboxes. */
@@ -441,13 +440,8 @@ export function CardTile({
         </div>
       </div>
 
-      <div
-        className={cn(
-          'flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground',
-          !card.projectId && 'pr-10 md:pr-0',
-        )}
-      >
-        {onSelectedChange && (selected || selectionActive) ? (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground">
+        {onSelectedChange ? (
           <span
             className={cn(
               'relative z-10 shrink-0 transition-opacity duration-(--dur-micro)',

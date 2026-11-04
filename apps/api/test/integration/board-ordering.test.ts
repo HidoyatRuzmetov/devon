@@ -200,27 +200,32 @@ describe('authoritative board ordering and personal focus', () => {
     )
   })
 
-  it('keeps the five-pin cap under concurrent adds and frees invisible deleted slots', async () => {
+  it('accepts concurrent pins without a five-pin cap and removes deleted entries', async () => {
     const items = await Promise.all(Array.from({ length: 8 }, () => card(memberId)))
     const results = await Promise.all(
       items.map((item) => request('/work/focus', 'POST', { cardId: item.id }, member)),
     )
-    expect(results.filter((res) => res.status === 204)).toHaveLength(5)
-    expect(results.filter((res) => res.status === 422)).toHaveLength(3)
+    expect(results.every((res) => res.status === 204)).toBe(true)
     const focus = (await (await request('/work/focus', 'GET', undefined, member)).json()) as {
       items: { cardId: string }[]
     }
-    expect(focus.items).toHaveLength(5)
+    expect(focus.items).toHaveLength(8)
+    expect(new Set(focus.items.map((item) => item.cardId)).size).toBe(8)
     const deleted = focus.items[0]!.cardId
     expect((await request(`/cards/${deleted}`, 'DELETE')).status).toBe(204)
-    const replacement = items.find((item) => !focus.items.some((pin) => pin.cardId === item.id))!
+    const remaining = (await (await request('/work/focus', 'GET', undefined, member)).json()) as {
+      items: { cardId: string }[]
+    }
+    expect(remaining.items).toHaveLength(7)
+    expect(remaining.items.some((item) => item.cardId === deleted)).toBe(false)
+    const replacement = await card(memberId)
     expect((await request('/work/focus', 'POST', { cardId: replacement.id }, member)).status).toBe(
       204,
     )
     const after = (await (await request('/work/focus', 'GET', undefined, member)).json()) as {
       items: { cardId: string }[]
     }
-    expect(after.items).toHaveLength(5)
+    expect(after.items).toHaveLength(8)
     expect(after.items[0]!.cardId).toBe(replacement.id)
   })
   it('keeps a removed/deleted assignee’s open cards visible for review and supports dropping beside/reassigning them', async () => {
