@@ -13,6 +13,12 @@ inputs:
 runs:
   using: composite
   steps:
+    # Run before downloads/tests can allocate one of these fixed fixture ports as a client port.
+    # Ubuntu hosted runners already have Node; the pinned workspace version is installed below.
+    - name: Reserve isolated fixture ports from automatic allocation
+      shell: bash
+      run: node scripts/reserve-ci-ports.mjs
+
     - name: Set up pnpm (version read from package.json#packageManager)
       uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
 

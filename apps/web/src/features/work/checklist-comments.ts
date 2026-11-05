@@ -1,23 +1,25 @@
-import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import { toast } from '@devon/ui'
 import { z } from 'zod'
 import { apiClient } from '../../lib/api-client.js'
-import { useIsLive } from '../../lib/realtime/index.js'
 import { checklistItemSchema, commentSchema } from './api.js'
-import { useCsrfToken } from './hooks.js'
+import { useCsrfToken, useLiveRefetchInterval } from './hooks.js'
 
 function commentPath(cardId: string, itemId: string) {
   return `/api/v1/cards/${encodeURIComponent(cardId)}/checklist/${encodeURIComponent(itemId)}/comments`
 }
 
 export function useChecklistComments(cardId: string, itemId: string, enabled: boolean) {
-  const live = useIsLive()
+  const fallbackInterval = useLiveRefetchInterval()
   return useQuery({
     queryKey: ['work', 'checklist-comments', cardId, itemId],
     queryFn: () => apiClient.get(commentPath(cardId, itemId), z.array(commentSchema)),
     enabled,
-    refetchInterval: enabled && !live ? 4000 : false,
+    // Work comment events invalidate this query through Centrifugo; the shared helper returns
+    // false while connected or work writes are pending. Only an open, offline thread falls back.
+    // nosemgrep: devon-polling-instead-of-realtime -- Reviewed disconnected-transport fallback, matching work/hooks.ts.
+    refetchInterval: enabled ? fallbackInterval : false,
   })
 }
 
@@ -71,8 +73,7 @@ export function useChecklistCommentChange(cardId: string, itemId: string) {
 /** Project tasks display their children together; fetch those children in one request. */
 export function useChecklistBatch(cardIds: string[]) {
   const ids = [...cardIds].sort()
-  const live = useIsLive()
-  const writes = useIsMutating({ mutationKey: ['work', 'checklist'] })
+  const fallbackInterval = useLiveRefetchInterval()
   return useQuery({
     queryKey: ['work', 'checklist-batch', ids],
     queryFn: async () => {
@@ -90,6 +91,9 @@ export function useChecklistBatch(cardIds: string[]) {
       return results.flat()
     },
     enabled: ids.length > 0,
-    refetchInterval: !live && !writes && ids.length ? 4000 : false,
+    // Work checklist events invalidate this batch; disconnected deployments retain the existing
+    // shared work fallback, paused throughout optimistic card/checklist writes.
+    // nosemgrep: devon-polling-instead-of-realtime -- Reviewed disconnected-transport fallback, matching work/hooks.ts.
+    refetchInterval: ids.length ? fallbackInterval : false,
   })
 }

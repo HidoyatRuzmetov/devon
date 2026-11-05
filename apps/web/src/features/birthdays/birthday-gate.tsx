@@ -16,6 +16,7 @@ async function acknowledgeSeen(claimToken: string, date: string, csrfToken: stri
   // Idempotent receipt: short transient failures must not turn a viewed letter into a second event.
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
+      // nosemgrep: query-in-loop -- Retry this same idempotent receipt only after a failed attempt; at most three attempts.
       await apiClient.post(
         '/api/v1/accounts/birthday/seen',
         { claimToken, date },
@@ -25,6 +26,7 @@ async function acknowledgeSeen(claimToken: string, date: string, csrfToken: stri
       return
     } catch {
       if (attempt < 2)
+        // nosemgrep: query-in-loop -- Sequential 1s/2s backoff between failures; parallel requests would defeat the retry policy.
         await new Promise((resolve) => window.setTimeout(resolve, (attempt + 1) * 1000))
     }
   }

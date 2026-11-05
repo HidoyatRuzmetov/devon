@@ -14,6 +14,7 @@ import {
   stopHarness,
   seedDepartment,
   seedMember,
+  loginAs,
   superuserQuery,
   type Db,
   type Server,
@@ -222,6 +223,47 @@ describe('atomic gallery project creation through actual application-role transa
       audit: '2',
       outbox: '1',
     })
+  })
+
+  it('template route defaults members to self, refuses other/null assignment and retains head choices', async () => {
+    const f = await fixture()
+    const id = await template(
+      f.department.id,
+      f.head.id,
+      { title: 'Self template' },
+      'department',
+      'card',
+    )
+    const member = await loginAs(server.baseUrl, f.member.login)
+    const head = await loginAs(server.baseUrl, f.head.login)
+    const create = (headers: Record<string, string>, body: Record<string, unknown>) =>
+      fetch(`${server.baseUrl}/api/v1/work/templates/${id}/create-card`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      })
+    for (const body of [{}, { assigneeUserId: f.member.id }]) {
+      const response = await create(member.headers, body)
+      expect(response.status).toBe(201)
+      const card = (await response.json()) as { id: string }
+      expect(
+        await superuserQuery(db, 'select assignee_user_id from app.cards where id=$1', [card.id]),
+      ).toEqual([{ assignee_user_id: f.member.id }])
+    }
+    for (const assigneeUserId of [f.head.id, null]) {
+      const response = await create(member.headers, { assigneeUserId })
+      expect(response.status).toBe(403)
+    }
+    expect(await count(id)).toBe(2)
+    for (const assigneeUserId of [f.member.id, f.head.id, null]) {
+      const response = await create(head.headers, { assigneeUserId })
+      expect(response.status).toBe(201)
+      const card = (await response.json()) as { id: string }
+      expect(
+        await superuserQuery(db, 'select assignee_user_id from app.cards where id=$1', [card.id]),
+      ).toEqual([{ assignee_user_id: assigneeUserId }])
+    }
+    expect(await count(id)).toBe(5)
   })
 
   it('card template count/card/activity/audit/outbox roll back if payload, labels or checklist insertion fail', async () => {

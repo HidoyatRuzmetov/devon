@@ -12,7 +12,7 @@ import {
 } from './flow-api.js'
 import type { Board, Card } from '../../src/features/work/api.js'
 
-test('@flow native card drags remain stable across columns and personal focus rises for head/member', async ({
+test('@flow native card drags remain stable across columns and assignee pins lead for every viewer', async ({
   browser,
 }, info) => {
   test.setTimeout(90_000)
@@ -211,13 +211,24 @@ test('@flow native card drags remain stable across columns and personal focus ri
     await expect(page.getByRole('button', { name: 'Unpin', exact: true })).toBeVisible()
     await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
     await page.unroute('**/api/v1/work/focus')
+    // A pin on one's assigned card leads that person's column for everyone. It is not copied
+    // into another viewer's private pins on cards assigned to other people.
+    await expect
+      .poll(async () => {
+        const board = (await (await member.request.get('/api/v1/board')).json()) as Board
+        const pinned = board.columns
+          .find((item) => item.member.userId === headId)!
+          .cards.find((card) => card.id === headCards[1]!.id)!
+        return { assigneePinned: pinned.assigneePinned, focusPinned: pinned.focusPinned }
+      })
+      .toEqual({ assigneePinned: true, focusPinned: false })
     const memberPage = await member.newPage()
     await memberPage.setViewportSize({ width: 1920, height: 1080 })
     await memberPage.goto('/work')
     const memberColumn = memberPage.locator(`[data-dnd-column="${memberId}"]`)
     await expect(
       memberPage.locator(`[data-dnd-column="${headId}"] [data-dnd-card]`).first(),
-    ).toHaveAttribute('data-dnd-card', headCards[0]!.id)
+    ).toHaveAttribute('data-dnd-card', headCards[1]!.id)
     await memberPage
       .locator(`[data-dnd-card="${memberCards[1]!.id}"]`)
       .getByRole('button', { name: memberCards[1]!.title, exact: true })

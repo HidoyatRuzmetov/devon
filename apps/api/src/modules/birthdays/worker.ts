@@ -55,14 +55,14 @@ export async function processBirthdays(
     )
     await Promise.all(
       birthdays.map((member) =>
-        withContext(ctx, async (tx) => {
-          await tx.raw(sql`insert into app.birthday_reminders(department_id,owner_user_id,head_user_id,celebration_date)
+        withContext(ctx, (tx) =>
+          tx.raw(sql`insert into app.birthday_reminders(department_id,owner_user_id,head_user_id,celebration_date)
           select ${departmentId},${member.userId},m.user_id,${tomorrow}::date from app.memberships m
           where m.department_id=${departmentId} and m.role='head' and m.status='active' and m.deleted_at is null
           on conflict(department_id,owner_user_id,head_user_id,birthday_year) do update
             set celebration_date=excluded.celebration_date
-            where app.birthday_reminders.status='pending'`)
-        }),
+            where app.birthday_reminders.status='pending'`),
+        ),
       ),
     )
     // nosemgrep: devon-query-in-loop -- Claim and acknowledge each external send before selecting the next.
@@ -70,6 +70,7 @@ export async function processBirthdays(
       const token = randomUUID()
       // nosemgrep: query-in-loop
       const delivery = await withContext(ctx, async (tx) => {
+        // nosemgrep: query-in-loop -- Claim one lease, send, and durably acknowledge it before claiming the next delivery.
         const [row] = await tx.raw<{
           id: string
           ownerUserId: string
@@ -138,6 +139,7 @@ export async function processBirthdays(
       const status = result.ok ? 'sent' : birthdaySendDisposition(result.error)
       // nosemgrep: query-in-loop
       await withContext(ctx, async (tx) => {
+        // nosemgrep: query-in-loop -- Persist this external send's receipt before its audit and the next claim; never replay an uncertain send.
         await tx.raw(sql`update app.birthday_reminders set status=${status},
           sent_at=${result.ok ? now.toISOString() : null}::timestamptz,
           telegram_message_id=${result.ok ? result.messageId : null},

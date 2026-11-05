@@ -692,7 +692,12 @@ export async function createFromCardTemplate(
       title: payload.title,
       description: payload.description ?? undefined,
       kind: input.projectId ? 'project_task' : 'task',
-      assigneeUserId: input.assigneeUserId ?? (input.projectId ? ctx.userId : null),
+      // Preserve omission for the canonical member-only-self default. Converting it to null
+      // would turn an ordinary template creation into a forbidden explicit unassignment.
+      assigneeUserId:
+        ctx.departmentRole === 'member'
+          ? input.assigneeUserId
+          : (input.assigneeUserId ?? (input.projectId ? ctx.userId : null)),
       giverUserId: input.giverUserId ?? ctx.userId!,
       projectId: input.projectId ?? null,
       projectScope: input.projectId ? 'subjective' : 'none',

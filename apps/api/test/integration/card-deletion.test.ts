@@ -217,7 +217,7 @@ describe('card deletion and audit retention', () => {
     expect((await request(`/cards/${card.id}`, owner)).status).toBe(200)
   })
 
-  it('lets a head delete department cards but expires the undo window', async () => {
+  it('expires the short undo window while retaining the head’s durable restore action', async () => {
     const card = await createCard()
     expect((await request(`/cards/${card.id}`, head, 'DELETE')).status).toBe(204)
     expect((await request(`/cards/${card.id}/undo-delete`, owner, 'POST', {})).status).toBe(404)
@@ -225,7 +225,9 @@ describe('card deletion and audit retention', () => {
       card.id,
     ])
     expect((await request(`/cards/${card.id}/undo-delete`, head, 'POST', {})).status).toBe(404)
-    expect((await request(`/cards/${card.id}/restore`, head, 'POST', {})).status).toBe(404)
+    expect((await request(`/cards/${card.id}`, head)).status).toBe(404)
+    expect((await request(`/cards/${card.id}/restore`, head, 'POST', {})).status).toBe(204)
+    expect((await request(`/cards/${card.id}`, head)).status).toBe(200)
   })
 
   it('cannot mutate a colleague’s checklist by supplying an owned card in the URL', async () => {

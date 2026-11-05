@@ -165,6 +165,9 @@ export default function PersonScreen() {
     queryKey: ['work', 'cards', 'person', department?.departmentId, viewerId, personId],
     queryFn: ({ signal }) => fetchPersonCards(personId, signal),
     enabled: Boolean(department?.departmentId && viewerId && person),
+    // Centrifugo's work events refresh every person partition. This shared work helper disables
+    // its fallback while connected and during optimistic writes, retaining offline parity with Board.
+    // nosemgrep: devon-polling-instead-of-realtime -- Reviewed disconnected-transport fallback, matching work/hooks.ts.
     refetchInterval: useLiveRefetchInterval(),
   })
   const mayCreate = department?.role === 'head' || viewerId === personId

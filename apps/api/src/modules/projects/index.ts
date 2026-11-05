@@ -114,7 +114,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.params.id,
       )
       if (!result) return sendProblem(reply, 'not_found')
-      return reply.send(result)
+      return reply.type('application/json').send(result)
     },
   )
   app.post(
