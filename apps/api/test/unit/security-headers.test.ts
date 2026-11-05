@@ -3,6 +3,7 @@
 // this pass: there was no helmet, no CSP, no HSTS, no frame-ancestors, no referrer policy, no
 // permissions policy and no CORS configuration of any kind.
 import { describe, it, expect } from 'vitest'
+import { readFile } from 'node:fs/promises'
 import { buildTestApp, cookieHeader, parseSetCookies } from './test-app.js'
 import { createFakeState } from './fake-deps.js'
 import { seedUser } from './seed.js'
@@ -28,7 +29,27 @@ describe('security headers on every response (H1.10)', () => {
     expect(res.headers['x-dns-prefetch-control']).toBe('off')
     expect(String(res.headers['permissions-policy'])).toContain('camera=()')
     expect(String(res.headers['permissions-policy'])).toContain('geolocation=()')
+    expect(String(res.headers['permissions-policy'])).toContain('autoplay=(self)')
     await app.close()
+  })
+
+  it('matches the proxy permissions exactly, keeping autoplay restricted to this origin', async () => {
+    const { app } = await buildTestApp()
+    try {
+      const res = await app.inject({ method: 'GET', url: '/healthz' })
+      const caddyfile = await readFile(
+        new URL('../../../../infra/Caddyfile', import.meta.url),
+        'utf8',
+      )
+      const proxyPolicy = caddyfile.match(/Permissions-Policy "([^"]+)"/)?.[1]
+      expect(proxyPolicy).toBe(res.headers['permissions-policy'])
+      expect(proxyPolicy?.split(', ').filter((feature) => !feature.endsWith('=()'))).toEqual([
+        'autoplay=(self)',
+        'fullscreen=(self)',
+      ])
+    } finally {
+      await app.close()
+    }
   })
 
   it('sends a CSP that lets an API response load nothing, and cannot be framed', async () => {

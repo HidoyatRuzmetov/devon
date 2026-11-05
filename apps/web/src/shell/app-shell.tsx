@@ -1,3 +1,4 @@
+import { BirthdayGate } from '../features/birthdays/birthday-gate.js'
 import { returnDestination } from '../lib/return-context.js'
 // The full shell for every signed-in route (design.md §3, spec.md §3-§5), rebuilt to
 // UI-OVERHAUL.md §2 row 1: a Linear/Huly-style full-height sidebar with grouped entries, counts, a
@@ -631,6 +632,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           offset put every toast right on top of it. `mobileOffset` lifts the stack clear of the bar
           plus its own safe-area inset (the tab bar's padding-bottom is a *visual* inset, not extra
           height Sonner's own layout knows about) with one gap token of breathing room above it. */}
+      <BirthdayGate />
       <Toaster
         position={isDesktop ? 'bottom-right' : 'bottom-center'}
         mobileOffset={{

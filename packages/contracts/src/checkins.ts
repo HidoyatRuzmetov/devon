@@ -27,6 +27,7 @@ export const checkinSourceCardSchema = z.object({
       version: z.number().int(),
       textLocked: z.boolean(),
       deletionProtected: z.boolean(),
+      commentCount: z.number().int().nonnegative().default(0),
     }),
   ),
 })
@@ -61,6 +62,7 @@ export const checkinMemberSchema = z.object({
   unitColour: z.number().int().nullable(),
 })
 export const checkinEntrySchema = z.object({
+  commentCount: z.number().int().nonnegative().default(0),
   id: z.string().uuid(),
   cycleId: z.string().uuid(),
   memberUserId: z.string().uuid(),

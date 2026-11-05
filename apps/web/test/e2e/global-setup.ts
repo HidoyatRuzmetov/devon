@@ -66,9 +66,11 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     )
     // Test servers must not restart halfway through requests when another local edit is saved.
     const apiEntry =
-      process.env['FLOW_AI_ACTION_FIXTURE'] === '1'
-        ? 'test/checks/flow-ai-actions-server.ts'
-        : 'src/server.ts'
+      process.env['FLOW_BIRTHDAY_FIXTURE'] === '1'
+        ? 'test/checks/flow-birthdays-server.ts'
+        : process.env['FLOW_AI_ACTION_FIXTURE'] === '1'
+          ? 'test/checks/flow-ai-actions-server.ts'
+          : 'src/server.ts'
     apiProcess = spawnManaged('pnpm', ['--filter', '@devon/api', 'exec', 'tsx', apiEntry], {
       cwd: REPO_ROOT,
       logFile: FLOW_API_LOG_FILE,

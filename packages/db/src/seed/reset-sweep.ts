@@ -100,6 +100,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.checkin_layouts' },
   { table: 'app.telegram_message_receipts' },
   { table: 'app.personnel_records' },
+  { table: 'app.birthday_reminders' },
   { table: 'app.checkin_reminders' },
   { table: 'app.checkin_cycles' },
   { table: 'app.work_action_receipts' },
@@ -115,6 +116,8 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
  * same shape `personal.ts` and `notifications.ts` already use to *write* them.
  */
 export const USER_SWEEP_ORDER: readonly { table: string; column: string | null }[] = [
+  { table: 'app.birthday_greetings', column: 'owner_user_id' },
+  { table: 'app.account_birthdays', column: 'owner_user_id' },
   { table: 'app.personal_calendar_entries', column: 'user_id' },
   { table: 'app.pomodoro_sessions', column: 'user_id' },
   { table: 'app.pomodoro_settings', column: 'user_id' },

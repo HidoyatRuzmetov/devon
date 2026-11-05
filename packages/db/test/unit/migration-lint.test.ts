@@ -46,6 +46,16 @@ describe('migration-lint', () => {
     const r = results.find((x) => x.name.includes('forbidden personal-data'))
     expect(r?.ok).toBe(true)
   })
+  it('does not allow unrelated sensitive fields through the specific birthday exception', () => {
+    for (const sql of [
+      'create table app.other (birth_date date);',
+      'create table app.account_birthdays (passport_number text);',
+      "create table app.account_birthdays(id uuid); create table app.other(birth_date date not null check (birth_date >= date '1900-01-01'), id uuid);",
+    ]) {
+      const results = lintMigrations([{ name: '2031_birthdays.sql', sql }])
+      expect(results.find((x) => x.name.includes('forbidden personal-data'))?.ok).toBe(false)
+    }
+  })
 
   it('flags a bare SET on the app.* GUC namespace', () => {
     const results = lintMigrations([{ name: '0099_bad.sql', sql: "set app.department_id = 'x';" }])

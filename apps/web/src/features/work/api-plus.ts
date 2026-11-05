@@ -272,16 +272,35 @@ export const focusListSchema = z.object({
 })
 export type FocusList = z.infer<typeof focusListSchema>
 
-export function fetchFocusList(): Promise<FocusList> {
-  return apiClient.get('/api/v1/work/focus', focusListSchema)
+export function fetchFocusList(userId?: string): Promise<FocusList> {
+  return apiClient.get(
+    `/api/v1/work/focus${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`,
+    focusListSchema,
+  )
 }
 
-export async function addFocusPin(cardId: string, csrfToken: string): Promise<void> {
-  await apiClient.post('/api/v1/work/focus', { cardId }, z.void(), csrfToken)
+export async function addFocusPin(
+  cardId: string,
+  csrfToken: string,
+  userId?: string,
+): Promise<void> {
+  await apiClient.post(
+    '/api/v1/work/focus',
+    { cardId, ...(userId ? { userId } : {}) },
+    z.void(),
+    csrfToken,
+  )
 }
 
-export async function removeFocusPin(cardId: string, csrfToken: string): Promise<void> {
-  await apiClient.delete(`/api/v1/work/focus/${encodeURIComponent(cardId)}`, csrfToken)
+export async function removeFocusPin(
+  cardId: string,
+  csrfToken: string,
+  userId?: string,
+): Promise<void> {
+  await apiClient.delete(
+    `/api/v1/work/focus/${encodeURIComponent(cardId)}${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`,
+    csrfToken,
+  )
 }
 
 export async function reorderFocusList(cardIds: string[], csrfToken: string): Promise<void> {

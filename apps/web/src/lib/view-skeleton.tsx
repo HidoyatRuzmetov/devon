@@ -461,6 +461,36 @@ const layouts = {
     </>
   ),
   structure: (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 border-b border-border pb-3">
+        <Skeleton className="h-9 w-28" />
+        <Skeleton className="h-9 w-28" />
+      </div>
+      {times(3, (index) => (
+        <div className="overflow-hidden rounded-lg border border-border">
+          <div className="flex items-center gap-3 bg-muted/40 p-3">
+            <Skeleton className="size-4" />
+            <Skeleton className="size-8" />
+            <Skeleton className="h-4 w-56" />
+            <Skeleton className="ml-auto h-7 w-24" />
+          </div>
+          <div className="space-y-3 border-t border-border px-6 py-4">
+            {times(index === 1 ? 2 : 3, () => (
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-9 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  {line('w-44')}
+                  {line('w-28')}
+                </div>
+                <Skeleton className="h-6 w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+  structureChart: (
     <>
       <Skeleton className="mx-auto h-24 w-64 rounded-xl" />
       <div className="mx-auto h-8 w-px bg-border" />
@@ -471,6 +501,40 @@ const layouts = {
         ))}
       </div>
     </>
+  ),
+  personWork: (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-9 w-28" />
+      </div>
+      <div className="grid grid-cols-[repeat(4,minmax(16rem,1fr))] gap-3 overflow-hidden">
+        {times(4, (column) => (
+          <div className="min-h-[calc(100dvh-270px)] rounded-xl border border-border bg-muted/40 p-2">
+            <div className="mb-3 flex items-center gap-2 p-2">
+              <Skeleton className="size-4" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="ml-auto size-5 rounded" />
+            </div>
+            <div className="space-y-2.5">
+              {times(column === 3 ? 2 : 3, (row) => (
+                <div className="overflow-hidden rounded-lg border border-border bg-card">
+                  <div className="space-y-3 p-3">
+                    {row % 2 === 0 ? line('w-24') : null}
+                    {line('w-5/6')}
+                    {line('w-2/3')}
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <div className="border-t border-border p-3">
+                    <Skeleton className={column === 3 ? 'ml-auto h-5 w-20' : 'h-4 w-28'} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   ),
   events: (
     <>

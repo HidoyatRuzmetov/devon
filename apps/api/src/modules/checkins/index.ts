@@ -40,10 +40,7 @@ const routes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'create',
-          subject: (req) => ({
-            kind: 'department_managed',
-            departmentId: req.actor?.departmentId ?? '',
-          }),
+          subject,
         },
       },
       schema: {

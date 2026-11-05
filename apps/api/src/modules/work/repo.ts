@@ -50,6 +50,8 @@ type CardRow = {
   recurrence_series_id: string | null
   focus_pinned: boolean
   focus_position: number | null
+  assignee_pinned: boolean
+  assignee_pin_position: number | null
 }
 
 function computeRisk(row: Pick<CardRow, 'status' | 'due_at'>): 'none' | 'at_risk' | 'overdue' {
@@ -103,6 +105,9 @@ function toCardDTO(row: CardRow): CardDTO {
     recurrenceSeriesId: row.recurrence_series_id,
     focusPinned: row.focus_pinned === true,
     focusPosition: row.focus_position === null ? null : Number(row.focus_position),
+    assigneePinned: row.assignee_pinned === true,
+    assigneePinPosition:
+      row.assignee_pin_position == null ? null : Number(row.assignee_pin_position),
   }
 }
 
@@ -134,6 +139,7 @@ function cardSelect(viewerUserId: string | null): SQL {
     coalesce(db.open_blockers, 0) as blocked_by_open,
     coalesce(bl.blocking, 0) as blocks_count,
     coalesce(fp.pinned, false) as focus_pinned, fp.position as focus_position,
+    coalesce(ap.pinned, false) as assignee_pinned, ap.position as assignee_pin_position,
     exists(select 1 from app.checkin_entries e where e.card_id=c.id and e.removed_at is null) as deletion_protected
   from app.cards c
   left join lateral (
@@ -163,6 +169,10 @@ function cardSelect(viewerUserId: string | null): SQL {
     where card_id = c.id and user_id = ${viewerUserId}
     limit 1
   ) fp on true
+  left join lateral (
+    select true as pinned, position from app.focus_pins
+    where card_id=c.id and user_id=c.assignee_user_id limit 1
+  ) ap on true
 `
 }
 
@@ -239,18 +249,27 @@ export async function getProjectNames(
 export async function listCards(
   ctx: RequestContext,
   departmentId: string,
-  options: { deleted?: boolean | undefined; projectId?: string | undefined } = {},
+  options: {
+    deleted?: boolean | undefined
+    projectId?: string | undefined
+    assigneeUserId?: string | undefined
+    limit?: number
+    offset?: number
+  } = {},
 ): Promise<CardDTO[]> {
   return withContext(ctx, async (tx) => {
     const deletionFilter = options.deleted
       ? sql`c.deleted_at is not null`
       : sql`c.deleted_at is null`
     const projectFilter = options.projectId ? sql`and c.project_id = ${options.projectId}` : sql``
+    const assigneeFilter = options.assigneeUserId
+      ? sql`and c.assignee_user_id=${options.assigneeUserId}`
+      : sql``
     const rows = await tx.raw<CardRow>(
       sql`${cardSelect(ctx.userId)}
-          where c.department_id = ${departmentId} and ${deletionFilter} ${projectFilter}
-          order by fp.position asc nulls last, c.order_key collate "C" asc, c.created_at asc, c.id asc
-          limit 5000`,
+          where c.department_id = ${departmentId} and ${deletionFilter} ${projectFilter} ${assigneeFilter}
+          order by (coalesce(ap.pinned,false) or coalesce(fp.pinned,false)) desc, c.order_key collate "C" asc, c.created_at asc, c.id asc
+          limit ${options.limit ?? 5000} offset ${options.offset ?? 0}`,
     )
     return rows.map(toCardDTO)
   })
@@ -357,6 +376,10 @@ export async function cardExists(
 }
 
 export async function getChecklist(ctx: RequestContext, cardId: string) {
+  return getChecklists(ctx, [cardId])
+}
+
+export async function getChecklists(ctx: RequestContext, cardIds: string[]) {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
       id: string
@@ -370,12 +393,15 @@ export async function getChecklist(ctx: RequestContext, cardId: string) {
       version: number
       text_locked: boolean
       deletion_protected: boolean
+      comment_count: number
     }>(
       sql`select id, card_id, parent_item_id, text, done_at, assignee_user_id, due_at, order_key, version,
           app.checkin_item_locked(i.id) as text_locked,
+          (select count(*) from app.card_comments cm where cm.checklist_item_id=i.id and cm.deleted_at is null) as comment_count,
           exists(select 1 from app.checkin_entries e where e.checklist_item_id=i.id and e.removed_at is null) as deletion_protected
           from app.card_checklist_items i
-          where card_id = ${cardId} and deleted_at is null
+          where card_id = any(${sql.param(cardIds)}::uuid[]) and deleted_at is null
+            and exists(select 1 from app.cards c where c.id=i.card_id and c.deleted_at is null)
           order by order_key asc, created_at asc, id asc`,
     )
     return rows.map((r) => ({
@@ -390,29 +416,39 @@ export async function getChecklist(ctx: RequestContext, cardId: string) {
       version: r.version,
       textLocked: r.text_locked,
       deletionProtected: r.deletion_protected,
+      commentCount: Number(r.comment_count),
     }))
   })
 }
 
-export async function getComments(ctx: RequestContext, cardId: string) {
+export async function getComments(
+  ctx: RequestContext,
+  cardId: string,
+  checklistItemId: string | null = null,
+) {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
       id: string
       card_id: string
+      checklist_item_id: string | null
       author_user_id: string
       body: { format: 'markdown'; text: string }
       mentions: string[]
       edited_at: Date | null
       created_at: Date
     }>(
-      sql`select id, card_id, author_user_id, body, mentions, edited_at, created_at
+      sql`select id, card_id, checklist_item_id, author_user_id, body, mentions, edited_at, created_at
           from app.card_comments
           where card_id = ${cardId} and deleted_at is null
-          order by created_at asc`,
+            and checklist_item_id is not distinct from ${checklistItemId}::uuid
+          order by created_at asc, id asc`,
     )
     return rows.map((r) => ({
       id: r.id,
       cardId: r.card_id,
+      checklistItemId: r.checklist_item_id,
+      canEdit: !ctx.viewAs && (ctx.userId === r.author_user_id || ctx.departmentRole === 'head'),
+      canDelete: !ctx.viewAs && (ctx.userId === r.author_user_id || ctx.departmentRole === 'head'),
       authorUserId: r.author_user_id,
       body: r.body,
       mentions: r.mentions ?? [],
@@ -531,6 +567,11 @@ export async function createCardInTx(
   tx: Tx,
   input: CreateCardInput,
 ): Promise<CardDTO> {
+  if (ctx.departmentRole === 'member') {
+    if (input.assigneeUserId !== undefined && input.assigneeUserId !== ctx.userId)
+      throw Object.assign(new Error('own_task_required'), { statusCode: 403 })
+    input = { ...input, assigneeUserId: ctx.userId }
+  }
   await lockCardOrder(tx, input.departmentId)
   // The creator remains historical attribution. Only newly named assignee/giver references
   // require current membership; the existing default giver=creator semantics stay intact.
@@ -1107,14 +1148,20 @@ export async function addComment(
   authorUserId: string,
   text: string,
   mentions: string[],
+  checklistItemId: string | null = null,
 ): Promise<string | null> {
   return withContext(ctx, async (tx) => {
-    if (!(await cardIsVisible(tx, departmentId, cardId))) return null
+    if (!(await cardIsVisible(tx, departmentId, cardId, true))) return null
+    if (
+      checklistItemId &&
+      !(await checklistIsVisible(tx, departmentId, cardId, checklistItemId, true))
+    )
+      return null
     const safeMentions = await activeMentionIds(tx, departmentId, mentions)
     const id = randomUUID()
     await tx.raw(
-      sql`insert into app.card_comments (id, department_id, card_id, author_user_id, body, mentions)
-          values (${id}, ${departmentId}, ${cardId}, ${authorUserId},
+      sql`insert into app.card_comments (id, department_id, card_id, checklist_item_id, author_user_id, body, mentions)
+          values (${id}, ${departmentId}, ${cardId}, ${checklistItemId}, ${authorUserId},
             ${JSON.stringify({ format: 'markdown', text })}::jsonb, ${sql.param(safeMentions)}::uuid[])`,
     )
     await tx.raw(
@@ -1129,7 +1176,13 @@ export async function addComment(
     })
     tx.emit({
       type: 'work.card.commented',
-      payload: { cardId, commentId: id, mentions: safeMentions, actorUserId: authorUserId },
+      payload: {
+        cardId,
+        checklistItemId,
+        commentId: id,
+        mentions: safeMentions,
+        actorUserId: authorUserId,
+      },
       departmentId,
     })
     return id
@@ -1264,6 +1317,57 @@ export async function deleteCard(
   })
 }
 
+/** Deleted-list restoration is separate from the short undo receipt. */
+export async function restoreCard(
+  ctx: RequestContext,
+  actor: Actor | null,
+  departmentId: string,
+  cardId: string,
+): Promise<'ok' | 'not_found' | 'forbidden' | 'conflict'> {
+  return withContext(ctx, async (tx) => {
+    const refs = await tx.raw<{ project_id: string | null }>(
+      sql`select project_id from app.cards where id=${cardId} and department_id=${departmentId}`,
+    )
+    if (!refs[0]) return 'not_found'
+    // Project deletion takes the project lock before its child cards. Use the same order.
+    if (refs[0].project_id) {
+      const projects = await tx.raw(
+        sql`select id from app.projects where id=${refs[0].project_id} and department_id=${departmentId} and deleted_at is null for share`,
+      )
+      if (!projects.length) return 'conflict'
+    }
+    const cards = await tx.raw<{
+      assignee_user_id: string | null
+      giver_user_id: string | null
+      created_by_user_id: string
+      deleted_at: Date | null
+    }>(sql`
+      select assignee_user_id,giver_user_id,created_by_user_id,deleted_at from app.cards
+      where id=${cardId} and department_id=${departmentId} for update`)
+    const card = cards[0]!
+    if (
+      !can(actor, 'update', {
+        kind: 'owned',
+        departmentId,
+        ownerUserIds: [card.assignee_user_id, card.giver_user_id, card.created_by_user_id].filter(
+          (value): value is string => value !== null,
+        ),
+      }).allowed
+    )
+      return 'forbidden'
+    if (!card.deleted_at) return 'ok'
+    await tx.raw(sql`update app.cards set deleted_at=null,deleted_by_user_id=null,deleted_by_project_id=null,
+      updated_at=now(),version=version+1 where id=${cardId}`)
+    tx.audit({ action: 'work.card_restored', subjectType: 'card', subjectId: cardId, departmentId })
+    tx.emit({
+      type: 'work.card.restored',
+      departmentId,
+      payload: { cardId, actorUserId: ctx.userId },
+    })
+    return 'ok'
+  })
+}
+
 /** Undo is deliberately narrow: same actor, same department, within 30 seconds. */
 export async function undoDeleteCard(
   ctx: RequestContext,
@@ -1301,9 +1405,15 @@ export async function changeComment(
   cardId: string,
   commentId: string,
   input: { text: string; mentions: string[]; editedAt: string | null } | null,
+  checklistItemId: string | null = null,
 ): Promise<'ok' | 'not_found' | 'forbidden' | 'conflict'> {
   return withContext(ctx, async (tx) => {
-    if (!(await cardIsVisible(tx, departmentId, cardId))) return 'not_found'
+    if (!(await cardIsVisible(tx, departmentId, cardId, true))) return 'not_found'
+    if (
+      checklistItemId &&
+      !(await checklistIsVisible(tx, departmentId, cardId, checklistItemId, true))
+    )
+      return 'not_found'
     const rows = await tx.raw<{
       author_user_id: string
       body: { text: string }
@@ -1311,7 +1421,8 @@ export async function changeComment(
       edited_at: Date | string | null
     }>(sql`
       select author_user_id,body,mentions,edited_at from app.card_comments
-      where id=${commentId} and card_id=${cardId} and department_id=${departmentId} and deleted_at is null for update`)
+      where id=${commentId} and card_id=${cardId} and department_id=${departmentId} and deleted_at is null
+        and checklist_item_id is not distinct from ${checklistItemId}::uuid for update`)
     const before = rows[0]
     if (!before) return 'not_found'
     if (
@@ -1359,6 +1470,7 @@ export async function changeComment(
     })
     const payload = {
       cardId,
+      checklistItemId,
       commentId,
       actorUserId: ctx.userId,
       recipientIds: recipients,
@@ -1368,4 +1480,26 @@ export async function changeComment(
     else tx.emit({ type: 'work.comment.deleted', departmentId, payload })
     return 'ok'
   })
+}
+
+async function checklistIsVisible(
+  tx: Tx,
+  departmentId: string,
+  cardId: string,
+  itemId: string,
+  lock = false,
+) {
+  const rows = await tx.raw<{ id: string }>(sql`select i.id from app.card_checklist_items i
+    join app.cards c on c.id=i.card_id and c.department_id=i.department_id and c.deleted_at is null
+    where i.id=${itemId} and i.card_id=${cardId} and i.department_id=${departmentId} and i.deleted_at is null ${lock ? sql`for share of i` : sql``}`)
+  return rows.length > 0
+}
+
+export async function checklistExists(
+  ctx: RequestContext,
+  departmentId: string,
+  cardId: string,
+  itemId: string,
+) {
+  return withContext(ctx, (tx) => checklistIsVisible(tx, departmentId, cardId, itemId))
 }

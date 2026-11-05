@@ -4,6 +4,28 @@
 // a build failure, not a review comment.
 export type TableClass = 'tenant_root' | 'department_owned' | 'user_owned' | 'global' | 'audit'
 
+/** Explicit November 2026 birthday request: private account data with a narrowly scoped scheduler
+ * exception. Every other user-owned table retains the original no-role-exception invariant. The
+ * DB verifier checks the exact policy name/command, active tenant membership and no view-as. */
+export const PRIVATE_SCHEDULER_ALLOWLIST: Readonly<
+  Record<string, { ownerColumn: string; policy: string; command: 'SELECT' | 'ALL'; reason: string }>
+> = Object.freeze({
+  'app.account_birthdays': {
+    ownerColumn: 'owner_user_id',
+    policy: 'account_birthdays_scheduler',
+    command: 'SELECT',
+    reason:
+      'Owner-written DOB; tenant-scoped birthday worker may read active members only to schedule the head reminder.',
+  },
+  'app.birthday_greetings': {
+    ownerColumn: 'owner_user_id',
+    policy: 'birthday_greetings_scheduler',
+    command: 'ALL',
+    reason:
+      'One shared annual AI letter; tenant-scoped birthday worker prepares it for active members. Ordinary heads cannot read the private store.',
+  },
+})
+
 /** `schema.table` -> class. Keys are the fully-qualified Postgres name, lower-case. */
 export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.departments': 'tenant_root',
@@ -11,6 +33,9 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.units': 'department_owned',
   'app.unit_roles': 'department_owned',
   'app.users': 'global',
+  'app.account_birthdays': 'user_owned',
+  'app.birthday_greetings': 'user_owned',
+  'app.birthday_reminders': 'department_owned',
   'app.sessions': 'global',
   'app.setup_tokens': 'global',
   'app.instance_settings': 'global',

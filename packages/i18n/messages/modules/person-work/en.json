@@ -1,0 +1,33 @@
+{
+  "personWork": {
+    "title": "By person",
+    "choosePerson": "Choose person",
+    "openPerson": "View {name}’s tasks",
+    "summary": "{active} active · {done} done",
+    "pinned": "Pinned",
+    "assigneePin": "Pinned for the assignee",
+    "pinFor": "Pin for {name}",
+    "unpinFor": "Unpin for {name}",
+    "activePinsOnly": "Only active tasks can be pinned.",
+    "restore": "Restore",
+    "restoreNamed": "Restore {title}",
+    "restoring": "Restoring…",
+    "restored": "Card restored",
+    "restoreProjectFirst": "Restore the parent project before restoring this card.",
+    "unavailable": "This person is unavailable",
+    "chooseAnother": "Choose another member of your department.",
+    "empty": {
+      "todo": "No tasks waiting to start",
+      "in_progress": "No tasks in progress",
+      "done": "Completed tasks will appear here",
+      "deleted": "No deleted tasks"
+    },
+    "pinOptions": "Pin options",
+    "pinForMe": "Pin for me",
+    "unpinForMe": "Unpin for me",
+    "restoreProjectDialogTitle": "Restore the group project?",
+    "restoreProjectDialogBody": "Restore “{project}” and {count} cards deleted with it. Your selected card will also be restored if it was deleted separately. Other separately deleted cards stay deleted.",
+    "restoreProjectDialogDenied": "This card belongs to deleted project “{project}”. Ask its owner or your department head to restore the project first.",
+    "restoreProjectDialogConfirm": "Restore project and cards"
+  }
+}

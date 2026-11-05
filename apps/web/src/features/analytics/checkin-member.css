@@ -1,0 +1,23 @@
+.checkin-person-chooser {
+  width: 17rem;
+  max-width: 100%;
+  font-size: var(--text-small);
+}
+.checkin-person-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.checkin-unit-dot {
+  height: 0.65rem;
+  width: 0.65rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+@media (max-width: 767px) {
+  .checkin-person-chooser {
+    flex: 1;
+    min-width: 10rem;
+  }
+}

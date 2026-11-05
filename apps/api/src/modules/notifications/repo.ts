@@ -898,7 +898,7 @@ export async function reconcileCommentNotifications(
   const recipients = Array.isArray(payload['recipientIds'])
     ? payload['recipientIds'].filter((id): id is string => typeof id === 'string')
     : []
-  const link = `/work/card?id=${payload['cardId']}#comment-${payload['commentId']}`
+  const link = `/work/card?id=${payload['cardId']}#${typeof payload['checklistItemId'] === 'string' ? `checklist-${payload['checklistItemId']}-` : ''}comment-${payload['commentId']}`
   const current = await withContext(
     toRequestContext(departmentAuditCtx(), {
       departmentId,

@@ -1,7 +1,7 @@
 // Backs `test/integration/tenancy.registry.test.ts` and `migrate:verify` (design §2.1, item AC-10).
 import type { ClientBase } from 'pg'
 import { departmentTableDDL, dropTableDDL, userTableDDL } from '../../src/rls.js'
-import { checkTenancyCoverage, TENANCY } from '../../src/tenancy.js'
+import { checkTenancyCoverage, PRIVATE_SCHEDULER_ALLOWLIST, TENANCY } from '../../src/tenancy.js'
 import {
   columnExists,
   foreignKeyExists,
@@ -114,19 +114,41 @@ export async function runTenancyRegistryChecks(client: ClientBase): Promise<Chec
     }
 
     if (cls === 'user_owned') {
-      const hasColumn = await columnExists(client, schema, table, 'user_id')
-      push(`${qualified} has a user_id column`, hasColumn)
+      const scheduler = PRIVATE_SCHEDULER_ALLOWLIST[qualified]
+      const ownerColumn = scheduler?.ownerColumn ?? 'user_id'
+      const hasColumn = await columnExists(client, schema, table, ownerColumn)
+      push(`${qualified} has a ${ownerColumn} column`, hasColumn)
       const rls = await rlsState(client, schema, table)
       push(`${qualified} has RLS enabled and forced`, rls.enabled && rls.forced)
       const pol = await policies(client, schema, table)
       const scoped = pol.some((p) => REFERENCES_USER_FN(p.qual) || REFERENCES_USER_FN(p.withCheck))
       push(`${qualified} has a policy referencing app.current_user_id()`, scoped)
-      const mentionsRole = pol.some(
+      const rolePolicies = pol.filter(
         (p) => REFERENCES_ACTOR_ROLE_FN(p.qual) || REFERENCES_ACTOR_ROLE_FN(p.withCheck),
       )
+      const schedulerOnly =
+        !!scheduler &&
+        rolePolicies.length === 1 &&
+        rolePolicies.every(
+          (p) =>
+            p.policyname === scheduler.policy &&
+            p.cmd === scheduler.command &&
+            [p.qual, ...(scheduler.command === 'ALL' ? [p.withCheck] : [])].every(
+              (expr) =>
+                !!expr &&
+                REFERENCES_DEPARTMENT_FN(expr) &&
+                expr.includes('super_admin') &&
+                expr.includes('memberships') &&
+                expr.includes(ownerColumn) &&
+                expr.includes('active') &&
+                expr.includes('deleted_at IS NULL') &&
+                expr.includes('NOT app.is_view_as()') &&
+                !/\bhead\b/.test(expr),
+            ),
+        )
       push(
-        `${qualified} has no policy mentioning current_actor_role() (I-1: no head/admin exception)`,
-        !mentionsRole,
+        `${qualified} has no role exception beyond its explicit active-tenant scheduler allowlist (I-1)`,
+        rolePolicies.length === 0 || schedulerOnly,
       )
     }
 

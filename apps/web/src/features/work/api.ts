@@ -93,11 +93,14 @@ export const cardSchema = z.object({
    * a focus list is personal and nobody else's pin ever shows here. */
   focusPinned: z.boolean().optional(),
   focusPosition: z.number().int().nullable().optional(),
+  assigneePinned: z.boolean().optional(),
+  assigneePinPosition: z.number().int().nullable().optional(),
   assigneeUnavailable: z.boolean().optional(),
 })
 export type Card = z.infer<typeof cardSchema>
 
 export const checklistItemSchema = z.object({
+  commentCount: z.number().int().nonnegative().default(0),
   deletionProtected: z.boolean().optional(),
   textLocked: z.boolean().optional(),
   id: z.string(),
@@ -113,6 +116,9 @@ export const checklistItemSchema = z.object({
 export type ChecklistItem = z.infer<typeof checklistItemSchema>
 
 export const commentSchema = z.object({
+  checklistItemId: z.string().nullable().optional(),
+  canEdit: z.boolean().optional(),
+  canDelete: z.boolean().optional(),
   id: z.string(),
   cardId: z.string(),
   authorUserId: z.string(),
@@ -202,6 +208,7 @@ export function fetchBoard(): Promise<Board> {
 }
 
 export type CardListQuery = {
+  assigneeUserId?: string | undefined
   deleted?: boolean | undefined
   projectId?: string | undefined
   q?: string | undefined
@@ -212,6 +219,7 @@ export type CardListQuery = {
 
 export function fetchCards(query: CardListQuery = {}): Promise<z.infer<typeof cardListSchema>> {
   const params = new URLSearchParams()
+  if (query.assigneeUserId) params.set('assigneeUserId', query.assigneeUserId)
   if (query.deleted) params.set('deleted', 'true')
   if (query.projectId) params.set('projectId', query.projectId)
   if (query.q) params.set('q', query.q)
@@ -304,6 +312,10 @@ export function moveCard(
 
 export async function deleteCard(id: string, csrfToken: string): Promise<void> {
   await apiClient.delete(`/api/v1/cards/${encodeURIComponent(id)}`, csrfToken)
+}
+
+export async function restoreCard(id: string, csrfToken: string): Promise<void> {
+  await apiClient.post(`/api/v1/cards/${encodeURIComponent(id)}/restore`, {}, z.void(), csrfToken)
 }
 
 export async function undoDeleteCard(id: string, csrfToken: string): Promise<void> {

@@ -20,7 +20,7 @@ import type { Locale } from '../types.js'
 export const draftReplyInputSchema = z.object({
   locale: localeSchema,
   subject: z.object({
-    kind: z.enum(['card', 'event', 'inbox']),
+    kind: z.enum(['card', 'event', 'checklist', 'inbox']),
     id: idSchema,
     title: z.string().min(1).max(500),
   }),

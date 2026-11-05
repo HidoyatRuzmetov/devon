@@ -16,14 +16,20 @@ import { Button, Dialog, DialogContent, Input, toast } from '@devon/ui'
 import { replaceSearchParam, useSearchParams } from '../../../lib/router.js'
 import { useBoardQuery, useCreateCardMutation } from '../hooks.js'
 import { QuickAddBar } from './quick-add-bar.js'
+import { useDepartment, useMeQuery } from '../../../lib/session.js'
 
-export function NewCardDialog() {
+export function NewCardDialog({ defaultAssigneeUserId }: { defaultAssigneeUserId?: string } = {}) {
   const t = useT()
+  const { department } = useDepartment()
+  const viewerId = useMeQuery().data?.user.id ?? ''
+  const isHead = department?.role === 'head'
   const search = useSearchParams()
   const open = search.get('new') === '1'
   // The board screen already holds this query, so this shares its member list and request cache.
   const boardQuery = useBoardQuery()
-  const members = boardQuery.data?.members ?? []
+  const members = (boardQuery.data?.members ?? []).filter(
+    (member) => isHead || member.userId === viewerId,
+  )
   const create = useCreateCardMutation()
   const [title, setTitle] = React.useState('')
   const [assignee, setAssignee] = React.useState('')
@@ -31,10 +37,10 @@ export function NewCardDialog() {
   React.useEffect(() => {
     if (open) {
       setTitle('')
-      setAssignee('')
+      setAssignee(isHead ? (defaultAssigneeUserId ?? '') : viewerId)
       setDue('')
     }
-  }, [open])
+  }, [open, defaultAssigneeUserId, viewerId, isHead])
 
   function close(): void {
     replaceSearchParam('new', null)
@@ -53,7 +59,7 @@ export function NewCardDialog() {
                 create.mutate(
                   {
                     title: title.trim(),
-                    assigneeUserId: assignee || null,
+                    assigneeUserId: isHead ? assignee || null : viewerId,
                     dueAt: due ? new Date(`${due}T23:59:59+05:00`).toISOString() : null,
                   },
                   {
@@ -91,7 +97,7 @@ export function NewCardDialog() {
                     onChange={(e) => setAssignee(e.target.value)}
                     className="h-10 rounded-sm border border-border bg-card px-3 text-foreground"
                   >
-                    <option value="">{t('work.field.unassigned')}</option>
+                    {isHead ? <option value="">{t('work.field.unassigned')}</option> : null}
                     {members.map((member) => (
                       <option key={member.userId} value={member.userId}>
                         {member.givenName} {member.familyName}
@@ -128,6 +134,9 @@ export function NewCardDialog() {
               </p>
               <QuickAddBar
                 members={members}
+                defaultAssigneeUserId={
+                  isHead ? assignee || defaultAssigneeUserId || null : viewerId
+                }
                 onCreated={() => {
                   // One card, then out of the way: a composer that stayed open after creating would
                   // make "did that work?" the next question. The board behind it has already

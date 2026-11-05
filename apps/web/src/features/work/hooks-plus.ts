@@ -17,6 +17,7 @@ import * as api from './api-plus.js'
 import type { Board, Card, CardDetail } from './api.js'
 import { fetchDependencyCandidates } from './dependency-candidates.js'
 import { finishWorkWrite, patchCardInCaches, useCsrfToken } from './hooks.js'
+import { useMeQuery } from '../../lib/session.js'
 
 // Key prefixes. `['work', ...]` throughout, so `hooks.ts`'s own invalidations and these never
 // collide but can still be cleared together when a department switch invalidates everything.
@@ -238,12 +239,67 @@ export function useCreateCardFromTemplateMutation() {
 // --- A9 the focus list ("Diqqat markazi") -----------------------------------------------------------------
 
 export function useFocusListQuery(): UseQueryResult<api.FocusList, Error> {
-  return useQuery({ queryKey: FOCUS_KEY, queryFn: api.fetchFocusList })
+  return useQuery({ queryKey: FOCUS_KEY, queryFn: () => api.fetchFocusList() })
+}
+
+function cachedCard(qc: QueryClient, cardId: string): api.FocusPin['card'] | undefined {
+  const board = qc.getQueryData<Board>(BOARD_KEY)
+  return (
+    qc.getQueryData<CardDetail>(CARD_KEY(cardId)) ??
+    [...(board?.columns.flatMap((col) => col.cards) ?? []), ...(board?.unassigned ?? [])].find(
+      (card) => card.id === cardId,
+    ) ??
+    qc
+      .getQueriesData<Card[]>({ queryKey: CARDS_KEY })
+      .flatMap(([, cards]) => cards ?? [])
+      .find((card) => card.id === cardId) ??
+    qc.getQueryData<api.FocusList>(FOCUS_KEY)?.items.find((pin) => pin.cardId === cardId)?.card
+  )
+}
+
+/** The viewer's pin and the assignee's pin are the same row only for their own task. */
+function selfPinPatch(
+  qc: QueryClient,
+  cardId: string,
+  viewerId: string | undefined,
+  pinned: boolean,
+): Partial<Card> {
+  return {
+    focusPinned: pinned,
+    focusPosition: pinned ? -1 : null,
+    ...(viewerId && cachedCard(qc, cardId)?.assigneeUserId === viewerId
+      ? { assigneePinned: pinned, assigneePinPosition: pinned ? -1 : null }
+      : {}),
+  }
+}
+
+/** Head assignment of a pin uses the same domain operation and cache invalidation as self pinning. */
+export function usePersonPinMutation(userId: string) {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  const viewerId = useMeQuery().data?.user.id
+  return useMutation({
+    mutationKey: ['work', 'card-write', 'person-pin', userId],
+    scope: { id: `work-focus-${userId}` },
+    mutationFn: ({ cardId, pinned }: { cardId: string; pinned: boolean }) =>
+      pinned ? api.addFocusPin(cardId, csrf, userId) : api.removeFocusPin(cardId, csrf, userId),
+    onMutate: async ({ cardId, pinned }) => {
+      await qc.cancelQueries({ queryKey: ['work'] })
+      return patchCardInCaches(qc, cardId, {
+        assigneePinned: pinned,
+        assigneePinPosition: pinned ? -1 : null,
+        ...(userId === viewerId ? { focusPinned: pinned, focusPosition: pinned ? -1 : null } : {}),
+      })
+    },
+    onError: (_error, _variables, context) => context?.rollback(),
+    onSettled: () => finishWorkWrite(qc),
+  })
 }
 
 export function useAddFocusMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
+  const viewerId = useMeQuery().data?.user.id
   return useMutation({
     mutationKey: ['work', 'card-write', 'focus'],
     scope: { id: 'work-focus' },
@@ -252,12 +308,7 @@ export function useAddFocusMutation() {
       await qc.cancelQueries({ queryKey: ['work'] })
       const previous = qc.getQueryData<api.FocusList>(FOCUS_KEY)
       const already = previous?.items.some((pin) => pin.cardId === cardId) ?? false
-      const card =
-        qc.getQueryData<CardDetail>(CARD_KEY(cardId)) ??
-        [
-          ...(qc.getQueryData<Board>(BOARD_KEY)?.columns.flatMap((col) => col.cards) ?? []),
-          ...(qc.getQueryData<Board>(BOARD_KEY)?.unassigned ?? []),
-        ].find((item) => item.id === cardId)
+      const card = cachedCard(qc, cardId)
       if (previous && card && !already) {
         qc.setQueryData<api.FocusList>(FOCUS_KEY, {
           ...previous,
@@ -270,10 +321,7 @@ export function useAddFocusMutation() {
           ],
         })
       }
-      const context = patchCardInCaches(qc, cardId, {
-        focusPinned: true,
-        focusPosition: -1,
-      })
+      const context = patchCardInCaches(qc, cardId, selfPinPatch(qc, cardId, viewerId, true))
       return { ...context, already }
     },
     onError: (_err, cardId, context) => {
@@ -295,6 +343,7 @@ export function useAddFocusMutation() {
 export function useRemoveFocusMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
+  const viewerId = useMeQuery().data?.user.id
   return useMutation({
     mutationKey: ['work', 'card-write', 'focus'],
     scope: { id: 'work-focus' },
@@ -313,10 +362,7 @@ export function useRemoveFocusMutation() {
           : current,
       )
       return {
-        ...patchCardInCaches(qc, cardId, {
-          focusPinned: false,
-          focusPosition: null,
-        }),
+        ...patchCardInCaches(qc, cardId, selfPinPatch(qc, cardId, viewerId, false)),
         previous,
       }
     },
@@ -338,7 +384,7 @@ export function useRemoveFocusMutation() {
   })
 }
 
-/** Reordering is optimistic: the pin moves under the pointer and stays there, because a list of five
+/** Reordering is optimistic: the pin moves under the pointer and stays there, because a list
  * that snaps back after a round trip feels broken even when the write succeeded. */
 export function useReorderFocusMutation() {
   const qc = useQueryClient()

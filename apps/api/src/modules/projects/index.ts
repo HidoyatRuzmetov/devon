@@ -24,6 +24,7 @@ import {
   patchProjectBodySchema,
   projectListSchema,
   projectSchema,
+  projectRestoreDetailsSchema,
   templateListSchema,
   type ProjectDTO,
 } from './schemas.js'
@@ -95,6 +96,49 @@ const PROJECT_TEMPLATES = [
 
 const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(projectDiscussionRoutes)
+  app.get(
+    '/projects/:id/restore',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 200: projectRestoreDetailsSchema } },
+    },
+    async (req, reply) => {
+      const result = await lifecycle.projectRestoreDetails(
+        contextFromRequest(req),
+        req.actor,
+        req.params.id,
+      )
+      if (!result) return sendProblem(reply, 'not_found')
+      return reply.send(result)
+    },
+  )
+  app.post(
+    '/projects/:id/restore',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await lifecycle.restoreProject(
+        contextFromRequest(req),
+        req.actor,
+        req.params.id,
+      )
+      if (result !== 'ok') return sendProblem(reply, result)
+      return reply.code(204).send()
+    },
+  )
   app.setErrorHandler((error, _req, reply) => {
     if (error instanceof repo.InvalidProjectMembers || error instanceof repo.InvalidProjectTemplate)
       return sendProblem(reply, 'validation_failed')

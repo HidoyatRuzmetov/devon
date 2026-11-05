@@ -264,21 +264,33 @@ export async function prepareLiveContext(
     return withContext(ctx, async (tx) => {
       const subject = input['subject'] as { kind?: unknown; id?: unknown } | undefined
       const id = recordId(subject?.id)
-      if (subject?.kind !== 'card' && subject?.kind !== 'event')
-        throw new AiInputValidationError('A task or event thread is required')
+      if (subject?.kind !== 'card' && subject?.kind !== 'event' && subject?.kind !== 'checklist')
+        throw new AiInputValidationError('A task, checklist or event thread is required')
       const subjects =
-        subject.kind === 'card'
-          ? await tx.raw<{ title: string }>(
-              sql`select title from app.cards where id=${id} and department_id=${departmentId} and deleted_at is null`,
-            )
-          : await tx.raw<{ title: string }>(
-              sql`select title from app.events where id=${id} and department_id=${departmentId} and deleted_at is null`,
-            )
+        subject.kind === 'checklist'
+          ? await tx.raw<{
+              title: string
+            }>(sql`select c.title||' — '||i.text as title from app.card_checklist_items i
+              join app.cards c on c.id=i.card_id and c.department_id=i.department_id
+              where i.id=${id} and i.department_id=${departmentId} and i.deleted_at is null and c.deleted_at is null`)
+          : subject.kind === 'card'
+            ? await tx.raw<{ title: string }>(
+                sql`select title from app.cards where id=${id} and department_id=${departmentId} and deleted_at is null`,
+              )
+            : await tx.raw<{ title: string }>(
+                sql`select title from app.events where id=${id} and department_id=${departmentId} and deleted_at is null`,
+              )
       if (!subjects[0]) throw new AiInputValidationError('The referenced discussion is unavailable')
       const comments =
-        subject.kind === 'card'
+        subject.kind !== 'event'
           ? await tx.raw<{ id: string; author: string; text: string; createdAt: string }>(
-              sql`select cm.id,concat_ws(' ',u.given_name,u.family_name) as author,cm.body->>'text' as text,cm.created_at as "createdAt" from app.card_comments cm join app.users u on u.id=cm.author_user_id where cm.card_id=${id} and cm.department_id=${departmentId} and cm.deleted_at is null order by cm.created_at desc,cm.id desc limit 61`,
+              sql`select cm.id,concat_ws(' ',u.given_name,u.family_name) as author,
+                case when ${subject.kind === 'card'} and i.id is not null then '['||i.text||'] ' else '' end || (cm.body->>'text') as text,
+                cm.created_at as "createdAt" from app.card_comments cm join app.users u on u.id=cm.author_user_id
+                left join app.card_checklist_items i on i.id=cm.checklist_item_id
+                where ${subject.kind === 'checklist' ? sql`cm.checklist_item_id=${id}` : sql`cm.card_id=${id}`}
+                  and cm.department_id=${departmentId} and cm.deleted_at is null and (cm.checklist_item_id is null or i.deleted_at is null)
+                order by cm.created_at desc,cm.id desc limit 61`,
             )
           : await tx.raw<{ id: string; author: string; text: string; createdAt: string }>(
               sql`select cm.id,concat_ws(' ',u.given_name,u.family_name) as author,cm.body as text,cm.created_at as "createdAt" from app.event_comments cm join app.users u on u.id=cm.author_user_id where cm.event_id=${id} and cm.department_id=${departmentId} and cm.deleted_at is null order by cm.created_at desc,cm.id desc limit 61`,

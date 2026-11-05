@@ -1,0 +1,18 @@
+{
+  "birthday": {
+    "dateOfBirth": "Дата рождения",
+    "dateHint": "Для поздравлений и личного напоминания руководителю. В невисокосные годы 29 февраля отмечается 28 февраля.",
+    "title": "Поздравление с днём рождения",
+    "close": "Закрыть поздравление",
+    "dedication": "Несколько тёплых пожеланий от ваших коллег.",
+    "readNow": "Прочитать сейчас",
+    "replay": "Прочитать снова",
+    "thankYou": "Спасибо",
+    "eyebrow": "A LITTLE MOMENT, JUST FOR YOU",
+    "greeting": "Happy birthday,",
+    "signatureAccessible": "With warm wishes, from the team.",
+    "playMusic": "Включить музыку",
+    "muteMusic": "Выключить музыку",
+    "musicUnavailable": "Музыка недоступна — повторите попытку"
+  }
+}

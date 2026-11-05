@@ -5,6 +5,7 @@
 // pattern's own, additional implementation, called directly from `index.ts` instead of through a
 // second `app.<name>` decorator this small a module does not need.
 import { randomUUID } from 'node:crypto'
+import { getBirthDate, writeBirthDate } from '../birthdays/repo.js'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { schema, withContext, type Tx } from '@devon/db'
 import { professionalProfileSchema, type ProfessionalProfile } from '@devon/contracts'
@@ -24,16 +25,22 @@ const LOCKOUT_MINUTES = 15
 
 export class LoginTaken extends Error {}
 
+export function getAccountBirthDate(ctx: AuditCtx) {
+  return getBirthDate(toDbContext(ctx))
+}
+
 /** Identity changes are self-service, while role and department remain management operations. */
 export async function patchProfile(userId: string, patch: PatchProfileBody, ctx: AuditCtx) {
   try {
     return await withContext(toDbContext(ctx), async (tx) => {
+      const { dateOfBirth, ...identityPatch } = patch
       const rows = await tx.drizzle
         .update(schema.users)
-        .set({ ...patch, updatedAt: new Date() })
+        .set({ ...identityPatch, updatedAt: new Date() })
         .where(eq(schema.users.id, userId))
         .returning()
       if (!rows[0]) return null
+      if (dateOfBirth !== undefined) await writeBirthDate(tx, userId, dateOfBirth)
       if ('title' in patch)
         await tx.raw(
           sql`update app.users set professional_profile_version=professional_profile_version+1, professional_profile=jsonb_set(professional_profile,'{position}',to_jsonb(coalesce(${patch.title ?? null}::text,''))) where id=${userId}`,

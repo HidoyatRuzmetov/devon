@@ -1,17 +1,23 @@
-import type { CheckinBoard, CheckinMember } from '@devon/contracts'
+import type { CheckinMember } from '@devon/contracts'
 import { Avatar, Combobox, cn, initialsFromName } from '@devon/ui'
 import { useT } from '@devon/i18n'
 import { avatarUrl } from '../../lib/avatar.js'
 import { createUnitPalette, unitColorClass } from '../../lib/unit-palette.js'
+import './checkin-member.css'
 
-export function memberName(member: CheckinMember) {
+type ChooserMember = Pick<
+  CheckinMember,
+  'userId' | 'givenName' | 'familyName' | 'avatarKey' | 'unitId'
+>
+
+export function memberName(member: ChooserMember) {
   return `${member.givenName} ${member.familyName}`.trim()
 }
 export function MemberAvatar({
   member,
   large = false,
 }: {
-  member: CheckinMember
+  member: ChooserMember
   large?: boolean
 }) {
   return (
@@ -30,10 +36,12 @@ export function CheckinMemberChooser({
   data,
   selected,
   onChange,
+  label,
 }: {
-  data: CheckinBoard
-  selected: CheckinMember | undefined
+  data: { units: readonly { id: string }[]; members: readonly ChooserMember[] }
+  selected: ChooserMember | undefined
   onChange: (id: string) => void
+  label?: string
 }) {
   const t = useT(),
     palette = createUnitPalette(data.units)
@@ -53,7 +61,7 @@ export function CheckinMemberChooser({
   return (
     <Combobox
       className="checkin-person-chooser"
-      label={t('checkins.people')}
+      label={label ?? t('checkins.people')}
       placeholder={t('checkins.people')}
       searchPlaceholder={t('checkins.searchPeople')}
       emptyMessage={t('checkins.noMembers')}

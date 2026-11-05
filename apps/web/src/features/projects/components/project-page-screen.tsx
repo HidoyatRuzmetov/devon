@@ -6,7 +6,7 @@ import * as React from 'react'
 import { WORK_TITLE_MAX } from '@devon/contracts'
 import { can } from '@devon/contracts'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarClock, ChevronLeft } from 'lucide-react'
+import { CalendarClock, ChevronLeft, ListTodo } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Avatar,
@@ -43,7 +43,9 @@ import { CatchUpPreview, PlanPreview } from '../../ai/components/previews.js'
 import { parseFeatureOutput, type CatchUpOutput, type PlanSprintOutput } from '../../ai/outputs.js'
 import type { RunMeta } from '../../ai/types.js'
 import { fetchCards } from '../../work/api.js'
-import type { Card } from '../../work/api.js'
+import type { Card, ChecklistItem } from '../../work/api.js'
+import { useChecklistBatch } from '../../work/checklist-comments.js'
+import { TaskChecklist } from '../../work/components/task-checklist.js'
 import { openCardPeek, CardPeekDialog } from '../../work/components/card-peek-dialog.js'
 import { useCreateCardMutation, useMembers, usePatchCardMutation } from '../../work/hooks.js'
 import { fullName, isCardCompleted } from '../../work/lib/format.js'
@@ -74,52 +76,59 @@ function useProjectCards(projectId: string | undefined) {
   })
 }
 
-function TaskRow({ card }: { card: Card }) {
+function TaskRow({
+  card,
+  checklist,
+  loading,
+}: {
+  card: Card
+  checklist: ChecklistItem[] | undefined
+  loading: boolean
+}) {
   const t = useT()
-  const patchCard = usePatchCardMutation()
   return (
-    <div className="flex items-center gap-2 rounded-sm px-1 py-1 hover:bg-accent">
-      <Checkbox
-        disabled={card.canEdit === false || patchCard.isPending}
-        checked={isCardCompleted(card)}
-        onCheckedChange={(v) =>
-          patchCard.mutate({
-            id: card.id,
-            patch: { status: v === true ? 'done' : 'active' },
-          })
-        }
-        celebrate
-        size="sm"
-        aria-label={card.title}
-      />
-      <button
-        type="button"
-        onClick={() => openCardPeek(card.id)}
-        className={cn(
-          'flex-1 truncate text-left text-small text-foreground',
-          strikethroughClass(isCardCompleted(card)),
-        )}
-      >
-        {card.title}
-      </button>
-      {card.status === 'active' ? (
-        <span
+    <article
+      className="my-1 rounded-md border border-border/70 bg-card px-2.5 py-2 shadow-xs"
+      data-project-task={card.id}
+    >
+      <div className="flex min-h-7 items-center gap-2">
+        <ListTodo className="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={() => openCardPeek(card.id)}
           className={cn(
-            'shrink-0 rounded-full px-2 py-0.5 text-caption',
-            card.workStage === 'in_progress'
-              ? 'bg-info/10 text-info'
-              : 'bg-muted text-muted-foreground',
+            'min-w-0 flex-1 break-words text-left text-small font-semibold text-foreground hover:text-primary focus-visible:outline-2 focus-visible:outline-ring',
+            strikethroughClass(isCardCompleted(card)),
           )}
         >
-          {t(card.workStage === 'in_progress' ? 'portal.stage.in_progress' : 'portal.stage.todo')}
-        </span>
-      ) : null}
-      {card.checklistTotal > 0 ? (
-        <span className="text-caption tabular-nums text-muted-foreground">
-          {card.checklistDone}/{card.checklistTotal}
-        </span>
-      ) : null}
-    </div>
+          {card.title}
+        </button>
+        {card.status === 'active' ? (
+          <span
+            className={cn(
+              'shrink-0 rounded-full px-2 py-0.5 text-caption',
+              card.workStage === 'in_progress'
+                ? 'bg-info/10 text-info-text'
+                : 'bg-muted text-muted-foreground',
+            )}
+          >
+            {t(card.workStage === 'in_progress' ? 'portal.stage.in_progress' : 'portal.stage.todo')}
+          </span>
+        ) : null}
+        {card.status === 'done' ? (
+          <span className="shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-caption text-success-text">
+            {t('work.status.done')}
+          </span>
+        ) : null}
+      </div>
+      <TaskChecklist
+        cardId={card.id}
+        card={card}
+        items={checklist}
+        loading={loading}
+        defaultExpanded
+      />
+    </article>
   )
 }
 
@@ -132,6 +141,7 @@ export default function ProjectPageScreen() {
   const projectQuery = useProjectQuery(id)
   const members = useMembers()
   const cardsQuery = useProjectCards(projectQuery.data?.id)
+  const checklistsQuery = useChecklistBatch(cardsQuery.data?.map((card) => card.id) ?? [])
   const patchProject = usePatchProjectMutation(id ?? '')
   const patchCard = usePatchCardMutation()
   const addMilestone = useAddMilestoneMutation(id ?? '')
@@ -658,7 +668,14 @@ export default function ProjectPageScreen() {
                           !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
                       )
                       .map((card) => (
-                        <TaskRow key={card.id} card={card} />
+                        <TaskRow
+                          key={card.id}
+                          card={card}
+                          checklist={checklistsQuery.data?.filter(
+                            (item) => item.cardId === card.id,
+                          )}
+                          loading={checklistsQuery.isPending}
+                        />
                       ))}
                   </div>
                 ) : null}
@@ -694,7 +711,14 @@ export default function ProjectPageScreen() {
                         </span>
                       </div>
                       {memberTasks.map((card) => (
-                        <TaskRow key={card.id} card={card} />
+                        <TaskRow
+                          key={card.id}
+                          card={card}
+                          checklist={checklistsQuery.data?.filter(
+                            (item) => item.cardId === card.id,
+                          )}
+                          loading={checklistsQuery.isPending}
+                        />
                       ))}
                       {canEdit ? (
                         <SubjectiveAddRow

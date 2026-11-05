@@ -3,6 +3,38 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it.each(['work.card.commented', 'work.comment.updated', 'work.comment.deleted'])(
+    'refreshes checklist discussions and their counts on %s',
+    async (event) => {
+      const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } })
+      const keys = [
+        ['work', 'checklist-comments', 'card-a', 'item-a'],
+        ['work', 'checklist-batch', ['card-a']],
+        ['work', 'card', 'card-a'],
+        ['work', 'cards', 'person', 'department-a', 'viewer-a', 'member-a'],
+        ['checkins', 'department-a', 'current'],
+      ]
+      let latest = 'before comment change'
+      const read = vi.fn(async () => latest)
+      await Promise.all(keys.map((queryKey) => client.fetchQuery({ queryKey, queryFn: read })))
+      const stops = keys.map((queryKey) =>
+        new QueryObserver(client, { queryKey, queryFn: read }).subscribe(() => {}),
+      )
+      const bridge = createRealtimeInvalidator(client)
+      try {
+        latest = event
+        bridge.receive(event)
+        await vi.waitFor(() => {
+          for (const key of keys) expect(client.getQueryData(key)).toBe(event)
+        })
+        expect(read).toHaveBeenCalledTimes(keys.length * 2)
+      } finally {
+        bridge.dispose()
+        stops.forEach((stop) => stop())
+        client.clear()
+      }
+    },
+  )
   it.each([
     { event: 'checkins.entry.updated', keys: [['checkins', 'department-a', 'current']] },
     {

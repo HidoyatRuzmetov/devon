@@ -98,6 +98,33 @@ function client() {
 }
 
 describe('board move and focus cache', () => {
+  it('keeps assignee pins first in both views and preserves the chosen order within the pinned partition', () => {
+    const rows = [
+      { ...card('urgent-unpinned', 'a', 'a0'), priority: 'urgent' as const },
+      {
+        ...card('manual-first-pin', 'a', 'a1'),
+        assigneePinned: true,
+        priority: 'low' as const,
+        assigneePinPosition: 9,
+      },
+      {
+        ...card('priority-first-pin', 'a', 'a2'),
+        assigneePinned: true,
+        priority: 'high' as const,
+        assigneePinPosition: 0,
+      },
+    ]
+    expect(orderBoardCards(rows, 'manual').map((item) => item.id)).toEqual([
+      'manual-first-pin',
+      'priority-first-pin',
+      'urgent-unpinned',
+    ])
+    expect(orderBoardCards(rows, 'attention').map((item) => item.id)).toEqual([
+      'priority-first-pin',
+      'manual-first-pin',
+      'urgent-unpinned',
+    ])
+  })
   it('attention order puts focus, overdue, priority and nearest deadlines first without changing manual ranks', () => {
     const rows = [
       { ...card('ordinary', 'a', 'a0'), dueAt: '2026-11-01T00:00:00Z' },
@@ -115,9 +142,14 @@ describe('board move and focus cache', () => {
       'ordinary',
       'no-date',
     ])
-    expect(orderBoardCards(rows, 'manual').map((item) => item.id)).toEqual(
-      rows.map((item) => item.id),
-    )
+    expect(orderBoardCards(rows, 'manual').map((item) => item.id)).toEqual([
+      'focused',
+      'ordinary',
+      'high',
+      'soon',
+      'late',
+      'no-date',
+    ])
     expect(rows.map((item) => item.orderKey)).toEqual(['a0', 'a1', 'a2', 'a3', 'a4', 'a5'])
   })
   it('attention ties retain the current optimistic order, rather than stale server ranks', () => {

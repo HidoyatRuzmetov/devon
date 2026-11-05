@@ -136,8 +136,12 @@ export const focusPinSchema = z.object({
 export const focusListSchema = z.object({
   items: z.array(focusPinSchema),
 })
-export const addFocusBodySchema = z.object({ cardId: z.string().uuid() })
+export const addFocusBodySchema = z.object({
+  cardId: z.string().uuid(),
+  userId: z.string().uuid().optional(),
+})
 export const reorderFocusBodySchema = z.object({
+  userId: z.string().uuid().optional(),
   cardIds: z.array(z.string().uuid()),
 })
 

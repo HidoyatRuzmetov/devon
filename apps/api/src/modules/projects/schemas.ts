@@ -5,6 +5,13 @@ import { z } from 'zod'
 export const projectStatusSchema = z.enum(['planning', 'active', 'on_hold', 'done', 'archived'])
 const dateSchema = z.iso.date()
 
+export const projectRestoreDetailsSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  cardCount: z.number().int().nonnegative(),
+  canRestore: z.boolean(),
+})
+
 export const milestoneSchema = z.object({
   id: z.string(),
   title: z.string(),

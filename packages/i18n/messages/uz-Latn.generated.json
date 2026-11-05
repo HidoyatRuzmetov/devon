@@ -1541,6 +1541,22 @@
     "infected": "Faylda zararli dastur aniqlandi va u rad etildi.",
     "error": "Amalni bajarib boʻlmadi. Fayl turini tekshirib, qayta urinib koʻring."
   },
+  "birthday": {
+    "dateOfBirth": "Tug‘ilgan sana",
+    "dateHint": "Tabriklar va boshqarmangiz boshlig‘iga shaxsiy eslatma uchun. Kabisa bo‘lmagan yillarda 29-fevral 28-fevralda nishonlanadi.",
+    "title": "Siz uchun tug‘ilgan kun tabrigi",
+    "close": "Tabrikni yopish",
+    "dedication": "Siz bilan birga ishlaydigan hamkasblaringizdan ezgu tilaklar.",
+    "readNow": "Hozir o‘qish",
+    "replay": "Qayta o‘qish",
+    "thankYou": "Rahmat",
+    "eyebrow": "A LITTLE MOMENT, JUST FOR YOU",
+    "greeting": "Happy birthday,",
+    "signatureAccessible": "With warm wishes, from the team.",
+    "playMusic": "Musiqani yoqish",
+    "muteMusic": "Musiqani o‘chirish",
+    "musicUnavailable": "Musiqa mavjud emas — qayta urinib ko‘ring"
+  },
   "work": {
     "board": {
       "navigationLabel": "Doskada harakatlanish",
@@ -2394,6 +2410,30 @@
       "remaining": "{count} soniya qoldi",
       "finished": "Vaqt tugadi!"
     }
+  },
+  "checklistDiscussion": {
+    "taskDone": "Bu vazifa allaqachon bajarilgan. Natija qo‘shishdan oldin uni qayta oching.",
+    "actions": "Band amallari",
+    "actionsFor": "{item} uchun amallar",
+    "comments": "Izohlar",
+    "addItem": "Roʻyxat bandini qoʻshish",
+    "taskDiscussion": "Vazifa muhokamasi",
+    "addComment": "Izoh qoʻshish",
+    "viewComments": "Izohlar ({count})",
+    "threadFor": "{item} bandiga izohlar",
+    "collapse": "Izohlarni yigʻish",
+    "placeholder": "Ushbu band haqida izoh yozing…",
+    "send": "Izohni yuborish",
+    "sendHint": "Yuborish · Ctrl / ⌘ Enter",
+    "editComment": "Tahrirlash",
+    "edited": "tahrirlangan",
+    "deleteConfirm": "Ushbu izoh oʻchirilsinmi?",
+    "saveError": "Izoh saqlanmadi. Matn saqlab qolindi; uni boshqa foydalanuvchi tahrirlagan boʻlsa, maʼlumotlarni yangilang.",
+    "loadError": "Izohlarni yuklab boʻlmadi.",
+    "textLocked": "Ushbu matn kelishilgan reja bilan himoyalangan.",
+    "selectionLocked": "Kelishilgan natijani rejadan olib tashlab boʻlmaydi.",
+    "cycleClosed": "Ushbu hisobot davri yopilgan.",
+    "alreadyDone": "Ushbu band allaqachon bajarilgan."
   },
   "departments": {
     "title": "Boshqarmalar",
@@ -3903,6 +3943,37 @@
         "assign": "Vazifa berish"
       }
     }
+  },
+  "personWork": {
+    "title": "Xodimlar bo‘yicha",
+    "choosePerson": "Xodimni tanlash",
+    "openPerson": "{name} vazifalarini ko‘rish",
+    "summary": "{active} ta faol · {done} ta bajarilgan",
+    "pinned": "Mahkamlangan",
+    "assigneePin": "Ijrochi uchun mahkamlangan",
+    "pinFor": "{name} uchun mahkamlash",
+    "unpinFor": "{name} uchun mahkamlashni bekor qilish",
+    "activePinsOnly": "Faqat faol vazifalarni mahkamlash mumkin.",
+    "restore": "Tiklash",
+    "restoreNamed": "«{title}» vazifasini tiklash",
+    "restoring": "Tiklanmoqda…",
+    "restored": "Vazifa tiklandi",
+    "restoreProjectFirst": "Bu vazifani tiklashdan oldin uning loyihasini tiklang.",
+    "unavailable": "Bu xodim mavjud emas",
+    "chooseAnother": "Boshqarmangizdagi boshqa xodimni tanlang.",
+    "empty": {
+      "todo": "Boshlanishi kutilayotgan vazifalar yo‘q",
+      "in_progress": "Bajarilayotgan vazifalar yo‘q",
+      "done": "Bajarilgan vazifalar shu yerda ko‘rinadi",
+      "deleted": "O‘chirilgan vazifalar yo‘q"
+    },
+    "pinOptions": "Mahkamlash variantlari",
+    "pinForMe": "O‘zim uchun mahkamlash",
+    "unpinForMe": "O‘zim uchun mahkamlashni bekor qilish",
+    "restoreProjectDialogTitle": "Guruh loyihasi tiklansinmi?",
+    "restoreProjectDialogBody": "“{project}” loyihasi va u bilan birga o‘chirilgan {count} ta kartochka tiklanadi. Tanlangan kartochka alohida o‘chirilgan bo‘lsa ham tiklanadi. Alohida o‘chirilgan boshqa kartochkalar tiklanmaydi.",
+    "restoreProjectDialogDenied": "Bu kartochka o‘chirilgan “{project}” loyihasiga tegishli. Avval loyiha egasi yoki boshqarma boshlig‘idan loyihani tiklashni so‘rang.",
+    "restoreProjectDialogConfirm": "Loyiha va kartochkalarni tiklash"
   },
   "personal": {
     "save": {

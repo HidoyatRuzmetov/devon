@@ -1,0 +1,33 @@
+{
+  "personWork": {
+    "title": "Xodimlar bo‘yicha",
+    "choosePerson": "Xodimni tanlash",
+    "openPerson": "{name} vazifalarini ko‘rish",
+    "summary": "{active} ta faol · {done} ta bajarilgan",
+    "pinned": "Mahkamlangan",
+    "assigneePin": "Ijrochi uchun mahkamlangan",
+    "pinFor": "{name} uchun mahkamlash",
+    "unpinFor": "{name} uchun mahkamlashni bekor qilish",
+    "activePinsOnly": "Faqat faol vazifalarni mahkamlash mumkin.",
+    "restore": "Tiklash",
+    "restoreNamed": "«{title}» vazifasini tiklash",
+    "restoring": "Tiklanmoqda…",
+    "restored": "Vazifa tiklandi",
+    "restoreProjectFirst": "Bu vazifani tiklashdan oldin uning loyihasini tiklang.",
+    "unavailable": "Bu xodim mavjud emas",
+    "chooseAnother": "Boshqarmangizdagi boshqa xodimni tanlang.",
+    "empty": {
+      "todo": "Boshlanishi kutilayotgan vazifalar yo‘q",
+      "in_progress": "Bajarilayotgan vazifalar yo‘q",
+      "done": "Bajarilgan vazifalar shu yerda ko‘rinadi",
+      "deleted": "O‘chirilgan vazifalar yo‘q"
+    },
+    "pinOptions": "Mahkamlash variantlari",
+    "pinForMe": "O‘zim uchun mahkamlash",
+    "unpinForMe": "O‘zim uchun mahkamlashni bekor qilish",
+    "restoreProjectDialogTitle": "Guruh loyihasi tiklansinmi?",
+    "restoreProjectDialogBody": "“{project}” loyihasi va u bilan birga o‘chirilgan {count} ta kartochka tiklanadi. Tanlangan kartochka alohida o‘chirilgan bo‘lsa ham tiklanadi. Alohida o‘chirilgan boshqa kartochkalar tiklanmaydi.",
+    "restoreProjectDialogDenied": "Bu kartochka o‘chirilgan “{project}” loyihasiga tegishli. Avval loyiha egasi yoki boshqarma boshlig‘idan loyihani tiklashni so‘rang.",
+    "restoreProjectDialogConfirm": "Loyiha va kartochkalarni tiklash"
+  }
+}

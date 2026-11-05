@@ -144,23 +144,6 @@
   font: inherit;
   font-size: var(--text-small);
 }
-.checkin-person-chooser {
-  width: 17rem;
-  max-width: 100%;
-  font-size: var(--text-small);
-}
-.checkin-person-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-.checkin-unit-dot {
-  height: 0.65rem;
-  width: 0.65rem;
-  flex-shrink: 0;
-  border-radius: 50%;
-}
 .checkins-layout {
   height: var(--checkins-height);
   min-height: 0;
@@ -409,19 +392,9 @@ button.checkin-row-text:disabled {
   opacity: 0.85;
   cursor: default;
 }
-.checkin-row-tools {
-  display: flex;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.checkin-row-tools button,
 .checkin-choice {
   height: 1.75rem;
   width: 1.75rem;
-}
-.checkin-row:hover .checkin-row-tools,
-.checkin-row:focus-within .checkin-row-tools {
-  opacity: 1;
 }
 .checkin-inline-edit {
   display: flex;
@@ -576,30 +549,10 @@ button.checkin-row-text:disabled {
     opacity: 0;
   }
 }
-.checkin-action {
-  width: 2rem;
-  height: 2rem;
-}
-.checkin-action-edit {
-  background: color-mix(in oklab, var(--color-warning) 13%, transparent);
-  color: var(--color-warning-text);
-}
-.checkin-action-delete {
-  background: color-mix(in oklab, var(--color-destructive) 10%, transparent);
-  color: var(--color-destructive);
-}
-.checkin-action-add {
-  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
-}
 @media (max-width: 767px) {
   .checkins-choosers {
     width: 100%;
     gap: 0.5rem;
-  }
-  .checkin-person-chooser {
-    flex: 1;
-    min-width: 10rem;
   }
   .checkin-period-select {
     flex: 1;
@@ -649,11 +602,9 @@ button.checkin-row-text:disabled {
   }
 }
 @media (pointer: coarse) {
-  .checkin-row-tools,
   .checkin-title-edit {
     opacity: 1;
   }
-  .checkin-row-tools button,
   .checkin-choice,
   .checkin-timer button {
     width: 2.5rem;
@@ -667,7 +618,6 @@ button.checkin-row-text:disabled {
   .checkin-group,
   .checkin-task,
   .checkin-row,
-  .checkin-row-tools,
   .checkin-title-edit {
     transition: none;
   }
@@ -712,7 +662,6 @@ button.checkin-row-text:disabled {
     0 8px 24px #0000000d;
 }
 @media (hover: none) {
-  .checkin-row-tools,
   .checkin-title-edit {
     opacity: 1;
   }

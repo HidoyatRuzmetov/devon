@@ -13,6 +13,7 @@ import {
   personalCalendarUpdateSchema,
 } from '@devon/contracts'
 import { z } from 'zod'
+import { patchProfileBodySchema } from '../accounts/schemas.js'
 import {
   cancelEventBodySchema,
   carpoolBodySchema,
@@ -127,6 +128,13 @@ const endpoint = (
   href: () => href,
 })
 export const ACTIONS: Record<string, Action> = {
+  'profile.account': endpoint(
+    'PATCH',
+    '/accounts/profile',
+    body(patchProfileBodySchema),
+    'Update the current user’s account profile with explicitly supplied name/contact/position or dateOfBirth in YYYY-MM-DD form (null clears it). Never infer a birthday or change another account. Date of birth enables personal birthday greetings and department-head reminders.',
+    '/account',
+  ),
   'telegram.groupMessage': {
     ...endpoint(
       'POST',
@@ -142,10 +150,9 @@ export const ACTIONS: Record<string, Action> = {
       'POST',
       '/checkins/cycles/:id/members/:memberUserId/tasks',
       z.object({ id, memberUserId: id, body: checkinCreateTaskSchema }).strict(),
-      'HEAD ONLY: atomically create an individual task assigned to this person, its checklist and selected deliverables in this cycle. Use a stable operationId for retries. Allowed during locked check-in (additions only), never after checkout closes. Group tasks must be created through project actions.',
+      'Atomically create an individual task, its checklist and selected deliverables in this cycle. Members may create only for themselves; the head may choose any active member. Use a stable operationId for retries. Allowed during locked check-in (additions only), never after checkout closes. Group tasks must be created through project actions.',
       '/analytics',
     ),
-    headOnly: true,
   },
   'checkin.selection': endpoint(
     'PUT',
@@ -187,6 +194,12 @@ export const ACTIONS: Record<string, Action> = {
     target,
     'Restore a soft-deleted card if its undo window allows.',
   ),
+  'card.restore': endpoint(
+    'POST',
+    '/cards/:id/restore',
+    target,
+    'Restore a deleted task with ordinary owner/head authority, including after the short undo window. A task whose group project is deleted requires restoring the project first. Preserves task status and its checklist.',
+  ),
   'card.watch': endpoint(
     'POST',
     '/cards/:id/watchers',
@@ -197,19 +210,22 @@ export const ACTIONS: Record<string, Action> = {
     'POST',
     '/work/focus',
     body(addFocusBodySchema),
-    'Pin an existing card for the current user. There is no five-card limit.',
+    'Pin an existing card. Omit body.userId for the current user. Only the head may specify another member, and that card must be assigned to that member. Pins stay above unpinned tasks in automatic and manual views. There is no five-card limit.',
   ),
-  'pin.remove': endpoint(
-    'DELETE',
-    '/work/focus/:id',
-    target,
-    'Unpin a card for the current user, keeping the card.',
-  ),
+  'pin.remove': {
+    schema: z.object({ id, userId: id.optional() }).strict(),
+    method: 'DELETE',
+    path: (a) =>
+      `/work/focus/${a['id']}${a['userId'] ? `?userId=${encodeURIComponent(String(a['userId']))}` : ''}`,
+    href: () => '/work',
+    description:
+      'Unpin a card without deleting it. Omit userId for own pins; only the head can target another person’s assigned-task pins.',
+  },
   'pin.reorder': endpoint(
     'POST',
     '/work/focus/reorder',
     body(reorderFocusBodySchema),
-    'Reorder the current user’s pinned cards.',
+    'Reorder pinned cards. Omit body.userId for own pins; only the head can target another person’s assigned-task pins. Include every currently visible pin exactly once.',
   ),
   'dependency.add': endpoint(
     'POST',
@@ -294,6 +310,13 @@ export const ACTIONS: Record<string, Action> = {
     '/projects/:id/undo-delete',
     target,
     'Restore a soft-deleted project within the permitted undo window.',
+    '/projects',
+  ),
+  'project.restore': endpoint(
+    'POST',
+    '/projects/:id/restore',
+    target,
+    'Restore a deleted group project and every card deleted with it, preserving the group. Available to its owner or department head, without an undo deadline. Explain this wider recovery scope in the confirmation; earlier individually deleted cards stay deleted.',
     '/projects',
   ),
   'project.fromTemplate': endpoint(
@@ -511,6 +534,24 @@ export const ACTIONS: Record<string, Action> = {
     path: (a) => `/cards/${a['id']}/comments`,
     href: (a) => cardHref(String(a['id'])),
   },
+  'checklist.comment.create': endpoint(
+    'POST',
+    '/cards/:id/checklist/:itemId/comments',
+    z.object({ id, itemId: id, body: createCommentBodySchema }).strict(),
+    'Post a comment under one specific checklist item. id is the source card ID and itemId the source checklist ID, including from check-in. Comments remain available when checklist wording is locked; they never alter the agreed text. Mentions require explicit instruction.',
+  ),
+  'checklist.comment.update': endpoint(
+    'PATCH',
+    '/cards/:id/checklist/:itemId/comments/:commentId',
+    z.object({ id, itemId: id, commentId: id, body: patchCommentBodySchema }).strict(),
+    'Edit a checklist comment owned by the user or moderated by the head. Include its current editedAt and preserve unchanged mentions. Read checklistItemId in the source comment; do not edit a task-level comment through this action.',
+  ),
+  'checklist.comment.delete': endpoint(
+    'DELETE',
+    '/cards/:id/checklist/:itemId/comments/:commentId',
+    z.object({ id, itemId: id, commentId: id }).strict(),
+    'Delete one explicitly selected checklist comment with ordinary author/head permissions. This never deletes the checklist item or its check-in history.',
+  ),
   'comment.update': {
     schema: z.object({ id, commentId: id, body: patchCommentBodySchema }).strict(),
     description:

@@ -40,9 +40,8 @@ import {
   EyeOff,
   FolderKanban,
   Link2,
+  MessageCircle,
   Pencil,
-  Pin,
-  PinOff,
   Plus,
   SlidersHorizontal,
   Trash2,
@@ -87,7 +86,7 @@ import { ChecklistRow } from './checklist-row.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
 import type { CardPriority, MemberSummary } from '../api.js'
-import { useAddFocusMutation, useRemoveFocusMutation } from '../hooks-plus.js'
+import { CardPinButton } from './card-pin-button.js'
 import {
   nextDoneStatus,
   useAddChecklistItemMutation,
@@ -168,8 +167,6 @@ export function CardDetailContent({
   const unfurl = useUnfurlMutation()
   // A9 -- the focus list ("Diqqat markazi"). Personal, so it needs no `canEdit`: pinning somebody
   // else's card to *your own* five is exactly the point.
-  const addFocus = useAddFocusMutation()
-  const removeFocus = useRemoveFocusMutation()
 
   const assigneeFlash = useFieldFlash()
   const giverFlash = useFieldFlash()
@@ -543,21 +540,6 @@ export function CardDetailContent({
     translateAi.reset()
   }
 
-  const pinned = card.focusPinned === true
-  function togglePin(): void {
-    if (pinned) {
-      removeFocus.mutate(card!.id, {
-        onSuccess: () => toast.success(t('work.focus.unpinned')),
-        onError: () => toast.error(t('work.focus.failed')),
-      })
-      return
-    }
-    addFocus.mutate(card!.id, {
-      onSuccess: () => toast.success(t('work.focus.pinned')),
-      onError: () => toast.error(t('work.focus.failed')),
-    })
-  }
-
   const project = projects.find((candidate) => candidate.id === card.projectId)
 
   return (
@@ -581,18 +563,7 @@ export function CardDetailContent({
             </span>
           </span>
           <div className="flex shrink-0 items-center gap-1">
-            {card.status === 'active' ? (
-              <IconButton
-                aria-label={pinned ? t('work.focus.unpin') : t('work.focus.pin')}
-                tooltip={pinned ? t('work.focus.unpin') : t('work.focus.pin')}
-                aria-pressed={pinned}
-                disabled={addFocus.isPending || removeFocus.isPending}
-                className={pinned ? 'bg-accent text-primary' : 'text-muted-foreground'}
-                onClick={() => togglePin()}
-              >
-                {pinned ? <PinOff aria-hidden="true" /> : <Pin aria-hidden="true" />}
-              </IconButton>
-            ) : null}
+            {card.status === 'active' ? <CardPinButton card={card} members={members} /> : null}
             <IconButton
               aria-label={isWatching ? t('work.card.watching') : t('work.card.watch')}
               tooltip={isWatching ? t('work.card.watching') : t('work.card.watch')}
@@ -933,12 +904,18 @@ export function CardDetailContent({
         </Field>
 
         <Checklist card={card} canEdit={canEdit} />
-        <Comments
-          cardId={card.id}
-          cardTitle={card.title}
-          comments={card.comments}
-          members={members}
-        />
+        <DetailDisclosure
+          title={`${t('checklistDiscussion.taskDiscussion')}${card.comments.length ? ` (${card.comments.length})` : ''}`}
+          icon={MessageCircle}
+          defaultOpen={window.location.hash.startsWith('#comment-')}
+        >
+          <Comments
+            cardId={card.id}
+            cardTitle={card.title}
+            comments={card.comments}
+            members={members}
+          />
+        </DetailDisclosure>
 
         <CardAttachments cardId={card.id} canEdit={canEdit} />
         <DetailDisclosure title={t('cardRefinement.details')} icon={SlidersHorizontal}>
@@ -1327,6 +1304,8 @@ function Checklist({
   canEdit: boolean
   card: {
     id: string
+    status: 'active' | 'done'
+    doneAt: string | null
     assigneeUserId: string | null
     title: string
     description: { text: string } | null
@@ -1425,6 +1404,7 @@ function Checklist({
     return (
       <div key={item.id} className="flex flex-col gap-1">
         <ChecklistRow
+          cardId={card.id}
           item={item}
           canEdit={canEdit}
           onSave={(text) => patchItem.mutateAsync({ itemId: item.id, patch: { text } })}
@@ -1437,9 +1417,18 @@ function Checklist({
                   disabled:
                     !cycle ||
                     !!lock?.checkoutLockedAt ||
+                    (!entry && (!!item.doneAt || card.status !== 'active' || !!card.doneAt)) ||
                     changeCheckin.isPending ||
                     (!!lock?.checkinLockedAt &&
                       !!checkins.data?.entries.some((e) => e.checklistItemId === item.id)),
+                  reason:
+                    !cycle || lock?.checkoutLockedAt
+                      ? t('checklistDiscussion.cycleClosed')
+                      : !entry && (card.status !== 'active' || card.doneAt)
+                        ? t('checklistDiscussion.taskDone')
+                        : item.doneAt && !entry
+                          ? t('checklistDiscussion.alreadyDone')
+                          : t('checklistDiscussion.selectionLocked'),
                   toggle: () => {
                     const entry = checkins.data?.entries.find((e) => e.checklistItemId === item.id)
                     if (entry) changeCheckin.mutate({ kind: 'remove', id: entry.id })

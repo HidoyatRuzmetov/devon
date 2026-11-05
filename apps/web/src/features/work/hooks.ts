@@ -55,7 +55,7 @@ const VIEWS_KEY = ['work', 'views'] as const
 // board silently frozen on stale data.
 const BOARD_POLL_MS = 4000
 
-function useLiveRefetchInterval(): number | false {
+export function useLiveRefetchInterval(): number | false {
   const busy =
     useIsMutating({ mutationKey: ['work', 'card-write'] }) +
       useIsMutating({ mutationKey: ['work', 'checklist'] }) >
@@ -105,6 +105,7 @@ export function useCardQuery(id: string | null): UseQueryResult<CardDetail, Erro
     queryKey: CARD_KEY(id ?? ''),
     queryFn: () => api.fetchCard(id!),
     enabled: id !== null,
+    refetchInterval: useLiveRefetchInterval(),
   })
 }
 
@@ -374,6 +375,19 @@ export function useToggleWatcherMutation() {
   })
 }
 
+export function useRestoreCardMutation() {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (id: string) => api.restoreCard(id, csrf),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['work'] })
+      void qc.invalidateQueries({ queryKey: ['projects'] })
+      void qc.invalidateQueries({ queryKey: ['analytics'] })
+    },
+  })
+}
+
 export function useAddChecklistItemMutation(cardId: string) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
@@ -405,38 +419,57 @@ export function usePatchChecklistItemMutation(cardId: string) {
     onMutate: async ({ itemId, patch }) => {
       await qc.cancelQueries({ queryKey: ['work'] })
       const prev = qc.getQueryData<CardDetail>(CARD_KEY(cardId))
+      const batches = qc.getQueriesData<api.ChecklistItem[]>({
+        queryKey: ['work', 'checklist-batch'],
+      })
+      const updatedAt = new Date().toISOString()
+      const updateItem = (item: api.ChecklistItem) =>
+        item.id === itemId
+          ? {
+              ...item,
+              ...patch,
+              doneAt: patch.done === undefined ? item.doneAt : patch.done ? updatedAt : null,
+            }
+          : item
       if (prev) {
         qc.setQueryData<CardDetail>(CARD_KEY(cardId), {
           ...prev,
-          checklist: prev.checklist.map((it) =>
-            it.id === itemId
-              ? {
-                  ...it,
-                  ...patch,
-                  doneAt:
-                    patch.done === undefined
-                      ? it.doneAt
-                      : patch.done
-                        ? new Date().toISOString()
-                        : null,
-                }
-              : it,
-          ),
+          checklist: prev.checklist.map(updateItem),
         })
       }
-      return { previousItem: prev?.checklist.find((it) => it.id === itemId) }
+      for (const [key, items] of batches)
+        if (items?.some((item) => item.id === itemId))
+          qc.setQueryData<api.ChecklistItem[]>(key, (current) => current?.map(updateItem))
+      return {
+        previousItem:
+          prev?.checklist.find((it) => it.id === itemId) ??
+          batches.flatMap(([, items]) => items ?? []).find((item) => item.id === itemId),
+      }
     },
-    onError: (_err, { itemId }, context) => {
+    onError: (_err, { itemId, patch }, context) => {
       const previousItem = context?.previousItem
-      if (previousItem)
+      if (previousItem) {
+        const restored = Object.fromEntries(
+          Object.keys(patch).map((field) => {
+            const key = (field === 'done' ? 'doneAt' : field) as keyof api.ChecklistItem
+            return [key, previousItem[key]]
+          }),
+        )
+        const restore = (item: api.ChecklistItem) =>
+          item.id === itemId ? { ...item, ...restored } : item
         qc.setQueryData<CardDetail>(CARD_KEY(cardId), (current) =>
           current
             ? {
                 ...current,
-                checklist: current.checklist.map((it) => (it.id === itemId ? previousItem : it)),
+                checklist: current.checklist.map(restore),
               }
             : current,
         )
+        qc.setQueriesData<api.ChecklistItem[]>(
+          { queryKey: ['work', 'checklist-batch'] },
+          (current) => current?.map(restore),
+        )
+      }
       toast.error(t('toast.saveError'))
     },
     onSettled: () => finishWorkWrite(qc),

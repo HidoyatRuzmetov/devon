@@ -680,7 +680,7 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     recipients: ['mentioned', 'assignee', 'giver', 'watchers'],
     deepLink: (f) =>
       f.subjectId
-        ? `/work/card?id=${f.subjectId}${str(f, 'commentId') ? '#comment-' + str(f, 'commentId') : ''}`
+        ? `/work/card?id=${f.subjectId}${str(f, 'checklistItemId') ? '#checklist-' + str(f, 'checklistItemId') + '-comment-' + str(f, 'commentId') : str(f, 'commentId') ? '#comment-' + str(f, 'commentId') : ''}`
         : '/work',
     title: (f) =>
       withName(

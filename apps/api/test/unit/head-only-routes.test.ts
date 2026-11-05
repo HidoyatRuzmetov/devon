@@ -29,7 +29,6 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/ai/briefing/refresh',
   'POST /api/v1/cards/assign-many',
   'POST /api/v1/checkins/cycles/:id/lock',
-  'POST /api/v1/checkins/cycles/:id/members/:memberUserId/tasks',
   'POST /api/v1/telegram/group-message',
 ]
 

@@ -1,0 +1,26 @@
+{
+  "checklistDiscussion": {
+    "taskDone": "Bu vazifa allaqachon bajarilgan. Natija qo‘shishdan oldin uni qayta oching.",
+    "actions": "Band amallari",
+    "actionsFor": "{item} uchun amallar",
+    "comments": "Izohlar",
+    "addItem": "Roʻyxat bandini qoʻshish",
+    "taskDiscussion": "Vazifa muhokamasi",
+    "addComment": "Izoh qoʻshish",
+    "viewComments": "Izohlar ({count})",
+    "threadFor": "{item} bandiga izohlar",
+    "collapse": "Izohlarni yigʻish",
+    "placeholder": "Ushbu band haqida izoh yozing…",
+    "send": "Izohni yuborish",
+    "sendHint": "Yuborish · Ctrl / ⌘ Enter",
+    "editComment": "Tahrirlash",
+    "edited": "tahrirlangan",
+    "deleteConfirm": "Ushbu izoh oʻchirilsinmi?",
+    "saveError": "Izoh saqlanmadi. Matn saqlab qolindi; uni boshqa foydalanuvchi tahrirlagan boʻlsa, maʼlumotlarni yangilang.",
+    "loadError": "Izohlarni yuklab boʻlmadi.",
+    "textLocked": "Ushbu matn kelishilgan reja bilan himoyalangan.",
+    "selectionLocked": "Kelishilgan natijani rejadan olib tashlab boʻlmaydi.",
+    "cycleClosed": "Ushbu hisobot davri yopilgan.",
+    "alreadyDone": "Ushbu band allaqachon bajarilgan."
+  }
+}

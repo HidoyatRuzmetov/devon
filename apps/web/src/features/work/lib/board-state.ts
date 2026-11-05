@@ -7,13 +7,13 @@ export type BoardMove = {
   edge: 'before' | 'after'
 }
 
-/** Focus is personal: raising a pin changes this viewer's layout without rewriting shared ranks. */
+/** A person's pins lead their column; personal pins on other cards remain personal. */
 export function focusFirst(cards: readonly Card[]): Card[] {
   return [...cards].sort((a, b) => {
-    const focused = Number(b.focusPinned === true) - Number(a.focusPinned === true)
-    if (focused) return focused
-    if (a.focusPinned && b.focusPinned) return (a.focusPosition ?? 0) - (b.focusPosition ?? 0)
-    return 0
+    return (
+      Number(Boolean(b.assigneePinned || b.focusPinned)) -
+      Number(Boolean(a.assigneePinned || a.focusPinned))
+    )
   })
 }
 
@@ -32,7 +32,7 @@ export type BoardCardOrder = 'manual' | 'attention'
 /** A personal viewing order, never a rewrite of the shared drag ranks. Stable ties retain the
  * current array order, including in-flight optimistic moves. Focus pins remain first in both views. */
 export function orderBoardCards(cards: readonly Card[], order: BoardCardOrder): Card[] {
-  if (order === 'manual') return [...cards]
+  if (order === 'manual') return focusFirst(cards)
   const priority = { urgent: 4, high: 3, medium: 2, low: 1, none: 0 }
   return focusFirst(
     [...cards].sort((a, b) => {
@@ -72,6 +72,9 @@ export function moveCardOnBoard(board: Board, move: BoardMove): Board {
       ...card,
       assigneeUserId: move.toUserId,
       assigneeUnavailable: false,
+      ...(sourceUserId !== move.toUserId
+        ? { assigneePinned: false, assigneePinPosition: null }
+        : {}),
     })
     return focusFirst(remaining)
   }

@@ -150,6 +150,7 @@ export async function board(ctx: RequestContext, selectedId?: string): Promise<C
       e.card_priority as "cardPriority",c.version as "cardVersion",
       coalesce((${ctx.departmentRole === 'head'} or ${ctx.userId} in(c.assignee_user_id,c.giver_user_id,c.created_by_user_id)),false) as "canEditCard",
       app.checkin_item_locked(e.checklist_item_id) as "textLocked",
+      (select count(*)::int from app.card_comments cm where cm.checklist_item_id=e.checklist_item_id and cm.deleted_at is null) as "commentCount",
       (i.id is not null and i.deleted_at is null and c.id is not null and c.deleted_at is null) as "sourceAvailable"
       from app.checkin_entries e left join app.card_checklist_items i on i.id=e.checklist_item_id
       left join app.cards c on c.id=e.card_id where e.cycle_id=${selectedCycleId} and e.removed_at is null order by e.added_at,e.id`)
@@ -220,6 +221,7 @@ export async function addEntry(
       left join app.units unit on unit.id=ur.unit_id and unit.deleted_at is null
       left join app.projects p on p.id=c.project_id and p.deleted_at is null
       where i.id=${itemId} and i.deleted_at is null and c.deleted_at is null and m.deleted_at is null and m.status='active' and m.role<>'head'
+        and c.status='active' and c.done_at is null and (i.done_at is null or exists(select 1 from app.checkin_entries existing where existing.cycle_id=${cycleId} and existing.checklist_item_id=i.id and existing.removed_at is null))
       on conflict(cycle_id,checklist_item_id) do update set removed_at=null,updated_at=now(),version=app.checkin_entries.version+1,
         text=case when app.checkin_entries.removed_at is null then app.checkin_entries.text else excluded.text end,
         state=case when app.checkin_entries.removed_at is null then app.checkin_entries.state else excluded.state end
@@ -362,9 +364,11 @@ export async function candidates(
     return tx.raw<CheckinSourceCard>(sql`select c.id,c.title,c.priority,c.project_id as "projectId",p.title as "projectTitle",c.version,
       coalesce((${ctx.departmentRole === 'head'} or ${ctx.userId} in(c.assignee_user_id,c.giver_user_id,c.created_by_user_id)),false) as "canEdit",
       coalesce((select jsonb_agg(jsonb_build_object('id',i.id,'text',i.text,'doneAt',i.done_at,'parentItemId',i.parent_item_id,
-        'version',i.version,'textLocked',app.checkin_item_locked(i.id),'deletionProtected',
+        'version',i.version,'textLocked',app.checkin_item_locked(i.id),'commentCount',
+          (select count(*) from app.card_comments cm where cm.checklist_item_id=i.id and cm.deleted_at is null),'deletionProtected',
           exists(select 1 from app.checkin_entries e where e.checklist_item_id=i.id and e.removed_at is null))
         order by i.order_key,i.created_at,i.id) from app.card_checklist_items i where i.card_id=c.id and i.deleted_at is null
+          and (i.done_at is null or exists(select 1 from app.checkin_entries selected where selected.cycle_id=${cycleId} and selected.checklist_item_id=i.id and selected.removed_at is null))
           and coalesce(i.assignee_user_id,c.assignee_user_id)=${memberUserId}),'[]'::jsonb) as checklist
       from app.cards c left join app.projects p on p.id=c.project_id and p.deleted_at is null
       where c.deleted_at is null and c.status='active' and c.done_at is null and
@@ -413,6 +417,7 @@ export async function saveSelection(
       left join app.projects p on p.id=c.project_id and p.deleted_at is null
       where i.id=any(${sql.param(addIds)}::uuid[]) and m.user_id=${memberUserId} and i.deleted_at is null and c.deleted_at is null
         and c.status='active' and c.done_at is null
+        and (i.done_at is null or exists(select 1 from app.checkin_entries selected where selected.cycle_id=${cycleId} and selected.checklist_item_id=i.id and selected.removed_at is null))
         and m.deleted_at is null and m.status='active' and m.role<>'head'
       on conflict(cycle_id,checklist_item_id) do update set removed_at=null,updated_at=now(),version=app.checkin_entries.version+1,
         text=case when app.checkin_entries.removed_at is null then app.checkin_entries.text else excluded.text end,
@@ -435,8 +440,8 @@ export async function createIndividualTask(
   memberUserId: string,
   input: CheckinCreateTask,
 ) {
-  if (ctx.departmentRole !== 'head' || ctx.viewAs)
-    throw new CheckinError('forbidden', 'head_required')
+  if (ctx.viewAs || (ctx.departmentRole !== 'head' && ctx.userId !== memberUserId))
+    throw new CheckinError('forbidden', 'own_task_required')
   return withWorkOperation(
     ctx,
     input.operationId,

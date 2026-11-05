@@ -1,0 +1,18 @@
+{
+  "birthday": {
+    "dateOfBirth": "Туғилган сана",
+    "dateHint": "Табриклар ва бошқармангиз бошлиғига шахсий эслатма учун. Кабиса бўлмаган йилларда 29-февраль 28-февралда нишонланади.",
+    "title": "Сиз учун туғилган кун табриги",
+    "close": "Табрикни ёпиш",
+    "dedication": "Сиз билан бирга ишлайдиган ҳамкасбларингиздан эзгу тилаклар.",
+    "readNow": "Ҳозир ўқиш",
+    "replay": "Қайта ўқиш",
+    "thankYou": "Раҳмат",
+    "eyebrow": "A LITTLE MOMENT, JUST FOR YOU",
+    "greeting": "Happy birthday,",
+    "signatureAccessible": "With warm wishes, from the team.",
+    "playMusic": "Мусиқани ёқиш",
+    "muteMusic": "Мусиқани ўчириш",
+    "musicUnavailable": "Мусиқа мавжуд эмас — қайта уриниб кўринг"
+  }
+}

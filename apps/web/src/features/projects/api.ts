@@ -59,6 +59,27 @@ export function fetchProject(id: string): Promise<Project> {
   return apiClient.get(`/api/v1/projects/${encodeURIComponent(id)}`, projectSchema)
 }
 
+const projectRestoreDetailsSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  cardCount: z.number().int(),
+  canRestore: z.boolean(),
+})
+export function fetchProjectRestoreDetails(id: string) {
+  return apiClient.get(
+    `/api/v1/projects/${encodeURIComponent(id)}/restore`,
+    projectRestoreDetailsSchema,
+  )
+}
+export function restoreProject(id: string, csrfToken: string): Promise<void> {
+  return apiClient.post(
+    `/api/v1/projects/${encodeURIComponent(id)}/restore`,
+    {},
+    z.void(),
+    csrfToken,
+  )
+}
+
 export type CreateProjectInput = {
   title: string
   description?: string

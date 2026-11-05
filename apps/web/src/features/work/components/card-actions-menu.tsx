@@ -12,7 +12,9 @@ import {
 import { Check, Ellipsis, FolderPlus, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Card } from '../api.js'
 import { useDeleteCardMutation, usePatchCardMutation } from '../hooks.js'
-import { useAddFocusMutation, useRemoveFocusMutation } from '../hooks-plus.js'
+import { useAddFocusMutation, useRemoveFocusMutation, usePersonPinMutation } from '../hooks-plus.js'
+import { useDepartment, useMeQuery } from '../../../lib/session.js'
+import { useBoardQuery } from '../hooks.js'
 import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
 
 /** Avoid mounting mutation observers for every tile until its menu is first opened. */
@@ -38,13 +40,22 @@ export function CardActionsMenu({ card }: { card: Card }) {
 }
 function ActiveCardActions({ card }: { card: Card }) {
   const t = useT()
+  const { department } = useDepartment()
+  const viewerId = useMeQuery().data?.user.id
+  const assignee = useBoardQuery().data?.members.find(
+    (member) => member.userId === card.assigneeUserId,
+  )
+  const personPin = usePersonPinMutation(card.assigneeUserId ?? '')
+  const pinForOther =
+    department?.role === 'head' && card.assigneeUserId && card.assigneeUserId !== viewerId
   const patch = usePatchCardMutation(),
     remove = useDeleteCardMutation(),
     undo = useDeleteCardMutation(true)
   const pin = useAddFocusMutation(),
     unpin = useRemoveFocusMutation()
   const [convertOpen, setConvertOpen] = React.useState(false)
-  const busy = patch.isPending || remove.isPending || pin.isPending || unpin.isPending
+  const busy =
+    patch.isPending || remove.isPending || pin.isPending || unpin.isPending || personPin.isPending
   const denied = card.canEdit === false ? t('state.denied.body') : undefined
   function item(
     label: string,
@@ -83,8 +94,32 @@ function ActiveCardActions({ card }: { card: Card }) {
           </IconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+          {pinForOther
+            ? item(
+                t(card.assigneePinned ? 'personWork.unpinFor' : 'personWork.pinFor', {
+                  name: assignee
+                    ? `${assignee.givenName} ${assignee.familyName}`
+                    : t('work.field.assignee'),
+                }),
+                card.assigneePinned ? <PinOff className="size-4" /> : <Pin className="size-4" />,
+                () =>
+                  personPin.mutate(
+                    { cardId: card.id, pinned: !card.assigneePinned },
+                    { onError: () => toast.error(t('work.focus.failed')) },
+                  ),
+                card.status !== 'active' ? t('personWork.activePinsOnly') : undefined,
+              )
+            : null}
           {item(
-            t(card.focusPinned ? 'work.focus.unpin' : 'work.focus.pin'),
+            t(
+              pinForOther
+                ? card.focusPinned
+                  ? 'personWork.unpinForMe'
+                  : 'personWork.pinForMe'
+                : card.focusPinned
+                  ? 'work.focus.unpin'
+                  : 'work.focus.pin',
+            ),
             card.focusPinned ? <PinOff className="size-4" /> : <Pin className="size-4" />,
             () =>
               (card.focusPinned ? unpin : pin).mutate(card.id, {

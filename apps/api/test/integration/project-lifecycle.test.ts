@@ -71,6 +71,53 @@ async function createCard(projectId: string) {
 }
 
 describe('project lifecycle', () => {
+  it('restores old deleted groups only for the owner or head and preserves separately deleted cards', async () => {
+    const project = await createProject()
+    const live = await createCard(project.id)
+    const earlier = await createCard(project.id)
+    expect((await request(`/cards/${earlier.id}`, 'DELETE')).status).toBe(204)
+    expect((await request(`/projects/${project.id}`, 'DELETE', undefined, head)).status).toBe(204)
+    await superuserQuery(
+      db,
+      "update app.projects set deleted_at=now()-interval '40 days' where id=$1",
+      [project.id],
+    )
+    const path = `/projects/${project.id}/restore`
+    const cardConflict = await request(`/cards/${live.id}/restore`, 'POST', {})
+    expect(cardConflict.status).toBe(409)
+    expect(await cardConflict.json()).toMatchObject({
+      errors: [{ path: 'project', code: 'restore_project_first' }],
+    })
+    expect(await (await request(path)).json()).toMatchObject({
+      id: project.id,
+      title: project.title,
+      cardCount: 1,
+      canRestore: true,
+    })
+    expect(await (await request(path, 'GET', undefined, colleague)).json()).toMatchObject({
+      canRestore: false,
+    })
+    expect((await request(path, 'GET', undefined, foreign)).status).toBe(404)
+    expect((await request(path, 'POST', {}, foreign)).status).toBe(404)
+    expect((await request(path, 'POST', {}, colleague)).status).toBe(403)
+    expect(
+      (
+        await fetch(`${server.baseUrl}/api/v1${path}`, {
+          method: 'POST',
+          headers: { cookie: owner.cookie },
+        })
+      ).status,
+    ).toBe(403)
+    // Ownership, not who deleted the project, governs explicit recovery.
+    expect((await request(path, 'POST', {})).status).toBe(204)
+    expect((await request(`/projects/${project.id}`)).status).toBe(200)
+    expect((await request(`/cards/${live.id}`)).status).toBe(200)
+    expect((await request(`/cards/${earlier.id}`)).status).toBe(404)
+    expect((await request(path, 'POST', {})).status).toBe(204)
+    expect((await request(`/projects/${project.id}`, 'DELETE')).status).toBe(204)
+    expect((await request(path, 'POST', {}, head)).status).toBe(204)
+    expect((await request(`/cards/${earlier.id}`)).status).toBe(404)
+  })
   it('creates blank milestones even from starter template and persists a varied default colour', async () => {
     const projects = await Promise.all([createProject(), createProject(true)])
     for (const project of projects) {

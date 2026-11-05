@@ -43,6 +43,7 @@ import { parseQuickAdd, resolveQuickAddAssignee } from '../lib/quick-add.js'
 import type { MemberSummary } from '../api.js'
 import { fullName } from '../lib/format.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
+import { useDepartment, useMeQuery } from '../../../lib/session.js'
 
 function isoDateToUtcMidnight(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00.000Z`).toISOString()
@@ -80,14 +81,22 @@ export interface QuickAddBarProps {
 }
 
 export function QuickAddBar({
-  members,
-  defaultAssigneeUserId = null,
+  members: suppliedMembers,
+  defaultAssigneeUserId: suppliedAssignee = null,
   compact = false,
   aiComposer = false,
   initialValue = '',
   onCreated,
 }: QuickAddBarProps) {
   const t = useT()
+  const { department } = useDepartment()
+  const viewerId = useMeQuery().data?.user.id ?? null
+  const isHead = department?.role === 'head'
+  const members = React.useMemo(
+    () => suppliedMembers.filter((member) => isHead || member.userId === viewerId),
+    [suppliedMembers, isHead, viewerId],
+  )
+  const defaultAssigneeUserId = isHead ? suppliedAssignee : viewerId
   const locale = useLocale()
   const [value, setValue] = React.useState(initialValue)
   const composerRef = React.useRef<HTMLTextAreaElement>(null)
@@ -149,7 +158,7 @@ export function QuickAddBar({
     try {
       await createCard.mutateAsync({
         title,
-        assigneeUserId: resolvedAssignee?.userId ?? defaultAssigneeUserId,
+        assigneeUserId: isHead ? (resolvedAssignee?.userId ?? defaultAssigneeUserId) : viewerId,
         dueAt: parsed.dueAt ? parsed.dueAt.toISOString() : null,
       })
       setValue('')
@@ -220,7 +229,7 @@ export function QuickAddBar({
     try {
       await createCard.mutateAsync({
         title: aiResult.title,
-        assigneeUserId: aiResult.assigneeUserId ?? defaultAssigneeUserId,
+        assigneeUserId: isHead ? (aiResult.assigneeUserId ?? defaultAssigneeUserId) : viewerId,
         dueAt: aiResult.dueDate ? isoDateToUtcMidnight(aiResult.dueDate) : null,
         priority: aiResult.priority,
         // AI-AUDIT §5 fix 3: v1.0 rendered the labels in the preview and then wrote `labels: []`.

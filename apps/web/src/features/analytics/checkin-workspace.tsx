@@ -29,6 +29,7 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
     change = useCheckinChange()
   const reduced = useReducedMotion()
   const [creating, setCreating] = React.useState(false)
+  const canCreateTask = department?.role === 'head' || session.user?.id === member.userId
   const cycle = data.cycles.find((c) => c.id === data.selectedCycleId)!
   const entries = data.entries.filter((e) => e.memberUserId === member.userId)
   const lock = memberLock(data, cycle, member.userId),
@@ -63,7 +64,9 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
   }, [choices, selectionKey])
   const committed = new Set(entries.map((e) => e.checklistItemId))
   const eligible = new Set(
-    candidates.data?.flatMap((card) => card.checklist.map((item) => item.id)),
+    candidates.data?.flatMap((card) =>
+      card.checklist.filter((item) => !item.doneAt).map((item) => item.id),
+    ),
   )
   const selected = (id: string) =>
     (locked && committed.has(id)) || (choices[id] ?? committed.has(id))
@@ -179,7 +182,7 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
   const localDay = new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 10)
   return (
     <section className="checkin-person" aria-label={memberName(member)}>
-      {creating && !closed && department?.role === 'head' ? (
+      {creating && !closed && canCreateTask ? (
         <CheckinCreateTask
           cycleId={cycle.id}
           memberUserId={member.userId}
@@ -419,7 +422,7 @@ export function CheckinWorkspace({ data, member }: { data: CheckinBoard; member:
       </div>
       {!closed ? (
         <div className="checkin-selection-actions">
-          {department?.role === 'head' ? (
+          {canCreateTask ? (
             <Button
               variant="secondary"
               disabled={change.isPending}

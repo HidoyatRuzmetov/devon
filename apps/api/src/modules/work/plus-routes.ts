@@ -56,6 +56,28 @@ import { idParamsSchema } from './schemas.js'
 
 type ZodApp = Parameters<FastifyPluginAsyncZod>[0]
 
+async function pinMember(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  userId: string | undefined,
+  write: boolean,
+) {
+  const target = userId ?? req.actor!.userId
+  const departmentId = requireDepartmentId(req)!
+  if (write && target !== req.actor!.userId && !isHeadOf(req.actor, departmentId)) {
+    sendProblem(reply, 'forbidden')
+    return null
+  }
+  const members = await repo.filterDepartmentMemberIds(contextFromRequest(req), departmentId, [
+    target,
+  ])
+  if (!members.has(target)) {
+    sendProblem(reply, 'not_found')
+    return null
+  }
+  return target
+}
+
 /**
  * SPEC §7: every capability in this file is behind an Imkoniyatlar switch, off by default.
  *
@@ -577,16 +599,17 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       config: {
         permission: { action: 'read', subject: (r) => ownViewerSubject(r) },
       },
-      schema: { response: { 200: focusListSchema } },
+      schema: {
+        querystring: z.object({ userId: z.uuid().optional() }),
+        response: { 200: focusListSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return reply.send({ items: [] })
-      const items = await plus.getFocusList(
-        contextFromRequest(req),
-        departmentId,
-        req.actor!.userId,
-      )
+      const userId = await pinMember(req, reply, req.query.userId, false)
+      if (!userId) return
+      const items = await plus.getFocusList(contextFromRequest(req), departmentId, userId)
       return reply.send({ items })
     },
   )
@@ -603,10 +626,12 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return sendProblem(reply, 'not_found')
+      const userId = await pinMember(req, reply, req.body.userId, true)
+      if (!userId) return
       const result = await plus.addFocusPin(
         contextFromRequest(req),
         departmentId,
-        req.actor!.userId,
+        userId,
         req.body.cardId,
       )
       if (!result.ok) return sendProblem(reply, 'not_found')
@@ -622,6 +647,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       },
       schema: {
         params: z.object({ cardId: z.string().uuid() }),
+        querystring: z.object({ userId: z.uuid().optional() }),
         response: { 204: z.undefined() },
       },
     },
@@ -629,10 +655,12 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return sendProblem(reply, 'not_found')
+      const userId = await pinMember(req, reply, req.query.userId, true)
+      if (!userId) return
       const ok = await plus.removeFocusPin(
         contextFromRequest(req),
         departmentId,
-        req.actor!.userId,
+        userId,
         req.params.cardId,
       )
       if (!ok) return sendProblem(reply, 'not_found')
@@ -655,10 +683,12 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return sendProblem(reply, 'not_found')
+      const userId = await pinMember(req, reply, req.body.userId, true)
+      if (!userId) return
       const reordered = await plus.reorderFocusPins(
         contextFromRequest(req),
         departmentId,
-        req.actor!.userId,
+        userId,
         req.body.cardIds,
       )
       if (!reordered) return sendProblem(reply, 'conflict')

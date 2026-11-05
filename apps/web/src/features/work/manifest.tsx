@@ -11,6 +11,7 @@ const TableScreen = React.lazy(() => import('./components/table-screen.js'))
 const TimelineScreen = React.lazy(() => import('./components/timeline-screen.js'))
 const CalendarScreen = React.lazy(() => import('./components/calendar-screen.js'))
 const MineScreen = React.lazy(() => import('./components/mine-screen.js'))
+const PersonScreen = React.lazy(() => import('./components/person-screen.js'))
 const CardPageScreen = React.lazy(() => import('./components/card-page-screen.js'))
 // v1.1 SPEC §7: the three screens the work-plus features earned of their own.
 const TemplatesScreen = React.lazy(() => import('./components/templates-screen.js'))
@@ -22,6 +23,7 @@ const manifest: FeatureManifest = {
     { path: '/work/timeline', component: TimelineScreen, titleKey: 'work.view.timeline' },
     { path: '/work/calendar', component: CalendarScreen, titleKey: 'work.view.calendar' },
     { path: '/work/mine', component: MineScreen, titleKey: 'work.view.mine' },
+    { path: '/work/person', component: PersonScreen, titleKey: 'personWork.title' },
     { path: '/work/card', component: CardPageScreen, titleKey: 'work.card.peekTitle' },
     { path: '/work/templates', component: TemplatesScreen, titleKey: 'work.templates.title' },
   ],
@@ -42,6 +44,7 @@ const manifest: FeatureManifest = {
   ],
   commands: [
     { id: 'work.mine', labelKey: 'work.view.mine', path: '/work/mine' },
+    { id: 'work.person', labelKey: 'personWork.title', path: '/work/person' },
     { id: 'work.table', labelKey: 'work.view.table', path: '/work/table' },
     { id: 'work.templates', labelKey: 'work.templates.title', path: '/work/templates' },
   ],

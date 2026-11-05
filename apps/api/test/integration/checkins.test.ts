@@ -135,7 +135,16 @@ describe('check-in lifecycle and source integrity', () => {
       priority: 'urgent',
       checklist: ['First delivery', 'Second delivery'],
     }
-    expect((await request(f.session, path, 'POST', input)).status).toBe(403)
+    expect(
+      (
+        await request(
+          f.session,
+          `/checkins/cycles/${f.cycleId}/members/${f.head.id}/tasks`,
+          'POST',
+          input,
+        )
+      ).status,
+    ).toBe(403)
     const noCsrf = { ...f.headSession, headers: { ...f.headSession.headers } }
     delete noCsrf.headers['x-csrf-token']
     expect((await request(noCsrf, path, 'POST', input)).status).toBe(403)

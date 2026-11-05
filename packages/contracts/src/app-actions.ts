@@ -330,8 +330,9 @@ export const APP_ACTIONS = {
     action: 'update',
     subject: 'department_managed',
   },
-  /** A9: the focus list ("Diqqat markazi") is the viewer's own pinned five. */
+  /** Personal pins have no quantity cap. The head may also maintain assigned-task pins. */
   'work.focus.manage': { area: 'work', action: 'update', subject: 'personal' },
+  'work.pin.manageOther': { area: 'work', action: 'update', subject: 'department_managed' },
   /** 7.4: a reminder is something you set for yourself on a card you can see. */
   'work.reminder.manage': { area: 'work', action: 'update', subject: 'personal' },
 
@@ -347,6 +348,7 @@ export const APP_ACTIONS = {
     subject: 'department_child',
   },
   'projects.edit': { area: 'projects', action: 'update', subject: 'owned' },
+  'projects.restore': { area: 'projects', action: 'delete', subject: 'owned' },
   'projects.milestone.edit': {
     area: 'projects',
     action: 'update',

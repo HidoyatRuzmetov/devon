@@ -104,12 +104,15 @@ export const cardSchema = z.object({
    * specific by design -- a focus list is personal, and nobody else's pin ever shows here. */
   focusPinned: z.boolean().optional(),
   focusPosition: z.number().int().nullable().optional(),
+  assigneePinned: z.boolean().optional(),
+  assigneePinPosition: z.number().int().nullable().optional(),
   /** Board-only review state; original assignee id stays intact for history and ownership. */
   assigneeUnavailable: z.boolean().optional(),
 })
 export type CardDTO = z.infer<typeof cardSchema>
 
 export const checklistItemSchema = z.object({
+  commentCount: z.number().int().nonnegative().default(0),
   deletionProtected: z.boolean().optional(),
   textLocked: z.boolean().optional(),
   id: z.string().uuid(),
@@ -124,6 +127,9 @@ export const checklistItemSchema = z.object({
 })
 
 export const commentSchema = z.object({
+  checklistItemId: z.string().uuid().nullable().optional(),
+  canEdit: z.boolean().optional(),
+  canDelete: z.boolean().optional(),
   id: z.string().uuid(),
   cardId: z.string().uuid(),
   authorUserId: z.string().uuid(),
@@ -211,6 +217,7 @@ export const patchCardBodySchema = z
   .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' })
 
 export const cardListQuerySchema = z.object({
+  assigneeUserId: z.string().uuid().optional(),
   deleted: z
     .enum(['true', 'false'])
     .transform((value) => value === 'true')

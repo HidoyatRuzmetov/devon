@@ -1,3 +1,4 @@
+import { birthdayRoutes } from '../birthdays/routes.js'
 import { personnelRoutes } from './personnel-routes.js'
 // /api/v1/accounts/* -- EPIC-001 (registration, sessions/devices, 2FA, password reset/change, account
 // deletion, profile photo). `POST /register` and `POST /2fa/login-verify` are the two public routes
@@ -56,6 +57,7 @@ const AVATAR_VARIANT_MAX_BYTES = 2 * 1024 * 1024
 
 const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(personnelRoutes)
+  await app.register(birthdayRoutes)
   const ownAccount = (userId: string) => ({
     kind: 'own_account' as const,
     userId,
@@ -130,6 +132,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const user = req.actorUser!
       return reply.send({
+        dateOfBirth: await repo.getAccountBirthDate(auditCtx(req)),
         login: user.login,
         email: user.email,
         givenName: user.givenName,
@@ -154,6 +157,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         const user = await repo.patchProfile(req.actor!.userId, req.body, auditCtx(req))
         if (!user) return sendProblem(reply, 'not_found')
         return reply.send({
+          dateOfBirth: await repo.getAccountBirthDate(auditCtx(req)),
           login: user.login,
           email: user.email,
           givenName: user.givenName,

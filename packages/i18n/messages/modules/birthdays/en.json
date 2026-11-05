@@ -1,0 +1,18 @@
+{
+  "birthday": {
+    "dateOfBirth": "Date of birth",
+    "dateHint": "For birthday wishes and a private reminder to your department head. February 29 is celebrated on February 28 in non-leap years.",
+    "title": "A birthday wish for you",
+    "close": "Close birthday letter",
+    "dedication": "A few wishes from the people who share your days.",
+    "readNow": "Read now",
+    "replay": "Read it again",
+    "thankYou": "Thank you",
+    "eyebrow": "A LITTLE MOMENT, JUST FOR YOU",
+    "greeting": "Happy birthday,",
+    "signatureAccessible": "With warm wishes, from the team.",
+    "playMusic": "Play music",
+    "muteMusic": "Mute music",
+    "musicUnavailable": "Music unavailable — try again"
+  }
+}

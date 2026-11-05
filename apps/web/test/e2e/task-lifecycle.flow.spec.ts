@@ -89,11 +89,13 @@ for (const role of ['head', 'member'] as const) {
         'Second check',
         'Third check',
       ])
-      await checklist.getByRole('button', { name: 'Edit checklist item' }).nth(1).click()
+      await checklist.getByRole('button', { name: 'Actions for Second check' }).click()
+      await page.getByRole('menuitem', { name: 'Edit checklist item' }).click()
       await checklist.getByRole('textbox', { name: 'Edit checklist item' }).fill('Revised second')
       await checklist.getByRole('button', { name: 'Save item' }).click()
       await expect(checklist.getByRole('checkbox', { name: 'Revised second' })).toBeChecked()
-      await checklist.getByRole('button', { name: 'Delete', exact: true }).nth(2).click()
+      await checklist.getByRole('button', { name: 'Actions for Third check' }).click()
+      await page.getByRole('menuitem', { name: 'Delete', exact: true }).click()
       await expect(checklist.getByRole('checkbox')).toHaveCount(2)
       // Let the creation toast leave naturally so evidence does not obscure the row actions.
       await page.mouse.move(0, 0)

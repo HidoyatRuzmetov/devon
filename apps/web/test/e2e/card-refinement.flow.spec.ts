@@ -73,7 +73,9 @@ test('@flow card drawer keeps primary work reachable and board controls discover
       'false',
     )
     await expect(dialog.getByRole('region', { name: /^Checklist/ })).toBeInViewport()
+    await dialog.getByRole('button', { name: /^Card discussion/ }).click()
     const row = dialog.locator(`#comment-${comment.id}`)
+    await row.scrollIntoViewIfNeeded()
     await expect(row).toBeInViewport()
     const edit = row.getByRole('button', { name: 'Edit comment', exact: true })
     await expect(edit).toHaveText('')

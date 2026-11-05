@@ -1,0 +1,17 @@
+Birthday celebration asset pack
+
+Paper: original AI-generated artwork, built-in image_gen, 5 November 2026.
+Prompt: Create a refined top-down flat lay of warm ivory handmade paper, extremely subtle fiber grain, ample absolutely clean empty writing area occupying central 85 percent, gentle warm candlelit shadow along the outer corners, delicate antique gold botanical sprigs and tiny midnight navy ink accents only in extreme corners. No text, no letters, no handwriting, no pen, no people, no typography, no logos, no thick frame. Landscape 3:2 composition, premium understated stationery, real tactile paper, beautifully soft natural lighting. The central area must stay light ivory and evenly lit for dark text readability. This is a background texture, not a complete user interface.
+Source PNG retained. WebP is the optimized production asset.
+
+Stroke lettering: EMS Allure, SIL Open Font License 1.1 (OFL.txt).
+Created by Sheldon B. Michaels; SVG conversion by Windell H. Oskay.
+Derived from Allura by Rob Leuschke, TypeSETit.
+Source: https://gitlab.com/oskay/svg-fonts/-/blob/master/fonts/EMS/EMSAllure.svg
+Original SVG and its metadata retained. allure-glyphs.json contains the same glyph geometry and advances as data for deterministic pen-stroke animation; it is not an outline-font approximation.
+
+Wax seal and stamping tool: original AI-generated artwork created for WorkPortal with the built-in OpenAI image_gen tool on 5 November 2026. No external source image or third-party artwork was used. The original transparent PNGs are retained as wax-seal-source.png and wax-stamp-source.png. Optimized transparent production images are wax-seal.webp and wax-stamp.webp. Exact generation prompts and the non-destructive production encoding recipe are recorded in wax-assets.provenance.json. These original project assets may be used and modified with the WorkPortal application; no additional third-party attribution is required for them.
+
+The quill, gold/navy confetti, layout, ink animation and interactions are original project code. The quill tip uses the active stroke's getPointAtLength coordinate, with an explicit pause between lifted pen strokes. No remote font or image dependency is used at runtime.
+
+Music: happy-birthday-music-box.wav and .mp3 are an original 24-second instrumental synthesis created for this project, with no sampled or third-party recording. render-music-box.mjs contains the complete note score, bell partials, decay envelopes, stereo room echoes and PCM rendering recipe. The melody is Happy Birthday to You; WIPO documents its public-domain status: https://www.wipo.int/en/web/wipo-magazine/articles/in-the-courts-court-confirms-legal-status-of-happy-birthday-to-you-55581 . WAV is 44.1kHz 16-bit stereo, mastered at -9.9 dBFS peak; MP3 uses libmp3lame 128kbps. Playback is once per open letter, at half of the already quiet master volume, with a visible Play music/Mute music control. Explicit mute is remembered on this browser. Browser autoplay rejection is handled through native play() without claiming playback; explicit Play music retries after a gesture. Music fades out on close or hidden tab and does not restart when handwriting is replayed. Browser policy reference: https://developer.chrome.com/blog/autoplay . No external media request occurs.

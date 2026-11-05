@@ -121,7 +121,10 @@ function childSources(row: SnapshotRow): AiChatSource[] {
     sources.push({
       ref: `${prefix}:${child['id']}`,
       title: `${row.title} — ${name}`,
-      href: row.href,
+      href:
+        kind === 'comment' && typeof child['checklistItemId'] === 'string'
+          ? `${row.href}#checklist-${child['checklistItemId']}-comment-${child['id']}`
+          : row.href,
     })
   }
   for (const [field, kind, label] of [
@@ -177,22 +180,24 @@ export async function conversationContext(
         union all
         select 'project:'||p.id,p.title,'/projects/view?id='||p.id,
           jsonb_build_object('kind','project','status',p.status,'ownerId',p.owner_user_id,'members',p.members,
-            'targetDate',p.target_on,'milestones',p.milestones,'description',p.description,'version',p.version,
+            'targetDate',p.target_on,'milestones',p.milestones,'description',p.description,'version',p.version,'deletedAt',p.deleted_at,
             'comments',coalesce((select jsonb_agg(jsonb_build_object('id',cm.id,'authorId',cm.author_user_id,'body',cm.body,'mentions',cm.mentions,'editedAt',cm.edited_at,'createdAt',cm.created_at) order by cm.created_at,cm.id) from app.project_comments cm where cm.project_id=p.id and cm.deleted_at is null),'[]'::jsonb)),3
-        from app.projects p where p.department_id=${departmentId} and p.deleted_at is null
+        from app.projects p where p.department_id=${departmentId} and (p.deleted_at is null or ${ctx.departmentRole === 'head'} or p.owner_user_id=${ctx.userId})
         union all
         select 'card:'||c.id,c.title,'/work/card?id='||c.id,
           jsonb_build_object('kind','card','status',c.status,'stage',c.work_stage,'priority',c.priority,
             'assigneeId',c.assignee_user_id,'projectId',c.project_id,'dueAt',c.due_at,
-            'updatedAt',c.updated_at,'version',c.version,'description',c.description,'estimateMin',c.estimate_min,
+            'updatedAt',c.updated_at,'version',c.version,'description',c.description,'estimateMin',c.estimate_min,'deletedAt',c.deleted_at,
+            'focusPinned',exists(select 1 from app.focus_pins fp where fp.card_id=c.id and fp.user_id=${ctx.userId}),
+            'assigneePinned',exists(select 1 from app.focus_pins fp where fp.card_id=c.id and fp.user_id=c.assignee_user_id),
             'checklist',coalesce(i.items,'[]'::jsonb),'checklistDone',coalesce(i.done,0),'checklistTotal',coalesce(i.total,0),
-            'comments',coalesce((select jsonb_agg(jsonb_build_object('id',cm.id,'authorId',cm.author_user_id,'body',cm.body,'mentions',cm.mentions,'editedAt',cm.edited_at,'createdAt',cm.created_at)) from app.card_comments cm where cm.card_id=c.id and cm.deleted_at is null),'[]'::jsonb)),
+            'comments',coalesce((select jsonb_agg(jsonb_build_object('id',cm.id,'checklistItemId',cm.checklist_item_id,'authorId',cm.author_user_id,'body',cm.body,'mentions',cm.mentions,'editedAt',cm.edited_at,'createdAt',cm.created_at)) from app.card_comments cm where cm.card_id=c.id and cm.deleted_at is null),'[]'::jsonb)),
           case when c.status='active' then 4 else 7 end
         from app.cards c left join (
           select card_id,count(*)::int as total,count(*) filter(where done_at is not null)::int as done,
             jsonb_agg(jsonb_build_object('id',id,'text',text,'done',done_at is not null,'parentItemId',parent_item_id) order by order_key,id) as items
           from app.card_checklist_items where department_id=${departmentId} and deleted_at is null group by card_id
-        ) i on i.card_id=c.id where c.department_id=${departmentId} and c.deleted_at is null
+        ) i on i.card_id=c.id where c.department_id=${departmentId} and (c.deleted_at is null or ${ctx.departmentRole === 'head'} or ${ctx.userId} in(c.assignee_user_id,c.giver_user_id,c.created_by_user_id))
         union all
         select 'event:'||e.id,e.title,'/events?event='||e.id,
           jsonb_build_object('kind','event','startsAt',e.starts_at,'endsAt',e.ends_at,'status',e.status,'capacity',e.capacity,'rsvpDeadline',e.rsvp_deadline,'organizerId',e.organizer_user_id,'description',e.description,'place',e.place,'version',e.version,
@@ -292,6 +297,7 @@ export async function conversationContext(
   let bytes = 0
   const categoryBytes = new Map<string, number>()
   const categoryLimits: Record<string, number> = {
+    comment: 60000,
     unit: 6000,
     person: 10000,
     project: 50000,
@@ -317,7 +323,45 @@ export async function conversationContext(
     priority.has(row.ref) ||
     (typeof record(row.facts)?.['eventId'] === 'string' &&
       priority.has(`event:${record(row.facts)!['eventId']}`))
-  const allRows = [...people, ...rows, ...personal, ...logistics, ...checkins, ...controls]
+  // A discussion is independently requestable: requesting a comment ref must not depend on
+  // its whole parent card fitting into the model's content budget.
+  const discussions: SnapshotRow[] = rows.flatMap((row) => {
+    const facts = record(row.facts)
+    if (facts?.['kind'] !== 'card' || !Array.isArray(facts['comments'])) return []
+    return facts['comments'].flatMap((value) => {
+      const comment = record(value)
+      if (!comment || typeof comment['id'] !== 'string') return []
+      const itemId =
+        typeof comment['checklistItemId'] === 'string' ? comment['checklistItemId'] : null
+      const checklist = Array.isArray(facts['checklist']) ? facts['checklist'] : []
+      const item = checklist.map(record).find((item) => item?.['id'] === itemId)
+      const title =
+        item && typeof item['text'] === 'string' ? `${row.title} — ${item['text']}` : row.title
+      return [
+        {
+          ref: `comment:${comment['id']}`,
+          title,
+          href: `${row.href}#${itemId ? `checklist-${itemId}-` : ''}comment-${comment['id']}`,
+          facts: {
+            ...comment,
+            kind: itemId ? 'checklist_comment' : 'card_comment',
+            cardId: row.ref.slice(5),
+            deletedAt: facts['deletedAt'],
+          },
+          total: 0,
+        },
+      ]
+    })
+  })
+  const allRows = [
+    ...people,
+    ...rows,
+    ...personal,
+    ...logistics,
+    ...checkins,
+    ...controls,
+    ...discussions,
+  ]
   const ordered = [...allRows].sort(
     (a, b) =>
       Number(prioritized(b)) - Number(prioritized(a)) ||
@@ -333,6 +377,11 @@ export async function conversationContext(
       assigneeId: record(row.facts)?.['assigneeId'],
       projectId: record(row.facts)?.['projectId'],
       dueAt: record(row.facts)?.['dueAt'],
+      deletedAt: record(row.facts)?.['deletedAt'],
+      cardId: record(row.facts)?.['cardId'],
+      checklistItemId: record(row.facts)?.['checklistItemId'],
+      focusPinned: record(row.facts)?.['focusPinned'],
+      assigneePinned: record(row.facts)?.['assigneePinned'],
     },
   }))
   sources.push(...allRows.map(({ ref, title, href }) => ({ ref, title, href })))
@@ -376,7 +425,8 @@ export async function conversationContext(
     (personal[0]?.total ?? 0) +
     (logistics[0]?.total ?? 0) +
     (checkins[0]?.total ?? 0) +
-    (controls[0]?.total ?? 0)
+    (controls[0]?.total ?? 0) +
+    discussions.length
   const files = await conversationFiles(ctx, conversationId, attachmentIds)
   sources.push(...files.sources)
   sources.push({

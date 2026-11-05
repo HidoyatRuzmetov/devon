@@ -170,20 +170,26 @@ describe('authoritative board ordering and personal focus', () => {
     )
   })
 
-  it('raises the newest focus pin immediately in its viewer board/list and leaves colleague ranks untouched', async () => {
+  it('keeps assigned-task pins above unpinned cards for everyone without replacing the chosen manual order', async () => {
     const items = [await card(headId), await card(headId), await card(headId)]
     expect((await request('/work/focus', 'POST', { cardId: items[1]!.id })).status).toBe(204)
     expect((await request('/work/focus', 'POST', { cardId: items[2]!.id })).status).toBe(204)
     const focus = (await (await request('/work/focus')).json()) as { items: { cardId: string }[] }
     expect(focus.items.map((pin) => pin.cardId)).toEqual([items[2]!.id, items[1]!.id])
-    expect(ids(await board(), headId).slice(0, 2)).toEqual([items[2]!.id, items[1]!.id])
+    expect(ids(await board(), headId).slice(0, 2)).toEqual([items[1]!.id, items[2]!.id])
     const colleagueBoard = await board(member)
     const same = colleagueBoard.columns
       .find((col) => col.member.userId === headId)!
       .cards.filter((item) => items.some((original) => original.id === item.id))
-    expect(same.map((item) => item.id)).toEqual(items.map((item) => item.id))
+    expect(same.map((item) => item.id)).toEqual([items[1]!.id, items[2]!.id, items[0]!.id])
     expect(same.every((item) => !item.focusPinned)).toBe(true)
-    expect(same.map((item) => item.orderKey)).toEqual(items.map((item) => item.orderKey))
+    expect(same.map((item) => item.orderKey)).toEqual(
+      same.map((item) => items.find((original) => original.id === item.id)!.orderKey),
+    )
+    expect(same.filter((item) => item.assigneePinned).map((item) => item.id)).toEqual([
+      items[1]!.id,
+      items[2]!.id,
+    ])
     expect(
       (await request('/work/focus/reorder', 'POST', { cardIds: [items[1]!.id, items[2]!.id] }))
         .status,

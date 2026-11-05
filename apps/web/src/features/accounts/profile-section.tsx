@@ -10,7 +10,15 @@ import { useMeQuery } from '../../lib/session.js'
 import type { Me } from '../../lib/api-schemas.js'
 import { fetchProfile, saveProfile, type AccountProfile } from './api.js'
 
-const PROFILE_FIELDS = ['givenName', 'familyName', 'patronymic', 'title', 'login', 'email'] as const
+const PROFILE_FIELDS = [
+  'givenName',
+  'familyName',
+  'patronymic',
+  'title',
+  'login',
+  'email',
+  'dateOfBirth',
+] as const
 
 /** Refresh each untouched field without erasing typing in another one. */
 function refreshDraft(current: AccountProfile, baseline: AccountProfile, updated: AccountProfile) {
@@ -91,6 +99,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
       setValues(next)
       qc.setQueryData(['accounts', 'profile'], acknowledged)
       void qc.invalidateQueries({ queryKey: ['accounts', 'profile'] })
+      if ('dateOfBirth' in patch) void qc.invalidateQueries({ queryKey: ['birthday'] })
       void qc.invalidateQueries({ queryKey: ['accounts', 'professional-profile'] })
       void qc.invalidateQueries({ queryKey: ['me'] })
       void qc.invalidateQueries({ queryKey: ['people'] })
@@ -125,7 +134,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
         {PROFILE_FIELDS.map((field) => (
           <label key={field} className="flex flex-col gap-1.5 text-small">
             <span>
-              {t(`profileEdit.${field}`)}
+              {t(field === 'dateOfBirth' ? 'birthday.dateOfBirth' : `profileEdit.${field}`)}
               {['givenName', 'familyName', 'login'].includes(field) ? (
                 <span className="ml-1 text-destructive" aria-hidden="true">
                   *
@@ -152,17 +161,25 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
             ) : (
               <Input
                 value={values[field] ?? ''}
-                type={field === 'email' ? 'email' : 'text'}
+                type={field === 'dateOfBirth' ? 'date' : field === 'email' ? 'email' : 'text'}
+                {...(field === 'dateOfBirth'
+                  ? {
+                      min: '1900-01-01',
+                      max: new Date(Date.now() + 18_000_000).toISOString().slice(0, 10),
+                    }
+                  : {})}
                 autoComplete={
-                  field === 'givenName'
-                    ? 'given-name'
-                    : field === 'familyName'
-                      ? 'family-name'
-                      : field === 'patronymic'
-                        ? 'additional-name'
-                        : field === 'email'
-                          ? 'email'
-                          : 'username'
+                  field === 'dateOfBirth'
+                    ? 'bday'
+                    : field === 'givenName'
+                      ? 'given-name'
+                      : field === 'familyName'
+                        ? 'family-name'
+                        : field === 'patronymic'
+                          ? 'additional-name'
+                          : field === 'email'
+                            ? 'email'
+                            : 'username'
                 }
                 required={['givenName', 'familyName', 'login'].includes(field)}
                 maxLength={field === 'email' ? 256 : field === 'login' ? 64 : 100}
@@ -172,7 +189,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                     ...values,
                     [field]:
                       e.target.value ||
-                      (['email', 'title', 'patronymic'].includes(field) ? null : ''),
+                      (['email', 'title', 'patronymic', 'dateOfBirth'].includes(field) ? null : ''),
                   }
                   currentValues.current = next
                   setValues(next)
@@ -183,6 +200,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
         ))}
       </div>
       <p className="text-caption text-muted-foreground">{t('profileEdit.loginHint')}</p>
+      <p className="text-caption text-muted-foreground">{t('birthday.dateHint')}</p>
       {save.isError ? (
         <p role="alert" className="text-small text-destructive">
           {t(

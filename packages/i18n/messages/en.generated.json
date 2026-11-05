@@ -1541,6 +1541,22 @@
     "infected": "The file failed the malware check and was rejected.",
     "error": "Could not complete the file action. Check the file type and try again."
   },
+  "birthday": {
+    "dateOfBirth": "Date of birth",
+    "dateHint": "For birthday wishes and a private reminder to your department head. February 29 is celebrated on February 28 in non-leap years.",
+    "title": "A birthday wish for you",
+    "close": "Close birthday letter",
+    "dedication": "A few wishes from the people who share your days.",
+    "readNow": "Read now",
+    "replay": "Read it again",
+    "thankYou": "Thank you",
+    "eyebrow": "A LITTLE MOMENT, JUST FOR YOU",
+    "greeting": "Happy birthday,",
+    "signatureAccessible": "With warm wishes, from the team.",
+    "playMusic": "Play music",
+    "muteMusic": "Mute music",
+    "musicUnavailable": "Music unavailable — try again"
+  },
   "work": {
     "board": {
       "navigationLabel": "Board navigation",
@@ -2394,6 +2410,30 @@
       "remaining": "{count} seconds remaining",
       "finished": "Time’s up!"
     }
+  },
+  "checklistDiscussion": {
+    "taskDone": "This card is already done. Reopen it before adding a deliverable.",
+    "actions": "Checklist actions",
+    "actionsFor": "Actions for {item}",
+    "comments": "Comments",
+    "addItem": "Add checklist item",
+    "taskDiscussion": "Card discussion",
+    "addComment": "Add a comment",
+    "viewComments": "Comments ({count})",
+    "threadFor": "Comments on {item}",
+    "collapse": "Collapse comments",
+    "placeholder": "Write a comment about this item…",
+    "send": "Send comment",
+    "sendHint": "Send comment · Ctrl / ⌘ Enter",
+    "editComment": "Edit",
+    "edited": "edited",
+    "deleteConfirm": "Delete this comment?",
+    "saveError": "Could not save this comment. Your text is kept; refresh if someone has edited it.",
+    "loadError": "Comments could not be loaded.",
+    "textLocked": "This wording is protected by an agreed check-in.",
+    "selectionLocked": "An agreed deliverable cannot be removed.",
+    "cycleClosed": "This check-out period is closed.",
+    "alreadyDone": "This checklist item is already done."
   },
   "departments": {
     "title": "Departments",
@@ -3903,6 +3943,37 @@
         "assign": "Give a card"
       }
     }
+  },
+  "personWork": {
+    "title": "By person",
+    "choosePerson": "Choose person",
+    "openPerson": "View {name}’s tasks",
+    "summary": "{active} active · {done} done",
+    "pinned": "Pinned",
+    "assigneePin": "Pinned for the assignee",
+    "pinFor": "Pin for {name}",
+    "unpinFor": "Unpin for {name}",
+    "activePinsOnly": "Only active tasks can be pinned.",
+    "restore": "Restore",
+    "restoreNamed": "Restore {title}",
+    "restoring": "Restoring…",
+    "restored": "Card restored",
+    "restoreProjectFirst": "Restore the parent project before restoring this card.",
+    "unavailable": "This person is unavailable",
+    "chooseAnother": "Choose another member of your department.",
+    "empty": {
+      "todo": "No tasks waiting to start",
+      "in_progress": "No tasks in progress",
+      "done": "Completed tasks will appear here",
+      "deleted": "No deleted tasks"
+    },
+    "pinOptions": "Pin options",
+    "pinForMe": "Pin for me",
+    "unpinForMe": "Unpin for me",
+    "restoreProjectDialogTitle": "Restore the group project?",
+    "restoreProjectDialogBody": "Restore “{project}” and {count} cards deleted with it. Your selected card will also be restored if it was deleted separately. Other separately deleted cards stay deleted.",
+    "restoreProjectDialogDenied": "This card belongs to deleted project “{project}”. Ask its owner or your department head to restore the project first.",
+    "restoreProjectDialogConfirm": "Restore project and cards"
   },
   "personal": {
     "save": {

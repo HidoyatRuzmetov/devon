@@ -19,12 +19,7 @@ import { createCardInTx } from './repo.js'
 import type { CardRef } from './schemas-plus.js'
 import type { CardDTO } from './schemas.js'
 
-/** A9: five pinned cards. More than five is a to-do list, not a focus list -- CLICKUP-RESEARCH §9's
- * own finding about "Personal Priorities". */
-
-/** A card that is not yours cannot be pinned by you, and a done card falls off the list on its own;
- * both are handled where they happen rather than by a database constraint that could not explain
- * itself. */
+/** Pins remain personal; the head can maintain a colleague's assigned-task pins. */
 type CardRefRow = {
   id: string
   title: string
@@ -688,7 +683,9 @@ export async function createFromCardTemplate(
     if (consumed[0]?.payload == null) return { ok: false as const, reason: 'not_found' as const }
     const parsed = cardTemplatePayloadSchema.safeParse(consumed[0].payload)
     if (!parsed.success)
-      throw Object.assign(new Error('Template payload is invalid'), { statusCode: 422 })
+      throw Object.assign(new Error('Template payload is invalid'), {
+        statusCode: 422,
+      })
     const payload = parsed.data
     const card = await createCardInTx(ctx, tx, {
       departmentId,
@@ -741,6 +738,7 @@ export async function getFocusList(
           from app.focus_pins f
           join app.cards c on c.id = f.card_id and c.deleted_at is null
           where f.department_id = ${departmentId} and f.user_id = ${userId}
+            and (${ctx.userId === userId} or c.assignee_user_id=${userId})
           order by f.position asc, f.created_at asc, f.id asc`,
     )
     return rows.map((r) => ({
@@ -752,6 +750,12 @@ export async function getFocusList(
 }
 
 export type AddFocusResult = { ok: true } | { ok: false; reason: 'not_found' }
+
+async function invalidatePinContext(tx: Tx, departmentId: string) {
+  // Pins are joined into AI card context; unlike cards, this table has no indexing trigger.
+  await tx.raw(sql`insert into app.ai_context_revisions(department_id,revision) values(${departmentId},1)
+    on conflict(department_id) do update set revision=app.ai_context_revisions.revision+1`)
+}
 
 export async function addFocusPin(
   ctx: RequestContext,
@@ -765,10 +769,15 @@ export async function addFocusPin(
     )
     if (!(await cardVisible(tx, departmentId, cardId)))
       return { ok: false as const, reason: 'not_found' as const }
-    // A deleted card must not occupy an invisible slot forever.
-    await tx.raw(sql`delete from app.focus_pins f using app.cards c
-      where f.card_id = c.id and f.department_id = ${departmentId} and f.user_id = ${userId}
-        and c.deleted_at is not null`)
+    if (userId !== ctx.userId) {
+      if (ctx.departmentRole !== 'head' || ctx.viewAs)
+        return { ok: false as const, reason: 'not_found' as const }
+      const assigned = await tx.raw(sql`select c.id from app.cards c
+        join app.memberships m on m.user_id=${userId} and m.department_id=c.department_id and m.status='active' and m.deleted_at is null
+        where c.id=${cardId} and c.assignee_user_id=${userId} for share of c,m`)
+      if (!assigned.length) return { ok: false as const, reason: 'not_found' as const }
+    }
+    // Deleted cards are hidden by reads, but their personal pins survive restoration.
     const existing = await tx.raw<{ cnt: number; already: number }>(
       sql`select count(*) as cnt, count(*) filter (where card_id = ${cardId}) as already
           from app.focus_pins where department_id = ${departmentId} and user_id = ${userId}`,
@@ -782,6 +791,7 @@ export async function addFocusPin(
           values (${randomUUID()}, ${departmentId}, ${userId}, ${cardId}, 0)
           on conflict (user_id, card_id) do nothing`,
     )
+    await invalidatePinContext(tx, departmentId)
     tx.audit({
       action: 'work.focus_added',
       subjectType: 'card',
@@ -792,7 +802,7 @@ export async function addFocusPin(
     tx.emit({
       type: 'work.focus.updated',
       departmentId,
-      payload: { userId, actorUserId: userId },
+      payload: { userId, actorUserId: ctx.userId },
     })
     return { ok: true as const }
   })
@@ -805,15 +815,18 @@ export async function removeFocusPin(
   cardId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    if (userId !== ctx.userId && (ctx.departmentRole !== 'head' || ctx.viewAs)) return false
     await tx.raw(
       sql`select pg_advisory_xact_lock(hashtextextended(${`work-focus:${departmentId}:${userId}`}, 0))`,
     )
     const rows = await tx.raw<{ id: string }>(
       sql`delete from app.focus_pins
           where department_id = ${departmentId} and user_id = ${userId} and card_id = ${cardId}
+            and (${ctx.userId === userId} or exists(select 1 from app.cards c where c.id=card_id and c.assignee_user_id=${userId}))
           returning id`,
     )
     if (rows.length) {
+      await invalidatePinContext(tx, departmentId)
       tx.audit({
         action: 'work.focus_removed',
         subjectType: 'card',
@@ -824,7 +837,7 @@ export async function removeFocusPin(
       tx.emit({
         type: 'work.focus.updated',
         departmentId,
-        payload: { userId, actorUserId: userId },
+        payload: { userId, actorUserId: ctx.userId },
       })
     }
     return rows.length > 0
@@ -838,6 +851,7 @@ export async function reorderFocusPins(
   cardIds: readonly string[],
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    if (userId !== ctx.userId && (ctx.departmentRole !== 'head' || ctx.viewAs)) return false
     await tx.raw(
       sql`select pg_advisory_xact_lock(hashtextextended(${`work-focus:${departmentId}:${userId}`}, 0))`,
     )
@@ -845,7 +859,8 @@ export async function reorderFocusPins(
       card_id: string
     }>(sql`select f.card_id from app.focus_pins f
       join app.cards c on c.id = f.card_id and c.deleted_at is null
-      where f.department_id = ${departmentId} and f.user_id = ${userId}`)
+      where f.department_id = ${departmentId} and f.user_id = ${userId}
+        and (${ctx.userId === userId} or c.assignee_user_id=${userId})`)
     if (
       new Set(cardIds).size !== cardIds.length ||
       current.length !== cardIds.length ||
@@ -862,6 +877,7 @@ export async function reorderFocusPins(
           where f.card_id = v.card_id
             and f.department_id = ${departmentId} and f.user_id = ${userId}`,
     )
+    await invalidatePinContext(tx, departmentId)
     tx.audit({
       action: 'work.focus_reordered',
       subjectType: 'user',
@@ -872,7 +888,7 @@ export async function reorderFocusPins(
     tx.emit({
       type: 'work.focus.updated',
       departmentId,
-      payload: { userId, actorUserId: userId },
+      payload: { userId, actorUserId: ctx.userId },
     })
     return true
   })
@@ -982,7 +998,11 @@ export async function listRecurringCards(ctx: RequestContext): Promise<Recurring
   })
 }
 
-export type ReminderOwner = { departmentId: string; userId: string; role: 'head' | 'member' }
+export type ReminderOwner = {
+  departmentId: string
+  userId: string
+  role: 'head' | 'member'
+}
 
 /** Only identity and membership eligibility are enumerated globally. Reminder contents remain
  * private and are claimed separately under the exact owner's department context. */

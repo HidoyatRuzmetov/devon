@@ -70,7 +70,23 @@ export function lintMigrations(files: readonly MigrationFile[]): CheckResult[] {
       })
     }
 
-    const forbidden = FORBIDDEN_PERSONAL_DATA.test(code) || FORBIDDEN_INN.test(code)
+    // The owner explicitly requested a private account DOB in November 2026. Excuse exactly that
+    // declaration in its named table, plus this feature's identifiers; every other personal-data
+    // field (even another DOB declaration in this migration) remains forbidden.
+    const personalDataCode =
+      file.name === '2031_birthdays.sql'
+        ? code
+            .replace(
+              /(create table app\.account_birthdays\s*\([^;]*?)\bbirth_date date not null check \(birth_date >= date '1900-01-01'\),/i,
+              '$1approved_account_date date,',
+            )
+            .replace(
+              /\b(?:account_birthdays(?:_owner|_scheduler)?|birthday_greetings(?:_owner|_scheduler)?|birthday_reminders(?:_department)?|birthday_year)\b/g,
+              'approved_bday_identifier',
+            )
+        : code
+    const forbidden =
+      FORBIDDEN_PERSONAL_DATA.test(personalDataCode) || FORBIDDEN_INN.test(personalDataCode)
     results.push({
       name: `${file.name}: no forbidden personal-data column names (I-2)`,
       ok: !forbidden,

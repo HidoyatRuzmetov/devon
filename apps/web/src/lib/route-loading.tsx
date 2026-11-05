@@ -9,6 +9,7 @@ const routes: Record<string, LoadingView> = {
   '/work/timeline': 'timeline',
   '/work/calendar': 'calendar',
   '/work/mine': 'mine',
+  '/work/person': 'personWork',
   '/work/deleted': 'deletedTasks',
   '/work/card': 'card',
   '/work/templates': 'templates',

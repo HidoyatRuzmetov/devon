@@ -10,6 +10,7 @@ import {
   conversationFiles,
 } from '../../src/modules/ai/conversation-files.js'
 import * as chat from '../../src/modules/ai/conversations.js'
+import { conversationContext } from '../../src/modules/ai/conversation-context.js'
 import { __setProviderForTests } from '../../src/modules/ai/service.js'
 import {
   loginAs,
@@ -926,4 +927,71 @@ describe('general compound work plans and batch review', () => {
         .status,
     ).toBe('pending')
   })
+})
+
+it('creates a checklist discussion and a head-assigned pin through reviewed dependent actions, then reads its exact thread', async () => {
+  const result = await propose([
+    {
+      key: 'task',
+      kind: 'card.create',
+      arguments: { body: { title: `Threaded task ${randomUUID()}`, assigneeUserId: memberId } },
+    },
+    {
+      key: 'item',
+      kind: 'checklist.add',
+      arguments: { body: { text: 'Verify the source table' } },
+      bindings: [{ path: 'id', from: 'task' }],
+    },
+    {
+      key: 'discussion',
+      kind: 'checklist.comment.create',
+      arguments: { body: { text: 'The source is reconciled and ready for review.' } },
+      bindings: [
+        { path: 'id', from: 'task' },
+        { path: 'itemId', from: 'item' },
+      ],
+    },
+    {
+      kind: 'pin.add',
+      arguments: { body: { userId: memberId } },
+      bindings: [{ path: 'body.cardId', from: 'task' }],
+    },
+  ])
+  const completed: AiChatProposal[] = []
+  for (let index = 0; index < result.proposals.length; index++) {
+    const proposal = await resolved(result.conversation.id, result.proposals[index]!.id)
+    expect(proposal.status).toBe('executed')
+    completed.push(proposal)
+  }
+  const cardId = completed[0]!.result!.entityId!,
+    itemId = completed[1]!.result!.entityId!,
+    commentId = completed[2]!.result!.entityId!
+  const rows = await superuserQuery<{ card_id: string; checklist_item_id: string }>(
+    db,
+    'select card_id,checklist_item_id from app.card_comments where id=$1',
+    [commentId],
+  )
+  expect(rows[0]).toEqual({ card_id: cardId, checklist_item_id: itemId })
+  expect(
+    await superuserQuery(db, 'select id from app.focus_pins where card_id=$1 and user_id=$2', [
+      cardId,
+      memberId,
+    ]),
+  ).toHaveLength(1)
+  const context = await conversationContext(headCtx, 'Read the checklist discussion', [
+    `comment:${commentId}`,
+  ])
+  expect(context.snapshot).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        ref: `comment:${commentId}`,
+        facts: expect.objectContaining({
+          kind: 'checklist_comment',
+          cardId,
+          checklistItemId: itemId,
+          editedAt: null,
+        }),
+      }),
+    ]),
+  )
 })

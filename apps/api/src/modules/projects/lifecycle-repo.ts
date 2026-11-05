@@ -1,5 +1,92 @@
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
+import { can, type Actor } from '@devon/contracts'
+
+export async function projectRestoreDetails(
+  ctx: RequestContext,
+  actor: Actor | null,
+  projectId: string,
+) {
+  return withContext(ctx, async (tx) => {
+    const [project] = await tx.raw<{
+      id: string
+      title: string
+      owner_user_id: string
+      cardCount: number
+    }>(sql`
+      select p.id,p.title,p.owner_user_id,(select count(*)::int from app.cards c
+        where c.project_id=p.id and c.deleted_by_project_id=p.id and c.deleted_at is not null) as "cardCount"
+      from app.projects p where p.id=${projectId} and p.department_id=${ctx.departmentId}`)
+    if (!project) return null
+    return {
+      id: project.id,
+      title: project.title,
+      cardCount: project.cardCount,
+      canRestore: can(actor, 'delete', {
+        kind: 'owned',
+        departmentId: ctx.departmentId!,
+        ownerUserIds: [project.owner_user_id],
+      }).allowed,
+    }
+  })
+}
+
+/** Explicit recovery keeps the group and only revives cards deleted as part of that group. */
+export async function restoreProject(
+  ctx: RequestContext,
+  actor: Actor | null,
+  projectId: string,
+): Promise<'ok' | 'not_found' | 'forbidden'> {
+  return withContext(ctx, async (tx) => {
+    const [project] = await tx.raw<{ owner_user_id: string; deleted_at: Date | null }>(sql`
+      select owner_user_id,deleted_at from app.projects where id=${projectId}
+        and department_id=${ctx.departmentId} for update`)
+    if (!project) return 'not_found'
+    if (
+      !can(actor, 'delete', {
+        kind: 'owned',
+        departmentId: ctx.departmentId!,
+        ownerUserIds: [project.owner_user_id],
+      }).allowed
+    )
+      return 'forbidden'
+    if (!project.deleted_at) return 'ok'
+    await tx.raw(
+      sql`update app.projects set deleted_at=null,deleted_by_user_id=null,updated_at=now(),version=version+1 where id=${projectId}`,
+    )
+    const cards = await tx.raw<{ id: string }>(sql`update app.cards set deleted_at=null,
+      deleted_by_user_id=null,deleted_by_project_id=null,updated_at=now(),version=version+1
+      where project_id=${projectId} and department_id=${ctx.departmentId}
+        and deleted_by_project_id=${projectId} and deleted_at is not null returning id`)
+    tx.audit({
+      action: 'projects.project_restored',
+      subjectType: 'project',
+      subjectId: projectId,
+      departmentId: ctx.departmentId,
+      after: { cardIds: cards.map((c) => c.id), mode: 'explicit' },
+    })
+    for (const card of cards) {
+      tx.audit({
+        action: 'work.card_restored',
+        subjectType: 'card',
+        subjectId: card.id,
+        departmentId: ctx.departmentId,
+        after: { restoredWithProjectId: projectId },
+      })
+      tx.emit({
+        type: 'work.card.restored',
+        departmentId: ctx.departmentId,
+        payload: { cardId: card.id, actorUserId: ctx.userId },
+      })
+    }
+    tx.emit({
+      type: 'projects.project.updated',
+      departmentId: ctx.departmentId,
+      payload: { projectId, restored: true },
+    })
+    return 'ok'
+  })
+}
 
 export async function deleteProject(ctx: RequestContext, projectId: string): Promise<boolean> {
   return withContext(ctx, async (tx) => {

@@ -37,6 +37,7 @@ import { isCardCompleted, PRIORITY_ORDER } from '../work/lib/format.js'
 import { useProjectsQuery } from '../projects/hooks.js'
 import { useEventsQuery } from '../events/hooks.js'
 import { HomeWorkspace, HOME_METRIC_INTERACTION } from './home-workspace.js'
+import { RestoreCardButton } from '../work/components/restore-card-button.js'
 
 const drill = (path: string) => `${path}${path.includes('?') ? '&' : '?'}from=overview`
 export type WorkCategory = 'todo' | 'in_progress' | 'done' | 'deleted'
@@ -95,7 +96,8 @@ function MemberTask({ card, projectTitle }: { card: Card; projectTitle?: string 
   return (
     <div
       className={cn(
-        'flex min-h-14 items-center gap-2.5 rounded-md border border-border px-3 py-2 transition-colors hover:border-primary/30',
+        'flex min-h-14 items-center gap-2.5 rounded-md border border-border px-3 py-2 transition-colors',
+        !card.deletedAt && 'hover:border-primary/30',
         card.projectId ? 'bg-accent/45' : 'bg-card',
       )}
     >
@@ -166,6 +168,7 @@ function MemberTask({ card, projectTitle }: { card: Card; projectTitle?: string 
           </ProgressRing>
         ) : null}
       </button>
+      {card.deletedAt ? <RestoreCardButton card={card} /> : null}
     </div>
   )
 }

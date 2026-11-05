@@ -154,11 +154,13 @@ async function loadCard(
   if (commentToo) {
     const commentId = pickString(payload, 'commentId')
     if (!commentId) return null
-    const c = await tx.raw<{ body: unknown; mentions: string[] }>(
-      sql`select body,mentions from app.card_comments where id = ${commentId} and card_id=${cardId} and deleted_at is null`,
+    const c = await tx.raw<{ body: unknown; mentions: string[]; checklist_item_id: string | null }>(
+      sql`select body,mentions,checklist_item_id from app.card_comments cm where id = ${commentId} and card_id=${cardId} and deleted_at is null
+        and (checklist_item_id is null or exists(select 1 from app.card_checklist_items i where i.id=cm.checklist_item_id and i.deleted_at is null))`,
     )
     if (!c[0]) return null // A queued notification must never revive a deleted comment.
     extra['commentId'] = commentId
+    if (c[0].checklist_item_id) extra['checklistItemId'] = c[0].checklist_item_id
     const excerpt = commentExcerpt(c[0].body)
     if (excerpt) extra['excerpt'] = excerpt
     mentions = mentions.filter((id) => c[0]!.mentions.includes(id))

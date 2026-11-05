@@ -7,6 +7,8 @@ import { avatarUrl } from '../../../lib/avatar.js'
 // fallback a card's own `dropTargetForElements` (`card-tile.tsx`) never claims because the pointer
 // isn't over any card.
 import * as React from 'react'
+import { navigate } from '../../../lib/router.js'
+import { useDepartment, useMeQuery } from '../../../lib/session.js'
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
 import { ChevronsLeftRight, ChevronsRightLeft } from 'lucide-react'
 import { numberFlowLocale, useLocale, useT } from '@devon/i18n'
@@ -97,6 +99,8 @@ export function BoardColumn({
   onRejectionShown,
 }: BoardColumnProps) {
   const t = useT()
+  const { department } = useDepartment()
+  const viewerId = useMeQuery().data?.user.id
   // `uz-Latn` groups with an ASCII comma on a real embedded-Chromium ICU; `numberFlowLocale` maps it
   // to `uz-Cyrl`, which groups the way DESIGN.md §5 asks for. Same shim KpiTile's call sites use.
   const locale = numberFlowLocale(useLocale())
@@ -229,52 +233,62 @@ export function BoardColumn({
         )}
       >
         <div className="hidden items-center gap-2 md:flex" title={unitName}>
-          {member ? (
-            <>
-              <Avatar
-                size="sm"
-                src={avatarUrl(member.avatarKey, 64)}
-                alt={fullName(member)}
-                initials={initialsFromName(member.givenName, member.familyName)}
-                hueSeed={member.unitId ?? 'department'}
-                className={unitColorClass(unitPalette, member.unitId, member.role === 'head')}
-              />
-              <div className="min-w-0">
-                <p
-                  className="line-clamp-2 text-small font-semibold leading-tight text-foreground [overflow-wrap:anywhere]"
-                  title={fullName(member)}
-                >
-                  {fullName(member)}
-                </p>
-                {member.title ? (
-                  <p className="truncate text-caption text-muted-foreground">
-                    {positionLabel(member.title, t)}
+          <button
+            type="button"
+            disabled={!member}
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={member ? t('personWork.openPerson', { name: fullName(member) }) : undefined}
+            onClick={() => {
+              if (member) navigate(`/work/person?person=${encodeURIComponent(member.userId)}`)
+            }}
+          >
+            {member ? (
+              <>
+                <Avatar
+                  size="sm"
+                  src={avatarUrl(member.avatarKey, 64)}
+                  alt={fullName(member)}
+                  initials={initialsFromName(member.givenName, member.familyName)}
+                  hueSeed={member.unitId ?? 'department'}
+                  className={unitColorClass(unitPalette, member.unitId, member.role === 'head')}
+                />
+                <div className="min-w-0">
+                  <p
+                    className="line-clamp-2 text-small font-semibold leading-tight text-foreground [overflow-wrap:anywhere]"
+                    title={fullName(member)}
+                  >
+                    {fullName(member)}
                   </p>
-                ) : null}
-              </div>
-            </>
-          ) : (
-            <p className="text-small font-semibold text-muted-foreground">
-              {t('work.board.unassigned')}
-            </p>
-          )}
-          {/* The two counts are the direct consequence of the card somebody just dragged in or ticked
+                  {member.title ? (
+                    <p className="truncate text-caption text-muted-foreground">
+                      {positionLabel(member.title, t)}
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <p className="text-small font-semibold text-muted-foreground">
+                {t('work.board.unassigned')}
+              </p>
+            )}
+            {/* The two counts are the direct consequence of the card somebody just dragged in or ticked
             off, so they tick rather than cut (DESIGN.md §10 "Counters"). Tabular figures come with
             `CountFlow`, so 9 -> 10 never nudges the collapse button. */}
-          <span
-            className="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
-            title={t('work.board.loadCount', { count: cards.length })}
-          >
-            <CountFlow value={cards.length} locale={locale} />
-          </span>
-          {overdueCount > 0 ? (
             <span
-              className="shrink-0 rounded-full bg-destructive/15 px-1.5 py-0.5 text-caption text-destructive"
-              title={t('work.risk.overdue')}
+              className="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
+              title={t('work.board.loadCount', { count: cards.length })}
             >
-              <CountFlow value={overdueCount} locale={locale} />
+              <CountFlow value={cards.length} locale={locale} />
             </span>
-          ) : null}
+            {overdueCount > 0 ? (
+              <span
+                className="shrink-0 rounded-full bg-destructive/15 px-1.5 py-0.5 text-caption text-destructive"
+                title={t('work.risk.overdue')}
+              >
+                <CountFlow value={overdueCount} locale={locale} />
+              </span>
+            ) : null}
+          </button>
           <IconButton
             aria-label={t('work.board.collapseColumn')}
             onClick={() => setCollapsed(true)}
@@ -282,7 +296,9 @@ export function BoardColumn({
             <ChevronsRightLeft className="size-4" />
           </IconButton>
         </div>
-        <QuickAddBar members={members} defaultAssigneeUserId={userId} compact />
+        {department?.role === 'head' || viewerId === userId ? (
+          <QuickAddBar members={members} defaultAssigneeUserId={userId} compact />
+        ) : null}
         <div className="flex items-center justify-between text-caption text-muted-foreground md:hidden">
           <span>{t('work.board.loadCount', { count: cards.length })}</span>
           {overdueCount > 0 ? (

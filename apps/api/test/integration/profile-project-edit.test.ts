@@ -60,7 +60,7 @@ describe('self-service profile', () => {
     }
     const response = await request('/accounts/profile', 'PATCH', profile)
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual(profile)
+    expect(await response.json()).toEqual({ ...profile, dateOfBirth: null })
     const me = (await (await request('/me')).json()) as { user: Record<string, unknown> }
     expect(me.user['givenName']).toBe('New')
     expect(me.user).not.toHaveProperty('email')

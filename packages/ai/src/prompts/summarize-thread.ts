@@ -21,7 +21,7 @@ import type { Locale } from '../types.js'
 export const summarizeThreadInputSchema = z.object({
   locale: localeSchema,
   subject: z.object({
-    kind: z.enum(['card', 'event']),
+    kind: z.enum(['card', 'event', 'checklist']),
     id: idSchema,
     title: z.string().min(1).max(500),
   }),

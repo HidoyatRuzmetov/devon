@@ -27,6 +27,8 @@ import {
   cardListQuerySchema,
   cardListSchema,
   cardSchema,
+  checklistItemSchema,
+  commentSchema,
   createCardBodySchema,
   createChecklistItemBodySchema,
   createCommentBodySchema,
@@ -158,6 +160,27 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return reply.send({ items: [], nextCursor: null })
       const ctx = contextFromRequest(req)
+      if (req.query.assigneeUserId && !req.query.q && !req.query.mine) {
+        const limit = req.query.limit ?? 50
+        const offset = Number(req.query.cursor ?? 0)
+        if (!Number.isSafeInteger(offset) || offset < 0)
+          return sendProblem(reply, 'validation_failed')
+        const rows = await repo.listCards(ctx, departmentId, {
+          assigneeUserId: req.query.assigneeUserId,
+          projectId: req.query.projectId,
+          deleted: req.query.deleted,
+          limit: limit + 1,
+          offset,
+        })
+        return reply.send({
+          items: withCanEdit(
+            rows.slice(0, limit),
+            req.actor!.userId,
+            isHeadOf(req.actor, departmentId),
+          ),
+          nextCursor: rows.length > limit ? String(offset + limit) : null,
+        })
+      }
       const [cards, members, labels, projectNames] = await Promise.all([
         repo.listCards(ctx, departmentId, {
           projectId: req.query.projectId,
@@ -196,6 +219,9 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       }
       if (req.query.mine) {
         filtered = filtered.filter((c) => c.assigneeUserId === req.actor!.userId)
+      }
+      if (req.query.assigneeUserId) {
+        filtered = filtered.filter((c) => c.assigneeUserId === req.query.assigneeUserId)
       }
 
       const limit = req.query.limit ?? 50
@@ -442,6 +468,34 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
   )
 
   app.post(
+    '/cards/:id/restore',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.restoreCard(
+        contextFromRequest(req),
+        req.actor,
+        requireDepartmentId(req)!,
+        req.params.id,
+      )
+      if (result === 'conflict')
+        return sendProblem(reply, 'conflict', {
+          errors: [{ path: 'project', code: 'restore_project_first' }],
+        })
+      if (result !== 'ok') return sendProblem(reply, result)
+      return reply.code(204).send()
+    },
+  )
+
+  app.post(
     '/cards/:id/checklist',
     {
       config: {
@@ -569,6 +623,143 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (id === null) return sendProblem(reply, 'not_found')
       return reply.code(201).send({ id })
+    },
+  )
+
+  app.get(
+    '/cards/checklists',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        querystring: z.object({
+          cardIds: z
+            .string()
+            .max(4000)
+            .transform((value) => value.split(','))
+            .pipe(z.array(z.uuid()).min(1).max(100)),
+        }),
+        response: { 200: z.array(checklistItemSchema) },
+      },
+    },
+    async (req) => repo.getChecklists(contextFromRequest(req), req.query.cardIds),
+  )
+
+  app.get(
+    '/cards/:id/checklist/:itemId/comments',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: cardChecklistParamsSchema, response: { 200: z.array(commentSchema) } },
+    },
+    async (req, reply) => {
+      const ctx = contextFromRequest(req)
+      if (
+        !(await repo.checklistExists(
+          ctx,
+          requireDepartmentId(req)!,
+          req.params.id,
+          req.params.itemId,
+        ))
+      )
+        return sendProblem(reply, 'not_found')
+      return repo.getComments(ctx, req.params.id, req.params.itemId)
+    },
+  )
+
+  app.post(
+    '/cards/:id/checklist/:itemId/comments',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: cardChecklistParamsSchema,
+        body: createCommentBodySchema,
+        response: { 201: z.object({ id: z.uuid() }) },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const id = await repo.addComment(
+        contextFromRequest(req),
+        requireDepartmentId(req)!,
+        req.params.id,
+        req.actor!.userId,
+        req.body.text,
+        req.body.mentions ?? [],
+        req.params.itemId,
+      )
+      if (id === null) return sendProblem(reply, 'not_found')
+      return reply.code(201).send({ id })
+    },
+  )
+
+  app.patch(
+    '/cards/:id/checklist/:itemId/comments/:commentId',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: cardChecklistParamsSchema.extend({ commentId: z.uuid() }),
+        body: patchCommentBodySchema,
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.changeComment(
+        contextFromRequest(req),
+        req.actor,
+        requireDepartmentId(req)!,
+        req.params.id,
+        req.params.commentId,
+        { text: req.body.text, mentions: req.body.mentions ?? [], editedAt: req.body.editedAt },
+        req.params.itemId,
+      )
+      if (result !== 'ok') return sendProblem(reply, result)
+      return reply.code(204).send()
+    },
+  )
+
+  app.delete(
+    '/cards/:id/checklist/:itemId/comments/:commentId',
+    {
+      config: {
+        permission: {
+          action: 'delete',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: cardChecklistParamsSchema.extend({ commentId: z.uuid() }) },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.changeComment(
+        contextFromRequest(req),
+        req.actor,
+        requireDepartmentId(req)!,
+        req.params.id,
+        req.params.commentId,
+        null,
+        req.params.itemId,
+      )
+      if (result !== 'ok') return sendProblem(reply, result)
+      return reply.code(204).send()
     },
   )
 

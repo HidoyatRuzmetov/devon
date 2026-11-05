@@ -5,6 +5,7 @@ import { useT } from '@devon/i18n'
 import { toast } from '@devon/ui'
 import * as api from './api.js'
 import type { Project, ProjectTemplate } from './api.js'
+import { restoreCard } from '../work/api.js'
 
 function useCsrfToken(): string {
   const me = useMeQuery().data
@@ -25,6 +26,33 @@ export function useProjectQuery(id: string | null): UseQueryResult<Project, Erro
     queryKey: PROJECT_KEY(id ?? ''),
     queryFn: () => api.fetchProject(id!),
     enabled: id !== null,
+  })
+}
+
+export function useProjectRestoreDetails(id: string | null) {
+  return useQuery({
+    queryKey: ['projects', 'restore', id],
+    queryFn: () => api.fetchProjectRestoreDetails(id!),
+    enabled: id !== null,
+    staleTime: 0,
+  })
+}
+
+/** The confirmation explicitly covers both the group recovery and the requested card. */
+export function useRestoreProjectAndCardMutation() {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: async ({ projectId, cardId }: { projectId: string; cardId: string }) => {
+      await api.restoreProject(projectId, csrf)
+      await restoreCard(cardId, csrf)
+    },
+    onSettled: () =>
+      Promise.all(
+        ['projects', 'work', 'analytics', 'inbox'].map((key) =>
+          qc.invalidateQueries({ queryKey: [key] }),
+        ),
+      ),
   })
 }
 

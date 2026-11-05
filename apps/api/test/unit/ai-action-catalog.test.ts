@@ -57,3 +57,27 @@ it('shows group messaging only to the head and preserves invited attendees and s
     }),
   ).toMatchObject({ body: { addItemIds: [id], removeEntryIds: [] } })
 })
+
+it('exposes checklist discussion, own check-in creation and restoration using canonical arguments', () => {
+  const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  for (const kind of [
+    'checklist.comment.create',
+    'checklist.comment.update',
+    'checklist.comment.delete',
+    'card.restore',
+    'project.restore',
+    'checkin.createTask',
+    'profile.account',
+  ])
+    expect(actionInstructions().some((action) => action.kind === kind)).toBe(true)
+  expect(
+    parseAction('checklist.comment.create', { id, itemId: id, body: { text: 'Evidence' } }),
+  ).toMatchObject({ id, itemId: id, body: { text: 'Evidence' } })
+  expect(parseAction('pin.add', { body: { cardId: id, userId: id } })).toMatchObject({
+    body: { userId: id },
+  })
+  expect(parseAction('pin.remove', { id, userId: id })).toEqual({ id, userId: id })
+  expect(parseAction('profile.account', { body: { dateOfBirth: '1990-05-11' } })).toMatchObject({
+    body: { dateOfBirth: '1990-05-11' },
+  })
+})

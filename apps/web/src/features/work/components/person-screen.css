@@ -1,0 +1,98 @@
+.person-work-columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(16rem, 1fr));
+  gap: 0.75rem;
+  min-height: 0;
+  flex: 1;
+  overflow-x: auto;
+  padding: 1px 1px 0.5rem;
+  scroll-snap-type: x proximity;
+}
+.person-work-column {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--color-muted) 45%, transparent);
+  scroll-snap-align: start;
+}
+.person-work-column-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 0.875rem 0.75rem;
+  flex-shrink: 0;
+}
+.person-work-column[data-stage='in_progress'] .person-work-column-heading > svg {
+  color: var(--color-primary);
+}
+.person-work-column[data-stage='done'] .person-work-column-heading > svg {
+  color: var(--color-success);
+}
+.person-work-column[data-stage='deleted'] .person-work-column-heading {
+  color: var(--color-muted-foreground);
+}
+.person-work-column-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.125rem 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+.person-work-column-body:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -2px;
+}
+.person-task {
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.625rem;
+  box-shadow: 0 1px 2px #00000006;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.person-task:has(.person-task-open:hover) {
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+  box-shadow: 0 2px 5px #00000008;
+}
+.person-task-open {
+  border-radius: 0.25rem;
+}
+.person-task-open:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+.person-task-pinned {
+  border-top: 2px solid var(--color-primary);
+}
+.person-task-deleted {
+  color: var(--color-muted-foreground);
+}
+.person-work-empty {
+  margin: 0.25rem 0;
+  padding: 1.5rem 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--color-muted-foreground);
+  border: 1px dashed var(--color-border);
+  border-radius: 0.5rem;
+}
+@media (max-width: 767px) {
+  .person-work-columns {
+    grid-template-columns: repeat(4, minmax(min(82vw, 20rem), 1fr));
+    gap: 0.625rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .person-task {
+    transition: none;
+  }
+}

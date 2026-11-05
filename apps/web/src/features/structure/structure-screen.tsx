@@ -172,7 +172,7 @@ export default function StructureScreen() {
     )
   }
   if (departments.isLoading || (departmentId && overviewQuery.isPending)) {
-    return <ViewSkeleton view="structure" />
+    return <ViewSkeleton view={view === 'chart' ? 'structureChart' : 'structure'} />
   }
   const error =
     overviewQuery.error ??

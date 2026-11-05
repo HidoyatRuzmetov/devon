@@ -1,0 +1,18 @@
+{
+  "birthday": {
+    "dateOfBirth": "Tug‘ilgan sana",
+    "dateHint": "Tabriklar va boshqarmangiz boshlig‘iga shaxsiy eslatma uchun. Kabisa bo‘lmagan yillarda 29-fevral 28-fevralda nishonlanadi.",
+    "title": "Siz uchun tug‘ilgan kun tabrigi",
+    "close": "Tabrikni yopish",
+    "dedication": "Siz bilan birga ishlaydigan hamkasblaringizdan ezgu tilaklar.",
+    "readNow": "Hozir o‘qish",
+    "replay": "Qayta o‘qish",
+    "thankYou": "Rahmat",
+    "eyebrow": "A LITTLE MOMENT, JUST FOR YOU",
+    "greeting": "Happy birthday,",
+    "signatureAccessible": "With warm wishes, from the team.",
+    "playMusic": "Musiqani yoqish",
+    "muteMusic": "Musiqani o‘chirish",
+    "musicUnavailable": "Musiqa mavjud emas — qayta urinib ko‘ring"
+  }
+}

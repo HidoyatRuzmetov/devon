@@ -30,12 +30,12 @@ const API_CSP =
   "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; " +
   "script-src 'none'; style-src 'none'; img-src 'none'; sandbox"
 
-/** Every powerful browser feature this product does not use, switched off for the whole origin.
- * `fullscreen=(self)` is the one exception: the canvas and the analytics charts use it. */
+/** Unused browser features are disabled. Same-origin fullscreen serves charts/canvas; same-origin
+ * autoplay permits birthday audio subject to the browser's own user-activation policy. */
 const PERMISSIONS_POLICY = [
   'accelerometer=()',
   'ambient-light-sensor=()',
-  'autoplay=()',
+  'autoplay=(self)',
   'battery=()',
   'camera=()',
   'display-capture=()',

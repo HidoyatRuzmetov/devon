@@ -4,7 +4,15 @@ import { avatarUrl } from '../../../lib/avatar.js'
 // is still there after clicking over to Table (TECH-SPEC "table, timeline, calendar and mine show the
 // same cards") -- the current `?q=` search string rides along on every tab link.
 import * as React from 'react'
-import { CalendarDays, ChevronDown, Columns3, SlidersHorizontal, Table2, Timer } from 'lucide-react'
+import {
+  CalendarDays,
+  ChevronDown,
+  Columns3,
+  SlidersHorizontal,
+  Table2,
+  Timer,
+  UserRound,
+} from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { returnContextParams } from '../../../lib/return-context.js'
 import { navigate, RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
@@ -40,6 +48,7 @@ const TABS: ReadonlyArray<{ path: string; labelKey: string; layout: SavedViewLay
   { path: '/work/table', labelKey: 'work.view.table', layout: 'table' },
   { path: '/work/timeline', labelKey: 'work.view.timeline', layout: 'timeline' },
   { path: '/work/calendar', labelKey: 'work.view.calendar', layout: 'calendar' },
+  { path: '/work/person', labelKey: 'personWork.title', layout: 'mine' },
 ]
 
 export interface WorkShellProps {
@@ -101,7 +110,7 @@ export function WorkShell({
   const contentRef = React.useRef<HTMLDivElement>(null)
   const meMode = (qs ?? '').split(/\s+/).includes(ME_CLAUSE)
   const activeTab = TABS.find((tab) => tab.path === path) ?? TABS[0]!
-  const viewIcons = [Columns3, Table2, Timer, CalendarDays]
+  const viewIcons = [Columns3, Table2, Timer, CalendarDays, UserRound]
   const ActiveViewIcon = viewIcons[TABS.indexOf(activeTab)] ?? Columns3
 
   function setMeMode(next: 'all' | 'mine'): void {

@@ -5,6 +5,7 @@ import { ApiError, apiClient } from '../../lib/api-client.js'
 import type { Locale } from '@devon/i18n'
 
 const profileSchema = z.object({
+  dateOfBirth: z.string().nullable().default(null),
   login: z.string(),
   email: z.string().nullable(),
   givenName: z.string(),

@@ -2,7 +2,9 @@ import * as React from 'react'
 import type { CheckinEntry, CheckinSourceCard } from '@devon/contracts'
 import { useT } from '@devon/i18n'
 import { IconButton, Input, toast } from '@devon/ui'
-import { Check, ListTodo, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, ListTodo, Pencil, Plus, X } from 'lucide-react'
+import { ChecklistActionsMenu } from '../work/components/checklist-actions-menu.js'
+import { ChecklistDiscussion } from '../work/components/checklist-discussion.js'
 import {
   useAddChecklistItemMutation,
   usePatchCardMutation,
@@ -87,6 +89,7 @@ function TaskRow({
   canEdit,
   closed,
   onChoose,
+  sourceAvailable,
 }: {
   cardId: string
   source: SourceItem | undefined
@@ -97,101 +100,142 @@ function TaskRow({
   canEdit: boolean
   closed: boolean
   onChoose: () => void
+  sourceAvailable: boolean
 }) {
   const t = useT(),
     change = useCheckinChange(),
     patch = usePatchChecklistItemMutation(cardId),
     remove = useDeleteChecklistItemMutation(cardId)
   const [renaming, setRenaming] = React.useState(false)
+  const [commentsOpen, setCommentsOpen] = React.useState(false)
+  const [commentsActivated, setCommentsActivated] = React.useState(false)
   const text = source?.text ?? entry!.text
   const state = entry?.state ?? (source?.doneAt ? 'done' : 'pending')
   const textLocked = source?.textLocked ?? entry?.textLocked ?? false
   return (
-    <li className="checkin-row" data-state={state} data-selected={chosen}>
-      {editing ? (
-        <IconButton
-          className="checkin-choice"
-          aria-label={t(chosen ? 'checkins.remove' : 'checkins.add')}
-          aria-pressed={chosen}
-          disabled={protectedChoice || closed}
-          onClick={onChoose}
-        >
-          {chosen ? <Check /> : <Plus />}
-        </IconButton>
-      ) : null}
-      <div className="checkin-row-copy">
-        {renaming ? (
-          <TextEdit
-            value={text}
-            label={t('checkins.edit')}
-            onCancel={() => setRenaming(false)}
-            onSave={(value) =>
-              source
-                ? patch.mutateAsync({ itemId: source.id, patch: { text: value } })
-                : change.mutateAsync({
-                    kind: 'update',
-                    id: entry!.id,
-                    version: entry!.version,
-                    text: value,
-                  })
-            }
-          />
-        ) : editing ? (
-          <button
-            className="checkin-row-text"
+    <li className="checkin-row-container">
+      <div className="checkin-row" data-state={state} data-selected={chosen}>
+        {editing ? (
+          <IconButton
+            className="checkin-choice"
+            aria-label={t(chosen ? 'checkins.remove' : 'checkins.add')}
+            aria-pressed={chosen}
             disabled={protectedChoice || closed}
             onClick={onChoose}
           >
-            {text}
-          </button>
-        ) : (
-          <span className="checkin-row-text">{text}</span>
-        )}
-      </div>
-      {!renaming && canEdit ? (
-        <div className="checkin-row-tools">
-          <IconButton
-            aria-label={t('checkins.edit')}
-            disabled={textLocked || closed}
-            onClick={() => setRenaming(true)}
-          >
-            <Pencil />
+            {chosen ? <Check /> : <Plus />}
           </IconButton>
-          {editing && source ? (
-            <IconButton
-              aria-label={t('work.action.delete')}
-              disabled={source.deletionProtected || remove.isPending || closed}
-              onClick={() =>
-                remove.mutate(source.id, { onError: () => toast.error(t('checkins.saveError')) })
+        ) : null}
+        <div className="checkin-row-copy">
+          {renaming ? (
+            <TextEdit
+              value={text}
+              label={t('checkins.edit')}
+              onCancel={() => setRenaming(false)}
+              onSave={(value) =>
+                source
+                  ? patch.mutateAsync({ itemId: source.id, patch: { text: value } })
+                  : change.mutateAsync({
+                      kind: 'update',
+                      id: entry!.id,
+                      version: entry!.version,
+                      text: value,
+                    })
               }
+            />
+          ) : editing ? (
+            <button
+              className="checkin-row-text"
+              disabled={protectedChoice || closed}
+              onClick={onChoose}
             >
-              <Trash2 />
-            </IconButton>
-          ) : null}
+              {text}
+            </button>
+          ) : (
+            <span className="checkin-row-text">{text}</span>
+          )}
         </div>
-      ) : null}
-      {chosen ? (
-        <select
-          className="checkin-row-status"
-          aria-label={t('checkins.statusFor', { item: text })}
-          value={state}
-          disabled={closed || change.isPending || !entry}
-          onChange={(e) => {
-            if (entry)
-              change.mutate({
-                kind: 'update',
-                id: entry.id,
-                version: entry.version,
-                state: e.target.value as CheckinEntry['state'],
-              })
-          }}
-        >
-          {(['pending', 'blocked', 'done'] as const).map((s) => (
-            <option key={s} value={s}>
-              {t(`checkins.state.${s}`)}
-            </option>
-          ))}
-        </select>
+        {chosen ? (
+          <select
+            className="checkin-row-status"
+            aria-label={t('checkins.statusFor', { item: text })}
+            value={state}
+            disabled={closed || change.isPending || !entry}
+            onChange={(e) => {
+              if (entry)
+                change.mutate({
+                  kind: 'update',
+                  id: entry.id,
+                  version: entry.version,
+                  state: e.target.value as CheckinEntry['state'],
+                })
+            }}
+          >
+            {(['pending', 'blocked', 'done'] as const).map((s) => (
+              <option key={s} value={s}>
+                {t(`checkins.state.${s}`)}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        {!renaming ? (
+          <ChecklistActionsMenu
+            text={text}
+            commentCount={source?.commentCount ?? entry?.commentCount}
+            onComments={
+              sourceAvailable
+                ? () => {
+                    setCommentsActivated(true)
+                    setCommentsOpen(true)
+                  }
+                : undefined
+            }
+            onEdit={() => setRenaming(true)}
+            editReason={
+              closed
+                ? t('checklistDiscussion.cycleClosed')
+                : textLocked || protectedChoice
+                  ? t('checklistDiscussion.textLocked')
+                  : !canEdit
+                    ? t('state.denied.body')
+                    : undefined
+            }
+            onDelete={source ? () => remove.mutate(source.id) : undefined}
+            deleteReason={
+              closed
+                ? t('checklistDiscussion.cycleClosed')
+                : source?.deletionProtected
+                  ? t('cardActions.checkinProtected')
+                  : !canEdit
+                    ? t('state.denied.body')
+                    : undefined
+            }
+            busy={remove.isPending || patch.isPending}
+            checkin={
+              editing
+                ? {
+                    selected: chosen,
+                    disabled: protectedChoice || closed,
+                    reason: closed
+                      ? t('checklistDiscussion.cycleClosed')
+                      : protectedChoice
+                        ? t('checklistDiscussion.selectionLocked')
+                        : undefined,
+                    toggle: onChoose,
+                  }
+                : undefined
+            }
+          />
+        ) : null}
+      </div>
+      {sourceAvailable && commentsActivated ? (
+        <ChecklistDiscussion
+          cardId={cardId}
+          itemId={source?.id ?? entry!.checklistItemId}
+          itemText={text}
+          open={commentsOpen}
+          onClose={() => setCommentsOpen(false)}
+        />
       ) : null}
     </li>
   )
@@ -219,13 +263,18 @@ export function CheckinTaskView({
     [adding, setAdding] = React.useState(false)
   const entries = new Map(task.entries.map((e) => [e.checklistItemId, e]))
   const sources = new Map(task.checklist.map((i) => [i.id, i]))
-  const ids = editing ? [...new Set([...sources.keys(), ...entries.keys()])] : [...entries.keys()]
+  const ids = editing
+    ? [...new Set([...sources.keys(), ...entries.keys()])].filter(
+        (id) => !sources.get(id)?.doneAt && entries.get(id)?.state !== 'done',
+      )
+    : [...entries.keys()]
   return (
     <section className="checkin-task" data-muted={editing && !ids.some(selected)}>
       {task.sourceAvailable ? (
         <button
           className="checkin-task-open"
-          aria-label={task.title}
+          aria-hidden="true"
+          tabIndex={-1}
           onClick={() => openCardPeek(task.id)}
         />
       ) : null}
@@ -291,6 +340,7 @@ export function CheckinTaskView({
             protectedChoice={locked && entries.has(id)}
             canEdit={task.canEdit && !locked}
             closed={closed}
+            sourceAvailable={task.sourceAvailable}
             onChoose={() => choose(id)}
           />
         ))}

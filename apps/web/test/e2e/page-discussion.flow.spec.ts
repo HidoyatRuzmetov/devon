@@ -98,6 +98,7 @@ test('@flow page reading, Markdown editing, safe HTML downloads and comment revi
     })
     const comment = (await commentResponse.json()) as { id: string }
     await page.goto(`/work/card?id=${card.id}`)
+    await page.getByRole('button', { name: /^Card discussion/ }).click()
     const row = page.locator(`#comment-${comment.id}`)
     await expect(row).toBeVisible({ timeout: 10000 })
     await row.scrollIntoViewIfNeeded()

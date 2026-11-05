@@ -1,0 +1,26 @@
+{
+  "checklistDiscussion": {
+    "taskDone": "This card is already done. Reopen it before adding a deliverable.",
+    "actions": "Checklist actions",
+    "actionsFor": "Actions for {item}",
+    "comments": "Comments",
+    "addItem": "Add checklist item",
+    "taskDiscussion": "Card discussion",
+    "addComment": "Add a comment",
+    "viewComments": "Comments ({count})",
+    "threadFor": "Comments on {item}",
+    "collapse": "Collapse comments",
+    "placeholder": "Write a comment about this item…",
+    "send": "Send comment",
+    "sendHint": "Send comment · Ctrl / ⌘ Enter",
+    "editComment": "Edit",
+    "edited": "edited",
+    "deleteConfirm": "Delete this comment?",
+    "saveError": "Could not save this comment. Your text is kept; refresh if someone has edited it.",
+    "loadError": "Comments could not be loaded.",
+    "textLocked": "This wording is protected by an agreed check-in.",
+    "selectionLocked": "An agreed deliverable cannot be removed.",
+    "cycleClosed": "This check-out period is closed.",
+    "alreadyDone": "This checklist item is already done."
+  }
+}

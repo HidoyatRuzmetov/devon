@@ -4,6 +4,7 @@
 // rather than redeclaring, since `LOCALES` is documented as a frozen, load-bearing constant no package
 // "owns" (see that file's own header comment).
 import { z } from 'zod'
+import { validBirthDate } from '../birthdays/calendar.js'
 import { positionSchema } from '@devon/contracts'
 import { localeSchema, asLocale } from '../../schemas.js'
 import type { UserRecord } from '../../types.js'
@@ -52,6 +53,10 @@ export const loginIdSchema = z
 
 export const profileSchema = z
   .object({
+    dateOfBirth: z.iso
+      .date()
+      .refine((value) => validBirthDate(value), 'invalid birth date')
+      .nullable(),
     login: loginIdSchema,
     email: z.string().email().max(256).nullable(),
     givenName: z.string().trim().min(1).max(100),

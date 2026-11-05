@@ -174,7 +174,7 @@ const INVALIDATIONS: ReadonlyArray<{
   mutationKeys?: readonly (readonly string[])[]
 }> = [
   {
-    match: /^work\.(card|checklist|focus)\./,
+    match: /^work\.(card|checklist|comment|focus)\./,
     keys: [['work'], ['projects'], ['checkins'], ['personal', 'calendar']],
     mutationKeys: [
       ['work', 'checklist'],
