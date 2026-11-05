@@ -107,7 +107,6 @@ function ActiveCardActions({ card }: { card: Card }) {
                     { cardId: card.id, pinned: !card.assigneePinned },
                     { onError: () => toast.error(t('work.focus.failed')) },
                   ),
-                card.status !== 'active' ? t('personWork.activePinsOnly') : undefined,
               )
             : null}
           {item(

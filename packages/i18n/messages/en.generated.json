@@ -3953,7 +3953,6 @@
     "assigneePin": "Pinned for the assignee",
     "pinFor": "Pin for {name}",
     "unpinFor": "Unpin for {name}",
-    "activePinsOnly": "Only active tasks can be pinned.",
     "restore": "Restore",
     "restoreNamed": "Restore {title}",
     "restoring": "Restoring…",

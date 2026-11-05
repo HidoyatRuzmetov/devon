@@ -3953,7 +3953,6 @@
     "assigneePin": "Ijrochi uchun mahkamlangan",
     "pinFor": "{name} uchun mahkamlash",
     "unpinFor": "{name} uchun mahkamlashni bekor qilish",
-    "activePinsOnly": "Faqat faol vazifalarni mahkamlash mumkin.",
     "restore": "Tiklash",
     "restoreNamed": "«{title}» vazifasini tiklash",
     "restoring": "Tiklanmoqda…",
