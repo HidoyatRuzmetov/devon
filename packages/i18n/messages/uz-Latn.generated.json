@@ -1543,7 +1543,7 @@
   },
   "birthday": {
     "dateOfBirth": "Tug‘ilgan sana",
-    "dateHint": "Tabriklar va boshqarmangiz boshlig‘iga shaxsiy eslatma uchun. Kabisa bo‘lmagan yillarda 29-fevral 28-fevralda nishonlanadi.",
+    "dateHint": "Tug‘ilgan kun tabriklari uchun.",
     "title": "Siz uchun tug‘ilgan kun tabrigi",
     "close": "Tabrikni yopish",
     "dedication": "Siz bilan birga ishlaydigan hamkasblaringizdan ezgu tilaklar.",
@@ -4419,7 +4419,7 @@
     "patronymic": "Otasining ismi",
     "login": "Login",
     "email": "Elektron pochta",
-    "loginHint": "Loginda kichik lotin harflari, raqamlar, nuqta, chiziqcha yoki pastki chiziqdan foydalaning. Keyingi safar yangi login bilan kiring.",
+    "loginHint": "Kichik lotin harflari, raqamlar, . _ -",
     "saved": "Profil saqlandi",
     "loginTaken": "Bu login band. Boshqasini tanlang.",
     "error": "Saqlab boʻlmadi. Maydonlarni tekshirib, qayta urinib koʻring."

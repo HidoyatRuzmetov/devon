@@ -1,7 +1,7 @@
 {
   "birthday": {
     "dateOfBirth": "Tug‘ilgan sana",
-    "dateHint": "Tabriklar va boshqarmangiz boshlig‘iga shaxsiy eslatma uchun. Kabisa bo‘lmagan yillarda 29-fevral 28-fevralda nishonlanadi.",
+    "dateHint": "Tug‘ilgan kun tabriklari uchun.",
     "title": "Siz uchun tug‘ilgan kun tabrigi",
     "close": "Tabrikni yopish",
     "dedication": "Siz bilan birga ishlaydigan hamkasblaringizdan ezgu tilaklar.",

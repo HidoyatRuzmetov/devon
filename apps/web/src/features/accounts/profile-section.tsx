@@ -61,6 +61,7 @@ export function ProfileSection() {
 
 function ProfileForm({ profile }: { profile: AccountProfile }) {
   const t = useT()
+  const fieldId = React.useId()
   const qc = useQueryClient()
   useMeQuery()
   const [values, setValues] = React.useState(profile)
@@ -103,6 +104,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
       void qc.invalidateQueries({ queryKey: ['accounts', 'professional-profile'] })
       void qc.invalidateQueries({ queryKey: ['me'] })
       void qc.invalidateQueries({ queryKey: ['people'] })
+      void qc.invalidateQueries({ queryKey: ['structure', 'members'] })
       void qc.invalidateQueries({ queryKey: ['work'] })
       toast(t('profileEdit.saved'))
     },
@@ -133,7 +135,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
       <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 2xl:grid-cols-3">
         {PROFILE_FIELDS.map((field) => (
           <label key={field} className="flex flex-col gap-1.5 text-small">
-            <span>
+            <span id={`${fieldId}-${field}-label`}>
               {t(field === 'dateOfBirth' ? 'birthday.dateOfBirth' : `profileEdit.${field}`)}
               {['givenName', 'familyName', 'login'].includes(field) ? (
                 <span className="ml-1 text-destructive" aria-hidden="true">
@@ -160,6 +162,12 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
               </select>
             ) : (
               <Input
+                aria-labelledby={`${fieldId}-${field}-label`}
+                aria-describedby={
+                  field === 'login' || field === 'dateOfBirth'
+                    ? `${fieldId}-${field}-hint`
+                    : undefined
+                }
                 value={values[field] ?? ''}
                 type={field === 'dateOfBirth' ? 'date' : field === 'email' ? 'email' : 'text'}
                 {...(field === 'dateOfBirth'
@@ -196,11 +204,14 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                 }}
               />
             )}
+            {field === 'login' || field === 'dateOfBirth' ? (
+              <span id={`${fieldId}-${field}-hint`} className="text-caption text-muted-foreground">
+                {t(field === 'login' ? 'profileEdit.loginHint' : 'birthday.dateHint')}
+              </span>
+            ) : null}
           </label>
         ))}
       </div>
-      <p className="text-caption text-muted-foreground">{t('profileEdit.loginHint')}</p>
-      <p className="text-caption text-muted-foreground">{t('birthday.dateHint')}</p>
       {save.isError ? (
         <p role="alert" className="text-small text-destructive">
           {t(

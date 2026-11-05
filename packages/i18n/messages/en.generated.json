@@ -1543,7 +1543,7 @@
   },
   "birthday": {
     "dateOfBirth": "Date of birth",
-    "dateHint": "For birthday wishes and a private reminder to your department head. February 29 is celebrated on February 28 in non-leap years.",
+    "dateHint": "For birthday wishes.",
     "title": "A birthday wish for you",
     "close": "Close birthday letter",
     "dedication": "A few wishes from the people who share your days.",
@@ -4419,7 +4419,7 @@
     "patronymic": "Patronymic",
     "login": "Username",
     "email": "Email",
-    "loginHint": "Use lowercase letters, numbers, dots, dashes or underscores for your username. Use the new username next time you sign in.",
+    "loginHint": "Lowercase letters, numbers, . _ -",
     "saved": "Profile saved",
     "loginTaken": "That username is already taken. Choose another.",
     "error": "Could not save. Check the fields and try again."

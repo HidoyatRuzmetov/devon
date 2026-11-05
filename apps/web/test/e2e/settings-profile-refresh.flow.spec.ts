@@ -113,6 +113,9 @@ test('settings panes, legacy links and professional profiles work on desktop and
     await page.goto('/account')
     await expect(page.getByRole('heading', { name: 'Profile settings', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible()
+    await page.getByLabel(/Date of birth/).fill('1992-02-29')
+    await page.getByRole('button', { name: 'Save', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled()
     await expect(
       page.getByRole('heading', { name: 'Professional profile', exact: true }),
     ).toHaveCount(0)
@@ -264,6 +267,14 @@ test('settings panes, legacy links and professional profiles work on desktop and
     await expect(page.getByRole('heading', { name: /Research and Policy/ })).toBeVisible()
     const memberCard = page.getByRole('button', { name: /Test Analyst.*Research analyst/ })
     await expect(memberCard).toBeVisible()
+    await expect(memberCard.locator('time[datetime="1992-02-29"]')).toHaveText('29.02.1992')
+    await expect(page.locator('time')).toHaveCount(1)
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await memberCard.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: testInfo.outputPath('people-birthday-desktop.png') })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await memberCard.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: testInfo.outputPath('people-birthday-mobile.png') })
     const unitColour = await memberCard.getAttribute('data-unit-color')
     await expect(
       page.locator('section[data-unit-color]').filter({ has: memberCard }),
@@ -282,6 +293,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
     expect(identityBounds?.height).toBeLessThan(190)
     await expect(identity.locator('h2')).toHaveText('Test Analyst')
     await expect(drawer.getByText('Example Research Center', { exact: true })).toBeVisible()
+    await expect(drawer.locator('time[datetime="1992-02-29"]')).toHaveText('29.02.1992')
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
@@ -295,8 +307,10 @@ test('settings panes, legacy links and professional profiles work on desktop and
     const positions = await contactRows.evaluateAll((nodes) =>
       nodes.map((node) => node.getBoundingClientRect().top),
     )
-    expect(positions).toHaveLength(3)
-    expect(Math.max(...positions) - Math.min(...positions)).toBeLessThan(2)
+    expect(positions).toHaveLength(4)
+    expect(Math.abs(positions[0]! - positions[1]!)).toBeLessThan(2)
+    expect(Math.abs(positions[2]! - positions[3]!)).toBeLessThan(2)
+    expect(positions[2]!).toBeGreaterThan(positions[0]!)
     const labels = drawer.locator('[data-profile-capabilities] h4')
     await expect(labels).toHaveCount(3)
     await expect(labels.locator('svg')).toHaveCount(3)

@@ -236,7 +236,7 @@ export function BoardColumn({
           <button
             type="button"
             disabled={!member}
-            className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="devon-board-person-link flex min-w-0 flex-1 items-center gap-2 rounded-md text-left disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={member ? t('personWork.openPerson', { name: fullName(member) }) : undefined}
             onClick={() => {
               if (member) navigate(`/work/person?person=${encodeURIComponent(member.userId)}`)
@@ -254,7 +254,7 @@ export function BoardColumn({
                 />
                 <div className="min-w-0">
                   <p
-                    className="line-clamp-2 text-small font-semibold leading-tight text-foreground [overflow-wrap:anywhere]"
+                    className="devon-board-person-name line-clamp-2 text-small font-semibold leading-tight text-foreground [overflow-wrap:anywhere]"
                     title={fullName(member)}
                   >
                     {fullName(member)}

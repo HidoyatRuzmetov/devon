@@ -79,6 +79,7 @@ const FULL_WIDTH_ROUTES = new Set([
   '/work/table',
   '/work/timeline',
   '/work/calendar',
+  '/work/person',
   '/work/mine',
   '/projects',
   '/people',

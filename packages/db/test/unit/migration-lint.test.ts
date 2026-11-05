@@ -57,6 +57,16 @@ describe('migration-lint', () => {
     }
   })
 
+  it('keeps the directory date exception limited to the approved existing field projection', () => {
+    for (const sql of [
+      'create table app.other (birth_date date);',
+      'select b.owner_user_id, b.birth_date, b.passport_number from app.account_birthdays b;',
+    ]) {
+      const results = lintMigrations([{ name: '2032_directory_birth_dates.sql', sql }])
+      expect(results.find((x) => x.name.includes('forbidden personal-data'))?.ok).toBe(false)
+    }
+  })
+
   it('flags a bare SET on the app.* GUC namespace', () => {
     const results = lintMigrations([{ name: '0099_bad.sql', sql: "set app.department_id = 'x';" }])
     const r = results.find((x) => x.name.includes('bare SET'))

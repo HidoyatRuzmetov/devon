@@ -654,6 +654,7 @@ export async function unassignUnitRole(
 
 type MemberRow = {
   email: string | null
+  date_of_birth: string | null
   professional_profile: unknown
   resume_updated_at: string | null
   personnel_updated_at: string | null
@@ -673,6 +674,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
     const rows = await tx.raw<MemberRow>(sql`
       select
         u.id as user_id, u.given_name, u.family_name, u.patronymic, u.title, u.avatar_key, u.email, u.professional_profile,
+        to_char(bd.date_of_birth, 'YYYY-MM-DD') as date_of_birth,
         u.professional_profile_updated_at::text as resume_updated_at,
         case when app.current_department_role()='head' and not app.is_view_as() then
           (select p.updated_at::text from app.personnel_records p
@@ -681,9 +683,10 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
         m.role as membership_role, ur.unit_id, ur.role as unit_role
       from app.memberships m
       join app.users u on u.id = m.user_id and u.deleted_at is null
+      left join app.directory_birth_dates() bd on bd.owner_user_id = u.id
       left join app.unit_roles ur
         on ur.department_id = m.department_id and ur.user_id = m.user_id and ur.deleted_at is null
-      where m.department_id = ${departmentId} and m.status = 'active'
+      where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
       order by u.family_name, u.given_name
     `)
     return rows.map((r) => ({
@@ -694,6 +697,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
       title: r.title,
       avatarKey: r.avatar_key,
       email: r.email,
+      dateOfBirth: r.date_of_birth,
       professionalProfile: professionalProfileSchema.parse(r.professional_profile ?? {}),
       resumeUpdatedAt: r.resume_updated_at,
       personnelUpdatedAt: r.personnel_updated_at,

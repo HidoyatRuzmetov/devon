@@ -1,5 +1,5 @@
 import { professionalProfileSchema } from '@devon/contracts'
-import { useLocale, useT } from '@devon/i18n'
+import { formatDate, useLocale, useT } from '@devon/i18n'
 import {
   Avatar,
   Button,
@@ -18,6 +18,7 @@ import {
   Award,
   BookUser,
   BriefcaseBusiness,
+  Cake,
   ChevronRight,
   ChevronDown,
   Download,
@@ -119,6 +120,9 @@ export function MemberCard({
       (a.current ? 2201 : (a.endYear ?? a.startYear ?? 0)),
   )
   const latestEducation = education[0]
+  const birthDate = member.dateOfBirth
+    ? formatDate(new Date(`${member.dateOfBirth}T00:00:00Z`), locale, 'UTC')
+    : null
   const resume = () =>
     downloadResume(
       {
@@ -210,6 +214,18 @@ export function MemberCard({
           </span>
           {!compact ? (
             <span className="flex w-full flex-col gap-2.5 border-t border-border pt-3 text-small">
+              {birthDate ? (
+                <span
+                  className="flex min-w-0 items-center gap-2.5"
+                  title={t('birthday.dateOfBirth')}
+                >
+                  <Cake className="size-4 shrink-0 text-primary/80" aria-hidden="true" />
+                  <span className="sr-only">{t('birthday.dateOfBirth')}: </span>
+                  <time dateTime={member.dateOfBirth!} className="text-muted-foreground">
+                    {birthDate}
+                  </time>
+                </span>
+              ) : null}
               <span className="flex min-w-0 items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-primary/80" aria-hidden="true" />
                 <span className="truncate text-muted-foreground">{member.email || empty}</span>
@@ -351,10 +367,19 @@ export function MemberCard({
                   data-profile-contacts
                   className={cn(
                     'grid gap-x-4 gap-y-3',
-                    profile.location ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
+                    profile.location && !birthDate ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
                   )}
                 >
                   {[
+                    ...(birthDate
+                      ? [
+                          {
+                            label: t('birthday.dateOfBirth'),
+                            value: <time dateTime={member.dateOfBirth!}>{birthDate}</time>,
+                            icon: Cake,
+                          },
+                        ]
+                      : []),
                     {
                       label: t('profileEdit.email'),
                       value: member.email,

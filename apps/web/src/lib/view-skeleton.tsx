@@ -439,10 +439,13 @@ const layouts = {
                     {line('w-1/2')}
                   </div>
                 </div>
-                <div className="space-y-4 border-t border-border pt-4">
-                  {line('w-3/4')}
-                  {line('w-1/2')}
-                  {line('w-4/5')}
+                <div className="space-y-2.5 border-t border-border pt-3">
+                  {times(4, (index) => (
+                    <div className="flex items-center gap-2.5">
+                      <Skeleton className="size-4 shrink-0" />
+                      {line(index === 0 ? 'w-24' : index === 2 ? 'w-1/2' : 'w-3/4')}
+                    </div>
+                  ))}
                 </div>
                 <div className="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1.35fr)] items-center gap-2 border-t border-border pt-2">
                   <Skeleton className="size-3.5 shrink-0" />

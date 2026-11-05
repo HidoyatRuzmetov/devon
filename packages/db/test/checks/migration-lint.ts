@@ -84,7 +84,14 @@ export function lintMigrations(files: readonly MigrationFile[]): CheckResult[] {
               /\b(?:account_birthdays(?:_owner|_scheduler)?|birthday_greetings(?:_owner|_scheduler)?|birthday_reminders(?:_department)?|birthday_year)\b/g,
               'approved_bday_identifier',
             )
-        : code
+        : file.name === '2032_directory_birth_dates.sql'
+          ? // Explicit People follow-up permits this existing date projection only, not another
+            // sensitive column declaration or a new source of personnel data.
+            code.replace(
+              /select b\.owner_user_id, b\.birth_date\b/i,
+              'select b.owner_user_id, b.approved_account_date',
+            )
+          : code
     const forbidden =
       FORBIDDEN_PERSONAL_DATA.test(personalDataCode) || FORBIDDEN_INN.test(personalDataCode)
     results.push({

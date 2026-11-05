@@ -9,7 +9,7 @@
     "patronymic": "Otasining ismi",
     "login": "Login",
     "email": "Elektron pochta",
-    "loginHint": "Loginda kichik lotin harflari, raqamlar, nuqta, chiziqcha yoki pastki chiziqdan foydalaning. Keyingi safar yangi login bilan kiring.",
+    "loginHint": "Kichik lotin harflari, raqamlar, . _ -",
     "saved": "Profil saqlandi",
     "loginTaken": "Bu login band. Boshqasini tanlang.",
     "error": "Saqlab boʻlmadi. Maydonlarni tekshirib, qayta urinib koʻring."

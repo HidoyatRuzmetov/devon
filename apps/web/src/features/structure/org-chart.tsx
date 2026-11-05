@@ -16,6 +16,8 @@ import { inlineOrgChartPhotos } from './org-chart-images.js'
 
 const NODE_W = 244
 const NODE_H = 116
+const MEMBER_ROW_H = 42
+const MEMBER_FOOTER_H = 24
 const H_GAP = 28
 const V_GAP = 56
 const MARGIN = 32
@@ -266,7 +268,11 @@ export function OrgChart({
   )
   const baseHeight = NODE_H + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight
   const nodeHeights = new Map(
-    [...memberRows].map(([id, rows]) => [id, baseHeight + rows.length * 42]),
+    [...memberRows].map(([id, rows]) => [
+      id,
+      // Keep the count below the last member's title, including in the exported SVG/PNG.
+      baseHeight + rows.length * MEMBER_ROW_H + (rows.length ? MEMBER_FOOTER_H : 0),
+    ]),
   )
   nodeHeights.set('department-root', baseHeight)
   const { nodes, width, height } = layout(chartRoots, textScale, nodeHeights)
@@ -652,8 +658,7 @@ export function OrgChart({
                     </>
                   )}
                   {(memberRows.get(node.id) ?? []).map((member, index) => {
-                    const y =
-                      NODE_H + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight + index * 42
+                    const y = baseHeight + index * MEMBER_ROW_H
                     return (
                       <g key={member.userId}>
                         <path

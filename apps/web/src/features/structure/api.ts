@@ -53,6 +53,7 @@ export const memberSchema = z.object({
   title: z.string().nullable(),
   avatarKey: z.string().nullable(),
   email: z.string().nullable().optional(),
+  dateOfBirth: z.string().nullable().optional(),
   professionalProfile: professionalProfileSchema.optional(),
   resumeUpdatedAt: z.string().nullable().optional(),
   personnelUpdatedAt: z.string().nullable().optional(),
