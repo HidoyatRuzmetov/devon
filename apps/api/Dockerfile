@@ -39,6 +39,8 @@ RUN pnpm install --frozen-lockfile --prod --network-concurrency=8 --fetch-timeou
 # --- runtime: only what `tsx src/server.ts` needs at process-start, nothing from apps/web/e2e/docs. --
 FROM ${NODE_IMAGE} AS runtime
 WORKDIR /repo
+# Alpine's fix for CVE-2026-85091 postdates this pinned Node image.
+RUN apk add --no-cache zlib=1.3.2-r1
 # Runtime has no package managers or their bundled dependency trees.
 RUN rm -rf /usr/local/lib/node_modules /opt/yarn-v* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV NODE_ENV=production
