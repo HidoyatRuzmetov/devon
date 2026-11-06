@@ -120,6 +120,7 @@ export function MemberCard({
       (a.current ? 2201 : (a.endYear ?? a.startYear ?? 0)),
   )
   const latestEducation = education[0]
+  const position = positionLabel(member.title, t)
   const birthDate = member.dateOfBirth
     ? formatDate(new Date(`${member.dateOfBirth}T00:00:00Z`), locale, 'UTC')
     : null
@@ -127,7 +128,7 @@ export function MemberCard({
     downloadResume(
       {
         name: formalName(member),
-        position: positionLabel(member.title, t),
+        position,
         email: member.email ?? '',
         unit: unit?.name ?? '',
       },
@@ -203,9 +204,9 @@ export function MemberCard({
             {portrait()}
             <span className="min-w-0 flex-1">
               <span className="block text-lead font-medium leading-snug">{fullName(member)}</span>
-              <span className="mt-1 block text-small text-muted-foreground">
-                {profile.headline || positionLabel(member.title, t) || empty}
-              </span>
+              {position ? (
+                <span className="mt-1 block text-small text-muted-foreground">{position}</span>
+              ) : null}
             </span>
             <ChevronRight
               className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
@@ -336,9 +337,9 @@ export function MemberCard({
                 </button>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-display text-h2 leading-tight">{fullName(member)}</h2>
-                  <p className="mt-1 text-body text-muted-foreground">
-                    {profile.headline || positionLabel(member.title, t) || empty}
-                  </p>
+                  {position ? (
+                    <p className="mt-1 text-body text-muted-foreground">{position}</p>
+                  ) : null}
                   <p className="mt-2 flex items-start gap-2 text-caption text-muted-foreground">
                     <span
                       className={cn('mt-1 size-2 shrink-0 rounded-full', colour)}

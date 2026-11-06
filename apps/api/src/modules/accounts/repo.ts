@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto'
 import { getBirthDate, writeBirthDate } from '../birthdays/repo.js'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { schema, withContext, type Tx } from '@devon/db'
-import { professionalProfileSchema, type ProfessionalProfile } from '@devon/contracts'
+import { parseStoredProfessionalProfile, type ProfessionalProfile } from '@devon/contracts'
 import type { Role } from '@devon/contracts'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
 import { generateToken, sha256Hex } from '../../lib/tokens.js'
@@ -597,7 +597,7 @@ export async function getProfessionalProfile(userId: string, ctx: AuditCtx) {
       sql`select professional_profile || jsonb_build_object('position',case when title in ('specialist_first_class','leading_specialist','chief_specialist','division_head','department_head') then title else '' end) as profile, professional_profile_version as version from app.users where id = ${userId} and deleted_at is null`,
     )
     return row
-      ? { profile: professionalProfileSchema.parse(row.profile), version: row.version }
+      ? { profile: parseStoredProfessionalProfile(row.profile), version: row.version }
       : null
   })
 }

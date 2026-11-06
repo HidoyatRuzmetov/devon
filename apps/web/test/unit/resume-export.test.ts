@@ -34,9 +34,15 @@ it('exports every public profile entry and full description without highlights o
       url: `https://example.com/${i}`,
     })),
   })
+  const legacyProfile = { ...profile, headline: 'Legacy résumé headline' }
   const bytes = buildResumeDocx(
-    { name: 'Example Person', email: '', unit: '', position: '' },
-    profile,
+    {
+      name: 'Example Person',
+      email: 'person@example.com',
+      unit: 'Policy',
+      position: 'Chief specialist',
+    },
+    legacyProfile,
     {
       about: 'Profile',
       experience: 'Experience',
@@ -59,6 +65,9 @@ it('exports every public profile entry and full description without highlights o
   expect(zipText.match(/FINAL DESCRIPTION SENTENCE\./g)).toHaveLength(7)
   expect(zipText).toContain('Skill 29')
   expect(zipText).toContain('Reading')
+  expect(zipText.match(/Chief specialist/g)).toHaveLength(1)
+  expect(zipText).toContain('person@example.com')
+  expect(zipText).not.toContain('Legacy résumé headline')
   expect(zipText).not.toContain('highlights')
   expect(zipText).not.toContain('People')
   expect(zipText).not.toContain('<w:br w:type="page"')

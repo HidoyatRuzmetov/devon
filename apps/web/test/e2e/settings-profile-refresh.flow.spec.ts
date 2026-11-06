@@ -67,7 +67,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
       data: {
         version: 1,
         profile: {
-          headline: 'Research analyst',
+          position: 'leading_specialist',
           about:
             'I translate evidence into practical policy and help teams build clear, measurable plans.',
           phone: '+998 00 000 00 00',
@@ -129,8 +129,8 @@ test('settings panes, legacy links and professional profiles work on desktop and
       fullPage: true,
     })
     await settingsNav.getByRole('link', { name: 'Résumé', exact: true }).click()
-    await expect(page.getByRole('textbox', { name: 'Headline', exact: true })).toHaveValue(
-      'Research analyst',
+    await expect(page.getByRole('textbox', { name: 'About', exact: true })).toHaveValue(
+      'I translate evidence into practical policy and help teams build clear, measurable plans.',
     )
     const year = page.getByRole('textbox', { name: 'Start year', exact: true }).first()
     await year.focus()
@@ -209,7 +209,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
     await page
       .getByRole('combobox', { name: 'Settings sections' })
       .selectOption('/account/professional')
-    await expect(page.getByRole('textbox', { name: 'Headline', exact: true })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'About', exact: true })).toBeVisible()
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
@@ -265,7 +265,7 @@ test('settings panes, legacy links and professional profiles work on desktop and
     /* eslint-enable no-restricted-syntax */
     await page.goto('/people')
     await expect(page.getByRole('heading', { name: /Research and Policy/ })).toBeVisible()
-    const memberCard = page.getByRole('button', { name: /Test Analyst.*Research analyst/ })
+    const memberCard = page.getByRole('button', { name: /Test Analyst.*Leading specialist/ })
     await expect(memberCard).toBeVisible()
     await expect(memberCard.locator('time[datetime="1992-02-29"]')).toHaveText('29.02.1992')
     await expect(page.locator('time')).toHaveCount(1)

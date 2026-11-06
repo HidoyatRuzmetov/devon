@@ -111,7 +111,7 @@ function PersonnelEditor({
     `devon.personnel.v1:${departmentId}:${owner}`,
     initial,
     version,
-    (value: unknown): value is PersonnelData => personnelDataSchema.safeParse(value).success,
+    (value) => (personnelDataSchema.safeParse(value).success ? (value as PersonnelData) : null),
   )
   const data = readonly ? initial : draft.value
   const [issues, setIssues] = React.useState<{

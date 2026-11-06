@@ -477,11 +477,6 @@ function WorkforceAvatars({
                   </p>
                 </div>
               </div>
-              {member.professionalProfile?.headline ? (
-                <p className="mt-2 line-clamp-2 text-small text-muted-foreground">
-                  {member.professionalProfile.headline}
-                </p>
-              ) : null}
             </HoverCardContent>
           </HoverCard>
         )

@@ -19,8 +19,8 @@ vi.mock('../../src/lib/session.js', async () => {
 vi.mock('@devon/ui', async (original) => ({ ...(await original<typeof UI>()), toast: vi.fn() }))
 import { toast } from '@devon/ui'
 
-const profile = (headline: string, version = 1) => ({
-  profile: professionalProfileSchema.parse({ headline }),
+const profile = (about: string, version = 1) => ({
+  profile: professionalProfileSchema.parse({ about }),
   version,
 })
 const key = (owner: string) => ['accounts', 'professional-profile', owner]
@@ -46,10 +46,52 @@ function setup() {
 }
 beforeEach(() => {
   vi.clearAllMocks()
+  localStorage.removeItem('devon.profile.resume.v2:a')
   setLocale('en')
 })
 
 describe('professional profile ownership and form submission', () => {
+  it('recovers an old draft without losing unfinished text, links or the original save version', async () => {
+    const draftKey = 'devon.profile.resume.v2:a'
+    const unfinishedAbout = 'Policy research in progress '
+    localStorage.setItem(
+      draftKey,
+      JSON.stringify({
+        revision: 7,
+        value: {
+          ...profile('').profile,
+          headline: 'Retired profile headline',
+          about: unfinishedAbout,
+          links: [{ label: 'Portfolio', url: 'https://' }],
+        },
+      }),
+    )
+    mocks.put.mockImplementation(async (_path, body) => ({ ...body, version: 8 }))
+    const { client } = setup()
+    const about = await screen.findByRole('textbox', { name: 'About' })
+    expect(about).toHaveValue(unfinishedAbout)
+    expect(screen.queryByRole('textbox', { name: 'Headline' })).toBeNull()
+    expect(mocks.put).not.toHaveBeenCalled()
+    const link = screen.getByDisplayValue('https://')
+    const user = userEvent.setup()
+    await user.type(link, 'example.com')
+    const recovered = JSON.parse(localStorage.getItem(draftKey)!)
+    expect(recovered.revision).toBe(7)
+    expect(recovered.value.about).toBe(unfinishedAbout)
+    expect(recovered.value).not.toHaveProperty('headline')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce())
+    expect(mocks.put.mock.calls[0]?.[1]).toMatchObject({
+      version: 7,
+      profile: {
+        about: unfinishedAbout.trim(),
+        links: [{ label: 'Portfolio', url: 'https://example.com' }],
+      },
+    })
+    expect(mocks.put.mock.calls[0]?.[1].profile).not.toHaveProperty('headline')
+    client.clear()
+  })
+
   it('requires a named education entry and never changes years when scrolling or pressing arrows', async () => {
     mocks.put.mockImplementation(async (_path, body) => ({ ...body, version: body.version + 1 }))
     const { client } = setup()
@@ -141,7 +183,7 @@ describe('professional profile ownership and form submission', () => {
     view.rerender(tree())
     await screen.findByDisplayValue('B profile')
     await act(async () => finish(profile('A private history', 2)))
-    expect(screen.getByRole('textbox', { name: 'Headline' })).toHaveValue('B profile')
+    expect(screen.getByRole('textbox', { name: 'About' })).toHaveValue('B profile')
     expect(client.getQueryData(key('b'))).toEqual(profile('B profile'))
     expect(client.getQueryData(key('a'))).toBeUndefined()
     expect(toast).not.toHaveBeenCalled()
@@ -167,7 +209,7 @@ describe('professional profile ownership and form submission', () => {
     await screen.findByDisplayValue('Newer edit')
     await act(async () => finish(profile('Older receipt', 2)))
     expect(client.getQueryData(key('a'))).toEqual(profile('Newer edit', 3))
-    expect(screen.getByRole('textbox', { name: 'Headline' })).toHaveValue('Newer edit')
+    expect(screen.getByRole('textbox', { name: 'About' })).toHaveValue('Newer edit')
     client.clear()
   })
 })

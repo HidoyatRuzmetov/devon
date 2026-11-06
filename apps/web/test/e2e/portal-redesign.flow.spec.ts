@@ -208,7 +208,7 @@ const test = base.extend<{ portal: PortalFixture }>({
             data: {
               version: 1,
               profile: {
-                headline: 'Policy researcher',
+                position: 'leading_specialist',
                 about: 'Research and public service.',
                 education: [
                   {
@@ -652,7 +652,7 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   await page.goto('/people')
   await page
     .getByRole('button')
-    .filter({ has: page.getByText('Policy researcher', { exact: true }) })
+    .filter({ has: page.getByText('Leading specialist', { exact: true }) })
     .click()
   await expect(page.getByRole('dialog')).toContainText('Example University')
   await expect(page.getByRole('dialog')).toContainText('2028')
@@ -668,15 +668,17 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   await page.keyboard.press('Escape')
   await page.goto('/account#section-professional')
   const profileSection = page.locator('#section-professional')
-  await profileSection.getByLabel('Headline', { exact: true }).fill('Senior policy researcher')
+  await profileSection
+    .getByRole('combobox', { name: 'Position', exact: true })
+    .selectOption('chief_specialist')
   await profileSection.getByRole('button', { name: 'Save', exact: true }).click()
   await expect
     .poll(
       async () =>
         (await (await context.request.get('/api/v1/accounts/professional-profile')).json()).profile
-          .headline,
+          .position,
     )
-    .toBe('Senior policy researcher')
+    .toBe('chief_specialist')
   await page.goto('/structure')
   await page.getByRole('tab', { name: 'Org chart', exact: true }).click()
   await expect(page.getByRole('tree')).toContainText('Test Head')
@@ -691,7 +693,7 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   const workforceAvatars = page.getByTestId('overview-workforce-avatars')
   await expect(workforceAvatars.getByRole('link')).toHaveCount(5)
   await workforceAvatars.getByRole('link', { name: 'Test Head', exact: true }).hover()
-  await expect(page.getByText('Senior policy researcher', { exact: true })).toBeVisible()
+  await expect(page.getByText('Chief specialist', { exact: true })).toBeVisible()
   await page.getByText('Total workforce', { exact: true }).hover()
   // A single page is being resized; these operations depend on the previous viewport.
   /* eslint-disable no-restricted-syntax */
@@ -784,7 +786,7 @@ test('@flow professional directory, staffing and responsive head overview', asyn
   await expect(mobileStaffing).toHaveValue('8')
   await page.screenshot({ path: testInfo.outputPath('structure-mobile.png') })
   await page.goto('/people')
-  await expect(page.getByText('Senior policy researcher', { exact: true })).toBeVisible()
+  await expect(page.getByText('Chief specialist', { exact: true })).toBeVisible()
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true)

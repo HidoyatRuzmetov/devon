@@ -59,7 +59,7 @@ describe('private birthday account and first-entry receipt', () => {
       [
         person.id,
         JSON.stringify({
-          headline: 'Thoughtful software systems',
+          headline: 'Private legacy headline',
           skills: ['Software engineering'],
           hobbies: ['Reading', 'Hiking'],
           about: 'Private omitted biography',
@@ -165,7 +165,6 @@ describe('private birthday account and first-entry receipt', () => {
         family: { children: true, livingParent: true, family: true },
         interests: {
           role: 'Chief specialist',
-          headline: 'Thoughtful software systems',
           skills: ['Software engineering'],
           hobbies: ['Reading', 'Hiking'],
           fields: ['Computer science'],

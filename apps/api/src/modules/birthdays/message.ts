@@ -6,7 +6,6 @@ export type BirthdayContext = {
   family: FamilyContext
   interests: {
     role: string
-    headline: string
     skills: string[]
     hobbies: string[]
     fields: string[]
@@ -18,20 +17,15 @@ export type BirthdayContext = {
  * dates, organizations, institutions, private drafts, or a complete profile to the provider. */
 export function publicBirthdayContext(value: unknown): BirthdayContext['interests'] {
   const data = value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
-  const bounded = (value: unknown, limit = 80) =>
+  const bounded = (value: unknown) =>
     typeof value === 'string' && !/https?:|@|\d{5,}/i.test(value)
       ? value
           .replace(/[\r\n\t]+/g, ' ')
           .trim()
-          .slice(0, limit)
+          .slice(0, 60)
       : ''
   const list = (value: unknown, max: number) =>
-    Array.isArray(value)
-      ? value
-          .map((item) => bounded(item, 60))
-          .filter(Boolean)
-          .slice(0, max)
-      : []
+    Array.isArray(value) ? value.map(bounded).filter(Boolean).slice(0, max) : []
   const roles: Record<string, string> = {
     specialist_first_class: 'First-class specialist',
     leading_specialist: 'Leading specialist',
@@ -41,7 +35,6 @@ export function publicBirthdayContext(value: unknown): BirthdayContext['interest
   }
   return {
     role: roles[String(data['position'])] ?? '',
-    headline: bounded(data['headline'], 120),
     skills: list(data['skills'], 6),
     hobbies: list(data['hobbies'], 4),
     fields: list(data['fields'], 2),

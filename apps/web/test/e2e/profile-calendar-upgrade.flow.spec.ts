@@ -57,10 +57,10 @@ test('private drafts recover, photos crop and invitations reach the attendee cal
     await page.setViewportSize({ width: 1440, height: 1000 })
     await page.goto('/account/professional')
     await page
-      .getByRole('textbox', { name: 'Headline', exact: true })
+      .getByRole('textbox', { name: 'About', exact: true })
       .fill('Unpublished recovery draft')
     await page.reload()
-    await expect(page.getByRole('textbox', { name: 'Headline', exact: true })).toHaveValue(
+    await expect(page.getByRole('textbox', { name: 'About', exact: true })).toHaveValue(
       'Unpublished recovery draft',
     )
     const published = await (
@@ -68,7 +68,7 @@ test('private drafts recover, photos crop and invitations reach the attendee cal
     ).json()
     expect(JSON.stringify(published)).not.toContain('Unpublished recovery draft')
     await page.getByRole('button', { name: 'Discard recovered draft' }).click()
-    await expect(page.getByRole('textbox', { name: 'Headline', exact: true })).toHaveValue('')
+    await expect(page.getByRole('textbox', { name: 'About', exact: true })).toHaveValue('')
     await page.getByRole('link', { name: 'Personnel record', exact: true }).click()
     await page
       .getByRole('textbox', { name: 'Full legal name', exact: true })

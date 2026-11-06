@@ -6,6 +6,7 @@ import {
   seedMember,
   startHarness,
   stopHarness,
+  superuserQuery,
   type Db,
   type Server,
   type Session,
@@ -42,11 +43,14 @@ function request(path: string, method = 'GET', body?: unknown, session = member)
 }
 describe('professional profiles, staffing and card stages', () => {
   it('lets each user publish their history, rejects stale edits and unsafe links, and scopes the directory', async () => {
-    const before = (await (await request('/accounts/professional-profile')).json()) as {
+    const initialResponse = await request('/accounts/professional-profile')
+    expect(initialResponse.status).toBe(200)
+    const before = (await initialResponse.json()) as {
       version: number
     }
     const profile = {
-      headline: 'Research analyst',
+      about: 'Economic policy research',
+      position: 'chief_specialist',
       phone: '+998 00 000 00 00',
       education: [
         {
@@ -69,8 +73,12 @@ describe('professional profiles, staffing and card stages', () => {
       links: [{ label: 'LinkedIn', url: 'https://www.linkedin.com/' }],
     }
     expect(
-      (await request('/accounts/professional-profile', 'PUT', { profile, version: before.version }))
-        .status,
+      (
+        await request('/accounts/professional-profile', 'PUT', {
+          profile: { ...profile, headline: 'Obsolete legacy headline' },
+          version: before.version,
+        })
+      ).status,
     ).toBe(200)
     expect(
       (await request('/accounts/professional-profile', 'PUT', { profile, version: before.version }))
@@ -84,16 +92,37 @@ describe('professional profiles, staffing and card stages', () => {
         })
       ).status,
     ).toBe(422)
+    expect(
+      (
+        await request('/accounts/professional-profile', 'PUT', {
+          profile: { ...profile, unrecognizedField: 'invalid' },
+          version: before.version + 1,
+        })
+      ).status,
+    ).toBe(422)
+    // Persistent profiles saved by the old release must still be editable and visible in People.
+    await superuserQuery(
+      db,
+      'update app.users set professional_profile = professional_profile || $2::jsonb where id=$1',
+      [memberId, JSON.stringify({ headline: 'Stored legacy headline' })],
+    )
+    const legacyResponse = await request('/accounts/professional-profile')
+    expect(legacyResponse.status).toBe(200)
+    const legacyRecord = (await legacyResponse.json()) as { profile: unknown; version: number }
+    expect(legacyRecord).toMatchObject({ profile, version: before.version + 1 })
+    expect(legacyRecord.profile).not.toHaveProperty('headline')
     const roster = (await (
       await request(`/departments/${departmentId}/roster`, 'GET', undefined, head)
     ).json()) as { userId: string; professionalProfile: unknown }[]
-    expect(roster.find((m) => m.userId === memberId)?.professionalProfile).toMatchObject(profile)
+    const published = roster.find((m) => m.userId === memberId)?.professionalProfile
+    expect(published).toMatchObject(profile)
+    expect(published).not.toHaveProperty('headline')
     expect(
       (await request(`/departments/${departmentId}/roster`, 'GET', undefined, foreign)).status,
     ).toBe(403)
     expect(
       await (await request('/accounts/professional-profile', 'GET', undefined, head)).json(),
-    ).toMatchObject({ profile: { headline: '' }, version: 1 })
+    ).toMatchObject({ profile: { about: '', position: '' }, version: 1 })
   })
   it('allows only the head to set staffing and makes the target visible to members', async () => {
     const created = await request(

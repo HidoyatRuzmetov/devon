@@ -63,7 +63,6 @@ test('@flow birthday letter writes real strokes, is dismissible, and appears onc
               profile: {
                 ...published.profile,
                 position: 'chief_specialist',
-                headline: 'Thoughtful software systems',
                 skills: ['Software engineering'],
                 hobbies: ['Reading', 'Hiking'],
               },

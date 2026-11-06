@@ -155,7 +155,7 @@ test('real data loading follows each layout and imported personnel records requi
           data: {
             version: 1,
             profile: {
-              headline: 'Research analyst with 7 years of experience',
+              position: 'chief_specialist',
               phone: '+998 00 000 00 00',
               education: [
                 {

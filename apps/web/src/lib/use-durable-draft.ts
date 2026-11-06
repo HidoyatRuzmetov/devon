@@ -5,7 +5,7 @@ export function useDurableDraft<T>(
   key: string,
   initial: T,
   revision: number,
-  validate: (value: unknown) => value is T,
+  parseDraft: (raw: unknown) => T | null,
 ) {
   const [restored, setRestored] = React.useState(() => {
     try {
@@ -15,10 +15,11 @@ export function useDurableDraft<T>(
         typeof raw === 'object' &&
         'value' in raw &&
         'revision' in raw &&
-        typeof raw.revision === 'number' &&
-        validate(raw.value)
-      )
-        return { value: raw.value, revision: raw.revision }
+        typeof raw.revision === 'number'
+      ) {
+        const value = parseDraft(raw.value)
+        if (value !== null) return { value, revision: raw.revision }
+      }
     } catch {
       /* A malformed/unsupported draft cannot break the editor. */
     }

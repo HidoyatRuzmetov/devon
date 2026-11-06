@@ -4,7 +4,7 @@ import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   professionalProfileRecordSchema,
-  isProfessionalProfileDraft,
+  parseProfessionalProfileDraft,
   POSITION_CODES,
   EDUCATION_CODES,
   professionalProfileWriteSchema,
@@ -85,7 +85,7 @@ function ProfileEditor({
     `devon.profile.resume.v2:${ownerUserId}`,
     initial,
     version,
-    isProfessionalProfileDraft,
+    parseProfessionalProfileDraft,
   )
   const profile = draft.value,
     setProfile = draft.update
@@ -219,15 +219,8 @@ function ProfileEditor({
           {t('settings.profile.introduction')}
         </legend>
         <div className="grid gap-4 sm:grid-cols-2">
-          {(['headline', 'phone', 'location'] as const).map((key) => (
-            <label
-              className={
-                key === 'headline'
-                  ? 'flex flex-col gap-1.5 text-small sm:col-span-2'
-                  : 'flex flex-col gap-1.5 text-small'
-              }
-              key={key}
-            >
+          {(['phone', 'location'] as const).map((key) => (
+            <label className="flex flex-col gap-1.5 text-small" key={key}>
               {label(key)}
               <Input
                 type={key === 'phone' ? 'tel' : 'text'}

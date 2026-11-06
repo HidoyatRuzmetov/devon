@@ -27,7 +27,6 @@ const orderedPeriod = (v: { startYear: number | null; endYear: number | null }) 
   v.startYear === null || v.endYear === null || v.endYear >= v.startYear
 export const professionalProfileSchema = z
   .object({
-    headline: text.default(''),
     position: positionSchema.or(z.literal('')).default(''),
     about: z.string().trim().max(10000).default(''),
     phone: z.string().trim().max(80).default(''),
@@ -87,38 +86,58 @@ export const professionalProfileSchema = z
       .default([]),
   })
   .strict()
+
+// Old saved profiles, offline drafts and still-open clients can carry this retired field.
+// Strip only that key. The canonical schema still rejects any other unknown top-level field.
+function discardRetiredHeadline(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || !Object.hasOwn(value, 'headline')) return value
+  const fields = { ...value } as Record<string, unknown>
+  delete fields['headline']
+  return fields
+}
+
 export type ProfessionalProfile = z.infer<typeof professionalProfileSchema>
-// Recovery must accept unfinished URLs and partially typed years; publication validates above.
-export function isProfessionalProfileDraft(value: unknown): value is ProfessionalProfile {
-  const result = professionalProfileSchema
-    .extend({
-      education: z.array(
-        z.object({
-          institution: z.string(),
-          degree: educationLevelSchema.or(z.literal('')),
-          field: z.string(),
-          startYear: z.number().nullable(),
-          endYear: z.number().nullable(),
-          current: z.boolean(),
-        }),
-      ),
-      experience: z.array(
-        z.object({
-          organization: z.string(),
-          role: z.string(),
-          description: z.string(),
-          startYear: z.number().nullable(),
-          endYear: z.number().nullable(),
-          current: z.boolean(),
-        }),
-      ),
-      certifications: z.array(
-        z.object({ name: z.string(), issuer: z.string(), year: z.number().nullable() }),
-      ),
-      links: z.array(z.object({ label: z.string(), url: z.string() })),
-    })
-    .safeParse(value)
-  return result.success
+export function parseStoredProfessionalProfile(value: unknown): ProfessionalProfile {
+  return professionalProfileSchema.parse(discardRetiredHeadline(value))
+}
+
+// Recovery preserves typed text and unfinished values. Publication applies trimming and validation.
+const profileDraftSchema = professionalProfileSchema.extend({
+  about: z.string().default(''),
+  phone: z.string().default(''),
+  location: z.string().default(''),
+  skills: z.array(z.string()).default([]),
+  languages: z.array(z.string()).default([]),
+  hobbies: z.array(z.string()).default([]),
+  education: z.array(
+    z.object({
+      institution: z.string(),
+      degree: educationLevelSchema.or(z.literal('')),
+      field: z.string(),
+      startYear: z.number().nullable(),
+      endYear: z.number().nullable(),
+      current: z.boolean(),
+    }),
+  ),
+  experience: z.array(
+    z.object({
+      organization: z.string(),
+      role: z.string(),
+      description: z.string(),
+      startYear: z.number().nullable(),
+      endYear: z.number().nullable(),
+      current: z.boolean(),
+    }),
+  ),
+  certifications: z.array(
+    z.object({ name: z.string(), issuer: z.string(), year: z.number().nullable() }),
+  ),
+  links: z.array(z.object({ label: z.string(), url: z.string() })),
+})
+
+export function parseProfessionalProfileDraft(value: unknown): ProfessionalProfile | null {
+  const result = profileDraftSchema.safeParse(discardRetiredHeadline(value))
+  return result.success ? result.data : null
 }
 export const professionalProfileRecordSchema = z.object({
   profile: professionalProfileSchema,
@@ -126,8 +145,9 @@ export const professionalProfileRecordSchema = z.object({
 })
 
 /** Existing optional profiles remain readable; new edits cannot create nameless entries. */
-export const professionalProfileWriteSchema = professionalProfileSchema.superRefine(
-  (profile, ctx) => {
+export const professionalProfileWriteSchema = z.preprocess(
+  discardRetiredHeadline,
+  professionalProfileSchema.superRefine((profile, ctx) => {
     const required = {
       education: ['institution'],
       experience: ['organization', 'role'],
@@ -143,7 +163,7 @@ export const professionalProfileWriteSchema = professionalProfileSchema.superRef
         }
       })
     }
-  },
+  }),
 )
 export const professionalProfileWriteRecordSchema = z.object({
   profile: professionalProfileWriteSchema,

@@ -6,7 +6,7 @@
 // hand-written, parameterised SQL against `app.units`/`app.unit_roles` -- the same tables
 // `packages/db/src/schema/structure.ts` describes for Drizzle's benefit inside that package (its own
 // seed module, and `test/tenancy.registry.test.ts`).
-import { professionalProfileSchema } from '@devon/contracts'
+import { parseStoredProfessionalProfile } from '@devon/contracts'
 import { randomUUID } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext, type Role, type Tx } from '@devon/db'
@@ -698,7 +698,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
       avatarKey: r.avatar_key,
       email: r.email,
       dateOfBirth: r.date_of_birth,
-      professionalProfile: professionalProfileSchema.parse(r.professional_profile ?? {}),
+      professionalProfile: parseStoredProfessionalProfile(r.professional_profile ?? {}),
       resumeUpdatedAt: r.resume_updated_at,
       personnelUpdatedAt: r.personnel_updated_at,
       membershipRole: r.membership_role,

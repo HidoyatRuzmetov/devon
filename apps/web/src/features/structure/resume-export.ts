@@ -46,11 +46,11 @@ export function buildResumeDocx(
   const period = (item: { current: boolean; startYear: number | null; endYear: number | null }) =>
     [item.startYear, item.current ? labels.present : item.endYear].filter(Boolean).join(' – ')
   // Let Word paginate complete entries. A fixed break after two jobs wastes half a page.
-  const contact = [identity.position, identity.unit].filter(Boolean).join(' · ')
+  const subtitle = [identity.position, identity.unit].filter(Boolean).join(' · ')
+  const contact = [identity.email, profile.phone, profile.location].filter(Boolean).join('  ·  ')
   let body = `<w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr>${run(identity.name, true, '000000', 44)}</w:p>`
-  body += p(profile.headline || contact, 'Subtitle')
-  if (profile.headline && contact) body += p(contact, 'Meta')
-  body += p([identity.email, profile.phone, profile.location].filter(Boolean).join('  ·  '), 'Meta')
+  if (subtitle) body += p(subtitle, 'Subtitle')
+  if (contact) body += p(contact, 'Meta')
   if (profile.about) body += heading(labels.about) + p(profile.about)
   const renderExperience = (items: typeof experience) =>
     items

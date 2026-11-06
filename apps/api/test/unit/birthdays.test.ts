@@ -54,7 +54,7 @@ describe('birthday calendar and disclosure boundaries', () => {
   it('bounds published interests without forwarding dates, biography, identity or contacts', () => {
     const context = publicBirthdayContext({
       position: 'chief_specialist',
-      headline: 'Software engineer',
+      headline: 'Private legacy headline',
       skills: Array(12).fill('A'.repeat(100)),
       hobbies: ['Hiking', 'name@example.com', 'https://example.com', '998901234567'],
       fields: ['Computer science'],

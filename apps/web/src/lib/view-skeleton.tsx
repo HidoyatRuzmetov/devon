@@ -588,8 +588,20 @@ const layouts = {
   ),
   resume: (
     <>
-      <Fields count={3} />
-      <Skeleton className="h-24 w-full" />
+      {line('w-44')}
+      <div className="space-y-1.5">
+        {line('w-28')}
+        <Skeleton className="h-11 w-full rounded-md" />
+      </div>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Skeleton className="size-5" />
+          {line('w-24')}
+        </div>
+        <Fields count={2} />
+        {line('w-16')}
+        <Skeleton className="h-24 w-full" />
+      </div>
       <div className="space-y-4 rounded-xl border border-border p-4">
         {line('w-40')}
         <Fields count={4} />

@@ -50,7 +50,7 @@ export async function ensureGreeting(ctx: RequestContext, ownerUserId: string, d
       from app.personnel_records p cross join lateral jsonb_array_elements(p.data->'relatives') r
       where p.department_id=${ctx.departmentId} and p.owner_user_id=${ownerUserId}`)
     const [published] = await tx.raw<{ data: unknown }>(sql`select jsonb_build_object(
-      'position',u.title,'headline',u.professional_profile->'headline',
+      'position',u.title,
       'skills',u.professional_profile->'skills','hobbies',u.professional_profile->'hobbies',
       'fields',(select jsonb_agg(e->'field') from jsonb_array_elements(coalesce(u.professional_profile->'education','[]'::jsonb)) e),
       'currentRoles',(select jsonb_agg(e->'role') from jsonb_array_elements(coalesce(u.professional_profile->'experience','[]'::jsonb)) e where e->>'current'='true')) as data
