@@ -1,0 +1,42 @@
+.birth-date-control {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+.birth-date-control > input {
+  width: 100%;
+  padding-inline-end: 2.25rem;
+}
+.birth-date-calendar {
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-end: 2px;
+  width: 2rem;
+  display: grid;
+  place-items: center;
+  color: inherit;
+  border-radius: 3px;
+}
+.birth-date-calendar:focus-within {
+  outline: 2px solid var(--color-ring, #4877aa);
+  outline-offset: -2px;
+}
+.birth-date-calendar input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.birth-date-calendar input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}

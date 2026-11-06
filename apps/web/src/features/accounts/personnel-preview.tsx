@@ -6,6 +6,7 @@ import {
   type PersonnelData,
 } from '@devon/contracts'
 import { useT } from '@devon/i18n'
+import { personnelPaperText } from './personnel-typography.js'
 
 /** The approved annotated Word sample, without its editorial notes or instructions. */
 export function PersonnelPreview({
@@ -26,9 +27,10 @@ export function PersonnelPreview({
     script === 'latin'
       ? preserveNames(value, [...data.protectedNames, ...names.filter(Boolean)], toLatin)
       : value
-  const field = (path: string, value: string) =>
-    readonly ? (
-      <span className={!value ? 'paper-placeholder' : undefined}>{value || '—'}</span>
+  const field = (path: string, value: string) => {
+    const shown = personnelPaperText(value, data.protectedNames)
+    return readonly ? (
+      <span className={!shown ? 'paper-placeholder' : undefined}>{shown || '—'}</span>
     ) : (
       <button
         type="button"
@@ -36,9 +38,10 @@ export function PersonnelPreview({
         className={`paper-edit ${value ? '' : 'paper-placeholder'}`}
         onClick={() => onEdit(path)}
       >
-        {value || t('personnelDocument.empty')}
+        {shown || t('personnelDocument.empty')}
       </button>
     )
+  }
   const pair = (a: string, b: string, left: React.ReactNode, right: React.ReactNode) => (
     <div className="paper-two">
       <strong>{wording(a)}</strong>

@@ -1232,7 +1232,17 @@ function validate(d) {
   if (!clean(d.photo)) err('photo', 'Фото киритилмаган.')
   if (clean(d.photoError)) err('photo', 'Фото: ' + clean(d.photoError))
   if (!d.birthDate) err('birthDate', 'Туғилган санаси тўлдирилмаган.')
-  else if (by && (by < 1930 || by > yr - 14)) err('birthDate', 'Туғилган санасини текширинг.')
+  else {
+    var birth = new Date(d.birthDate + 'T00:00:00Z')
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(d.birthDate) ||
+      !Number.isFinite(birth.getTime()) ||
+      birth.toISOString().slice(0, 10) !== d.birthDate ||
+      by < 1930 ||
+      by > yr - 14
+    )
+      err('birthDate', 'Туғилган санасини текширинг.')
+  }
   placeCheck('birthPlace', 'Туғилган жойи', d.birthPlace)
   if (!clean(d.nationality)) err('nationality', 'Миллати тўлдирилмаган.')
   else latinCheck('nationality', 'Миллати', d.nationality)

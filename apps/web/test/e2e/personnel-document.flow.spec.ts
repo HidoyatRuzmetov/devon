@@ -40,16 +40,31 @@ test('personnel record edits on two paper pages, previews in place and exports a
       page.getByRole('textbox', { name: 'Academic title', exact: true }),
     ).toHaveAttribute('placeholder', /professor/)
     await expect(page.getByText('Names to keep unchanged', { exact: true })).toHaveCount(0)
-    await page
-      .getByRole('textbox', { name: 'Full legal name', exact: true })
-      .fill('Karimov Sardor Akmalovich')
+    const name = page.getByRole('textbox', { name: 'Full legal name', exact: true })
+    const typedName = "Karimov Sardor O'Brien o'g'li"
+    const paperName = "Karimov Sardor O'Brien oʻgʻli"
+    const labelFont = await page
+      .locator('.personnel-label')
+      .first()
+      .evaluate((label) => getComputedStyle(label).fontFamily)
+    await expect(name).toHaveCSS('font-family', labelFont)
+    await expect(page.getByRole('combobox', { name: 'Study mode', exact: true })).toHaveCSS(
+      'font-family',
+      labelFont,
+    )
+    await name.fill(typedName)
+    await name.blur()
+    await expect(name).toHaveValue(typedName)
+    const printedName = page.locator('.personnel-name .personnel-paper-ink')
+    await expect(printedName).toBeVisible()
+    await expect(printedName).toHaveText(paperName)
     await page.getByRole('button', { name: 'Preview', exact: true }).click()
     await expect(page.locator('.template-paper')).toHaveCount(2)
-    await page
-      .getByRole('button', { name: 'Karimov Sardor Akmalovich', exact: true })
-      .first()
-      .click()
-    await expect(page.getByRole('textbox', { name: 'Full legal name', exact: true })).toBeFocused()
+    const previewName = page.getByRole('button', { name: paperName, exact: true }).first()
+    await expect(previewName).toHaveCSS('font-family', labelFont)
+    await previewName.click()
+    await expect(name).toBeFocused()
+    await expect(name).toHaveValue(typedName)
     await page.keyboard.press('Control+Enter')
     await expect(page.getByRole('button', { name: 'Edit document', exact: true })).toBeVisible()
     await page.keyboard.press('Escape')
@@ -63,7 +78,7 @@ test('personnel record edits on two paper pages, previews in place and exports a
       }),
       militaryRank: 'yo‘q',
       fio: 'Karimov Sardor Akmalovich',
-      birthDate: '1990-03-15',
+      birthDate: '1992-07-31',
       birthPlace: 'Toshkent shahri, Yunusobod tumani',
       nationality: 'o‘zbek',
       eduLevel: 'олий',
@@ -133,6 +148,21 @@ test('personnel record edits on two paper pages, previews in place and exports a
     await expect(page.getByRole('textbox', { name: 'Academic title', exact: true })).toHaveValue(
       'dotsent',
     )
+    const birthDate = page.locator('[data-field-path="birthDate"]')
+    await expect(birthDate).toHaveValue('31.07.1992')
+    await birthDate.fill('29.02.1993')
+    await page.getByRole('button', { name: 'Save', exact: true }).click()
+    await expect(birthDate).toBeFocused()
+    await expect(birthDate).toHaveAttribute('aria-invalid', 'true')
+    await page.reload()
+    await expect(birthDate).toHaveValue('29.02.1993')
+    const calendar = page.locator('.personnel-birthDate input[type="date"]')
+    await calendar.fill('1992-02-29')
+    await expect(birthDate).toHaveValue('29.02.1992')
+    await birthDate.fill('')
+    await birthDate.pressSequentially('31071992')
+    await expect(birthDate).toHaveValue('31.07.1992')
+    await expect(calendar).toHaveValue('1992-07-31')
     await page.getByRole('button', { name: 'Save', exact: true }).click()
     await expect
       .poll(
@@ -140,11 +170,15 @@ test('personnel record edits on two paper pages, previews in place and exports a
           (await (await head.request.get('/api/v1/accounts/personnel-record')).json()).version,
       )
       .toBe(1)
+    expect(
+      (await (await head.request.get('/api/v1/accounts/personnel-record')).json()).data.birthDate,
+    ).toBe('1992-07-31')
     await page.screenshot({
       path: testInfo.outputPath('document-edit-desktop.png'),
       fullPage: true,
     })
     await page.getByRole('button', { name: 'Preview', exact: true }).click()
+    await expect(page.locator('[data-preview-field="birthDate"]')).toHaveText('31.07.1992')
     const workLines = await page
       .locator('.paper-work-description .paper-edit')
       .evaluateAll((elements) =>
@@ -224,6 +258,7 @@ test('personnel record edits on two paper pages, previews in place and exports a
       await page.setViewportSize({ width: widths[index]!, height: 900 })
       const address = page.locator('[data-field-path="relatives.1.address"]')
       await address.fill('')
+      await expect(address).toHaveValue('')
       await page.getByRole('button', { name: 'Preview', exact: true }).click()
       await page.getByRole('button', { name: 'Save', exact: true }).click()
       await expect(address).toBeFocused()

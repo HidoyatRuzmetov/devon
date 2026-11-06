@@ -95,7 +95,9 @@ test('@flow birthday letter writes real strokes, is dismissible, and appears onc
     const profile = page.locator('#section-profile')
     await expect(profile.getByLabel('Date of birth', { exact: true })).toBeVisible()
     const today = new Date(Date.now() + 18_000_000).toISOString().slice(0, 10)
-    await profile.getByLabel('Date of birth', { exact: true }).fill(`2000-${today.slice(5)}`)
+    await profile
+      .getByRole('textbox', { name: 'Date of birth', exact: true })
+      .fill(`${today.slice(8)}.${today.slice(5, 7)}.2000`)
     await profile.getByRole('button', { name: 'Save', exact: true }).click()
     const letter = page.getByRole('dialog', { name: 'A birthday wish for you' })
     await expect(letter).toBeVisible({ timeout: 30_000 })

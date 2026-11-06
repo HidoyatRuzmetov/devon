@@ -113,9 +113,20 @@ test('settings panes, legacy links and professional profiles work on desktop and
     await page.goto('/account')
     await expect(page.getByRole('heading', { name: 'Profile settings', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible()
-    await page.getByLabel(/Date of birth/).fill('1992-02-29')
-    await page.getByRole('button', { name: 'Save', exact: true }).click()
-    await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled()
+    const birthDate = page.getByRole('textbox', { name: 'Date of birth', exact: true })
+    const save = page.getByRole('button', { name: 'Save', exact: true })
+    await birthDate.fill('29.02.1993')
+    await save.click()
+    await expect(birthDate).toBeFocused()
+    expect(await birthDate.evaluate((field: HTMLInputElement) => field.validity.valid)).toBe(false)
+    await birthDate.fill('29.02.1992')
+    await save.click()
+    await expect(save).toBeDisabled()
+    await page.reload()
+    await expect(birthDate).toHaveValue('29.02.1992')
+    expect((await (await member.request.get('/api/v1/accounts/profile')).json()).dateOfBirth).toBe(
+      '1992-02-29',
+    )
     await expect(
       page.getByRole('heading', { name: 'Professional profile', exact: true }),
     ).toHaveCount(0)

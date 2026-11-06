@@ -41,6 +41,7 @@ it('preserves protected names, internal choices and original drafts during scrip
 it('exports a valid stored ZIP and escapes reviewed text after conversion', () => {
   const data = personnelDataSchema.parse({
     fio: 'Karimov Sardor Akmalovich',
+    birthDate: '1992-07-31',
     specialty: 'B&O <engineering>',
     militaryRank: 'капитан',
     work: [
@@ -88,6 +89,7 @@ it('exports a valid stored ZIP and escapes reviewed text after conversion', () =
     at = start + size
   }
   const xml = files.get('word/document.xml')!
+  expect(xml).toContain('31.07.1992')
   expect(xml).toContain('R&amp;D &lt;engineering&gt;')
   expect(xml).toContain('Ҳарбий унвони:')
   expect(xml).toContain('капитан')

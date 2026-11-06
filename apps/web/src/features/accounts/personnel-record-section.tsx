@@ -12,12 +12,18 @@ import {
 } from '@devon/contracts'
 import { useLocale, useT } from '@devon/i18n'
 import { Button, StateView, toast } from '@devon/ui'
+import { z } from 'zod'
 import { ArrowLeft, Download, Eye, FileText, LockKeyhole, Pencil, Sparkles } from 'lucide-react'
 import { apiClient, ApiError } from '../../lib/api-client.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
 import { useDurableDraft } from '../../lib/use-durable-draft.js'
 import { PersonnelDocument, blankSchool, blankWork, blankRelative } from './personnel-document.js'
 import { downloadPersonnel, toLatin } from './personnel-export.js'
+
+// The local paper may contain a half-typed DOB; saved records still require a real ISO date.
+const personnelDraftSchema = personnelDataSchema.extend({
+  birthDate: z.string().max(10).default(''),
+})
 
 export function PersonnelRecordSection({
   ownerUserId,
@@ -111,7 +117,7 @@ function PersonnelEditor({
     `devon.personnel.v1:${departmentId}:${owner}`,
     initial,
     version,
-    (value) => (personnelDataSchema.safeParse(value).success ? (value as PersonnelData) : null),
+    (value) => (personnelDraftSchema.safeParse(value).success ? (value as PersonnelData) : null),
   )
   const data = readonly ? initial : draft.value
   const [issues, setIssues] = React.useState<{

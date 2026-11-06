@@ -11,7 +11,9 @@ import {
 import { useT } from '@devon/i18n'
 import { Camera, Plus, Trash2 } from 'lucide-react'
 import { AvatarCrop } from './avatar-crop.js'
+import { BirthDateInput } from './birth-date-input.js'
 import { PersonnelPreview } from './personnel-preview.js'
+import { personnelPaperText } from './personnel-typography.js'
 import './personnel-document.css'
 
 export const blankSchool = (): PersonnelData['schools'][number] => ({
@@ -71,6 +73,7 @@ type FieldProps = {
   path: string
   label: string
   value: string
+  protectedNames: readonly string[]
   placeholder: string
   preview: boolean
   readonly: boolean
@@ -86,6 +89,7 @@ function DocumentField({
   path,
   label,
   value,
+  protectedNames,
   placeholder,
   preview,
   readonly,
@@ -124,7 +128,10 @@ function DocumentField({
       observer.disconnect()
     }
   }, [preview])
-  const shown = display ?? options?.find((option) => option.value === value)?.label ?? value
+  const shown = personnelPaperText(
+    display ?? options?.find((option) => option.value === value)?.label ?? value,
+    protectedNames,
+  )
   if (preview)
     return readonly ? (
       <span className="personnel-value">{shown || '—'}</span>
@@ -168,32 +175,49 @@ function DocumentField({
         ))}
       </select>
     )
-  if (type)
+  if (type === 'date')
     return (
-      <span className={`personnel-date ${value ? 'has-value' : ''}`}>
+      <BirthDateInput
+        paper
+        value={value}
+        onValueChange={onChange}
+        aria-label={label}
+        data-field-path={path}
+        aria-invalid={common['aria-invalid']}
+        aria-describedby={errorId}
+        disabled={readonly}
+        placeholder={placeholder}
+        className="personnel-input"
+      />
+    )
+  if (type === 'year')
+    return (
+      <span className="personnel-date">
         <input
           {...common}
-          type={type === 'date' ? 'date' : 'text'}
-          inputMode={type === 'year' ? 'numeric' : undefined}
-          maxLength={type === 'year' ? 4 : undefined}
+          type="text"
+          inputMode="numeric"
+          maxLength={4}
           placeholder={placeholder}
         />
-        {type === 'date' && !value ? (
-          <span aria-hidden="true" className="personnel-date-example">
-            {placeholder}
-          </span>
-        ) : null}
       </span>
     )
   return (
-    <textarea
-      {...common}
-      ref={ref}
-      rows={1}
-      maxLength={3000}
-      placeholder={placeholder}
-      className={`personnel-input ${compact ? 'is-compact' : ''}`}
-    />
+    <div className={`personnel-text-line${shown !== value ? ' has-paper-ink' : ''}`}>
+      <textarea
+        {...common}
+        ref={ref}
+        rows={1}
+        maxLength={3000}
+        placeholder={placeholder}
+        className={`personnel-input ${compact ? 'is-compact' : ''}`}
+      />
+      {shown !== value ? (
+        <span aria-hidden="true" className="personnel-input personnel-paper-ink">
+          {shown}
+        </span>
+      ) : null}
+    </div>
   )
 }
 
@@ -246,6 +270,7 @@ export function PersonnelDocument({
         path={path}
         label={t(`personnel.fields.${key}`)}
         value={String(value ?? '')}
+        protectedNames={data.protectedNames}
         placeholder={
           options ? t('personnelDocument.choose') : t(`personnelDocument.examples.${example}`)
         }
@@ -324,15 +349,16 @@ export function PersonnelDocument({
     ) : null
   }
   function composed(path: string, content: string) {
+    const shown = personnelPaperText(content, data.protectedNames)
     return readonly ? (
-      <span className="personnel-value">{content || '—'}</span>
+      <span className="personnel-value">{shown || '—'}</span>
     ) : (
       <button
         type="button"
         className="personnel-value personnel-edit-target"
         onClick={() => onEdit(path)}
       >
-        {content || t('personnelDocument.empty')}
+        {shown || t('personnelDocument.empty')}
       </button>
     )
   }

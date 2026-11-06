@@ -9,6 +9,7 @@ import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import type { Me } from '../../lib/api-schemas.js'
 import { fetchProfile, saveProfile, type AccountProfile } from './api.js'
+import { BirthDateInput } from './birth-date-input.js'
 
 const PROFILE_FIELDS = [
   'givenName',
@@ -109,6 +110,11 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
       toast(t('profileEdit.saved'))
     },
   })
+  function updateField<K extends keyof AccountProfile>(field: K, value: AccountProfile[K]) {
+    const next = { ...currentValues.current, [field]: value }
+    currentValues.current = next
+    setValues(next)
+  }
   return (
     <form
       className="flex flex-col gap-3"
@@ -134,24 +140,21 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
     >
       <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 2xl:grid-cols-3">
         {PROFILE_FIELDS.map((field) => (
-          <label key={field} className="flex flex-col gap-1.5 text-small">
-            <span id={`${fieldId}-${field}-label`}>
+          <div key={field} className="flex flex-col gap-1.5 text-small">
+            <label htmlFor={`${fieldId}-${field}`}>
               {t(field === 'dateOfBirth' ? 'birthday.dateOfBirth' : `profileEdit.${field}`)}
               {['givenName', 'familyName', 'login'].includes(field) ? (
                 <span className="ml-1 text-destructive" aria-hidden="true">
                   *
                 </span>
               ) : null}
-            </span>
+            </label>
             {field === 'title' ? (
               <select
+                id={`${fieldId}-${field}`}
                 className="h-11 rounded-md border border-border bg-card px-3"
                 value={values.title ?? ''}
-                onChange={(e) => {
-                  const next = { ...values, title: e.target.value || null }
-                  currentValues.current = next
-                  setValues(next)
-                }}
+                onChange={(e) => updateField('title', e.target.value || null)}
               >
                 <option value="">{t('profileChoices.choose')}</option>
                 {POSITION_CODES.map((code) => (
@@ -160,48 +163,42 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                   </option>
                 ))}
               </select>
+            ) : field === 'dateOfBirth' ? (
+              <BirthDateInput
+                id={`${fieldId}-${field}`}
+                aria-describedby={`${fieldId}-${field}-hint`}
+                autoComplete="bday"
+                value={values.dateOfBirth ?? ''}
+                min="1900-01-01"
+                max={new Date(Date.now() + 18_000_000).toISOString().slice(0, 10)}
+                onValueChange={(value) => updateField('dateOfBirth', value || null)}
+              />
             ) : (
               <Input
-                aria-labelledby={`${fieldId}-${field}-label`}
-                aria-describedby={
-                  field === 'login' || field === 'dateOfBirth'
-                    ? `${fieldId}-${field}-hint`
-                    : undefined
-                }
+                id={`${fieldId}-${field}`}
+                aria-describedby={field === 'login' ? `${fieldId}-${field}-hint` : undefined}
                 value={values[field] ?? ''}
-                type={field === 'dateOfBirth' ? 'date' : field === 'email' ? 'email' : 'text'}
-                {...(field === 'dateOfBirth'
-                  ? {
-                      min: '1900-01-01',
-                      max: new Date(Date.now() + 18_000_000).toISOString().slice(0, 10),
-                    }
-                  : {})}
+                type={field === 'email' ? 'email' : 'text'}
                 autoComplete={
-                  field === 'dateOfBirth'
-                    ? 'bday'
-                    : field === 'givenName'
-                      ? 'given-name'
-                      : field === 'familyName'
-                        ? 'family-name'
-                        : field === 'patronymic'
-                          ? 'additional-name'
-                          : field === 'email'
-                            ? 'email'
-                            : 'username'
+                  field === 'givenName'
+                    ? 'given-name'
+                    : field === 'familyName'
+                      ? 'family-name'
+                      : field === 'patronymic'
+                        ? 'additional-name'
+                        : field === 'email'
+                          ? 'email'
+                          : 'username'
                 }
                 required={['givenName', 'familyName', 'login'].includes(field)}
                 maxLength={field === 'email' ? 256 : field === 'login' ? 64 : 100}
                 {...(field === 'login' ? { minLength: 3, pattern: '[a-z0-9._\\-]+' } : {})}
-                onChange={(e) => {
-                  const next = {
-                    ...values,
-                    [field]:
-                      e.target.value ||
-                      (['email', 'title', 'patronymic', 'dateOfBirth'].includes(field) ? null : ''),
-                  }
-                  currentValues.current = next
-                  setValues(next)
-                }}
+                onChange={(e) =>
+                  updateField(
+                    field,
+                    e.target.value || (field === 'email' || field === 'patronymic' ? null : ''),
+                  )
+                }
               />
             )}
             {field === 'login' || field === 'dateOfBirth' ? (
@@ -209,7 +206,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                 {t(field === 'login' ? 'profileEdit.loginHint' : 'birthday.dateHint')}
               </span>
             ) : null}
-          </label>
+          </div>
         ))}
       </div>
       {save.isError ? (
