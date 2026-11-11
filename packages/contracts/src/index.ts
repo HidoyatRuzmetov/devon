@@ -141,6 +141,7 @@ export {
 } from './work-plus.js'
 
 export * from './ai-chat.js'
+export * from './ai-usage.js'
 export * from './checkins.js'
 export {
   POSITION_CODES,

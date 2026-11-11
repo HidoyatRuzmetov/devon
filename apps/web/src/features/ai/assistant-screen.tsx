@@ -49,6 +49,7 @@ import { chatSourceHref } from './chat-source-href.js'
 import { AnswerMarkdown } from './components/answer-markdown.js'
 import { ChatFileQueue, useChatFiles } from './components/chat-files.js'
 import { ChatProposalBatch } from './components/chat-proposal.js'
+import { ConversationTitle, ConversationTitleSkeleton } from './components/conversation-title.js'
 import { CatchUpPreview } from './components/previews.js'
 import {
   useCancelConversationMessageMutation,
@@ -464,10 +465,17 @@ export function AssistantWorkspace({
           {t('overviewChat.history')}
         </h2>
         {history.isPending ? (
-          <p role="status" className="p-2 text-small text-muted-foreground">
-            {t('state.loading')}
-          </p>
-        ) : history.isError ? (
+          <div role="status" aria-label={t('state.loading')} className="text-small">
+            {['w-[12ch]', 'w-[17ch]', 'w-[10ch]'].map((width) => (
+              <div
+                key={width}
+                className="flex h-9 items-center px-2.5 [@media(pointer:coarse)]:h-11"
+              >
+                <ConversationTitleSkeleton width={width} />
+              </div>
+            ))}
+          </div>
+        ) : history.isError && !history.data ? (
           <Button variant="ghost" onClick={() => void history.refetch()}>
             {t('state.error.action')}
           </Button>
@@ -477,14 +485,16 @@ export function AssistantWorkspace({
               type="button"
               key={item.id}
               onClick={() => choose(item.id)}
-              title={item.title}
               aria-current={item.id === selectedId ? 'page' : undefined}
               className={cn(
                 'flex h-9 w-full shrink-0 cursor-pointer items-center rounded-md px-2.5 text-left text-small transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [@media(pointer:coarse)]:h-11',
                 item.id === selectedId && 'bg-primary/10 text-primary',
               )}
             >
-              <span className="block truncate">{item.title}</span>
+              <ConversationTitle
+                {...(current?.id === item.id && item.titleStatus === 'empty' ? current : item)}
+                animate
+              />
             </button>
           ))
         ) : (
@@ -548,8 +558,16 @@ export function AssistantWorkspace({
                 </DialogContent>
               </Dialog>
             ) : null}
-            <h1 className="truncate text-body font-semibold" title={current?.title}>
-              {current?.title || t('assistantWorkspace.title')}
+            <h1 className="truncate text-body font-semibold">
+              {current?.title || current?.titleStatus === 'pending' ? (
+                <ConversationTitle
+                  key={current.id}
+                  title={current.title}
+                  titleStatus={current.titleStatus}
+                />
+              ) : (
+                t('assistantWorkspace.title')
+              )}
             </h1>
           </div>
           {!desktop ? (

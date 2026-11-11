@@ -1,5 +1,21 @@
 {
   "admin": {
+    "usage": {
+      "title": "AI usage",
+      "period": "Period",
+      "month": "Month",
+      "all": "All time",
+      "custom": "Custom",
+      "measure": "Chart measure",
+      "costUzs": "Estimated cost",
+      "tokens": "Tokens",
+      "runs": "Requests",
+      "start": "Range start",
+      "end": "Range end",
+      "departments": "Usage by department",
+      "explore": "Explore usage by time",
+      "empty": "No AI usage recorded yet."
+    },
     "console": {
       "operationFailed": "The change could not be saved. Try again.",
       "eyebrow": "Administration",

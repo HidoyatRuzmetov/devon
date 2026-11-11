@@ -29,6 +29,7 @@ export class ConversationError extends Error {
 type Row = {
   id: string
   title: string
+  title_status: AiConversation['titleStatus']
   locale: AiConversation['locale']
   messages: AiChatMessage[]
   cursor_at?: string
@@ -73,6 +74,7 @@ function dto(row: Row): AiConversation {
   return aiConversationSchema.parse({
     id: row.id,
     title: row.title,
+    titleStatus: row.title_status,
     locale: row.locale,
     messages: row.messages,
     createdAt: iso(row.created_at),
@@ -201,7 +203,7 @@ export async function listConversations(
   }
   return withContext(ctx, async (tx) => {
     const rows =
-      await tx.raw<Row>(sql`select id,title,locale,created_at,updated_at,active_message_id,
+      await tx.raw<Row>(sql`select id,title,title_status,locale,created_at,updated_at,active_message_id,
       to_char(updated_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_at,
       jsonb_array_length(messages)::int as message_count from app.ai_conversations
       where department_id=${ctx.departmentId} and owner_user_id=${ctx.userId}
@@ -213,6 +215,7 @@ export async function listConversations(
       conversations: selected.map((row) => ({
         id: row.id,
         title: row.title,
+        titleStatus: row.title_status,
         locale: row.locale,
         createdAt: iso(row.created_at),
         updatedAt: iso(row.updated_at),
@@ -365,7 +368,6 @@ export async function submitConversationMessage(
     if (messages.length > 400) throw new ConversationError('conflict', 'context_limit')
     const rows =
       await tx.raw<Row>(sql`update app.ai_conversations set messages=${JSON.stringify(messages)}::jsonb,
-      title=case when title='' then ${input.content.slice(0, 120)} else title end,
       active_message_id=${input.id},run_token=null,lease_until=now()+interval '10 minutes',updated_at=now()
       where id=${id} returning *`)
     row = rows[0]!

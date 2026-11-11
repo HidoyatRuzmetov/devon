@@ -1,0 +1,349 @@
+.usage-panel {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  padding: clamp(1rem, 2.2vw, 1.65rem);
+}
+.usage-heading,
+.usage-toolbar,
+.usage-period,
+.usage-metrics,
+.usage-dates,
+.usage-extent,
+.usage-departments,
+.usage-tip-row {
+  display: flex;
+  align-items: center;
+}
+.usage-heading,
+.usage-toolbar {
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.usage-period {
+  gap: 2px;
+  background: var(--color-surface-2);
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+}
+.usage-period button {
+  padding: 0.36rem 0.72rem;
+  border-radius: 0.43rem;
+  font-size: 0.8rem;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.usage-period button[aria-pressed='true'] {
+  color: var(--color-primary);
+  background: var(--color-card);
+  box-shadow: var(--shadow-1);
+  font-weight: 600;
+}
+.usage-toolbar {
+  margin: 1.2rem 0 0.6rem;
+  align-items: flex-end;
+}
+.usage-metrics {
+  gap: clamp(0.8rem, 2.5vw, 2.1rem);
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.usage-metrics > * {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.18rem 0 0.45rem;
+  gap: 2px;
+  border-bottom: 2px solid transparent;
+}
+.usage-metrics button {
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    color 0.18s;
+}
+.usage-metrics button[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.usage-metrics span,
+.usage-dates,
+.usage-extent {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+}
+.usage-metrics strong {
+  font-size: clamp(1rem, 1.6vw, 1.42rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+.usage-dates {
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-self: center;
+}
+.usage-dates input {
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4rem;
+  background: var(--color-card);
+  padding: 0.35rem 0.45rem;
+  color: var(--color-foreground);
+  font: inherit;
+  color-scheme: inherit;
+}
+.usage-plot-frame {
+  display: grid;
+  grid-template-columns: minmax(2.1rem, auto) 1fr;
+  grid-template-rows: clamp(10.5rem, 21vw, 14.5rem) 1.65rem;
+  column-gap: 0.5rem;
+  margin-top: 1.15rem;
+}
+.usage-scale,
+.usage-plot,
+.usage-labels {
+  position: relative;
+  min-width: 0;
+}
+.usage-scale {
+  min-width: 2.5rem;
+}
+.usage-scale span,
+.usage-labels span {
+  position: absolute;
+  font-size: 0.68rem;
+  color: var(--color-muted-foreground);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.usage-scale span {
+  right: 0;
+  transform: translateY(50%);
+}
+.usage-labels {
+  grid-column: 2;
+}
+.usage-labels span {
+  top: 5px;
+}
+.usage-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-bottom: 1px dashed var(--color-border);
+  pointer-events: none;
+}
+.usage-curves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.usage-curves [data-usage-line] {
+  transition: opacity 0.2s;
+  stroke-linejoin: round;
+}
+.usage-crosshair {
+  position: absolute;
+  inset-block: 0;
+  border-left: 1px dashed var(--color-muted-foreground);
+  pointer-events: none;
+}
+.usage-crosshair i {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  transform: translate(-55%, 50%);
+  border-radius: 50%;
+  border: 2px solid var(--color-card);
+  background: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.usage-tip {
+  pointer-events: none;
+  position: absolute;
+  bottom: 18%;
+  z-index: 1;
+  min-width: min(11rem, 100%);
+  max-width: min(15rem, 100%);
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface-3);
+  box-shadow: var(--shadow-2);
+  font-size: 0.74rem;
+  max-height: 90%;
+  overflow: hidden;
+}
+.usage-tip-row {
+  gap: 0.35rem;
+  line-height: 1.5;
+}
+.usage-tip-row span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.usage-tip-row b,
+.usage-departments b {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.usage-tip i,
+.usage-departments i {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: none;
+  border-radius: 3px;
+}
+.usage-navigator {
+  padding: 0 13px;
+  margin: 1px 0 0.28rem;
+  user-select: none;
+}
+.usage-track {
+  height: 38px;
+  position: relative;
+  isolation: isolate;
+  touch-action: none;
+  cursor: crosshair;
+}
+.usage-track::before {
+  content: '';
+  position: absolute;
+  inset: 0 -1px;
+  background: var(--color-surface-2);
+  border-radius: 4px;
+}
+.usage-track svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  overflow: visible;
+  fill: color-mix(in srgb, var(--color-primary) 36%, var(--color-card));
+  pointer-events: none;
+}
+.usage-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-block: 1px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  cursor: grab;
+}
+.usage-window:active {
+  cursor: grabbing;
+}
+.usage-handle {
+  position: absolute;
+  inset-block: 0;
+  width: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--color-primary);
+  cursor: ew-resize;
+  touch-action: none;
+}
+.usage-handle::after {
+  content: '';
+  position: absolute;
+  inset: -4px -2px;
+}
+.usage-handle.usage-from {
+  transform: translateX(-100%);
+  border-radius: 4px 0 0 4px;
+}
+.usage-handle.usage-to {
+  border-radius: 0 4px 4px 0;
+}
+.usage-handle span {
+  width: 4px;
+  height: 13px;
+  border-inline: 1px solid var(--color-primary-foreground);
+  border-radius: 1px;
+}
+.usage-panel :focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  z-index: 2;
+}
+.usage-extent {
+  justify-content: space-between;
+  font-size: 0.68rem;
+}
+.usage-departments {
+  gap: 0.4rem 0.65rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-border);
+  margin-top: 0.85rem;
+  padding-top: 0.72rem;
+}
+.usage-departments button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  font-size: 0.75rem;
+  padding: 0.26rem 0.42rem;
+  border-radius: 0.38rem;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+.usage-departments button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.usage-departments b {
+  color: var(--color-muted-foreground);
+}
+.usage-departments button:hover,
+.usage-departments button[aria-pressed='true'] {
+  background: var(--color-accent);
+}
+.usage-departments button[data-muted='true'] {
+  color: var(--color-muted-foreground);
+}
+.usage-no-data {
+  padding: 2.7rem 1rem;
+  text-align: center;
+  color: var(--color-muted-foreground);
+}
+@media (max-width: 600px) {
+  .usage-toolbar {
+    row-gap: 0.65rem;
+  }
+  .usage-heading {
+    gap: 0.6rem;
+  }
+  .usage-period button {
+    padding: 0.35rem 0.54rem;
+  }
+  .usage-dates input {
+    min-height: 32px;
+  }
+  .usage-plot-frame {
+    grid-template-columns: 1.9rem 1fr;
+  }
+  .usage-scale {
+    min-width: 1.9rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .usage-panel *,
+  .usage-panel *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}

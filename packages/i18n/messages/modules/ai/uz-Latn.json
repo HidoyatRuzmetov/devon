@@ -46,6 +46,12 @@
       "spentThisMonth": "Bu oy: {cost}"
     },
     "usage": {
+      "summary": "Bo‘limning AI sarfi",
+      "summaryPeriod": "Hisobot davri",
+      "estimatedCost": "Taxminiy xarajat",
+      "calls": "So‘rovlar",
+      "recent": "So‘nggi 50 ta so‘rov",
+      "totalsUnavailable": "Jami sarfni yuklab bo‘lmadi.",
       "empty": {
         "title": "Hali AI ishlatilmagan",
         "body": "Boshqarmadan kimdir yordamchini ishlatgach, foydalanish shu yerda koʻrinadi."

@@ -1,5 +1,21 @@
 {
   "admin": {
+    "usage": {
+      "title": "Sunʼiy intellekt sarfi",
+      "period": "Davr",
+      "month": "Oy",
+      "all": "Barcha davr",
+      "custom": "Tanlangan davr",
+      "measure": "Diagramma koʻrsatkichi",
+      "costUzs": "Taxminiy xarajat",
+      "tokens": "Tokenlar",
+      "runs": "Soʻrovlar",
+      "start": "Davr boshi",
+      "end": "Davr oxiri",
+      "departments": "Boshqarmalar kesimida sarf",
+      "explore": "Vaqt boʻyicha sarfni koʻrish",
+      "empty": "Sunʼiy intellektdan foydalanish hali qayd etilmagan."
+    },
     "console": {
       "operationFailed": "Oʻzgarish saqlanmadi. Qayta urinib koʻring.",
       "eyebrow": "BOSHQARUV",

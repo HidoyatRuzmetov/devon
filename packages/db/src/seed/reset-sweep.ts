@@ -181,6 +181,8 @@ export const GLOBAL_SWEEP: readonly {
  * is a recorded decision rather than an omission nobody noticed.
  */
 export const SWEEP_NOT_NEEDED: Readonly<Record<string, string>> = Object.freeze({
+  'app.ai_conversation_title_jobs':
+    'Deleted by conversation_id ON DELETE CASCADE when the owner conversations are swept.',
   'app.personal_calendar_reminders':
     'Deleted by the entry_id ON DELETE CASCADE when the owner calendar entries are swept.',
   'app.telegram_group_members':

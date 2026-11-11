@@ -70,7 +70,7 @@ function run(at: string, send: (chat: string, text: string) => Promise<SendResul
   return processGroupBirthdays(send, configured, new Date(at), prepare)
 }
 
-it('starts at 09:00 Tashkent and publishes each birthday once to each subscribed department chat, including next year', async () => {
+it('starts on November 12 at 09:00 Tashkent and publishes each birthday once per subscribed chat and year', async () => {
   const dept = await department()
   const [firstChat, secondChat] = await Promise.all([group(dept), group(dept)])
   await Promise.all([
@@ -78,14 +78,30 @@ it('starts at 09:00 Tashkent and publishes each birthday once to each subscribed
     group(dept, ['announcements'], true),
     group(await department()),
   ])
-  const dilnoza = await celebrant(dept, '1992-11-11')
-  const aziza = await celebrant(dept, '1998-11-11', 'Aziza')
-  const inactive = await celebrant(dept, '1990-11-11', 'Inactive')
+  const beforeLaunch = await celebrant(dept, '1994-11-11', 'Before launch')
+  const dilnoza = await celebrant(dept, '1992-11-12')
+  const aziza = await celebrant(dept, '1998-11-12', 'Aziza')
+  const inactive = await celebrant(dept, '1990-11-12', 'Inactive')
   await superuserQuery(db, "update app.users set status='locked' where id=$1", [inactive])
   const send = successfulSend()
-  await run('2040-11-11T03:59:59Z', send)
+  // A previous deployment could have queued a greeting before the public launch.
+  await superuserQuery(
+    db,
+    'insert into app.telegram_birthday_deliveries(department_id,owner_user_id,chat_id,celebration_date) values($1,$2,$3,$4)',
+    [dept, beforeLaunch, firstChat, '2026-11-11'],
+  )
+  const prepareBeforeLaunch = vi.fn(prepare)
+  const prelaunchTick = (at: string) =>
+    processGroupBirthdays(send, configured, new Date(at), prepareBeforeLaunch)
+  await prelaunchTick('2026-11-11T04:00:00Z')
+  await prelaunchTick('2026-11-11T18:59:59Z')
+  await prelaunchTick('2026-11-12T03:59:59Z')
+  expect(prepareBeforeLaunch).not.toHaveBeenCalled()
   expect(send).not.toHaveBeenCalled()
-  await Promise.all([run('2040-11-11T04:00:00Z', send), run('2040-11-11T04:00:00Z', send)])
+  await Promise.all([run('2026-11-12T04:00:00Z', send), run('2026-11-12T04:00:00Z', send)])
+  expect(await receipts(beforeLaunch)).toEqual([
+    expect.objectContaining({ chat: firstChat, status: 'pending', attempts: 0 }),
+  ])
   // Reconnecting this chat creates a new group row, but its Telegram recipients are the same.
   await superuserQuery(
     db,
@@ -97,7 +113,7 @@ it('starts at 09:00 Tashkent and publishes each birthday once to each subscribed
     "insert into app.telegram_groups(department_id,chat_id,kinds) values($1,$2,'{announcements}')",
     [dept, firstChat],
   )
-  await run('2040-11-11T18:59:59Z', send)
+  await run('2026-11-12T18:59:59Z', send)
   expect(send).toHaveBeenCalledTimes(4)
   for (const chat of [firstChat, secondChat]) {
     const messages = send.mock.calls
@@ -120,14 +136,14 @@ it('starts at 09:00 Tashkent and publishes each birthday once to each subscribed
         status: 'sent',
         attempts: 1,
         receipt: '91',
-        year: 2040,
+        year: 2026,
       })),
     )
   }
   expect(await receipts(inactive)).toEqual([])
-  await run('2041-11-11T04:05:00Z', send)
+  await run('2027-11-12T04:05:00Z', send)
   expect(send).toHaveBeenCalledTimes(8)
-  expect((await receipts(dilnoza)).map((row) => row['year'])).toEqual([2040, 2040, 2041, 2041])
+  expect((await receipts(dilnoza)).map((row) => row['year'])).toEqual([2026, 2026, 2027, 2027])
 })
 
 it('catches up a missed morning on the same local birthday and skips a birthday that already ended', async () => {

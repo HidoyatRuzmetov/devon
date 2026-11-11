@@ -46,6 +46,12 @@
       "spentThisMonth": "This month: {cost}"
     },
     "usage": {
+      "summary": "Department usage",
+      "summaryPeriod": "Totals period",
+      "estimatedCost": "Estimated cost",
+      "calls": "Calls",
+      "recent": "Latest 50 calls",
+      "totalsUnavailable": "Totals are unavailable.",
       "empty": {
         "title": "No AI calls yet",
         "body": "Once someone in the department uses a helper, the usage appears here."

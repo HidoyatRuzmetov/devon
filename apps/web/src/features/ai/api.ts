@@ -1,5 +1,6 @@
 // Typed endpoint functions for the AI module (MODULE-GUIDE.md "Web features"), built on the shared
 // `apiClient` exactly like every other feature's `api.ts`.
+import { departmentAiUsageSummarySchema } from '@devon/contracts'
 import { apiClient } from '../../lib/api-client.js'
 import {
   aiSettingsSchema,
@@ -37,6 +38,11 @@ export function patchAiSettings(
 export async function fetchAiUsage(limit = 50): Promise<Trace[]> {
   const result = await apiClient.get(`${BASE}/usage?limit=${limit}`, usageListSchema)
   return result.traces
+}
+
+export function fetchAiUsageSummary(month?: string) {
+  const path = month ? `/usage/summary?month=${encodeURIComponent(month)}` : '/usage/summary'
+  return apiClient.get(`${BASE}${path}`, departmentAiUsageSummarySchema)
 }
 
 export function runAiFeature(

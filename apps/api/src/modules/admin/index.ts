@@ -4,6 +4,8 @@
 import { Readable } from 'node:stream'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyRequest } from 'fastify'
+import { adminAiUsageSchema, adminAiUsageHoursSchema, aiUsageDaySchema } from '@devon/contracts'
+import { z } from 'zod'
 import { denyForSubject } from '../../plugins/authorize.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { checkCsrf } from '../../lib/csrf.js'
@@ -508,8 +510,27 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
-  // -- Audit ------------------------------------------------------------------------------------
+  app.get(
+    '/analytics/ai-usage',
+    {
+      config: { permission: { action: 'administer', subject: instanceSubject } },
+      schema: { response: { 200: adminAiUsageSchema } },
+    },
+    () => repo.getAiUsageHistory(),
+  )
+  app.get(
+    '/analytics/ai-usage/hours',
+    {
+      config: { permission: { action: 'administer', subject: instanceSubject } },
+      schema: {
+        querystring: z.object({ day: aiUsageDaySchema }),
+        response: { 200: adminAiUsageHoursSchema },
+      },
+    },
+    (req) => repo.getAiUsageHours(req.query.day),
+  )
 
+  // -- Audit ------------------------------------------------------------------------------------
   app.get(
     '/audit/events',
     {

@@ -8,6 +8,7 @@ import { createRepo } from './db/repo.js'
 import { installFatalHandlers } from './lib/fatal.js'
 import { startScanRetryWorker } from './modules/accounts/scan-retry-worker.js'
 import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
+import { startConversationTitleWorker } from './modules/ai/conversation-title-worker.js'
 import { startBirthdayWorker } from './modules/birthdays/worker.js'
 import { startCheckinWorker } from './modules/checkins/worker.js'
 import { startEventReminderWorker } from './modules/events/reminder-worker.js'
@@ -37,6 +38,9 @@ async function main(): Promise<void> {
   const birthdayWorker = startBirthdayWorker((err) =>
     app.log.error(err, 'birthday scheduler failed'),
   )
+  const titleWorker = startConversationTitleWorker((err) =>
+    app.log.error(err, 'conversation title scheduler failed'),
+  )
   const checkinWorker = startCheckinWorker((err) => app.log.error(err, 'check-in scheduler failed'))
   // EPIC-001 storage plugin: hourly retention sweep of abandoned presigned uploads (TECH-SPEC §6
   // `retention.sweep`), same start-here-only rule as the two workers above.
@@ -55,6 +59,7 @@ async function main(): Promise<void> {
     personalCalendarWorker.stop()
     checkinWorker.stop()
     birthdayWorker.stop()
+    titleWorker.stop()
     uploadSweeper.stop()
     scanRetryWorker.stop()
   })

@@ -97,6 +97,7 @@ export async function runDepartmentChatForActor(
     allowedRefs: Set<string>
     signal: AbortSignal
     timeoutMs?: number
+    maxTokens?: number
   },
 ): Promise<z.infer<typeof chatAnswerSchema>> {
   if (!hasApiKey(aiConfig) && !providerIsTestOverride) throw new Error('provider_unavailable')
@@ -112,7 +113,8 @@ export async function runDepartmentChatForActor(
     0,
   )
   if (promptBytes > 700_000) throw new Error('context_limit')
-  const worstCaseTokens = (promptBytes + 16384) * 3
+  const maxTokens = Math.max(input.maxTokens ?? 16384, aiConfig.minMaxTokens)
+  const worstCaseTokens = (promptBytes + maxTokens) * 3
   if (
     !canAffordCall(
       spent,
@@ -133,7 +135,7 @@ export async function runDepartmentChatForActor(
     feature: 'semantic_ask',
     messages: input.messages,
     signal: input.signal,
-    maxTokens: 16384,
+    maxTokens,
     temperature: 0.1,
     overallTimeoutMs: input.timeoutMs ?? 180_000,
     tool: {

@@ -648,9 +648,15 @@ const layouts = {
   ),
   usage: (
     <>
-      <Stats count={3} />
-      <Skeleton className="h-44 w-full" />
-      <Table columns={4} rows={4} />
+      <div className="flex flex-wrap gap-3">
+        {['w-40', 'w-32', 'w-32'].map((width, i) => (
+          <div key={i} className="space-y-1">
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className={`h-9 ${width}`} />
+          </div>
+        ))}
+      </div>
+      <Table columns={7} rows={5} />
     </>
   ),
   providers: (
@@ -720,11 +726,20 @@ const layouts = {
   analytics: (
     <>
       <Stats />
+      <div className="space-y-3 rounded-md border border-border p-5">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-28" />
+          <Skeleton className="h-8 w-44" />
+        </div>
+        <Skeleton className="h-12 w-64 max-w-full" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-9 w-full" />
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Skeleton className="h-60 w-full" />
         <Skeleton className="h-60 w-full" />
       </div>
-      <Table columns={5} rows={4} />
+      <Skeleton className="h-44 w-full" />
     </>
   ),
   audit: (

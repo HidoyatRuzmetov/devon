@@ -4,6 +4,7 @@
 // before this module existed, waiting for exactly this convention.
 import { z } from 'zod'
 import { localeSchema } from '@devon/i18n'
+import { adminAiUsageSchema, adminAiUsageHoursSchema } from '@devon/contracts'
 import { apiClient } from '../../lib/api-client.js'
 
 const departmentStatusSchema = z.enum([
@@ -200,6 +201,15 @@ export const adminAnalyticsSchema = z.object({
 export type AdminAnalytics = z.infer<typeof adminAnalyticsSchema>
 export function fetchAdminAnalytics() {
   return apiClient.get('/api/v1/admin/analytics', adminAnalyticsSchema)
+}
+export function fetchAdminUsage() {
+  return apiClient.get('/api/v1/admin/analytics/ai-usage', adminAiUsageSchema)
+}
+export function fetchAdminUsageHours(day: string) {
+  return apiClient.get(
+    '/api/v1/admin/analytics/ai-usage/hours?day=' + encodeURIComponent(day),
+    adminAiUsageHoursSchema,
+  )
 }
 
 export const auditEventRowSchema = z.object({

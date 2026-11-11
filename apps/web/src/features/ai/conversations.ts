@@ -37,6 +37,12 @@ export function useConversationsQuery(enabled: boolean, query = '') {
     getNextPageParam: (page) => page.nextCursor,
     enabled: enabled && scope.enabled,
     staleTime: 15_000,
+    refetchInterval: (query) =>
+      query.state.data?.pages.some((page) =>
+        page.conversations.some((conversation) => conversation.titleStatus === 'pending'),
+      )
+        ? 3_000
+        : false,
   })
 }
 
@@ -48,6 +54,7 @@ export function useConversationQuery(id: string | null) {
     enabled: scope.enabled && Boolean(id),
     refetchInterval: (query) =>
       query.state.data?.status === 'running' ||
+      query.state.data?.titleStatus === 'pending' ||
       query.state.data?.messages.some((message) =>
         message.proposals?.some((proposal) => proposal.status === 'executing'),
       )
@@ -97,6 +104,7 @@ export function useSendConversationMessageMutation() {
         current
           ? {
               ...current,
+              titleStatus: current.titleStatus === 'empty' ? 'pending' : current.titleStatus,
               status: 'running',
               messages: [
                 ...current.messages.filter((message) => message.id !== input.id),

@@ -379,6 +379,22 @@
       "down": "Ishlamayapti",
       "refresh": "Yangilash"
     },
+    "usage": {
+      "title": "Sunʼiy intellekt sarfi",
+      "period": "Davr",
+      "month": "Oy",
+      "all": "Barcha davr",
+      "custom": "Tanlangan davr",
+      "measure": "Diagramma koʻrsatkichi",
+      "costUzs": "Taxminiy xarajat",
+      "tokens": "Tokenlar",
+      "runs": "Soʻrovlar",
+      "start": "Davr boshi",
+      "end": "Davr oxiri",
+      "departments": "Boshqarmalar kesimida sarf",
+      "explore": "Vaqt boʻyicha sarfni koʻrish",
+      "empty": "Sunʼiy intellektdan foydalanish hali qayd etilmagan."
+    },
     "console": {
       "operationFailed": "Oʻzgarish saqlanmadi. Qayta urinib koʻring.",
       "eyebrow": "BOSHQARUV",
@@ -1108,6 +1124,12 @@
       "spentThisMonth": "Bu oy: {cost}"
     },
     "usage": {
+      "summary": "Bo‘limning AI sarfi",
+      "summaryPeriod": "Hisobot davri",
+      "estimatedCost": "Taxminiy xarajat",
+      "calls": "So‘rovlar",
+      "recent": "So‘nggi 50 ta so‘rov",
+      "totalsUnavailable": "Jami sarfni yuklab bo‘lmadi.",
       "empty": {
         "title": "Hali AI ishlatilmagan",
         "body": "Boshqarmadan kimdir yordamchini ishlatgach, foydalanish shu yerda koʻrinadi."
@@ -1516,6 +1538,7 @@
       "key": "Band havolasi"
     }
   },
+  "assistantWorkspace.naming": "Suhbatga nom tanlanyapti…",
   "assistantWorkspace.title": "Yordamchi",
   "assistantWorkspace.welcome": "Sizga qanday yordam bera olaman?",
   "assistantWorkspace.search": "Suhbatlarni qidirish",

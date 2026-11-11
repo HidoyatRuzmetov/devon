@@ -109,7 +109,7 @@ export async function spentThisMonthUzs(tx: Tx, departmentId: string): Promise<n
     select coalesce(sum(cost_uzs), 0)::int as total
     from app.ai_traces
     where department_id = ${departmentId}
-      and created_at >= date_trunc('month', now())
+      and created_at >= (date_trunc('month', now() at time zone 'Asia/Tashkent') at time zone 'Asia/Tashkent')
   `)
   return rows[0]?.total ?? 0
 }
@@ -166,7 +166,7 @@ export async function spentThisMonthByFeature(
     select feature, coalesce(sum(cost_uzs), 0)::int as total
     from app.ai_traces
     where department_id = ${departmentId}
-      and created_at >= date_trunc('month', now())
+      and created_at >= (date_trunc('month', now() at time zone 'Asia/Tashkent') at time zone 'Asia/Tashkent')
     group by feature
   `)
   return Object.fromEntries(rows.map((row) => [row.feature, row.total]))

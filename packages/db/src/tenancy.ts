@@ -112,6 +112,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.ai_department_settings': 'department_owned',
   'app.ai_traces': 'department_owned',
   'app.ai_conversations': 'department_owned',
+  'app.ai_conversation_title_jobs': 'global',
   'app.ai_index_dirty': 'department_owned',
   'app.ai_context_revisions': 'department_owned',
   'app.ai_file_text': 'department_owned',
@@ -152,6 +153,8 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
  * reviewable, per ADR-002. `test/tenancy.registry.test.ts` fails if a `global` table has no entry here.
  */
 export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze({
+  'app.ai_conversation_title_jobs':
+    'Cross-owner scheduler pointers only. Forced RLS admits the owner or the system worker. Private conversation content is read separately under active owner membership.',
   'app.personal_calendar_reminders':
     'Cross-owner timed delivery pointers only, with no private text. The worker enters the owner context and rechecks the entry, version, cancellation and verified Telegram link before sending.',
   'app.users':

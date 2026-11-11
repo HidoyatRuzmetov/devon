@@ -9,7 +9,8 @@
 // per-feature input/output validation happens inside `@devon/ai`'s `runFeature()`. `plan_sprint` is
 // the one personal-workspace feature (EPIC-009): its permission subject is `{kind:'personal'}` (I-1),
 // never `department_child`, even though its budget/flag still bills to the caller's active department.
-import type { Subject } from '@devon/contracts'
+import { aiUsageMonthSchema, departmentAiUsageSummarySchema, type Subject } from '@devon/contracts'
+import { z } from 'zod'
 import type { RequestContext } from '@devon/db'
 import type { FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
@@ -45,6 +46,7 @@ import {
   type RunFeatureResponse,
 } from './schemas.js'
 import * as service from './service.js'
+import { departmentUsageSummary } from './usage-analytics.js'
 
 function activeDepartmentId(req: FastifyRequest): string {
   return req.actor?.viewAs?.departmentId ?? req.actor?.departmentId ?? ''
@@ -157,6 +159,18 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
       const dto = await service.patchSettings(toDbContext(req), activeDepartmentId(req), req.body)
       return reply.type('application/json').send(dto)
     },
+  )
+
+  app.get(
+    '/usage/summary',
+    {
+      config: { permission: { action: 'read', subject: departmentManagedSubject } },
+      schema: {
+        querystring: z.object({ month: aiUsageMonthSchema.optional() }),
+        response: { 200: departmentAiUsageSummarySchema },
+      },
+    },
+    (req) => departmentUsageSummary(toDbContext(req), req.query.month),
   )
 
   app.get(

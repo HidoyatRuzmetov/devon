@@ -60,6 +60,7 @@ export const aiChatMessageSchema = z.object({
 export const aiConversationSummarySchema = z.object({
   id: z.uuid(),
   title: z.string(),
+  titleStatus: z.enum(['empty', 'pending', 'ready']),
   locale: z.enum(['uz-Latn', 'uz-Cyrl', 'ru', 'en']),
   createdAt: z.string(),
   updatedAt: z.string(),

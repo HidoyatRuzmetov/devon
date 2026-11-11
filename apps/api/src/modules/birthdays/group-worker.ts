@@ -7,6 +7,8 @@ import { birthdayClock, birthdayInYear } from './calendar.js'
 import { birthdaySendDisposition, birthdayWorkerContext } from './delivery.js'
 import { prepareGroupBirthday } from './group-greeting.js'
 
+const FIRST_PUBLIC_BIRTHDAY_DATE = '2026-11-12'
+
 const deliveryErrors = {
   sent: null,
   pending: 'telegram_retry',
@@ -100,7 +102,13 @@ export async function processGroupBirthdays(
   const readNow = typeof now === 'function' ? now : () => now
   const start = readNow()
   const { date, hour } = birthdayClock(start)
-  if (hour < 9 || !configured() || (await isMaintenanceActive())) return
+  if (
+    date < FIRST_PUBLIC_BIRTHDAY_DATE ||
+    hour < 9 ||
+    !configured() ||
+    (await isMaintenanceActive())
+  )
+    return
   const departments = await listAllDepartmentIds()
   // nosemgrep: devon-query-in-loop -- Each department requires its own RLS context for its receipts.
   for (let index = 0; index < departments.length; index++) {

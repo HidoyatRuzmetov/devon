@@ -379,6 +379,22 @@
       "down": "Not running",
       "refresh": "Refresh"
     },
+    "usage": {
+      "title": "AI usage",
+      "period": "Period",
+      "month": "Month",
+      "all": "All time",
+      "custom": "Custom",
+      "measure": "Chart measure",
+      "costUzs": "Estimated cost",
+      "tokens": "Tokens",
+      "runs": "Requests",
+      "start": "Range start",
+      "end": "Range end",
+      "departments": "Usage by department",
+      "explore": "Explore usage by time",
+      "empty": "No AI usage recorded yet."
+    },
     "console": {
       "operationFailed": "The change could not be saved. Try again.",
       "eyebrow": "Administration",
@@ -1108,6 +1124,12 @@
       "spentThisMonth": "This month: {cost}"
     },
     "usage": {
+      "summary": "Department usage",
+      "summaryPeriod": "Totals period",
+      "estimatedCost": "Estimated cost",
+      "calls": "Calls",
+      "recent": "Latest 50 calls",
+      "totalsUnavailable": "Totals are unavailable.",
       "empty": {
         "title": "No AI calls yet",
         "body": "Once someone in the department uses a helper, the usage appears here."
@@ -1516,6 +1538,7 @@
       "key": "Item reference"
     }
   },
+  "assistantWorkspace.naming": "Naming conversation…",
   "assistantWorkspace.title": "Assistant",
   "assistantWorkspace.welcome": "What can I help you with?",
   "assistantWorkspace.search": "Search conversations",

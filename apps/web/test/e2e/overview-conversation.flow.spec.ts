@@ -116,6 +116,7 @@ test('@flow assistant resumes after reload, searches history and preserves sourc
       conversations.set(id, {
         id,
         title,
+        titleStatus: 'ready',
         locale: 'en',
         createdAt: now(),
         updatedAt: now(),
@@ -209,7 +210,8 @@ test('@flow assistant resumes after reload, searches history and preserves sourc
         const body = request.postDataJSON() as { id: string; locale: 'en'; seedBriefing: boolean }
         const conversation: AiConversation = {
           id: body.id,
-          title: 'Department briefing',
+          title: '',
+          titleStatus: 'empty',
           locale: body.locale,
           createdAt: now(),
           updatedAt: now(),
@@ -253,9 +255,7 @@ test('@flow assistant resumes after reload, searches history and preserves sourc
             sources: [],
             context: null,
           })
-          conversation.title = conversation.messages
-            .find((message) => message.role === 'user')!
-            .content.slice(0, 120)
+          if (conversation.titleStatus === 'empty') conversation.titleStatus = 'pending'
           conversation.status = 'running'
           conversation.messageCount = conversation.messages.length
           active = conversation
@@ -294,12 +294,16 @@ test('@flow assistant resumes after reload, searches history and preserves sourc
     )
     await expect.poll(() => active?.status).toBe('running')
     await expect(page).toHaveURL(/conversation=/)
+    const namingRow = history.getByRole('button', { name: 'Naming conversation…', exact: true })
+    await expect(namingRow).toBeVisible()
+    const pendingHeight = (await namingRow.boundingBox())!.height
     // Reload while the model is answering: the saved pending turn remains visible and resumes polling.
     await page.reload()
     await expect(workspace).toBeVisible()
     await expect(page.getByTestId('ai-messages')).toContainText(
       'What needs my attention this week?',
     )
+    await expect(namingRow).toBeVisible()
     answer(
       '**Confirm the evidence package owner.**\n\n- Review the pending evidence.\n- Agree the next delivery date.',
     )
@@ -315,10 +319,18 @@ test('@flow assistant resumes after reload, searches history and preserves sourc
         .getByRole('listitem')
         .filter({ hasText: 'Agree the next delivery date.' }),
     ).toBeVisible()
+    // Title generation can finish independently after the assistant has answered.
+    active!.title = 'Weekly evidence review'
+    active!.titleStatus = 'ready'
+    const namedRow = history.getByRole('button', { name: 'Weekly evidence review', exact: true })
+    await expect(namedRow).toBeVisible()
+    expect((await namedRow.boundingBox())!.height).toBe(pendingHeight)
     await page.getByRole('button', { name: 'New conversation', exact: true }).click()
     await expect(workspace).toBeVisible()
-    await page.getByRole('textbox', { name: 'Search conversations', exact: true }).fill('attention')
-    await page.getByRole('button', { name: /What needs my attention this week/ }).click()
+    await page
+      .getByRole('textbox', { name: 'Search conversations', exact: true })
+      .fill('evidence review')
+    await namedRow.click()
     await expect(workspace).toBeVisible()
     await composer.fill('Which team owns it?')
     await page.getByRole('button', { name: 'Send message', exact: true }).click()

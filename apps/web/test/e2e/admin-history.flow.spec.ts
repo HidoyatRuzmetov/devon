@@ -149,9 +149,7 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
     expect(analytics.activity.weeklyLogins).toHaveLength(8)
     expect(analytics.aiSpend.available).toBe(true)
     await expect(
-      page.getByText(label('admin.console.analytics.aiSpendTitle'), {
-        exact: true,
-      }),
+      page.getByRole('heading', { name: label('admin.usage.title'), exact: true }),
     ).toBeVisible()
   } finally {
     await Promise.all([admin.close(), head.close()])

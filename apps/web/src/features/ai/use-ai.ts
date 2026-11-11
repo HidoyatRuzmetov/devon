@@ -59,6 +59,15 @@ export function useAiUsageQuery() {
   })
 }
 
+export function useAiUsageSummaryQuery(month?: string, enabled = true) {
+  const scope = useAiScope()
+  return useQuery({
+    queryKey: [...KEYS.usage, ...scope.key, 'summary', month ?? 'current'],
+    queryFn: () => api.fetchAiUsageSummary(month),
+    enabled: enabled && scope.enabled,
+  })
+}
+
 /**
  * `useMutation` with `feature` fixed per call site rather than passed at call time -- every use site
  * in this feature (the assistant panel's tabs) already knows which feature it is running, and keeping

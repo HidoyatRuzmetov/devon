@@ -34,6 +34,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import * as React from 'react'
 import { RouterLink, useSearchParams } from '../../lib/router.js'
 import { useDepartment, useSession } from '../../lib/session.js'
+import { DepartmentUsageSummary } from './components/department-usage-summary.js'
 import {
   AI_FEATURE_IDS,
   HEAD_ONLY_FEATURES,
@@ -487,7 +488,7 @@ const PAGE_SIZE = 20
  * which is the window a head looks through in one sitting. Narrowing that in the browser is instant
  * and costs one request rather than one per filter change.
  */
-function UsageTab() {
+function RecentUsage() {
   const t = useT()
   const locale = useLocale()
   const usageQuery = useAiUsageQuery()
@@ -743,6 +744,7 @@ function UsageTab() {
 export default function AiSettingsScreen() {
   const t = useT()
   const { isLoading, isAuthenticated } = useSession()
+  const { department } = useDepartment()
   const search = useSearchParams()
   const previous = search.get('conversation')
   const back =
@@ -780,7 +782,17 @@ export default function AiSettingsScreen() {
         <HelpersTab />
       </TabsContent>
       <TabsContent value="usage">
-        <UsageTab />
+        <div className="space-y-6">
+          {department?.role === 'head' ? (
+            <DepartmentUsageSummary key={department.departmentId} />
+          ) : null}
+          <section aria-labelledby="ai-recent-usage" className="space-y-3">
+            <h2 id="ai-recent-usage" className="text-body font-semibold text-foreground">
+              {t('ai.usage.recent')}
+            </h2>
+            <RecentUsage />
+          </section>
+        </div>
       </TabsContent>
     </Tabs>
   )

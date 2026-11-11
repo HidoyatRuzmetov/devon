@@ -22,6 +22,7 @@ import { generateSentinelKeypair } from './sentinel-protocol.js'
 import { sendWipeCommand } from './sentinel-client.js'
 import { invalidateDepartmentStatusCache, invalidateMaintenanceCache } from './availability-gate.js'
 import { parseAdminListCursor } from './list-cursor.js'
+import { instanceUsageHistory, instanceUsageHours } from '../ai/usage-analytics.js'
 
 function adminCtx(ctx: AuditCtx, departmentId: string | null = null) {
   return {
@@ -710,6 +711,13 @@ export type AdminAnalytics = {
     costUzsThisMonth: number
     byDepartment: { departmentId: string; departmentName: string; tokens: number }[]
   }
+}
+
+export function getAiUsageHistory() {
+  return withContext(anonymousAdminCtx(), instanceUsageHistory)
+}
+export function getAiUsageHours(day: string) {
+  return withContext(anonymousAdminCtx(), (tx) => instanceUsageHours(tx, day))
 }
 
 /** Live analytics describe people who can work in an active department, plus instance admins.
