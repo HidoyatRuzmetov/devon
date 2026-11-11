@@ -1,0 +1,76 @@
+.resume-copy {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 24px;
+  align-items: baseline;
+  column-gap: 0.3rem;
+  border-radius: var(--radius-sm);
+  text-align: start;
+  cursor: copy;
+  transition: background-color 150ms ease-out;
+}
+.resume-copy:hover,
+.resume-copy:focus-visible {
+  background-color: var(--color-accent);
+}
+.resume-copy:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+.resume-copy-indicator {
+  display: inline-grid;
+  flex: none;
+  align-self: baseline;
+  color: var(--color-muted-foreground);
+}
+.resume-copy-indicator > svg {
+  grid-area: 1 / 1;
+  width: 0.8rem;
+  height: 0.8rem;
+  transition:
+    opacity 140ms ease-out,
+    transform 160ms ease-out;
+}
+.resume-copy-glyph {
+  opacity: 0;
+}
+.resume-copy:hover .resume-copy-glyph,
+.resume-copy:focus-visible .resume-copy-glyph,
+.resume-copy-icon-only .resume-copy-glyph {
+  opacity: 1;
+}
+.resume-copy-check {
+  opacity: 0;
+  color: var(--color-success-text);
+  transform: scale(0.7) rotate(-12deg);
+}
+.resume-copy[data-copied] {
+  background-color: color-mix(in oklab, var(--color-success) 12%, transparent);
+}
+.resume-copy[data-copied] .resume-copy-glyph {
+  opacity: 0;
+}
+.resume-copy[data-copied] .resume-copy-check {
+  opacity: 1;
+  transform: none;
+}
+.resume-copy-icon-only {
+  min-width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+}
+.resume-copy-icon-only .resume-copy-indicator {
+  align-self: center;
+}
+@media (hover: none) {
+  .resume-copy-glyph {
+    opacity: 0.7;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .resume-copy,
+  .resume-copy-indicator > svg {
+    transition: none;
+  }
+}

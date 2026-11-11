@@ -326,6 +326,25 @@ test('settings panes, legacy links and professional profiles work on desktop and
     await expect(labels).toHaveCount(3)
     await expect(labels.locator('svg')).toHaveCount(3)
     await page.screenshot({ path: testInfo.outputPath('professional-profile-desktop.png') })
+    await member.grantPermissions(['clipboard-write', 'clipboard-read'])
+    const copyDate = drawer.getByRole('button', { name: 'Copy 29.02.1992', exact: true })
+    await copyDate.focus()
+    await copyDate.press('Enter')
+    await expect(copyDate).toHaveAttribute('data-copied', 'true')
+    expect(
+      await page.evaluate(async () => (await navigator.clipboard.readText()) === '29.02.1992'),
+    ).toBe(true)
+    const link = drawer.getByRole('link', { name: 'LinkedIn', exact: true })
+    await expect(link).toHaveAttribute('href', 'https://www.linkedin.com/')
+    const copyLink = drawer.getByRole('button', { name: 'Copy LinkedIn', exact: true })
+    await copyLink.click()
+    await expect(copyLink).toHaveAttribute('data-copied', 'true')
+    await expect(copyDate).not.toHaveAttribute('data-copied')
+    expect(
+      await page.evaluate(
+        async () => (await navigator.clipboard.readText()) === 'https://www.linkedin.com/',
+      ),
+    ).toBe(true)
     // A head retains the full department toolset; four tabs must wrap cleanly at phone width.
     expect((await authedPatch(head, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
     const headPage = await head.newPage()

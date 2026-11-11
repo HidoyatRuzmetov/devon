@@ -1693,6 +1693,8 @@
       "titleRequired": "Enter a card title.",
       "peekTitle": "Card details",
       "markDone": "Mark done",
+      "reopen": "Reopen",
+      "reopened": "Task reopened",
       "archive": "Archive",
       "done": "Card done",
       "checklistComplete": "Checklist complete",
@@ -4191,6 +4193,8 @@
       "unset": "Not set"
     },
     "profile": {
+      "copyField": "Copy {field}",
+      "copyFailed": "Could not copy this value.",
       "title": "Professional profile",
       "description": "Description",
       "phone": "Work phone",

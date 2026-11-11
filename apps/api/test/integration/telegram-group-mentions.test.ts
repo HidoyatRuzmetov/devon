@@ -4,7 +4,7 @@ import {
   claimGroupMention,
   connectedMentionGroup,
   finishGroupMention,
-  mentionCandidateIds,
+  groupMentionAudience,
   rememberGroupMember,
 } from '../../src/modules/telegram/group-mentions-repo.js'
 import {
@@ -48,9 +48,14 @@ describe('durable group mention boundaries', () => {
       id: group,
       department_id: department,
     })
-    expect((await mentionCandidateIds(group, department)).sort()).toEqual([901301, 901303])
+    const audience = await groupMentionAudience(group, department)
+    expect(audience.candidates.sort()).toEqual([901301, 901303])
+    expect(audience).toMatchObject({ connected: 1, total: 1, missing: [] })
     await rememberGroupMember(group, { id: 901303, is_bot: false, first_name: 'Observed' }, false)
-    expect(await mentionCandidateIds(group, department)).toEqual([901301])
+    expect((await groupMentionAudience(group, department)).candidates).toEqual([901301])
+    await expect(groupMentionAudience(group, foreign)).rejects.toThrow(
+      'telegram_group_disconnected',
+    )
   })
   it('claims once across concurrent deliveries and preserves the receipt after completion', async () => {
     const claims = await Promise.all(Array.from({ length: 8 }, () => claimGroupMention(group, 40)))
@@ -76,5 +81,8 @@ describe('durable group mention boundaries', () => {
       group,
     ])
     expect(await connectedMentionGroup(-991301)).toBeNull()
+    await expect(groupMentionAudience(group, department)).rejects.toThrow(
+      'telegram_group_disconnected',
+    )
   })
 })

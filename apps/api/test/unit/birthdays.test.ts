@@ -47,6 +47,12 @@ describe('birthday calendar and disclosure boundaries', () => {
   it('retries only known no-send results and never repeats an ambiguous delivery', () => {
     expect(birthdaySendDisposition('telegram_unavailable')).toBe('pending')
     expect(birthdaySendDisposition('429: Too Many Requests')).toBe('pending')
+    expect(
+      birthdaySendDisposition(
+        "Call to 'sendMessage' failed! (429: Too Many Requests: retry after 30)",
+      ),
+    ).toBe('pending')
+    expect(birthdaySendDisposition('socket reset after 429ms')).toBe('uncertain')
     expect(birthdaySendDisposition('403: bot was blocked')).toBe('failed')
     expect(birthdaySendDisposition('ETIMEDOUT')).toBe('uncertain')
     expect(birthdaySendDisposition('delivery_uncertain')).toBe('uncertain')

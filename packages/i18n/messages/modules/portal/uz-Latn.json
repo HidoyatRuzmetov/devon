@@ -11,6 +11,8 @@
       "unset": "Belgilanmagan"
     },
     "profile": {
+      "copyField": "«{field}»ni nusxalash",
+      "copyFailed": "Qiymatni nusxalab bo‘lmadi.",
       "title": "Kasbiy profil",
       "description": "Tavsif",
       "phone": "Ish telefoni",

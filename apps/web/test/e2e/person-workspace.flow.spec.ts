@@ -83,7 +83,17 @@ test('person workspace connects column header, pins, all lifecycle columns and p
       [doing, 'Review received applications'],
       [doing, 'Send the findings'],
     ]) {
-      expect((await authedPost(head, `/api/v1/cards/${id}/checklist`, { text })).status()).toBe(201)
+      const item = await authedPost(head, `/api/v1/cards/${id}/checklist`, { text })
+      expect(item.status()).toBe(201)
+      if (id === doing && text === 'Review received applications') {
+        expect(
+          (
+            await authedPatch(head, `/api/v1/cards/${id}/checklist/${(await item.json()).id}`, {
+              done: true,
+            })
+          ).status(),
+        ).toBe(204)
+      }
     }
     expect(
       (await authedPatch(head, `/api/v1/cards/${doing}`, { workStage: 'in_progress' })).status(),
@@ -161,6 +171,44 @@ test('person workspace connects column header, pins, all lifecycle columns and p
     await expect(
       memberPage.getByRole('combobox', { name: 'Choose person', exact: true }),
     ).toContainText('Aziz Karimov')
+    const completedTask = memberPage.locator(`[data-person-card="${done}"]`)
+    await completedTask.getByRole('button', { name: 'Card actions', exact: true }).click()
+    await memberPage.getByRole('menuitem', { name: 'Reopen', exact: true }).click()
+    await expect(
+      memberPage.locator(`[data-stage="todo"] [data-person-card="${done}"]`),
+    ).toBeVisible()
+    await completedTask.getByRole('button', { name: 'Card actions', exact: true }).click()
+    await memberPage.getByRole('menuitem', { name: 'Mark done', exact: true }).click()
+    await memberPage.getByRole('button', { name: 'Undo', exact: true }).click()
+    await expect(
+      memberPage.locator(`[data-stage="todo"] [data-person-card="${done}"]`),
+    ).toBeVisible()
+
+    await memberPage.locator(`[data-person-card="${doing}"] .person-task-open`).click()
+    const taskDrawer = memberPage.getByRole('dialog', { name: 'Card details' })
+    await taskDrawer.getByRole('button', { name: 'Mark done', exact: true }).click()
+    await taskDrawer.getByRole('button', { name: 'Reopen', exact: true }).click()
+    await expect(taskDrawer.getByText('In progress', { exact: true })).toBeVisible()
+    await taskDrawer.getByRole('button', { name: 'Mark done', exact: true }).click()
+    await expect(taskDrawer.getByRole('button', { name: 'Reopen', exact: true })).toBeEnabled()
+    await memberPage.goto('/')
+    const home = memberPage.getByTestId('member-overview')
+    await home.getByRole('button', { name: 'Completed', exact: true }).click()
+    await home
+      .getByRole('button', { name: 'Reopen “Review digital service applications”', exact: true })
+      .click()
+    await expect(
+      home.getByText('Review digital service applications', { exact: true }),
+    ).toHaveCount(0)
+    const reopened = await (await member.request.get(`/api/v1/cards/${doing}`)).json()
+    expect(reopened).toMatchObject({
+      status: 'active',
+      workStage: 'in_progress',
+      doneAt: null,
+      checklistDone: 1,
+      checklistTotal: 2,
+    })
+    await memberPage.goto('/work/person')
     await memberPage.getByRole('button', { name: 'New card', exact: true }).click()
     const dialog = memberPage.getByRole('dialog')
     await dialog.getByRole('textbox', { name: 'Title', exact: true }).fill('My follow-up task')

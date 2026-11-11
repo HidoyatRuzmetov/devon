@@ -38,6 +38,7 @@ import { useProjectsQuery } from '../projects/hooks.js'
 import { useEventsQuery } from '../events/hooks.js'
 import { HomeWorkspace, HOME_METRIC_INTERACTION } from './home-workspace.js'
 import { RestoreCardButton } from '../work/components/restore-card-button.js'
+import { CardCompletionButton } from '../work/components/card-completion-button.js'
 
 const drill = (path: string) => `${path}${path.includes('?') ? '&' : '?'}from=overview`
 export type WorkCategory = 'todo' | 'in_progress' | 'done' | 'deleted'
@@ -168,7 +169,11 @@ function MemberTask({ card, projectTitle }: { card: Card; projectTitle?: string 
           </ProgressRing>
         ) : null}
       </button>
-      {card.deletedAt ? <RestoreCardButton card={card} /> : null}
+      {card.deletedAt ? (
+        <RestoreCardButton card={card} />
+      ) : done && card.canEdit !== false ? (
+        <CardCompletionButton card={card} inline />
+      ) : null}
     </div>
   )
 }

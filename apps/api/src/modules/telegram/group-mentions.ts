@@ -6,7 +6,7 @@ import {
   claimGroupMention,
   connectedMentionGroup,
   finishGroupMention,
-  mentionCandidateIds,
+  groupMentionAudience,
   rememberGroupMember,
 } from './group-mentions-repo.js'
 import { sendMentionMessage } from './transport.js'
@@ -70,8 +70,8 @@ const copy = {
     heading: 'Everyone!',
     admin:
       'To use @all, make the portal bot a group administrator so it can receive messages and verify membership.',
-    coverage: (count: number) =>
-      `Mentioned ${count} verified members. Telegram does not share the full member list with bots. Missing members can send a message here or link their portal account for next time.`,
+    connections: (linked: number, total: number) =>
+      `${linked}/${total} connected to the bot. Still to connect: `,
     failed:
       'The group notification could not be completed. Some mentions may have arrived; check the replies before trying @all again.',
   },
@@ -79,8 +79,8 @@ const copy = {
     heading: 'Всем!',
     admin:
       'Для @all назначьте бота администратором группы, чтобы он мог получать сообщения и проверять участников.',
-    coverage: (count: number) =>
-      `Упомянуто участников: ${count}. Telegram не передаёт ботам полный список. Остальным нужно отправить сообщение в группу или привязать аккаунт портала.`,
+    connections: (linked: number, total: number) =>
+      `К боту подключены ${linked}/${total}. Ещё не подключились: `,
     failed:
       'Не удалось завершить оповещение. Некоторые упоминания могли быть доставлены; проверьте ответы перед повторным @all.',
   },
@@ -88,15 +88,80 @@ const copy = {
     heading: 'Barchaga!',
     admin:
       '@all uchun portal botini guruh administratori qiling. Shunda u xabarlarni qabul qilib, a’zolikni tekshira oladi.',
-    coverage: (count: number) =>
-      `${count} ta tasdiqlangan a’zo tilga olindi. Telegram botlarga to‘liq ro‘yxatni bermaydi. Qolgan a’zolar guruhga xabar yozishi yoki portal akkauntini bog‘lashi kerak.`,
+    connections: (linked: number, total: number) =>
+      `Botga ulanganlar: ${linked}/${total}. Hali ulanmaganlar: `,
     failed:
       'Guruhni xabardor qilish tugallanmadi. Ayrim xabarlar yetkazilgan bo‘lishi mumkin; @all ni takrorlashdan oldin javoblarni tekshiring.',
   },
+  'uz-Cyrl': {
+    heading: 'Барчага!',
+    admin: '@all учун портал ботини гуруҳ администратори қилинг.',
+    connections: (linked: number, total: number) =>
+      `Ботга уланганлар: ${linked}/${total}. Ҳали уланмаганлар: `,
+    failed:
+      'Айрим хабарлар етказилган бўлиши мумкин. @all ни такрорлашдан олдин жавобларни текширинг.',
+  },
+}
+function mentionCopy(locale = '') {
+  if (locale.startsWith('ru')) return copy.ru
+  if (locale.startsWith('en')) return copy.en
+  if (locale.startsWith('uz-Cyrl')) return copy['uz-Cyrl']
+  return copy.uz
 }
 const present = (member: { status: string; is_member?: boolean }) =>
   !['left', 'kicked'].includes(member.status) &&
   (member.status !== 'restricted' || member.is_member === true)
+
+/** Both sources of @all use the same verified Telegram recipients and portal connection counts. */
+export async function groupMentionMessages(
+  api: Bot['api'],
+  chatId: string | number,
+  groupId: string,
+  departmentId: string,
+  body: string,
+  locale?: string,
+) {
+  const audience = await groupMentionAudience(groupId, departmentId)
+  const administrators = await withTimeout(
+    api.getChatAdministrators(chatId),
+    8000,
+    'telegram administrators',
+  )
+  const candidates = [...new Set([...audience.candidates, ...administrators.map((m) => m.user.id)])]
+  const people: User[] = []
+  for (let i = 0; i < candidates.length; i += 5) {
+    const members = await Promise.all(
+      candidates
+        .slice(i, i + 5)
+        .map((id) =>
+          withTimeout(api.getChatMember(chatId, id), 8000, 'telegram membership').catch(() => null),
+        ),
+    )
+    for (const member of members)
+      if (member && present(member) && !member.user.is_bot) people.push(member.user)
+  }
+  const messages = mentionCopy(locale ?? audience.locale)
+  const chunks = mentionMessages(body, people, messages.heading)
+  if (!audience.missing.length) return chunks
+
+  // Keep the status on the last message where it fits. Start a continuation at a name
+  // boundary for large departments, so names and existing UTF-16 mention offsets stay intact.
+  const prefix = messages.connections(audience.connected, audience.total)
+  let note = prefix
+  for (const member of audience.missing) {
+    const name = member.replace(/\s+/gu, ' ').trim()
+    if (note.length + name.length + 2 > 4096) {
+      chunks.push({ text: note, entities: [] })
+      note = prefix
+    }
+    note += (note === prefix ? '' : ', ') + name
+  }
+  const last = chunks[chunks.length - 1]!
+  if (last.text.length + note.length + 2 <= 4096) last.text += '\n\n' + note
+  else chunks.push({ text: note, entities: [] })
+  return chunks
+}
+
 export function registerGroupMentions(bot: Bot) {
   bot.use(async (ctx, next) => {
     if (!ctx.chat || !['group', 'supergroup'].includes(ctx.chat.type)) return next()
@@ -124,14 +189,7 @@ export function registerGroupMentions(bot: Bot) {
       message.entities ?? message.caption_entities ?? [],
     )
     if (body === null) return next()
-    const messages =
-      copy[
-        ctx.from?.language_code?.startsWith('ru')
-          ? 'ru'
-          : ctx.from?.language_code?.startsWith('en')
-            ? 'en'
-            : 'uz'
-      ]
+    const messages = mentionCopy(ctx.from?.language_code)
     if (await isMaintenanceActive()) return
     const own = await withTimeout(
       ctx.api.getChatMember(ctx.chat.id, ctx.me.id),
@@ -145,38 +203,14 @@ export function registerGroupMentions(bot: Bot) {
     if (!(await claimGroupMention(group.id, message.message_id))) return
     let notified = 0
     try {
-      const administrators = await withTimeout(
-        ctx.api.getChatAdministrators(ctx.chat.id),
-        8000,
-        'telegram administrators',
+      const chunks = await groupMentionMessages(
+        ctx.api,
+        ctx.chat.id,
+        group.id,
+        group.department_id,
+        body,
+        ctx.from?.language_code,
       )
-      const candidates = Array.from(
-        new Set([
-          ...(await mentionCandidateIds(group.id, group.department_id)),
-          ...administrators.map((m) => m.user.id),
-        ]),
-      )
-      const people: User[] = []
-      // Bounded network concurrency; every candidate is checked against this actual Telegram group.
-      for (let i = 0; i < candidates.length; i += 5) {
-        const batch = await Promise.all(
-          candidates.slice(i, i + 5).map(async (id) => {
-            try {
-              // nosemgrep: query-in-loop -- This await is inside the concurrent five-member batch, with an eight-second bound.
-              return await withTimeout(
-                ctx.api.getChatMember(ctx.chat!.id, id),
-                8000,
-                'telegram membership',
-              )
-            } catch {
-              return null
-            }
-          }),
-        )
-        for (const member of batch)
-          if (member && present(member) && !member.user.is_bot) people.push(member.user)
-      }
-      const chunks = mentionMessages(body, people, messages.heading)
       for (const chunk of chunks) {
         // nosemgrep: query-in-loop -- Telegram chunks must stay in order and stop immediately after any failed delivery.
         const result = await sendMentionMessage(
@@ -190,17 +224,6 @@ export function registerGroupMentions(bot: Bot) {
         notified += chunk.entities.length
       }
       await finishGroupMention(group.id, message.message_id, true, notified)
-      // Bot API cannot enumerate existing silent members. Never claim complete coverage from a partial roster.
-      const count = await withTimeout(
-        ctx.api.getChatMemberCount(ctx.chat.id),
-        8000,
-        'telegram member count',
-      ).catch(() => null)
-      if (count === null || people.length < count - 1)
-        await ctx.reply(messages.coverage(people.length), {
-          reply_parameters: { message_id: message.message_id },
-          disable_notification: true,
-        })
     } catch {
       await finishGroupMention(group.id, message.message_id, false, notified)
       await ctx.reply(messages.failed, {

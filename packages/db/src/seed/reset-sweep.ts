@@ -101,6 +101,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.telegram_message_receipts' },
   { table: 'app.personnel_records' },
   { table: 'app.birthday_reminders' },
+  { table: 'app.telegram_birthday_deliveries' },
   { table: 'app.checkin_reminders' },
   { table: 'app.checkin_cycles' },
   { table: 'app.work_action_receipts' },

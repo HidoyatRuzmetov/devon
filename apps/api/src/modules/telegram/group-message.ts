@@ -2,14 +2,12 @@ import { withContext, type RequestContext } from '@devon/db'
 import { sql } from 'drizzle-orm'
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import type { User } from 'grammy/types'
 import { z } from 'zod'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { withTimeout } from '../../lib/resilience/timeout.js'
 import { contextFromRequest } from '../work/context.js'
-import { extractAllMessage, mentionMessages } from './group-mentions.js'
-import { mentionCandidateIds } from './group-mentions-repo.js'
+import { extractAllMessage, groupMentionMessages } from './group-mentions.js'
 import { listGroupsForDepartment } from './repo.js'
 import { getBot, sendMentionMessage } from './transport.js'
 
@@ -60,7 +58,9 @@ export async function sendDepartmentMessage(
     success = false
   try {
     const allText = extractAllMessage(input.message)
-    const people: User[] = []
+    let chunks: Awaited<ReturnType<typeof groupMentionMessages>> = [
+      { text: input.message, entities: [] },
+    ]
     if (input.mentionAll || allText !== null) {
       const me = await withTimeout(bot.api.getMe(), 8000, 'telegram bot identity')
       const own = await withTimeout(
@@ -69,43 +69,14 @@ export async function sendDepartmentMessage(
         'telegram membership',
       )
       if (!['creator', 'administrator'].includes(own.status)) throw new Error('bot_admin_required')
-      const admins = await withTimeout(
-        bot.api.getChatAdministrators(group.chatId),
-        8000,
-        'telegram administrators',
+      chunks = await groupMentionMessages(
+        bot.api,
+        group.chatId,
+        group.id,
+        ctx.departmentId,
+        allText ?? input.message,
       )
-      const ids = [
-        ...new Set([
-          ...(await mentionCandidateIds(group.id, ctx.departmentId)),
-          ...admins.map((member) => member.user.id),
-        ]),
-      ]
-      for (let start = 0; start < ids.length; start += 5) {
-        const members = await Promise.all(
-          ids
-            .slice(start, start + 5)
-            .map((id) =>
-              withTimeout(
-                bot.api.getChatMember(group.chatId, id),
-                8000,
-                'telegram membership',
-              ).catch(() => null),
-            ),
-        )
-        for (const member of members)
-          if (
-            member &&
-            !member.user.is_bot &&
-            !['left', 'kicked'].includes(member.status) &&
-            (member.status !== 'restricted' || member.is_member)
-          )
-            people.push(member.user)
-      }
     }
-    const chunks =
-      input.mentionAll || allText !== null
-        ? mentionMessages(allText ?? input.message, people)
-        : [{ text: input.message, entities: [] }]
     for (const chunk of chunks) {
       // nosemgrep: query-in-loop -- Ordered external delivery stops on the first failure; the receipt prevents replay.
       const result = await sendMentionMessage(group.chatId, chunk.text, chunk.entities)

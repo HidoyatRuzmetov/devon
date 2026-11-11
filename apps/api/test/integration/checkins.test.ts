@@ -332,6 +332,16 @@ describe('check-in lifecycle and source integrity', () => {
       [f.cycleId],
     )
     const frozen = (await read(f)).entries[0]!
+    // Correcting an accidental task completion must not reopen an agreed deliverable.
+    for (const status of ['done', 'active']) {
+      const changed = await request(f.session, `/cards/${f.cardId}`, 'PATCH', { status })
+      expect(changed.status).toBe(200)
+      expect(await changed.json()).toMatchObject({
+        status,
+        workStage: 'in_progress',
+        checklistDone: 1,
+      })
+    }
     expect(
       (
         await request(f.session, `/cards/${f.cardId}/checklist/${f.itemId}`, 'PATCH', {

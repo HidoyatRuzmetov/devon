@@ -15,7 +15,7 @@ export const PRIVATE_SCHEDULER_ALLOWLIST: Readonly<
     policy: 'account_birthdays_scheduler',
     command: 'SELECT',
     reason:
-      'Owner-written DOB; tenant-scoped birthday worker may read active members only to schedule the head reminder.',
+      'Owner-written DOB; tenant-scoped birthday worker reads active members to schedule head reminders and same-day department greetings.',
   },
   'app.birthday_greetings': {
     ownerColumn: 'owner_user_id',
@@ -36,6 +36,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.account_birthdays': 'user_owned',
   'app.birthday_greetings': 'user_owned',
   'app.birthday_reminders': 'department_owned',
+  'app.telegram_birthday_deliveries': 'department_owned',
   'app.sessions': 'global',
   'app.setup_tokens': 'global',
   'app.instance_settings': 'global',

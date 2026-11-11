@@ -9,7 +9,7 @@ import {
 const mocks = vi.hoisted(() => ({
   group: vi.fn(),
   remember: vi.fn(),
-  candidates: vi.fn(),
+  audience: vi.fn(),
   claim: vi.fn(),
   finish: vi.fn(),
   send: vi.fn(),
@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../../src/modules/telegram/group-mentions-repo.js', () => ({
   connectedMentionGroup: mocks.group,
   rememberGroupMember: mocks.remember,
-  mentionCandidateIds: mocks.candidates,
+  groupMentionAudience: mocks.audience,
   claimGroupMention: mocks.claim,
   finishGroupMention: mocks.finish,
 }))
@@ -42,7 +42,6 @@ function fixture() {
         user: user(id),
       })),
       getChatAdministrators: vi.fn(async () => []),
-      getChatMemberCount: vi.fn(async () => 3),
     }
   const ctx = {
     chat: { id: -100, type: 'supergroup' },
@@ -62,7 +61,13 @@ function fixture() {
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.group.mockResolvedValue({ id: 'group', department_id: 'dept' })
-  mocks.candidates.mockResolvedValue([1, 2])
+  mocks.audience.mockResolvedValue({
+    candidates: [1, 2],
+    locale: 'en',
+    total: 2,
+    connected: 2,
+    missing: [],
+  })
   mocks.claim.mockResolvedValue(true)
   mocks.send.mockResolvedValue({ ok: true, messageId: 12 })
   mocks.maintenance.mockResolvedValue(false)
@@ -147,9 +152,15 @@ describe('group notification boundaries', () => {
     await second.run()
     expect(mocks.send).not.toHaveBeenCalled()
   })
-  it('does not notify departed, bot or unverifiable users and explains incomplete coverage', async () => {
+  it('does not notify departed, bot or unverifiable users or add a status when everyone is linked', async () => {
     const f = fixture()
-    mocks.candidates.mockResolvedValue([1, 2, 3, 4])
+    mocks.audience.mockResolvedValue({
+      candidates: [1, 2, 3, 4],
+      locale: 'en',
+      total: 3,
+      connected: 3,
+      missing: [],
+    })
     f.api.getChatMember.mockImplementation(async (_chat, id) => {
       if (id === 3) throw new Error('unknown')
       return {
@@ -157,13 +168,50 @@ describe('group notification boundaries', () => {
         user: { ...user(id), is_bot: id === 4 },
       }
     })
-    f.api.getChatMemberCount.mockResolvedValue(6)
     await f.run()
     expect(mocks.finish).toHaveBeenCalledWith('group', 10, true, 1)
-    expect(f.reply).toHaveBeenCalledWith(
-      expect.stringContaining('Mentioned 1 verified members'),
-      expect.anything(),
+    expect(mocks.send.mock.calls.map((call) => call[1])).toEqual([
+      'Review the materials\n\nEveryone! · Person 1',
+    ])
+    expect(f.reply).not.toHaveBeenCalled()
+  })
+  it('uses portal connections for the count and lists only missing names in the original topic', async () => {
+    const f = fixture()
+    mocks.audience.mockResolvedValue({
+      candidates: [1, 2, 3, 4],
+      locale: 'en',
+      total: 3,
+      connected: 1,
+      missing: ['Aziza Qodirova', 'Umar Aliyev'],
+    })
+    await f.run()
+    expect(mocks.send).toHaveBeenCalledExactlyOnceWith(
+      '-100',
+      expect.stringContaining(
+        '\n\n1/3 connected to the bot. Still to connect: Aziza Qodirova, Umar Aliyev',
+      ),
+      expect.any(Array),
+      10,
+      7,
     )
+    expect(mocks.finish).toHaveBeenCalledWith('group', 10, true, 4)
+    expect(f.reply).not.toHaveBeenCalled()
+  })
+  it('keeps long lists within Telegram limits without omitting anyone', async () => {
+    const f = fixture()
+    const missing = Array.from({ length: 125 }, (_, i) => `Person ${i} ${'🧑'.repeat(29)}`)
+    mocks.audience.mockResolvedValue({
+      candidates: [1],
+      locale: 'en',
+      total: 126,
+      connected: 1,
+      missing,
+    })
+    await f.run()
+    const texts = mocks.send.mock.calls.map((call) => String(call[1]))
+    expect(texts.every((text) => text.length <= 4096)).toBe(true)
+    for (const name of missing) expect(texts.join('\n')).toContain(name)
+    expect(mocks.finish).toHaveBeenCalledWith('group', 10, true, 1)
   })
   it('reports a failed delivery without replaying an unknown send outcome', async () => {
     const f = fixture()

@@ -1693,6 +1693,8 @@
       "titleRequired": "Karta nomini kiriting.",
       "peekTitle": "Karta tafsilotlari",
       "markDone": "Bajarildi deb belgilash",
+      "reopen": "Qayta ochish",
+      "reopened": "Vazifa qayta ochildi",
       "archive": "Arxivga olish",
       "done": "Bajarildi",
       "checklistComplete": "Roʻyxat toʻliq bajarildi",
@@ -4191,6 +4193,8 @@
       "unset": "Belgilanmagan"
     },
     "profile": {
+      "copyField": "«{field}»ni nusxalash",
+      "copyFailed": "Qiymatni nusxalab bo‘lmadi.",
       "title": "Kasbiy profil",
       "description": "Tavsif",
       "phone": "Ish telefoni",

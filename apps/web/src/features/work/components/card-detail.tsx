@@ -87,8 +87,8 @@ import { ChecklistRow } from './checklist-row.js'
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
 import type { CardPriority, MemberSummary } from '../api.js'
 import { CardPinButton } from './card-pin-button.js'
+import { CardCompletionButton } from './card-completion-button.js'
 import {
-  nextDoneStatus,
   useAddChecklistItemMutation,
   useAddCommentMutation,
   useCardQuery,
@@ -187,7 +187,6 @@ export function CardDetailContent({
   const linkWritePending = React.useRef(false)
   const [newLabelName, setNewLabelName] = React.useState('')
   const [activityOpen, setActivityOpen] = React.useState(false)
-  const doneCelebrate = useCelebrate()
 
   const card = query.data
   /** The server's own answer (`canEdit` on the card DTO), never a client-side guess. Absent means an
@@ -348,13 +347,6 @@ export function CardDetailContent({
     } catch {
       return false
     }
-  }
-
-  async function markDone() {
-    const status = nextDoneStatus(card!)
-    await patchCard.mutateAsync({ id: card!.id, patch: { status } })
-    doneCelebrate.fire()
-    toast(t('work.card.done'))
   }
 
   async function deleteNow() {
@@ -642,32 +634,24 @@ export function CardDetailContent({
           </Badge>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {canEdit && card.status === 'active' ? (
-              <>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={patchCard.isPending}
-                  onClick={() =>
-                    void patchCard.mutateAsync({
-                      id: card.id,
-                      patch: {
-                        workStage: card.workStage === 'in_progress' ? 'todo' : 'in_progress',
-                      },
-                    })
-                  }
-                >
-                  {t(
-                    card.workStage === 'in_progress' ? 'portal.stage.reset' : 'portal.stage.start',
-                  )}
-                </Button>
-                <span className="relative inline-flex">
-                  <Button size="sm" onClick={() => void markDone()} loading={patchCard.isPending}>
-                    <Check className="size-4" aria-hidden="true" />
-                    {t('work.card.markDone')}
-                  </Button>
-                  <Celebrate play={doneCelebrate.play} onDone={doneCelebrate.onDone} />
-                </span>
-              </>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={patchCard.isPending}
+                onClick={() =>
+                  void patchCard.mutateAsync({
+                    id: card.id,
+                    patch: {
+                      workStage: card.workStage === 'in_progress' ? 'todo' : 'in_progress',
+                    },
+                  })
+                }
+              >
+                {t(card.workStage === 'in_progress' ? 'portal.stage.reset' : 'portal.stage.start')}
+              </Button>
+            ) : null}
+            {canEdit && !card.deletedAt ? (
+              <CardCompletionButton card={card} disabled={patchCard.isPending} />
             ) : null}
           </div>
         </div>

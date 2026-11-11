@@ -18,6 +18,6 @@ The retired Notes, Canvas, Periods and management features are removed from appl
 
 Progress measures completion of agreed deliverables rather than claiming to measure productivity. The denominator and snapshots are inspectable. Late additions stay visible. Data from retired workspaces can be recovered from the restricted backup rather than through unused product screens.
 
-Telegram cannot enumerate every silent group member through the Bot API. Mentions use verified linked accounts and observed current group membership; the bot reports incomplete coverage rather than claiming to notify unknown members. Notifications are explicit mentions because one visible word cannot contain multiple Telegram mention entities.
+Mentions use verified linked accounts and observed current group membership. When any active department members have yet to link their accounts, the message includes the department’s connected count and their names. A fully linked department receives only the announcement and its mentions. The connection count tracks portal accounts independently of Telegram group membership.
 
 Evidence: [release verification](../qa/2026-10-28-deliverables/README.md).

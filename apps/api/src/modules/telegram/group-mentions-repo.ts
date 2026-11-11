@@ -1,6 +1,7 @@
 import { withContext, type RequestContext } from '@devon/db'
 import { sql } from 'drizzle-orm'
 import type { User } from 'grammy/types'
+import { departmentTelegramRoster } from './repo.js'
 
 const system: RequestContext = {
   requestId: 'telegram-group-mentions',
@@ -38,17 +39,24 @@ export async function rememberGroupMember(groupId: string, user: User, present =
     )
   })
 }
-export async function mentionCandidateIds(
-  groupId: string,
-  departmentId: string,
-): Promise<number[]> {
-  return withContext(system, async (tx) => {
-    const rows = await tx.raw<{
-      id: string
-    }>(sql`select telegram_user_id::text as id from app.telegram_group_members where group_id=${groupId}
-      union select l.chat_id::text from app.telegram_links l join app.memberships m on m.user_id=l.user_id
-      join app.users u on u.id=m.user_id where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null and u.deleted_at is null and l.unlinked_at is null and l.chat_id>0`)
-    return rows.map((row) => Number(row.id)).filter(Number.isSafeInteger)
+export async function groupMentionAudience(groupId: string, departmentId: string) {
+  return withContext({ ...system, departmentId }, async (tx) => {
+    const [group] = await tx.raw<{ locale: string; observed: string[] }>(sql`
+      select d.locale_default as locale,
+        array(select telegram_user_id::text from app.telegram_group_members where group_id=g.id) as observed
+      from app.telegram_groups g join app.departments d on d.id=g.department_id
+      where g.id=${groupId} and g.department_id=${departmentId} and g.disconnected_at is null`)
+    if (!group) throw new Error('telegram_group_disconnected')
+    const roster = await departmentTelegramRoster(tx, departmentId)
+    return {
+      locale: group.locale,
+      candidates: [...new Set([...group.observed.map(Number), ...roster.linkedChatIds])].filter(
+        Number.isSafeInteger,
+      ),
+      total: roster.memberCount,
+      connected: roster.linkedChatIds.length,
+      missing: roster.unlinkedMembers.map((member) => member.name),
+    }
   })
 }
 export async function claimGroupMention(groupId: string, messageId: number): Promise<boolean> {

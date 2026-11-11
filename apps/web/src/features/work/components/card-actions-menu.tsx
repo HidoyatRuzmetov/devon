@@ -9,9 +9,9 @@ import {
   toast,
   toastWithUndo,
 } from '@devon/ui'
-import { Check, Ellipsis, FolderPlus, Pin, PinOff, Trash2 } from 'lucide-react'
+import { Check, Ellipsis, FolderPlus, Pin, PinOff, Trash2, Undo2 } from 'lucide-react'
 import type { Card } from '../api.js'
-import { useDeleteCardMutation, usePatchCardMutation } from '../hooks.js'
+import { useCardCompletion, useDeleteCardMutation } from '../hooks.js'
 import { useAddFocusMutation, useRemoveFocusMutation, usePersonPinMutation } from '../hooks-plus.js'
 import { useDepartment, useMeQuery } from '../../../lib/session.js'
 import { useBoardQuery } from '../hooks.js'
@@ -48,14 +48,18 @@ function ActiveCardActions({ card }: { card: Card }) {
   const personPin = usePersonPinMutation(card.assigneeUserId ?? '')
   const pinForOther =
     department?.role === 'head' && card.assigneeUserId && card.assigneeUserId !== viewerId
-  const patch = usePatchCardMutation(),
+  const completion = useCardCompletion(card.id),
     remove = useDeleteCardMutation(),
     undo = useDeleteCardMutation(true)
   const pin = useAddFocusMutation(),
     unpin = useRemoveFocusMutation()
   const [convertOpen, setConvertOpen] = React.useState(false)
   const busy =
-    patch.isPending || remove.isPending || pin.isPending || unpin.isPending || personPin.isPending
+    completion.isPending ||
+    remove.isPending ||
+    pin.isPending ||
+    unpin.isPending ||
+    personPin.isPending
   const denied = card.canEdit === false ? t('state.denied.body') : undefined
   function item(
     label: string,
@@ -132,10 +136,10 @@ function ActiveCardActions({ card }: { card: Card }) {
             denied ?? (card.projectId ? t('cardActions.alreadyGrouped') : undefined),
           )}
           {item(
-            t('work.card.markDone'),
-            <Check className="size-4" />,
-            () => patch.mutate({ id: card.id, patch: { status: 'done', version: card.version } }),
-            denied ?? (card.status === 'done' ? t('cardActions.alreadyDone') : undefined),
+            t(card.status === 'done' ? 'work.card.reopen' : 'work.card.markDone'),
+            card.status === 'done' ? <Undo2 className="size-4" /> : <Check className="size-4" />,
+            () => void completion.toggle(card),
+            denied,
           )}
           {item(
             t('work.action.delete'),

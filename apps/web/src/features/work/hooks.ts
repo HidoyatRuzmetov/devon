@@ -14,12 +14,12 @@ import {
   type QueryClient,
   type UseQueryResult,
 } from '@tanstack/react-query'
-import { toast } from '@devon/ui'
+import { toast, toastWithUndo } from '@devon/ui'
 import { useT } from '@devon/i18n'
 import { useMeQuery } from '../../lib/session.js'
 import { useIsLive } from '../../lib/realtime/index.js'
 import * as api from './api.js'
-import type { Board, Card, CardDetail, CardStatus, Label, SavedView } from './api.js'
+import type { Board, Card, CardDetail, Label, SavedView } from './api.js'
 import {
   focusFirst,
   sortBoardCards,
@@ -345,9 +345,39 @@ export function useMoveCardMutation() {
 
 const latestMoves = new WeakMap<QueryClient, Map<string, symbol>>()
 
-/** Completion and archiving are distinct for both individual and project cards. */
-export function nextDoneStatus(_card: Pick<Card, 'projectScope'>): CardStatus {
-  return 'done'
+export function useCardCompletion(cardId: string) {
+  const patch = usePatchCardMutation()
+  const t = useT()
+  // By person mounts a new row as soon as its stage changes optimistically. That row
+  // still needs to wait for the first write's receipt and refreshed version.
+  const isPending =
+    useIsMutating({
+      mutationKey: ['work', 'card-write', 'patch'],
+      predicate: (mutation) =>
+        (mutation.state.variables as { id?: string } | undefined)?.id === cardId,
+    }) > 0
+  async function toggle(card: Card, onDone?: () => void) {
+    if (card.deletedAt || card.canEdit === false || isPending) return
+    const status = card.status === 'done' ? 'active' : 'done'
+    // The existing stage, checklist and check-in history belong to the task across completions.
+    // Use the receipt version for Undo so an old toast cannot reverse a newer decision.
+    const updated = await patch
+      .mutateAsync({ id: card.id, patch: { status, version: card.version } })
+      .catch(() => null) // The shared mutation already reports failures and rolls back.
+    if (!updated) return
+    if (status === 'active') {
+      toast.success(t('work.card.reopened'))
+      return
+    }
+    onDone?.()
+    toastWithUndo({
+      message: t('work.card.done'),
+      undoLabel: t('action.undo'),
+      onUndo: () =>
+        patch.mutate({ id: card.id, patch: { status: 'active', version: updated.version } }),
+    })
+  }
+  return { toggle, isPending }
 }
 
 export function useDeleteCardMutation(undo = false) {

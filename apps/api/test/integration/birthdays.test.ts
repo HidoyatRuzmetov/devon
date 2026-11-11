@@ -5,6 +5,7 @@ import { withContext } from '@devon/db'
 import { sql } from 'drizzle-orm'
 import { birthdayClock, nextDay } from '../../src/modules/birthdays/calendar.js'
 import { processBirthdays } from '../../src/modules/birthdays/worker.js'
+import { prepareGroupBirthday } from '../../src/modules/birthdays/group-greeting.js'
 import { FALLBACK_BIRTHDAY_MESSAGE } from '../../src/modules/birthdays/message.js'
 import { claimCelebration, ensureGreeting } from '../../src/modules/birthdays/repo.js'
 import { __setProviderForTests } from '../../src/modules/ai/service.js'
@@ -124,6 +125,7 @@ describe('private birthday account and first-entry receipt', () => {
       `insert into app.ai_department_settings(department_id,budget_uzs_per_month,flags) values($1,1000000,'{"semantic_ask":true}') on conflict(department_id) do update set flags=excluded.flags`,
       [departmentId],
     )
+    let aiReply = personalLetter
     const provider = new MockProvider({
       respond: () => ({
         content: null,
@@ -135,7 +137,7 @@ describe('private birthday account and first-entry receipt', () => {
             id: randomUUID(),
             name: 'department_chat_answer',
             argumentsJson: JSON.stringify({
-              content: personalLetter,
+              content: aiReply,
               citations: [],
               actions: [],
             }),
@@ -225,6 +227,21 @@ describe('private birthday account and first-entry receipt', () => {
       const portal = await claimCelebration(ctx, randomUUID(), new Date(`${tomorrow}T04:00:00Z`))
       expect(portal?.message).toBe(personalLetter)
       expect(provider.calls).toHaveLength(1)
+      aiReply =
+        'May your next trail end with a good view and your next book be worth staying up for. Wishing you time for both, with plenty left over for the people you love. 📚'
+      expect(await prepareGroupBirthday(ctx, person.id)).toEqual({ source: 'ai', message: aiReply })
+      const publicInput = JSON.parse(
+        provider.calls[1]!.messages.find((m) => m.role === 'user')!.content!,
+      )
+      expect(publicInput).toEqual({
+        interests: JSON.parse(supplied[0]!.content!).interests,
+        wishForTimeWithLovedOnes: true,
+      })
+      aiReply =
+        'We hope your children have a wonderful time throwing you a party and wish you a lovely birthday with all of them!'
+      await expect(prepareGroupBirthday(ctx, person.id)).rejects.toThrow(
+        'invalid_group_birthday_greeting',
+      )
     } finally {
       __setProviderForTests(null)
     }

@@ -1,32 +1,14 @@
-import { withContext, type RequestContext } from '@devon/db'
+import { withContext } from '@devon/db'
 import { sql } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 import { isMaintenanceActive, listAllDepartmentIds } from '../notifications/repo.js'
 import { isTelegramConfigured, sendPlainMessage } from '../telegram/transport.js'
 import { birthdayClock, birthdayInYear, nextDay } from './calendar.js'
+import { birthdaySendDisposition, birthdayWorkerContext as workerContext } from './delivery.js'
+import { processGroupBirthdays } from './group-worker.js'
 import { ensureGreeting } from './repo.js'
 
-function workerContext(departmentId: string, userId: string | null = null): RequestContext {
-  return {
-    requestId: randomUUID(),
-    userId,
-    actorRole: 'super_admin',
-    departmentId,
-    departmentRole: 'head',
-    actingForUserId: null,
-    viewAs: false,
-    ip: '127.0.0.1',
-    userAgent: 'devon-birthdays/scheduler',
-  }
-}
-
-/** Only explicit no-send failures may retry. A timeout could already have delivered a message. */
-export function birthdaySendDisposition(error: string): 'pending' | 'failed' | 'uncertain' {
-  if (/telegram_not_configured|telegram_unavailable|429|Too Many Requests/i.test(error))
-    return 'pending'
-  if (/400:|403:|bot was blocked|chat not found|user is deactivated/i.test(error)) return 'failed'
-  return 'uncertain'
-}
+export { birthdaySendDisposition } from './delivery.js'
 
 export async function processBirthdays(
   send = sendPlainMessage,
@@ -156,18 +138,22 @@ export async function processBirthdays(
 }
 
 export function startBirthdayWorker(onError: (error: unknown) => void) {
-  let running = false
-  const tick = () => {
-    if (running) return
-    running = true
-    void processBirthdays()
-      .catch(onError)
-      .finally(() => {
-        running = false
-      })
-  }
-  const timer = setInterval(tick, 30_000)
-  timer.unref?.()
-  tick()
-  return { stop: () => clearInterval(timer) }
+  // Each destination keeps its own schedule and in-flight guard.
+  const timers = [processBirthdays, processGroupBirthdays].map((run) => {
+    let running = false
+    const tick = () => {
+      if (running) return
+      running = true
+      void run()
+        .catch(onError)
+        .finally(() => {
+          running = false
+        })
+    }
+    const timer = setInterval(tick, 30_000)
+    timer.unref?.()
+    tick()
+    return timer
+  })
+  return { stop: () => timers.forEach(clearInterval) }
 }

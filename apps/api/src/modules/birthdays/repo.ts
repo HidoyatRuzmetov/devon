@@ -21,6 +21,28 @@ export async function writeBirthDate(tx: Tx, ownerUserId: string, date: string |
     on conflict(owner_user_id) do update set birth_date=excluded.birth_date,updated_at=now()`)
 }
 
+export function loadBirthdayContext(ctx: RequestContext, ownerUserId: string) {
+  return withContext(ctx, async (tx) => {
+    // Private HR data is projected down to relationship/status before it enters application memory.
+    // Public profile projection intentionally excludes biography, identities, contacts and dates.
+    const [record] = await tx.raw<{
+      data: unknown
+    }>(sql`select jsonb_build_object('relatives',coalesce(jsonb_agg(jsonb_build_object('rel',r->>'rel','status',r->>'status')),'[]'::jsonb)) as data
+      from app.personnel_records p cross join lateral jsonb_array_elements(p.data->'relatives') r
+      where p.department_id=${ctx.departmentId} and p.owner_user_id=${ownerUserId}`)
+    const [published] = await tx.raw<{ data: unknown }>(sql`select jsonb_build_object(
+      'position',u.title,
+      'skills',u.professional_profile->'skills','hobbies',u.professional_profile->'hobbies',
+      'fields',(select jsonb_agg(e->'field') from jsonb_array_elements(coalesce(u.professional_profile->'education','[]'::jsonb)) e),
+      'currentRoles',(select jsonb_agg(e->'role') from jsonb_array_elements(coalesce(u.professional_profile->'experience','[]'::jsonb)) e where e->>'current'='true')) as data
+      from app.users u where u.id=${ownerUserId} and u.status='active' and u.deleted_at is null`)
+    return {
+      family: familyContext(record?.data),
+      interests: publicBirthdayContext(published?.data),
+    }
+  })
+}
+
 export async function ensureGreeting(ctx: RequestContext, ownerUserId: string, date: string) {
   const year = Number(date.slice(0, 4))
   const existing = await withContext(ctx, async (tx) => {
@@ -41,25 +63,7 @@ export async function ensureGreeting(ctx: RequestContext, ownerUserId: string, d
     )
     if (!reserved.length) return existing.message
   }
-  const context = await withContext(ctx, async (tx) => {
-    // Private HR data is projected down to relationship/status before it enters application memory.
-    // Public profile projection intentionally excludes biography, identities, contacts and dates.
-    const [record] = await tx.raw<{
-      data: unknown
-    }>(sql`select jsonb_build_object('relatives',coalesce(jsonb_agg(jsonb_build_object('rel',r->>'rel','status',r->>'status')),'[]'::jsonb)) as data
-      from app.personnel_records p cross join lateral jsonb_array_elements(p.data->'relatives') r
-      where p.department_id=${ctx.departmentId} and p.owner_user_id=${ownerUserId}`)
-    const [published] = await tx.raw<{ data: unknown }>(sql`select jsonb_build_object(
-      'position',u.title,
-      'skills',u.professional_profile->'skills','hobbies',u.professional_profile->'hobbies',
-      'fields',(select jsonb_agg(e->'field') from jsonb_array_elements(coalesce(u.professional_profile->'education','[]'::jsonb)) e),
-      'currentRoles',(select jsonb_agg(e->'role') from jsonb_array_elements(coalesce(u.professional_profile->'experience','[]'::jsonb)) e where e->>'current'='true')) as data
-      from app.users u where u.id=${ownerUserId} and u.status='active' and u.deleted_at is null`)
-    return {
-      family: familyContext(record?.data),
-      interests: publicBirthdayContext(published?.data),
-    }
-  })
+  const context = await loadBirthdayContext(ctx, ownerUserId)
   const greeting = await birthdayMessage(ctx, context)
   return withContext(ctx, async (tx) => {
     await tx.raw(sql`insert into app.birthday_greetings(owner_user_id,birthday_year,celebration_date,message,source)

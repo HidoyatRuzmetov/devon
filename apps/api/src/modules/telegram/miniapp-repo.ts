@@ -21,6 +21,7 @@
 // SQL.
 import { withContext, type RequestContext } from '@devon/db'
 import { sql } from 'drizzle-orm'
+import { departmentTelegramRoster } from './repo.js'
 
 // --- Board peek ------------------------------------------------------------------------------------
 
@@ -221,42 +222,17 @@ export type SetupCounts = {
   unlinkedMembers: { userId: string; name: string }[]
 }
 
-/** One query, three counts. Feeds `GET /telegram/departments/:id/setup-checklist` (head-only) and the
- * Mini App's own "Sozlash" screen. `app.telegram_links` is a `global` table (see
- * `packages/db/src/tenancy.ts`), so the department scoping is the membership join, not RLS. */
+/** Feeds the head's Telegram setup checklist in the portal and Mini App. */
 export async function setupCounts(ctx: RequestContext, departmentId: string): Promise<SetupCounts> {
   return withContext(ctx, async (tx) => {
-    const rows = await tx.raw<{
-      member_count: number
-      linked_member_count: number
-      group_count: number
-    }>(sql`
-      select
-        (select count(*)::int from app.memberships m
-          join app.users u on u.id=m.user_id and u.deleted_at is null
-          where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null)
-          as member_count,
-        (select count(*)::int from app.memberships m
-          join app.telegram_links tl on tl.user_id = m.user_id and tl.unlinked_at is null
-          join app.users u on u.id=m.user_id and u.deleted_at is null
-          where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null)
-          as linked_member_count,
-        (select count(*)::int from app.telegram_groups g
-          where g.department_id = ${departmentId} and g.disconnected_at is null)
-          as group_count
-    `)
-    const row = rows[0]
-    const unlinkedMembers = await tx.raw<{ userId: string; name: string }>(sql`
-      select u.id as "userId", concat_ws(' ',u.given_name,u.family_name) as name
-      from app.memberships m join app.users u on u.id=m.user_id and u.deleted_at is null
-      where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null
-        and not exists(select 1 from app.telegram_links l where l.user_id=u.id and l.unlinked_at is null)
-      order by u.family_name,u.given_name,u.id`)
+    const roster = await departmentTelegramRoster(tx, departmentId)
+    const [groups] = await tx.raw<{ count: number }>(sql`select count(*)::int as count
+      from app.telegram_groups where department_id=${departmentId} and disconnected_at is null`)
     return {
-      memberCount: Number(row?.member_count ?? 0),
-      linkedMemberCount: Number(row?.linked_member_count ?? 0),
-      groupCount: Number(row?.group_count ?? 0),
-      unlinkedMembers,
+      memberCount: roster.memberCount,
+      linkedMemberCount: roster.linkedChatIds.length,
+      groupCount: groups?.count ?? 0,
+      unlinkedMembers: roster.unlinkedMembers,
     }
   })
 }

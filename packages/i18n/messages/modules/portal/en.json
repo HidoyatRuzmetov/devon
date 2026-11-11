@@ -11,6 +11,8 @@
       "unset": "Not set"
     },
     "profile": {
+      "copyField": "Copy {field}",
+      "copyFailed": "Could not copy this value.",
       "title": "Professional profile",
       "description": "Description",
       "phone": "Work phone",

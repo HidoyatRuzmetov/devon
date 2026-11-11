@@ -38,6 +38,14 @@ beforeAll(async () => {
     'insert into app.telegram_groups(id,department_id,chat_id) values($1,$2,-991999)',
     [groupId, department.id],
   )
+  await superuserQuery(db, "update app.departments set locale_default='en' where id=$1", [
+    department.id,
+  ])
+  await superuserQuery(
+    db,
+    "update app.users set given_name='Aziza',family_name='Qodirova' where id=$1",
+    [peerId],
+  )
   await superuserQuery(
     db,
     "insert into app.telegram_group_members(group_id,telegram_user_id,first_name) values($1,101,'Verified'),($1,102,'Left')",
@@ -94,6 +102,13 @@ it('refuses members and foreign group IDs, mentions only verified present people
   ).toBe(200)
   expect(await first.json()).toEqual({ recipients: 1 })
   expect(send).toHaveBeenCalledOnce()
+  expect(send).toHaveBeenCalledWith(
+    '-991999',
+    expect.stringContaining(
+      '0/2 connected to the bot. Still to connect: Aziza Qodirova, Test User',
+    ),
+    expect.any(Array),
+  )
   expect((await request(head, operation, '@all Please update your profile', true)).status).toBe(200)
   expect((await request(head, operation, 'Changed body', true)).status).toBe(409)
   expect(send).toHaveBeenCalledOnce()
@@ -105,6 +120,8 @@ it('lists unconnected active colleagues only for the department head', async () 
   ])
   const foreign = await seedDepartment(db, { name: 'Other department', slug: randomUUID() })
   await seedMember(db, foreign.id, { role: 'member' })
+  const locked = await seedMember(db, departmentId, { role: 'member' })
+  await superuserQuery(db, "update app.users set status='locked' where id=$1", [locked.id])
   const requestSetup = (actor: Session, id = departmentId) =>
     fetch(server.baseUrl + '/api/v1/telegram/departments/' + id + '/setup-checklist', {
       headers: actor.headers,

@@ -41,6 +41,7 @@ import { PersonnelRecordSection } from '../accounts/personnel-record-section.js'
 import { avatarUrl } from '../../lib/avatar.js'
 import { unitColorClass } from '../../lib/unit-palette.js'
 import type { Member, Unit } from './api.js'
+import { CopyValue, ResumeCopyFields } from './resume-copy.js'
 import { downloadResume } from './resume-export.js'
 
 export function fullName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymic'>): string {
@@ -121,6 +122,13 @@ export function MemberCard({
   )
   const latestEducation = education[0]
   const position = positionLabel(member.title, t)
+  const unitLabel =
+    unit?.name ??
+    t(
+      member.membershipRole === 'head'
+        ? 'headScope.leadership'
+        : 'structure.people.unassignedGroup',
+    )
   const birthDate = member.dateOfBirth
     ? formatDate(new Date(`${member.dateOfBirth}T00:00:00Z`), locale, 'UTC')
     : null
@@ -321,7 +329,7 @@ export function MemberCard({
       </div>
       <Sheet open={open} onOpenChange={setOpen} direction="right">
         <SheetContent side="right" title={fullName(member)} className="w-full sm:w-[36rem]">
-          <div
+          <ResumeCopyFields
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [overflow-wrap:anywhere]"
             style={style}
           >
@@ -336,23 +344,24 @@ export function MemberCard({
                   {portrait(true)}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <h2 className="font-display text-h2 leading-tight">{fullName(member)}</h2>
+                  <h2 aria-label={fullName(member)} className="font-display text-h2 leading-tight">
+                    <CopyValue value={fullName(member)} />
+                  </h2>
                   {position ? (
-                    <p className="mt-1 text-body text-muted-foreground">{position}</p>
+                    <p className="mt-1 text-body text-muted-foreground">
+                      <CopyValue value={position} />
+                    </p>
                   ) : null}
                   <p className="mt-2 flex items-start gap-2 text-caption text-muted-foreground">
                     <span
                       className={cn('mt-1 size-2 shrink-0 rounded-full', colour)}
                       aria-hidden="true"
                     />
-                    <span>
-                      {unit?.name ??
-                        t(
-                          member.membershipRole === 'head'
-                            ? 'headScope.leadership'
-                            : 'structure.people.unassignedGroup',
-                        )}
-                    </span>
+                    {unit?.name || member.membershipRole === 'head' ? (
+                      <CopyValue value={unitLabel} />
+                    ) : (
+                      <span>{unitLabel}</span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -376,7 +385,7 @@ export function MemberCard({
                       ? [
                           {
                             label: t('birthday.dateOfBirth'),
-                            value: <time dateTime={member.dateOfBirth!}>{birthDate}</time>,
+                            value: birthDate,
                             icon: Cake,
                           },
                         ]
@@ -407,7 +416,17 @@ export function MemberCard({
                         {label}
                       </dt>
                       <dd className="min-w-0 text-small [overflow-wrap:anywhere]">
-                        {value || empty}
+                        {value ? (
+                          <CopyValue value={value}>
+                            {Icon === Cake ? (
+                              <time dateTime={member.dateOfBirth!}>{value}</time>
+                            ) : (
+                              value
+                            )}
+                          </CopyValue>
+                        ) : (
+                          empty
+                        )}
                       </dd>
                     </div>
                   ))}
@@ -415,17 +434,27 @@ export function MemberCard({
                 {profile.links.length ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.links.map((link, i) => (
-                      <a
+                      <span
                         key={i}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-small text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="inline-flex max-w-full items-stretch rounded-md border border-border bg-card text-small text-primary"
                       >
-                        <LinkIcon className="size-4 shrink-0" aria-hidden="true" />
-                        <span className="min-w-0 break-all">{link.label || link.url}</span>
-                        <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                      </a>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-l-md px-3 py-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <LinkIcon className="size-4 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 break-all">{link.label || link.url}</span>
+                          <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                        </a>
+                        <CopyValue
+                          value={link.url}
+                          label={link.label || link.url}
+                          iconOnly
+                          className="border-l border-border"
+                        />
+                      </span>
                     ))}
                   </div>
                 ) : null}
@@ -433,7 +462,7 @@ export function MemberCard({
               {profile.about ? (
                 <ProfileSection title={t('portal.profile.about')} icon={UserRound}>
                   <p className="whitespace-pre-wrap text-small leading-relaxed text-muted-foreground">
-                    {profile.about}
+                    <CopyValue value={profile.about} label={t('portal.profile.about')} />
                   </p>
                 </ProfileSection>
               ) : null}
@@ -447,15 +476,22 @@ export function MemberCard({
                           aria-hidden="true"
                         />
                         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                          <p className="text-small font-semibold">{entry.role}</p>
-                          <p className="text-caption text-muted-foreground">{period(entry)}</p>
+                          <p className="text-small font-semibold">
+                            <CopyValue value={entry.role} />
+                          </p>
+                          <p className="text-caption text-muted-foreground">
+                            <CopyValue value={period(entry)} />
+                          </p>
                         </div>
                         <p className="mt-0.5 text-small text-muted-foreground">
-                          {entry.organization}
+                          <CopyValue value={entry.organization} />
                         </p>
                         {entry.description ? (
                           <p className="mt-2 whitespace-pre-wrap text-small leading-relaxed text-muted-foreground">
-                            {entry.description}
+                            <CopyValue
+                              value={entry.description}
+                              label={t('portal.profile.description')}
+                            />
                           </p>
                         ) : null}
                       </li>
@@ -471,16 +507,18 @@ export function MemberCard({
                     {education.map((entry, i) => (
                       <li key={i} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
                         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                          <p className="text-small font-semibold">{entry.institution}</p>
+                          <p className="text-small font-semibold">
+                            <CopyValue value={entry.institution} />
+                          </p>
                           <p className="text-caption text-muted-foreground">
-                            {period(entry, true)}
+                            <CopyValue value={period(entry, true)} />
                           </p>
                         </div>
                         {entry.degree || entry.field ? (
                           <p className="mt-1 text-small">
-                            {[educationLabel(entry.degree, t), entry.field]
-                              .filter(Boolean)
-                              .join(' · ')}
+                            <CopyValue value={educationLabel(entry.degree, t)} />
+                            {entry.degree && entry.field ? ' · ' : null}
+                            <CopyValue value={entry.field} />
                           </p>
                         ) : null}
                       </li>
@@ -498,9 +536,13 @@ export function MemberCard({
                         key={i}
                         className="border-b border-border pb-3 last:border-b-0 last:pb-0"
                       >
-                        <p className="text-small font-semibold">{entry.name}</p>
+                        <p className="text-small font-semibold">
+                          <CopyValue value={entry.name} />
+                        </p>
                         <p className="mt-1 text-small text-muted-foreground">
-                          {[entry.issuer, entry.year].filter(Boolean).join(' · ')}
+                          <CopyValue value={entry.issuer} />
+                          {entry.issuer && entry.year ? ' · ' : null}
+                          {entry.year ? <CopyValue value={String(entry.year)} /> : null}
                         </p>
                       </div>
                     ))}
@@ -528,12 +570,11 @@ export function MemberCard({
                           </h4>
                           <div className="flex min-w-0 flex-wrap gap-1.5">
                             {profile[key].map((item, index) => (
-                              <span
+                              <CopyValue
                                 key={index}
-                                className="min-w-0 rounded-sm bg-muted/50 px-2 py-1 text-caption text-foreground"
-                              >
-                                {item}
-                              </span>
+                                value={item}
+                                className="bg-muted/50 px-2 py-1 text-caption text-foreground"
+                              />
                             ))}
                           </div>
                         </div>
@@ -543,7 +584,7 @@ export function MemberCard({
                 </ProfileSection>
               ) : null}
             </div>
-          </div>
+          </ResumeCopyFields>
           {onAssign ? (
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-card p-4">
               {onAssign ? (

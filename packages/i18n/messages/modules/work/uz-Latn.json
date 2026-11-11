@@ -113,6 +113,8 @@
       "titleRequired": "Karta nomini kiriting.",
       "peekTitle": "Karta tafsilotlari",
       "markDone": "Bajarildi deb belgilash",
+      "reopen": "Qayta ochish",
+      "reopened": "Vazifa qayta ochildi",
       "archive": "Arxivga olish",
       "done": "Bajarildi",
       "checklistComplete": "Roʻyxat toʻliq bajarildi",

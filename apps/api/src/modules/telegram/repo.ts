@@ -9,7 +9,7 @@
 // need no per-call-site coercion (`test/checks/telegram-prove.ts` asserts this against a real Postgres).
 import { randomBytes, randomUUID } from 'node:crypto'
 import { sql } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
+import { withContext, type RequestContext, type Tx } from '@devon/db'
 import type { AuditCtx } from '../../types.js'
 import type { GroupKind } from './schemas.js'
 
@@ -348,6 +348,23 @@ export async function getDepartmentName(departmentId: string): Promise<string | 
       return rows[0]?.name ?? null
     },
   )
+}
+
+/** The same active department roster backs the setup checklist and @all connection notices. */
+export async function departmentTelegramRoster(tx: Tx, departmentId: string) {
+  const members = await tx.raw<{ userId: string; name: string; chatId: string | null }>(sql`
+    select u.id as "userId", concat_ws(' ',u.given_name,u.family_name) as name, l.chat_id::text as "chatId"
+    from app.memberships m join app.users u on u.id=m.user_id and u.status='active' and u.deleted_at is null
+    left join app.telegram_links l on l.user_id=u.id and l.unlinked_at is null and l.chat_id>0
+    where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null
+    order by u.family_name,u.given_name,u.id`)
+  return {
+    memberCount: members.length,
+    linkedChatIds: members.flatMap((member) => (member.chatId ? [Number(member.chatId)] : [])),
+    unlinkedMembers: members
+      .filter((member) => !member.chatId)
+      .map(({ userId, name }) => ({ userId, name })),
+  }
 }
 
 export type GroupRow = {
