@@ -2,7 +2,7 @@
 // store, confirmations and audit remain real. Only model output is deterministic. Never imported by
 // production; the ordinary server entry point has no fixture branch or mock-provider environment flag.
 import { randomUUID } from 'node:crypto'
-import { MockProvider } from '@devon/ai'
+import { MockProvider, type ChatCompletionResult } from '@devon/ai'
 import { __setProviderForTests } from '../../src/modules/ai/service.js'
 
 const database = new URL(process.env['DATABASE_URL'] ?? '')
@@ -16,6 +16,22 @@ if (
 )
   throw new Error('The AI browser fixture requires an owned, credential-free local flow database')
 
+function answer(content: string, actions: unknown[] = []): ChatCompletionResult {
+  return {
+    content: null,
+    reasoningContent: null,
+    finishReason: 'tool_calls',
+    usage: { promptTokens: 100, completionTokens: 100, totalTokens: 200 },
+    toolCalls: [
+      {
+        id: randomUUID(),
+        name: 'department_chat_answer',
+        argumentsJson: JSON.stringify({ content, citations: [], actions }),
+      },
+    ],
+  }
+}
+
 __setProviderForTests(
   new MockProvider({
     respond(request) {
@@ -23,6 +39,15 @@ __setProviderForTests(
         throw new Error('The action browser fixture only supports department_chat_answer')
       const latest =
         request.messages.filter((message) => message.role === 'user').at(-1)?.content ?? ''
+      // Naming receives JSON conversation excerpts. Only the action turn receives the scanned file.
+      if (latest.startsWith('{')) {
+        const excerpts = JSON.parse(latest) as { requests: string[] }
+        if (excerpts.requests.some((text) => text.startsWith('Create a page named')))
+          return answer('Directory publication')
+        if (excerpts.requests.some((text) => text.startsWith('Create a task to review')))
+          return answer('Directory review assignment')
+        throw new Error('Browser fixture received an unexpected conversation to name')
+      }
       const attachmentLine = latest.split('\n').find((line) => line.startsWith('Attached files: '))
       const files = attachmentLine
         ? (JSON.parse(attachmentLine.slice('Attached files: '.length)) as { id: string }[])
@@ -65,24 +90,10 @@ __setProviderForTests(
       ]
       if (!files.length)
         throw new Error('Browser fixture expected a real persisted upload in chat context')
-      return {
-        content: null,
-        reasoningContent: null,
-        finishReason: 'tool_calls',
-        usage: { promptTokens: 100, completionTokens: 100, totalTokens: 200 },
-        toolCalls: [
-          {
-            id: randomUUID(),
-            name: 'department_chat_answer',
-            argumentsJson: JSON.stringify({
-              content:
-                '**Ready for your review.** The proposed change will only run after you confirm it.',
-              citations: [],
-              actions,
-            }),
-          },
-        ],
-      }
+      return answer(
+        '**Ready for your review.** The proposed change will only run after you confirm it.',
+        actions,
+      )
     },
   }),
 )

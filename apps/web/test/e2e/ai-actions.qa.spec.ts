@@ -22,6 +22,7 @@ for (const role of ['head', 'member'] as const) {
     const isPage = role === 'head'
     const title = isPage ? 'AI publication browser test' : 'Review the published directory'
     const proposalTitle = isPage ? 'Publish the directory page' : 'Create the review task'
+    const conversationTitle = isPage ? 'Directory publication' : 'Directory review assignment'
     const fileName = isPage ? 'directory.html' : 'review.txt'
     const fileBody = isPage
       ? '<!doctype html><title>Directory fixture</title><p>Synthetic directory for browser verification.</p>'
@@ -93,6 +94,10 @@ for (const role of ['head', 'member'] as const) {
         (await (
           await context.request.get(`/api/v1/ai/conversations/${conversationId}`)
         ).json()) as AiConversation
+      await expect.poll(read, { timeout: 30_000 }).toMatchObject({
+        title: conversationTitle,
+        titleStatus: 'ready',
+      })
       const pending = await read()
       expect(pending.messages.flatMap((message) => message.proposals ?? [])).toMatchObject([
         { status: 'pending' },
@@ -134,11 +139,11 @@ for (const role of ['head', 'member'] as const) {
       await page.getByRole('button', { name: 'New conversation', exact: true }).click()
       if (role === 'member')
         await page.getByRole('button', { name: 'Saved conversations', exact: true }).click()
-      await page
-        .getByRole('button', {
-          name: new RegExp(isPage ? '^Create a page named' : '^Create a task to'),
-        })
-        .click()
+      const history = isPage
+        ? page.getByRole('complementary', { name: 'Saved conversations', exact: true })
+        : page.getByRole('dialog', { name: 'Saved conversations', exact: true })
+      await history.getByRole('button', { name: conversationTitle, exact: true }).click()
+      await expect(page).toHaveURL(conversationUrl)
       await expect(proposal).toContainText('Applied')
       expect(errors).toEqual([])
     } finally {
