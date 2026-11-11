@@ -26,6 +26,7 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/labels',
   'POST /api/v1/ai/search/reindex',
   'GET /api/v1/ai/briefing',
+  'GET /api/v1/ai/usage/summary',
   'POST /api/v1/ai/briefing/refresh',
   'POST /api/v1/cards/assign-many',
   'POST /api/v1/checkins/cycles/:id/lock',
