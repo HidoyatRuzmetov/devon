@@ -4,7 +4,7 @@
 //   1. `requestAvatarUpload`  -> an `app.uploads` row + a presigned PUT the browser uploads to directly
 //   2. `finalizeAvatar`       -> head/size check -> MIME sniff -> ClamAV -> sharp decode -> 64/128/512
 //                               WebP variants -> `users.avatar_key` (one transaction, audited)
-//   3. `removeAvatar`         -> `users.avatar_key = null`, objects deleted
+//   3. `removeAvatar`         -> `users.avatar_key = null`, approved variants retained privately
 //
 // "ClamAV before visibility": nothing an upload contains is ever readable by anyone (not even its
 // owner) until step 2 has run to completion -- the original object is written under a random key
@@ -69,8 +69,7 @@ export type AvatarFinalizeResult =
   | { ok: false; reason: 'scanner_unavailable' }
 
 /** Every object an avatar prefix can own -- the three served variants plus the original, which is
- * normally deleted right after the variants are written but is listed so a crash in between still
- * gets cleaned up on the next remove/replace. */
+ * normally deleted right after the variants are written. Explicit account erasure removes all four. */
 export function avatarObjectKeys(prefix: string): string[] {
   return [...AVATAR_SIZES.map((size) => avatarVariantKey(prefix, size)), `${prefix}/original`]
 }
@@ -201,12 +200,16 @@ export async function finalizeAvatar(
   }
 
   const prefix = avatarKeyPrefix(user.id, upload.id)
-  // Captured before the write: `user` is the request's own actor record, and a `Deps` implementation
-  // is free to hand back (and mutate) that very object.
-  const previousAvatarKey = user.avatarKey
-  await Promise.all(
+  const writes = await Promise.allSettled(
     variants.map((v) => store.put(avatarVariantKey(prefix, v.size), v.webp, 'image/webp')),
   )
+  const failed = writes.find((write) => write.status === 'rejected')
+  if (failed?.status === 'rejected') {
+    // Wait for every concurrent put before refreshing any erasure receipt. A slow
+    // sibling write may have left a derivative after another worker's deletion.
+    await app.devon.requeueAvatarIfErased(user.id, upload.id)
+    throw failed.reason
+  }
   // The EXIF-bearing original has served its purpose; only the stripped variants stay.
   await removeQuietly(app, [upload.key])
 
@@ -215,22 +218,28 @@ export async function finalizeAvatar(
     { avatarKey: prefix, uploadId: upload.id },
     ctx,
   )
-  if (previousAvatarKey && previousAvatarKey !== prefix) {
-    await removeQuietly(app, avatarObjectKeys(previousAvatarKey))
-  }
-  return { ok: true, user: updated }
+  return updated ? { ok: true, user: updated } : { ok: false, reason: 'not_found' }
 }
 
 export async function removeAvatar(
   app: FastifyInstance,
   user: UserRecord,
   ctx: AuditCtx,
-): Promise<UserRecord> {
-  const previousAvatarKey = user.avatarKey
-  if (!previousAvatarKey) return user
-  const updated = await app.devon.setUserAvatar(user.id, { avatarKey: null, uploadId: null }, ctx)
-  await removeQuietly(app, avatarObjectKeys(previousAvatarKey))
-  return updated
+): Promise<void> {
+  if (user.avatarKey)
+    await app.devon.setUserAvatar(user.id, { avatarKey: null, uploadId: null }, ctx)
+}
+
+/** A completed account erasure covers previously published versions. Clearing
+ * the receipt after successful deletion makes a storage outage recoverable. */
+export async function sweepErasedAvatars(app: FastifyInstance, limit = 200): Promise<number> {
+  const receipts = await app.devon.listAvatarsForErasure(limit)
+  if (!receipts.length) return 0
+  await app.storage.store.remove(
+    receipts.flatMap(({ userId, id }) => avatarObjectKeys(avatarKeyPrefix(userId, id))),
+  )
+  await app.devon.acknowledgeAvatarErasure(receipts.map(({ token }) => token))
+  return receipts.length
 }
 
 /** One retention pass (TECH-SPEC §6 `retention.sweep`): expire pending uploads whose URL window has

@@ -109,17 +109,13 @@ function PersonTask({ card, projectTitle }: { card: Card; projectTitle?: string 
       )}
     >
       <div className="flex items-start gap-1 px-3 pt-3">
-        {deleted ? (
-          <div className="min-w-0 flex-1 pb-2">{body}</div>
-        ) : (
-          <button
-            type="button"
-            className="person-task-open min-w-0 flex-1 pb-3 text-left"
-            onClick={() => openCardPeek(card.id)}
-          >
-            {body}
-          </button>
-        )}
+        <button
+          type="button"
+          className="person-task-open min-w-0 flex-1 pb-3 text-left"
+          onClick={() => openCardPeek(card.id)}
+        >
+          {body}
+        </button>
         {!deleted ? <CardActionsMenu card={card} /> : null}
       </div>
       {deleted ? (

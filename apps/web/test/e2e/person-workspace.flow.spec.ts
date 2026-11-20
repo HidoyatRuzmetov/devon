@@ -82,6 +82,7 @@ test('person workspace connects column header, pins, all lifecycle columns and p
       [urgent, 'Check the source figures'],
       [doing, 'Review received applications'],
       [doing, 'Send the findings'],
+      [deleted, 'Keep the previous notes'],
     ]) {
       const item = await authedPost(head, `/api/v1/cards/${id}/checklist`, { text })
       expect(item.status()).toBe(201)
@@ -135,13 +136,21 @@ test('person workspace connects column header, pins, all lifecycle columns and p
     await expect(page.getByRole('dialog')).toHaveCount(0)
 
     const deletedCard = page.locator(`[data-person-card="${deleted}"]`)
-    await expect(deletedCard.locator('.person-task-open')).toHaveCount(0)
-    await deletedCard
+    await deletedCard.locator('.person-task-open').click()
+    const historyDrawer = page.getByRole('dialog', { name: 'Card details', exact: true })
+    await expect(historyDrawer.getByText('Keep the previous notes')).toBeVisible()
+    await expect(historyDrawer.getByRole('textbox')).toHaveCount(0)
+    await historyDrawer
       .getByRole('button', {
         name: 'Restore Previous draft for the service directory',
         exact: true,
       })
       .click()
+    await expect(historyDrawer.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
+      'Previous draft for the service directory',
+    )
+    await page.keyboard.press('Escape')
+    await expect(historyDrawer).toHaveCount(0)
     await expect(page.locator('[data-stage="deleted"] [data-person-card]')).toHaveCount(0)
     await expect(page.locator(`[data-stage="todo"] [data-person-card="${deleted}"]`)).toBeVisible()
 

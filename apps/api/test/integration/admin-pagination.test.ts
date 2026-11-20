@@ -88,6 +88,8 @@ describe('admin list pagination boundaries', () => {
       name: 'Admin member revision',
       slug: `member-revision-${randomUUID()}`,
     })
+    // Account-state transitions remain available when another active head retains leadership.
+    await seedMember(db, department.id, { role: 'head' })
     for (const role of ['member', 'head'] as const) {
       const actor = await seedMember(db, department.id, { role })
       const active = await loginAs(server.baseUrl, actor.login)

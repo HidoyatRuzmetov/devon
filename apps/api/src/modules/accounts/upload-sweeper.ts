@@ -7,7 +7,7 @@
 // Same shape and same rule as `modules/events/reminder-worker.ts`: started exactly once from
 // `apps/api/src/server.ts`, never from `app.ts`, so a `buildApp()` in a unit test never owns a timer.
 import type { FastifyInstance } from 'fastify'
-import { sweepExpiredUploads } from './avatar-service.js'
+import { sweepErasedAvatars, sweepExpiredUploads } from './avatar-service.js'
 
 export type UploadSweeperHandle = { stop(): void }
 
@@ -24,6 +24,8 @@ export function startUploadSweeper(
     try {
       const expired = await sweepExpiredUploads(app)
       if (expired > 0) app.log.info({ expired }, 'storage: expired abandoned uploads')
+      const erased = await sweepErasedAvatars(app)
+      if (erased > 0) app.log.info({ erased }, 'storage: erased account avatar versions')
     } catch (err) {
       options.onError?.(err)
     } finally {

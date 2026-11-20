@@ -29,6 +29,7 @@ import {
 } from './approvals.js'
 
 const paramsSchema = z.object({ id: z.string().uuid() })
+const historyQuery = z.object({ includeDeleted: z.enum(['true', 'false']).optional() })
 const attachmentParams = paramsSchema.extend({
   attachmentId: z.string().uuid(),
 })
@@ -58,6 +59,7 @@ async function allowed(
   cardId: string,
   write = false,
   subjectType: repo.AttachmentSubject = 'card',
+  includeDeleted = false,
 ) {
   if (subjectType === 'project') {
     const project = await getProject(contextFromRequest(req), req.actor!.departmentId!, cardId)
@@ -92,7 +94,12 @@ async function allowed(
     if (!page) sendProblem(reply, 'not_found')
     return Boolean(page)
   }
-  const owners = await getCardOwners(contextFromRequest(req), req.actor!.departmentId!, cardId)
+  const owners = await getCardOwners(
+    contextFromRequest(req),
+    req.actor!.departmentId!,
+    cardId,
+    !write && includeDeleted,
+  )
   if (!owners) {
     sendProblem(reply, 'not_found')
     return false
@@ -204,11 +211,22 @@ function registerSubjectAttachmentRoutes(
       config: { permission: { action: 'read', subject } },
       schema: {
         params: paramsSchema,
+        querystring: historyQuery,
         response: { 200: z.array(attachmentSchema) },
       },
     },
     async (req, reply) => {
-      if (!(await allowed(req, reply, req.params.id, false, subjectType))) return
+      if (
+        !(await allowed(
+          req,
+          reply,
+          req.params.id,
+          false,
+          subjectType,
+          req.query.includeDeleted === 'true',
+        ))
+      )
+        return
       return reply
         .type('application/json')
         .send(await repo.list(contextFromRequest(req), req.params.id, subjectType))
@@ -399,10 +417,20 @@ function registerSubjectAttachmentRoutes(
     `${routePrefix}/:id/attachments/:attachmentId/download`,
     {
       config: { permission: { action: 'read', subject } },
-      schema: { params: attachmentParams },
+      schema: { params: attachmentParams, querystring: historyQuery },
     },
     async (req, reply) => {
-      if (!(await allowed(req, reply, req.params.id, false, subjectType))) return
+      if (
+        !(await allowed(
+          req,
+          reply,
+          req.params.id,
+          false,
+          subjectType,
+          req.query.includeDeleted === 'true',
+        ))
+      )
+        return
       const row = await repo.get(
         contextFromRequest(req),
         req.params.id,

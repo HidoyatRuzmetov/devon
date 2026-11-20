@@ -92,7 +92,7 @@ export async function computeBriefing(
       await markRunning(tx, departmentId, day)
       return {
         snapshot: await repo.departmentWeekSnapshot(tx, departmentId),
-        head: await repo.headUserId(tx, departmentId),
+        head: await repo.headUserId(tx, departmentId, options.requestedBy ?? null),
         departmentName: await repo.departmentName(tx, departmentId),
       }
     })
@@ -110,7 +110,7 @@ export async function computeBriefing(
     const now = new Date()
     const weekAgo = new Date(now.getTime() - 7 * 86_400_000)
 
-    const outcome = await runFeatureForActor(ctx, {
+    const outcome = await runFeatureForActor(jobContext(departmentId, head), {
       departmentId,
       userId: head,
       feature: 'catch_up',

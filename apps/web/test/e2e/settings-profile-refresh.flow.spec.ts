@@ -328,9 +328,16 @@ test('settings panes, legacy links and professional profiles work on desktop and
     await page.screenshot({ path: testInfo.outputPath('professional-profile-desktop.png') })
     await member.grantPermissions(['clipboard-write', 'clipboard-read'])
     const copyDate = drawer.getByRole('button', { name: 'Copy 29.02.1992', exact: true })
+    const restingBackground = await copyDate.evaluate(
+      (field) => getComputedStyle(field).backgroundColor,
+    )
+    await copyDate.hover()
+    await expect(copyDate).not.toHaveCSS('box-shadow', 'none')
+    await expect(copyDate).toHaveCSS('background-color', restingBackground)
     await copyDate.focus()
     await copyDate.press('Enter')
     await expect(copyDate).toHaveAttribute('data-copied', 'true')
+    await expect(copyDate).toHaveCSS('background-color', restingBackground)
     expect(
       await page.evaluate(async () => (await navigator.clipboard.readText()) === '29.02.1992'),
     ).toBe(true)

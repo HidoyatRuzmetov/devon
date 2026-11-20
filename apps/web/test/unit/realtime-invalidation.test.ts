@@ -3,6 +3,52 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it('refreshes every role-sensitive workspace after a co-head changes membership', () => {
+    const client = new QueryClient()
+    const prefixes = [
+      'departments',
+      'me',
+      'people',
+      'structure',
+      'projects',
+      'work',
+      'ai',
+      'checkins',
+      'events',
+      'pages',
+      'telegram',
+      'admin',
+    ]
+    for (const prefix of prefixes) client.setQueryData([prefix, 'open-view'], 'before')
+    client.setQueryData(['personal', 'notes'], 'private')
+    const bridge = createRealtimeInvalidator(client)
+    try {
+      bridge.receive('departments.membership.changed')
+      for (const prefix of prefixes)
+        expect(client.getQueryState([prefix, 'open-view'])?.isInvalidated).toBe(true)
+      expect(client.getQueryState(['personal', 'notes'])?.isInvalidated).toBe(false)
+    } finally {
+      bridge.dispose()
+      client.clear()
+    }
+  })
+  it.each([
+    'departments.settings.updated',
+    'departments.features.updated',
+    'departments.invite.changed',
+  ])('refreshes co-head configuration on %s', (event) => {
+    const client = new QueryClient()
+    for (const prefix of ['departments', 'me', 'people']) client.setQueryData([prefix], 'before')
+    const bridge = createRealtimeInvalidator(client)
+    try {
+      bridge.receive(event)
+      for (const prefix of ['departments', 'me', 'people'])
+        expect(client.getQueryState([prefix])?.isInvalidated).toBe(true)
+    } finally {
+      bridge.dispose()
+      client.clear()
+    }
+  })
   it.each(['work.card.commented', 'work.comment.updated', 'work.comment.deleted'])(
     'refreshes checklist discussions and their counts on %s',
     async (event) => {

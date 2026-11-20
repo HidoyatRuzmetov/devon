@@ -6,7 +6,8 @@
 // `buildApp()`'s test seam so the infected/unavailable paths need no clamd.
 import { existsSync } from 'node:fs'
 import sharp from 'sharp'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { sweepErasedAvatars } from '../../../src/modules/accounts/avatar-service.js'
 import { ScannerUnavailable, type MalwareScanner } from '../../../src/lib/storage/clamav.js'
 import type { LocalStore } from '../../../src/lib/storage/local-store.js'
 import { __resetAllCircuitsForTests } from '../../../src/lib/resilience/registry.js'
@@ -175,7 +176,7 @@ describe('the happy path: presign -> PUT -> finalise', () => {
     }
     expect(existsSync(store.pathFor(`${prefix}/original`))).toBe(false)
 
-    // The variant is served to any signed-in user, immutable-cacheable, as image/webp.
+    // Access to a published version must be rechecked when its saved URL is opened again.
     const img = await app.inject({
       method: 'GET',
       url: `/api/v1/accounts/avatar/${user.id}/${presigned.uploadId}/128`,
@@ -183,7 +184,7 @@ describe('the happy path: presign -> PUT -> finalise', () => {
     })
     expect(img.statusCode).toBe(200)
     expect(img.headers['content-type']).toBe('image/webp')
-    expect(img.headers['cache-control']).toContain('immutable')
+    expect(img.headers['cache-control']).toContain('no-store')
     expect(img.rawPayload.subarray(0, 4).toString('ascii')).toBe('RIFF')
 
     // ... but never to an anonymous caller.
@@ -195,8 +196,8 @@ describe('the happy path: presign -> PUT -> finalise', () => {
     await app.close()
   })
 
-  it('replacing a photo deletes the previous variants', async () => {
-    const { app, auth, user } = await setup()
+  it('replacing a photo keeps its private variants and refuses the old URL to signed-in colleagues', async () => {
+    const { app, auth, state, user } = await setup()
     const png = await samplePng()
     const store = app.storage.store as LocalStore
 
@@ -213,12 +214,22 @@ describe('the happy path: presign -> PUT -> finalise', () => {
     ).json()
     await putBytes(app, auth, second, png)
     expect((await finalize(app, auth, second.uploadId)).statusCode).toBe(200)
-    expect(existsSync(store.pathFor(`${firstPrefix}/512.webp`))).toBe(false)
+    expect(existsSync(store.pathFor(`${firstPrefix}/512.webp`))).toBe(true)
     expect(existsSync(store.pathFor(`avatars/${user.id}/${second.uploadId}/512.webp`))).toBe(true)
+    const colleague = await seedUser(state, { login: 'aziza', password: PASSWORD })
+    const session = await signIn(app, colleague.login)
+    const open = (uploadId: string) =>
+      app.inject({
+        method: 'GET',
+        url: `/api/v1/accounts/avatar/${user.id}/${uploadId}/512`,
+        headers: { cookie: session.cookie },
+      })
+    expect((await open(first.uploadId)).statusCode).toBe(404)
+    expect((await open(second.uploadId)).statusCode).toBe(200)
     await app.close()
   })
 
-  it('DELETE /avatar clears avatar_key and removes the variants', async () => {
+  it('DELETE /avatar unpublishes immediately and only completed account erasure purges historical variants', async () => {
     const { app, auth, state, user } = await setup()
     const png = await samplePng()
     const store = app.storage.store as LocalStore
@@ -236,7 +247,7 @@ describe('the happy path: presign -> PUT -> finalise', () => {
     })
     expect(del.statusCode).toBe(204)
     expect(state.users[0]!.avatarKey).toBeNull()
-    expect(existsSync(store.pathFor(`${prefix}/64.webp`))).toBe(false)
+    expect(existsSync(store.pathFor(`${prefix}/64.webp`))).toBe(true)
     expect(state.auditEvents.some((e) => e.action === 'accounts.avatar_removed')).toBe(true)
 
     const gone = await app.inject({
@@ -245,6 +256,41 @@ describe('the happy path: presign -> PUT -> finalise', () => {
       headers: { cookie: auth.cookie },
     })
     expect(gone.statusCode).toBe(404)
+    expect(await sweepErasedAvatars(app)).toBe(0)
+    state.erasedAccounts.add(user.id)
+    state.avatarErasures.push({ id: presigned.uploadId, userId: user.id, token: 'fixture' })
+    vi.spyOn(store, 'remove').mockRejectedValueOnce(new Error('store unavailable'))
+    await expect(sweepErasedAvatars(app)).rejects.toThrow('store unavailable')
+    expect(state.avatarErasures).toHaveLength(1)
+    expect(await sweepErasedAvatars(app)).toBe(1)
+    for (const size of [64, 128, 512])
+      expect(existsSync(store.pathFor(`${prefix}/${size}.webp`))).toBe(false)
+    expect(state.avatarErasures).toHaveLength(0)
+    await app.close()
+  })
+
+  it('requeues partially written variants when an explicit erasure overtakes an upload', async () => {
+    const { app, auth, state, user } = await setup()
+    const png = await samplePng()
+    const upload = (
+      await requestUrl(app, auth, { contentType: 'image/png', size: png.length })
+    ).json()
+    await putBytes(app, auth, upload, png)
+    const store = app.storage.store as LocalStore
+    const write = store.put.bind(store)
+    vi.spyOn(store, 'put').mockImplementation(async (key, body, type) => {
+      if (key.endsWith('/64.webp')) {
+        state.erasedAccounts.add(user.id)
+        throw new Error('interrupted write')
+      }
+      await write(key, body, type)
+    })
+    expect((await finalize(app, auth, upload.uploadId)).statusCode).toBe(500)
+    const path = store.pathFor(`avatars/${user.id}/${upload.uploadId}/512.webp`)
+    expect(existsSync(path)).toBe(true)
+    expect(state.users[0]!.avatarKey).toBeNull()
+    expect(await sweepErasedAvatars(app)).toBe(1)
+    expect(existsSync(path)).toBe(false)
     await app.close()
   })
 })

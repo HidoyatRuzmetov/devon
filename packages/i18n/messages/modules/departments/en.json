@@ -104,7 +104,7 @@
       "setPasswordSubmit": "Save",
       "passwordRequirements": "Use 8–128 characters for the invitation password.",
       "approvalToggleLabel": "Require approval to join",
-      "approvalToggleBody": "When on, new members wait for the head's approval.",
+      "approvalToggleBody": "When on, a department head must approve each new member.",
       "passwordHiddenNotice": "For security, the password is shown only right after it's created or rotated.",
       "saveNowWarning": "Save this now — it won't be shown again.",
       "linkDescription": "Anyone who opens this link can ask to join your department.",
@@ -123,14 +123,14 @@
         "passwordLabel": "Password"
       },
       "submit": "Join",
-      "keyHint": "Paste the key after key=, or the complete invitation link. Enter the invitation password provided by your head.",
+      "keyHint": "Paste the key after key=, or the complete invitation link. Enter the invitation password provided by one of your department heads.",
       "success": "You've joined the department",
-      "pendingApproval": "Your request is waiting for the head's approval",
+      "pendingApproval": "Your request is waiting for approval from a department head",
       "invalidKeyOrPassword": "Invalid key or password",
       "rateLimited": "Too many attempts. Try again in a moment.",
       "failed": "Could not complete the request. Check your connection and try again.",
-      "pendingApprovalBody": "The department head has been notified. You will get a notification once they approve, and can start work then.",
-      "approvalNotice": "Joining this department needs the head’s approval.",
+      "pendingApprovalBody": "The department heads have been notified. You will get a notification once one of them approves, and can start work then.",
+      "approvalNotice": "Joining this department needs approval from a department head.",
       "successBody": "The department’s work is open to you now."
     },
     "members": {
@@ -147,15 +147,28 @@
       "removedToast": "Member removed",
       "leave": "Leave department",
       "leaveConfirm": "Are you sure you want to leave this department?",
-      "leaveBlockedHead": "Transfer headship to someone else first.",
+      "leaveBlockedHead": "At least one active head must remain. Appoint another head or transfer your role before leaving or stepping down.",
       "leftToast": "You left the department",
       "transfer": "Transfer headship",
-      "transferConfirm": "Headship will be transferred to {name}. Continue?",
+      "transferConfirm": "Transfer your head role to {name}? You will become a member. Other heads keep their roles.",
       "transferredToast": "Headship transferred",
       "transferDialogTitle": "Transfer headship",
       "removeDialogTitle": "Remove member from the department",
       "leaveDialogTitle": "Leave the department",
-      "rowMenuAria": "Actions for {name}"
+      "rowMenuAria": "Actions for {name}",
+      "headsTitle": "Department heads ({count})",
+      "headsDescription": "All heads have the same department management permissions. Appoint an active member to add another head.",
+      "appointHead": "Appoint as head",
+      "removeHead": "Remove head role",
+      "stepDown": "Step down as head",
+      "appointConfirm": "Give {name} the same department management access as you? You and the other heads will keep your roles.",
+      "demoteConfirm": "Remove department management access from {name}? They will remain a member. Other heads keep their roles.",
+      "headAppointed": "Department head appointed",
+      "headRemoved": "Head role removed",
+      "roleConflict": "Membership has changed. Review the refreshed list and try again.",
+      "adminLastHead": "This account is the last active head of a department. Appoint another active head before locking or deleting it.",
+      "accountUnavailable": "Account inactive",
+      "headsReadOnlyDescription": "All department heads have equal management rights."
     },
     "settings": {
       "title": "Department settings",
@@ -169,7 +182,7 @@
       "allowStructureEdit": "Members can edit the structure",
       "telegramGroupLabel": "Who can connect a Telegram group",
       "telegramEveryone": "Everyone",
-      "telegramHeadOnly": "Head only",
+      "telegramHeadOnly": "Department heads only",
       "quietHoursLabel": "Quiet hours",
       "quietHoursStart": "Starts",
       "quietHoursEnd": "Ends",
@@ -180,15 +193,15 @@
       "requestDeletionConfirm": "The super admin will review this request. This cannot be undone.",
       "deletionRequested": "Deletion requested",
       "typedConfirmLabel": "Type \"{name}\" to confirm",
-      "permissionsReadOnlyDescription": "What members may do on their own in your department. Your department head manages these.",
-      "readOnlyNotice": "Your department head manages these settings. You can see them, but not change them."
+      "permissionsReadOnlyDescription": "What members may do on their own in your department. Your department heads manage these permissions.",
+      "readOnlyNotice": "Your department heads manage these settings. You can see them, but not change them."
     },
     "switcher": {
       "label": "Switch department",
       "current": "Current department"
     },
     "hub": {
-      "statHead": "Head",
+      "statHead": "Heads",
       "statMembers": "Members",
       "noHead": "Not yet assigned",
       "otherMemberships": "Your other memberships",
@@ -219,7 +232,7 @@
     "features": {
       "title": "Capabilities",
       "description": "Turn on what your department needs. Anything off is hidden from everyone.",
-      "readOnlyDescription": "What is turned on in your department. The head decides these.",
+      "readOnlyDescription": "What is turned on in your department. Department heads manage these capabilities.",
       "onToast": "Turned on",
       "offToast": "Turned off",
       "custom_fields": {
@@ -236,7 +249,7 @@
       },
       "workload": {
         "label": "Workload",
-        "description": "Who is how busy, week by week (head only)."
+        "description": "Who is how busy, week by week (department heads only)."
       },
       "dependencies": {
         "label": "Dependencies",

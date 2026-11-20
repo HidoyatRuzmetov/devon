@@ -126,6 +126,12 @@ export type Deps = {
   createUpload(input: CreateUploadInput, ctx: AuditCtx): Promise<UploadRecord>
   /** Owner-scoped lookup: `null` for another user's upload exactly like for a non-existent one. */
   findOwnUpload(uploadId: string, userId: string): Promise<UploadRecord | null>
+  isPublishedAvatar(userId: string, avatarKey: string): Promise<boolean>
+  requeueAvatarIfErased(userId: string, uploadId: string): Promise<void>
+  listAvatarsForErasure(
+    limit: number,
+  ): Promise<Array<{ id: string; userId: string; token: string }>>
+  acknowledgeAvatarErasure(tokens: string[]): Promise<void>
   /** Moves an upload out of `pending` (rejected / infected / scan_failed / expired). Audits. */
   markUpload(
     uploadId: string,
@@ -134,12 +140,13 @@ export type Deps = {
     ctx: AuditCtx,
   ): Promise<void>
   /** Sets (or, with `null`, clears) `users.avatar_key`, marks `uploadId` finalised when given, and
-   * writes the audit event + outbox event -- all in ONE transaction (I-5). Returns the updated user. */
+   * writes the audit event + outbox event in one transaction. Returns null if a retired upload
+   * or an erased account is no longer publishable. */
   setUserAvatar(
     userId: string,
     next: { avatarKey: string | null; uploadId: string | null },
     ctx: AuditCtx,
-  ): Promise<UserRecord>
+  ): Promise<UserRecord | null>
   /** Retention sweep (TECH-SPEC §6 `retention.sweep`: "temp uploads only"): flips up to `limit`
    * pending uploads whose `expires_at` is before `before` to `expired`, returning them so the caller
    * can delete the objects. Cross-user by design (see `tenancy.ts`'s allow-list reason). */

@@ -13,6 +13,7 @@ import { probeStorage, probeAi, probeTelegram, probeBackups } from './health-pro
 import { and, desc, eq, getTableColumns, ilike, isNull, or, sql } from 'drizzle-orm'
 import { normalizeUz, schema, withContext, type Tx } from '@devon/db'
 import { verifyPassword } from '../../lib/password.js'
+import { assertUserCanBeDisabled, lockUserDepartments } from '../../lib/department-heads.js'
 import { verifyTotp } from '../accounts/totp.js'
 import { decryptSecret as decryptAccountSecret } from '../accounts/crypto.js'
 import type { AuditCtx } from '../../types.js'
@@ -60,6 +61,7 @@ export type AdminDepartmentRow = {
   slug: string
   status: 'active' | 'paused_by_admin' | 'deletion_requested' | 'archived'
   memberCount: number
+  /** Display names of every active head, in stable membership order. Legacy field name retained. */
   headName: string | null
   createdAt: Date
 }
@@ -127,11 +129,11 @@ export async function listDepartments(input: {
         (select count(*) from app.memberships m join app.users mu on mu.id=m.user_id
           where m.department_id = d.id and m.status = 'active' and m.deleted_at is null
             and mu.status='active' and mu.deleted_at is null) as member_count,
-        (select u.given_name || ' ' || u.family_name from app.memberships hm
+        (select string_agg(u.given_name || ' ' || u.family_name, ', ' order by hm.joined_at, hm.user_id) from app.memberships hm
            join app.users u on u.id = hm.user_id
            where hm.department_id = d.id and hm.role = 'head' and hm.status = 'active' and hm.deleted_at is null
              and u.status='active' and u.deleted_at is null
-           order by hm.joined_at asc limit 1) as head_name
+        ) as head_name
       from app.departments d
       where ${sql.join(conditions, sql` and `)}
       order by d.created_at desc, d.id desc
@@ -177,11 +179,11 @@ export async function getDepartmentDetail(id: string): Promise<AdminDepartmentDe
         (select count(*) from app.memberships m join app.users mu on mu.id=m.user_id
           where m.department_id = d.id and m.status = 'active' and m.deleted_at is null
             and mu.status='active' and mu.deleted_at is null) as member_count,
-        (select u.given_name || ' ' || u.family_name from app.memberships hm
+        (select string_agg(u.given_name || ' ' || u.family_name, ', ' order by hm.joined_at, hm.user_id) from app.memberships hm
            join app.users u on u.id = hm.user_id
            where hm.department_id = d.id and hm.role = 'head' and hm.status = 'active' and hm.deleted_at is null
              and u.status='active' and u.deleted_at is null
-           order by hm.joined_at asc limit 1) as head_name
+        ) as head_name
       from app.departments d
       where d.id = ${id} and d.deleted_at is null
       limit 1
@@ -461,6 +463,11 @@ async function advanceMembershipRevisions(tx: Tx, userId: string): Promise<void>
       update app.memberships set version=version+1,updated_at=now()
       where user_id=${userId} and department_id=${row.department_id} and deleted_at is null
     `)
+    tx.emit({
+      type: 'departments.membership.changed',
+      departmentId: row.department_id,
+      payload: { userId },
+    })
   }
   /* eslint-enable no-restricted-syntax */
   await tx.raw(sql`select set_config('app.department_id','',true)`)
@@ -468,6 +475,7 @@ async function advanceMembershipRevisions(tx: Tx, userId: string): Promise<void>
 
 export async function lockUser(id: string, reason: string, ctx: AuditCtx): Promise<boolean> {
   return withContext(adminCtx(ctx), async (tx) => {
+    const lockedDepartments = await lockUserDepartments(tx, id)
     const before = await tx.drizzle
       .select({ status: schema.users.status, role: schema.users.role })
       .from(schema.users)
@@ -477,6 +485,7 @@ export async function lockUser(id: string, reason: string, ctx: AuditCtx): Promi
     if (!before[0] || before[0].status === 'deleted' || before[0].role === 'super_admin')
       return false
 
+    await assertUserCanBeDisabled(tx, id, lockedDepartments)
     const lockedUntil = new Date()
     lockedUntil.setFullYear(lockedUntil.getFullYear() + LOCK_FAR_FUTURE_YEARS)
     await tx.drizzle
@@ -571,6 +580,7 @@ function deletedLogin(login: string, id: string): string {
  * revokes access while retaining the identity needed by historical records; it is not erasure. */
 export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean> {
   return withContext(adminCtx(ctx), async (tx) => {
+    const lockedDepartments = await lockUserDepartments(tx, id)
     const before = await tx.drizzle
       .select({ status: schema.users.status, login: schema.users.login, role: schema.users.role })
       .from(schema.users)
@@ -580,6 +590,7 @@ export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean>
     if (!before[0] || before[0].status === 'deleted' || before[0].role === 'super_admin')
       return false
 
+    await assertUserCanBeDisabled(tx, id, lockedDepartments)
     await tx.drizzle
       .update(schema.users)
       .set({

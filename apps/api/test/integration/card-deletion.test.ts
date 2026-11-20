@@ -173,6 +173,18 @@ describe('card deletion and audit retention', () => {
 
   it('hides deleted cards, retains their children and audit snapshot, and allows only the deleting actor to undo', async () => {
     const card = await createCard()
+    const item = await request(`/cards/${card.id}/checklist`, owner, 'POST', {
+      text: 'Evidence item',
+    })
+    expect(item.status).toBe(201)
+    const { id: itemId } = (await item.json()) as { id: string }
+    expect(
+      (
+        await request(`/cards/${card.id}/checklist/${itemId}/comments`, owner, 'POST', {
+          text: 'Historical thread',
+        })
+      ).status,
+    ).toBe(201)
     expect(
       (await request(`/cards/${card.id}/comments`, owner, 'POST', { text: 'Keep this history' }))
         .status,
@@ -182,6 +194,35 @@ describe('card deletion and audit retention', () => {
       [owner, colleague, head].map((session) => request(`/cards/${card.id}`, session)),
     )
     expect(hidden.map((r) => r.status)).toEqual([404, 404, 404])
+    const historical = `/cards/${card.id}?includeDeleted=true`
+    const view = await request(historical, colleague)
+    expect(view.status).toBe(200)
+    expect(await view.json()).toMatchObject({
+      canEdit: false,
+      history: {
+        canRestore: false,
+        people: expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]),
+      },
+      checklist: [expect.objectContaining({ id: itemId, text: 'Evidence item' })],
+      comments: expect.arrayContaining([
+        expect.objectContaining({
+          checklistItemId: itemId,
+          body: { format: 'markdown', text: 'Historical thread' },
+        }),
+        expect.objectContaining({
+          checklistItemId: null,
+          body: { format: 'markdown', text: 'Keep this history' },
+        }),
+      ]),
+    })
+    expect(await (await request(historical, owner)).json()).toMatchObject({
+      canEdit: false,
+      history: { canRestore: true },
+    })
+    expect((await request(historical, outsider)).status).toBe(404)
+    expect((await request(historical, owner, 'PATCH', { title: 'Forbidden change' })).status).toBe(
+      404,
+    )
     expect((await request(`/cards/${card.id}/activity`, owner)).status).toBe(404)
     expect((await request(`/cards/${card.id}/reminders`, owner)).status).toBe(404)
     expect((await request(`/cards/${card.id}/time-logs`, owner)).status).toBe(404)
@@ -198,7 +239,7 @@ describe('card deletion and audit retention', () => {
     )
     expect(retained[0]?.title).toBe('Retained deletion evidence')
     expect(retained[0]?.deleted_at).toBeTruthy()
-    expect(Number(retained[0]?.children)).toBe(1)
+    expect(Number(retained[0]?.children)).toBe(2)
     const audit = await sql<{ before: { title: string } }>(
       "select before from audit.events where subject_id = $1 and action = 'work.card_deleted'",
       [card.id],

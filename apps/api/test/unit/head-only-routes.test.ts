@@ -23,6 +23,7 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/departments/:id/join-requests/:userId/reject',
   'POST /api/v1/departments/:id/join-requests/:userId/undo',
   'POST /api/v1/departments/:id/members/:userId/reset-password',
+  'PATCH /api/v1/departments/:id/members/:userId/role',
   'POST /api/v1/labels',
   'POST /api/v1/ai/search/reindex',
   'GET /api/v1/ai/briefing',

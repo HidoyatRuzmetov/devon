@@ -77,6 +77,8 @@ describe('admin historical identities and live analytics', () => {
       slug: `identity-${randomUUID()}`,
     })
     const head = await seedMember(db, department.id, { role: 'head' })
+    // Preserve a current head while exercising historical attribution for the deleted co-head.
+    await seedMember(db, department.id, { role: 'head' })
     await superuserQuery(
       db,
       "update app.users set given_name='Diyor',family_name='Qodirov',patronymic='Testovich',title='Department head' where id=$1",

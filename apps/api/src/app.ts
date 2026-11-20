@@ -24,6 +24,10 @@ import jsonBodyPlugin from './plugins/json-body.js'
 import storagePlugin, { type StorageOverrides } from './plugins/storage.js'
 import { redactPaths, REDACTION_CENSOR } from './lib/log-redaction.js'
 import { sendProblem } from './lib/problem-reply.js'
+import {
+  DepartmentMembershipChangedError,
+  LastDepartmentHeadError,
+} from './lib/department-heads.js'
 import healthRoutes from './modules/health.js'
 import openapiRoutes from './modules/openapi.js'
 import metricsRoutes from './modules/metrics.js'
@@ -107,6 +111,18 @@ export async function buildApp(
   // module is never inherited by that module's routes (verified empirically against fastify@5.12.3;
   // this is not documented behaviour worth relying on being fixed).
   app.setErrorHandler((err: FastifyError, req, reply) => {
+    if (err instanceof DepartmentMembershipChangedError) {
+      sendProblem(reply, 'conflict', {
+        errors: [{ path: 'membership', code: 'membership_changed' }],
+      })
+      return
+    }
+    if (err instanceof LastDepartmentHeadError) {
+      sendProblem(reply, 'conflict', {
+        errors: [{ path: 'membership', code: 'last_department_head' }],
+      })
+      return
+    }
     // H1.13/H16.1: the body is built by `@devon/contracts`'s `problem()` from its frozen table --
     // never hand-assembled here -- so a stack, a SQL fragment, a filesystem path or the offending
     // value can never reach a client, in any environment. `instance` carries the request id, which

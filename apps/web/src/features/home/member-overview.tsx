@@ -98,17 +98,14 @@ function MemberTask({ card, projectTitle }: { card: Card; projectTitle?: string 
     <div
       className={cn(
         'flex min-h-14 items-center gap-2.5 rounded-md border border-border px-3 py-2 transition-colors',
-        !card.deletedAt && 'hover:border-primary/30',
+        'hover:border-primary/30',
         card.projectId ? 'bg-accent/45' : 'bg-card',
       )}
     >
       <button
         type="button"
-        onClick={() => {
-          if (!card.deletedAt) openCardPeek(card.id)
-        }}
-        disabled={Boolean(card.deletedAt)}
-        className="disabled:cursor-default flex min-h-10 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={() => openCardPeek(card.id)}
+        className="flex min-h-10 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="min-w-0 flex-1">
           {projectTitle ? (

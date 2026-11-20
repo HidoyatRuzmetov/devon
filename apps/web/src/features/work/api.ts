@@ -140,6 +140,13 @@ export const activitySchema = z.object({
 export type CardActivity = z.infer<typeof activitySchema>
 
 export const cardDetailSchema = cardSchema.extend({
+  history: z
+    .object({
+      projectTitle: z.string().nullable(),
+      canRestore: z.boolean(),
+      people: z.array(z.object({ id: z.string(), name: z.string() })),
+    })
+    .optional(),
   checklist: z.array(checklistItemSchema),
   comments: z.array(commentSchema),
   activity: z.array(activitySchema),
@@ -231,7 +238,10 @@ export function fetchCards(query: CardListQuery = {}): Promise<z.infer<typeof ca
 }
 
 export function fetchCard(id: string): Promise<CardDetail> {
-  return apiClient.get(`/api/v1/cards/${encodeURIComponent(id)}`, cardDetailSchema)
+  return apiClient.get(
+    `/api/v1/cards/${encodeURIComponent(id)}?includeDeleted=true`,
+    cardDetailSchema,
+  )
 }
 
 export type CreateCardInput = {

@@ -33,6 +33,7 @@ import {
   requestIdParamsSchema,
   setJoinApprovalBodySchema,
   setJoinPasswordBodySchema,
+  setMemberRoleBodySchema,
 } from './schemas.js'
 
 const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -352,13 +353,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
       schema: {
         params: departmentIdParamsSchema,
-        response: { 200: inviteSecretSchema.pick({ password: true }) },
+        response: { 200: inviteSecretSchema.pick({ password: true, revision: true }) },
       },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const password = await repo.rotateJoinPassword(req.params.id, auditCtx(req))
-      return reply.send({ password })
+      return reply.send(await repo.rotateJoinPassword(req.params.id, auditCtx(req)))
     },
   )
 
@@ -374,11 +374,13 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         params: departmentIdParamsSchema,
         body: setJoinPasswordBodySchema,
+        response: { 200: inviteSecretSchema.pick({ revision: true }), 204: z.void() },
       },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      await repo.setJoinPassword(req.params.id, req.body.password, auditCtx(req))
+      const revision = await repo.setJoinPassword(req.params.id, req.body.password, auditCtx(req))
+      if (req.body.returnRevision) return reply.send({ revision })
       return reply.code(204).send()
     },
   )
@@ -478,6 +480,8 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       return reply.send({
         members: rows.map((m) => ({
           userId: m.userId,
+          version: m.version,
+          accountStatus: m.accountStatus,
           givenName: m.givenName,
           familyName: m.familyName,
           patronymic: m.patronymic,
@@ -488,6 +492,31 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           joinedAt: m.joinedAt.toISOString(),
         })),
       })
+    },
+  )
+
+  app.patch(
+    '/:id/members/:userId/role',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentManaged((r.params as { id: string }).id),
+        },
+      },
+      schema: { params: memberParamsSchema, body: setMemberRoleBodySchema },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const ok = await repo.setMemberRole(
+        req.params.id,
+        req.params.userId,
+        req.body.role,
+        req.body.expectedVersion,
+        auditCtx(req),
+      )
+      if (!ok) return sendProblem(reply, 'conflict')
+      return reply.code(204).send()
     },
   )
 
@@ -528,7 +557,14 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const result = await repo.leaveDepartment(req.params.id, req.actor!.userId, auditCtx(req))
       if (!result.ok) {
-        sendProblem(reply, 'conflict')
+        sendProblem(reply, 'conflict', {
+          errors: [
+            {
+              path: 'membership',
+              code: result.reason === 'is_only_head' ? 'last_department_head' : result.reason,
+            },
+          ],
+        })
         return
       }
       return reply.code(204).send()

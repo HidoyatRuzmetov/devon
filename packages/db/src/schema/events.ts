@@ -172,6 +172,7 @@ export const eventPhotos = appSchema.table('event_photos', {
   url: text('url').notNull(),
   caption: text('caption'),
   addedByUserId: uuid('added_by_user_id').notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

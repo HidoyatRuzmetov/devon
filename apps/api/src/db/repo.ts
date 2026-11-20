@@ -25,6 +25,14 @@ import type {
 const SESSION_ABSOLUTE_DAYS = 30
 const SETUP_TOKEN_TTL_HOURS = 24
 
+async function queueErasedAvatarWrite(tx: Tx, userId: string, uploadId: string) {
+  return tx.raw(sql`update app.uploads set avatar_erasure_token=gen_random_uuid(),
+    status=case when status='pending' then 'rejected'::app.upload_status else status end,
+    updated_at=now() where id=${uploadId} and user_id=${userId} and purpose='avatar'
+      and exists (select 1 from app.account_deletion_requests where user_id=${userId}
+                  and completed_at is not null and cancelled_at is null) returning id`)
+}
+
 function anonymousCtx(): RequestContext {
   return {
     requestId: randomUUID(),
@@ -490,6 +498,35 @@ export function createRepo(): Deps {
       })
     },
 
+    async isPublishedAvatar(userId, avatarKey) {
+      return withContext(anonymousCtx(), async (tx) => {
+        const match = await tx.raw(sql`select id from app.users where id=${userId}
+          and avatar_key=${avatarKey} and not exists (select 1 from app.account_deletion_requests
+            where user_id=${userId} and completed_at is not null and cancelled_at is null)`)
+        return match.length > 0
+      })
+    },
+
+    async requeueAvatarIfErased(userId, uploadId) {
+      await withContext(anonymousCtx(), (tx) => queueErasedAvatarWrite(tx, userId, uploadId))
+    },
+
+    async listAvatarsForErasure(limit) {
+      return withContext(anonymousCtx(), (tx) =>
+        tx.raw<{ id: string; userId: string; token: string }>(sql`
+          select id, user_id as "userId", avatar_erasure_token as token from app.uploads
+          where avatar_erasure_token is not null and purpose='avatar' and expires_at <= now()
+          order by id limit ${limit}`),
+      )
+    },
+
+    async acknowledgeAvatarErasure(tokens) {
+      await withContext(anonymousCtx(), (tx) =>
+        tx.raw(sql`update app.uploads
+        set avatar_erasure_token=null where avatar_erasure_token=any(${sql.param(tokens)}::uuid[])`),
+      )
+    },
+
     async markUpload(uploadId, userId, patch, ctx) {
       await withContext(toDbContext(ctx), async (tx) => {
         const rows = await tx.raw<{ id: string }>(
@@ -510,20 +547,34 @@ export function createRepo(): Deps {
 
     async setUserAvatar(userId, next, ctx) {
       return withContext(toDbContext(ctx), async (tx) => {
+        // Serialize publication against replacement, removal and explicit account erasure.
+        await tx.raw(sql`select id from app.users where id=${userId} for update`)
+        const erased = await tx.raw(sql`select 1 from app.account_deletion_requests
+          where user_id=${userId} and completed_at is not null and cancelled_at is null`)
+        if (erased.length) {
+          if (next.uploadId) {
+            // This finalizer may have written derivatives after an erasure sweep. A
+            // fresh token ensures an older sweep cannot acknowledge this new work.
+            await queueErasedAvatarWrite(tx, userId, next.uploadId)
+          }
+          return null
+        }
         const before = await selectUserById(tx, userId)
         if (!before) throw new Error('setUserAvatar: user not found')
+        if (next.uploadId) {
+          // A duplicate finalizer must never republish a version removed since its first commit.
+          const changed = await tx.raw(sql`update app.uploads
+            set status='finalized', finalized_at=now(), updated_at=now()
+            where id=${next.uploadId} and user_id=${userId} and purpose='avatar' and status='pending'
+            returning id`)
+          if (!changed.length) return before.avatarKey === next.avatarKey ? before : null
+        }
         const rows = await tx.drizzle
           .update(schema.users)
           .set({ avatarKey: next.avatarKey, updatedAt: new Date() })
           .where(eq(schema.users.id, userId))
           .returning()
         const after = toUserRecord(rows[0]!)
-        if (next.uploadId) {
-          await tx.raw(
-            sql`update app.uploads set status = 'finalized', finalized_at = now(), updated_at = now()
-                where id = ${next.uploadId} and user_id = ${userId}`,
-          )
-        }
         tx.audit({
           action: next.avatarKey ? 'accounts.avatar_updated' : 'accounts.avatar_removed',
           subjectType: 'user',

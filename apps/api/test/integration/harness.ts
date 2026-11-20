@@ -18,10 +18,12 @@ export const PASSWORD = 'Str0ngExampleValue123'
 export type Db = ProveDatabase
 export type Server = ProveServer
 
-export async function startHarness(): Promise<{ db: Db; server: Server }> {
+export async function startHarness(
+  envOverrides: Record<string, string> = {},
+): Promise<{ db: Db; server: Server }> {
   const db = await startProveDatabase()
   try {
-    const server = await startProveServer(db)
+    const server = await startProveServer(db, envOverrides)
     return { db, server }
   } catch (error) {
     try {

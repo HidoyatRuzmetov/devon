@@ -25,9 +25,11 @@ export function CardAttachments({
   cardId,
   canEdit,
   subjectType = 'card',
+  historical = false,
 }: {
   cardId: string
   canEdit: boolean
+  historical?: boolean
   subjectType?: 'card' | 'page' | 'project'
 }) {
   const t = useT()
@@ -35,6 +37,7 @@ export function CardAttachments({
   const qc = useQueryClient()
   const fileInput = React.useRef<HTMLInputElement>(null)
   const base = `/api/v1/${subjectType === 'card' ? 'cards' : subjectType === 'project' ? 'projects' : 'pages'}/${encodeURIComponent(cardId)}/attachments`
+  const historyQuery = historical ? '?includeDeleted=true' : ''
   const key = [
     subjectType === 'card' ? 'work' : subjectType === 'project' ? 'projects' : 'pages',
     'attachments',
@@ -42,7 +45,7 @@ export function CardAttachments({
   ]
   const list = useQuery({
     queryKey: key,
-    queryFn: () => apiClient.get(base, z.array(attachmentSchema)),
+    queryFn: () => apiClient.get(base + historyQuery, z.array(attachmentSchema)),
   })
   const approvals = useQuery({
     queryKey: [...key, 'approvals'],
@@ -187,7 +190,7 @@ export function CardAttachments({
             <File className="size-5 shrink-0 text-primary/70" aria-hidden="true" />
             <a
               className="flex min-w-0 flex-1 items-center gap-3 text-small font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-              href={`${base}/${encodeURIComponent(file.id)}/download`}
+              href={`${base}/${encodeURIComponent(file.id)}/download${historyQuery}`}
               download={file.name}
               title={file.name}
               aria-label={file.name}

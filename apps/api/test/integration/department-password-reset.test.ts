@@ -116,7 +116,8 @@ async function waitForMembershipWaiters(blockerPid: number, count: number) {
       db,
       `select pid from pg_stat_activity
       where datname=current_database() and wait_event_type='Lock'
-        and (query ilike '%memberships%' or query ilike '%app.users%')
+        and (query ilike '%memberships%' or query ilike '%app.users%'
+          or query ilike '%pg_advisory_xact_lock%')
         and cardinality(pg_blocking_pids(pid)) > 0
         and pid <> $1`,
       [blockerPid],

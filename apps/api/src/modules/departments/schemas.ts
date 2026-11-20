@@ -108,13 +108,17 @@ export const inviteViewSchema = z.object({
   joinUrl: z.string().nullable(),
   joinRequiresApproval: z.boolean(),
   hasPassword: z.boolean(),
+  revision: z.number().int().positive(),
 })
 export const inviteSecretSchema = z.object({
   joinKey: z.string(),
   password: z.string(),
+  revision: z.number().int().positive(),
 })
 
-export const setJoinPasswordBodySchema = z.object({ password: z.string().min(8).max(128) }).strict()
+export const setJoinPasswordBodySchema = z
+  .object({ password: z.string().min(8).max(128), returnRevision: z.literal(true).optional() })
+  .strict()
 export const setJoinApprovalBodySchema = z.object({ joinRequiresApproval: z.boolean() }).strict()
 
 export const joinPreviewSchema = z.object({
@@ -137,6 +141,8 @@ export const joinResultSchema = z.object({
 
 export const memberViewSchema = z.object({
   userId: z.string().uuid(),
+  version: z.number().int().positive(),
+  accountStatus: z.enum(['active', 'locked', 'deleted']),
   givenName: z.string(),
   familyName: z.string(),
   patronymic: z.string().nullable(),
@@ -147,6 +153,13 @@ export const memberViewSchema = z.object({
   joinedAt: z.string(),
 })
 export const memberListSchema = z.object({ members: z.array(memberViewSchema) })
+
+export const setMemberRoleBodySchema = z
+  .object({
+    role: z.enum(['head', 'member']),
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict()
 
 // --- v1.1 SPEC §2.2: the join-approval queue ------------------------------------------------------
 

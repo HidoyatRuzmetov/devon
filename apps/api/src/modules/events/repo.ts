@@ -879,7 +879,7 @@ export async function listPhotos(tx: Tx, eventId: string): Promise<PhotoRow[]> {
   return tx.raw<PhotoRow>(sql`
     select p.id, p.url, p.caption, p.added_by_user_id, u.given_name, u.family_name, u.avatar_key, p.created_at
     from app.event_photos p join app.users u on u.id = p.added_by_user_id
-    where p.event_id = ${eventId}
+    where p.event_id = ${eventId} and p.deleted_at is null
     order by p.created_at asc
   `)
 }
@@ -903,13 +903,15 @@ export async function insertPhoto(
 
 export async function getPhotoOwner(tx: Tx, photoId: string): Promise<string | null> {
   const rows = await tx.raw<{ added_by_user_id: string }>(
-    sql`select added_by_user_id from app.event_photos where id = ${photoId}`,
+    sql`select added_by_user_id from app.event_photos where id = ${photoId} and deleted_at is null for update`,
   )
   return rows[0]?.added_by_user_id ?? null
 }
 
 export async function deletePhoto(tx: Tx, photoId: string): Promise<void> {
-  await tx.raw(sql`delete from app.event_photos where id = ${photoId}`)
+  await tx.raw(
+    sql`update app.event_photos set deleted_at=now() where id = ${photoId} and deleted_at is null`,
+  )
 }
 
 // --- Feedback ------------------------------------------------------------------------------------

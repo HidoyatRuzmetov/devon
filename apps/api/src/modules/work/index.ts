@@ -305,23 +305,40 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { params: idParamsSchema, response: { 200: cardDetailSchema } },
+      schema: {
+        params: idParamsSchema,
+        querystring: z.object({ includeDeleted: z.enum(['true', 'false']).optional() }),
+        response: { 200: cardDetailSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)!
       const ctx = contextFromRequest(req)
-      const card = await repo.getCard(ctx, departmentId, req.params.id)
+      const card = await repo.getCard(
+        ctx,
+        departmentId,
+        req.params.id,
+        req.query.includeDeleted === 'true',
+      )
       if (!card) return sendProblem(reply, 'not_found')
-      const [checklist, comments, activity] = await Promise.all([
-        repo.getChecklist(ctx, card.id),
-        repo.getComments(ctx, card.id),
+      const [checklist, comments, activity, history] = await Promise.all([
+        repo.getChecklist(ctx, card.id, Boolean(card.deletedAt)),
+        repo.getComments(ctx, card.id, null, Boolean(card.deletedAt)),
         repo.getActivity(ctx, card.id),
+        card.deletedAt ? repo.getHistoricalAttribution(ctx, card.id) : undefined,
       ])
+      const detail = withCanEdit([card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!
       return reply.send({
-        ...withCanEdit([card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
+        ...detail,
         checklist,
-        comments,
+        comments: card.deletedAt
+          ? comments.map((comment) => ({ ...comment, canEdit: false, canDelete: false }))
+          : comments,
         activity,
+        ...(card.deletedAt ? { canEdit: false } : {}),
+        ...(history
+          ? { history: { ...history, canRestore: !ctx.viewAs && detail.canEdit === true } }
+          : {}),
       })
     },
   )

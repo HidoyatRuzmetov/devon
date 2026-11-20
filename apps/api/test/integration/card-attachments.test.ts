@@ -413,6 +413,17 @@ describe('task files', () => {
     // Deleting the card also hides its files, without erasing the bytes or attachment metadata.
     expect((await request(`/cards/${cardId}`, 'DELETE')).status).toBe(204)
     expect((await request(path(`/${retry.uploadId}/download`))).status).toBe(404)
+    const historical = path(`/${retry.uploadId}/download?includeDeleted=true`)
+    const retained = await request(historical, 'GET', undefined, colleague)
+    expect(retained.status).toBe(200)
+    expect(Buffer.from(await retained.arrayBuffer())).toEqual(file)
+    expect((await request(historical, 'GET', undefined, foreign)).status).toBe(404)
+    expect((await request(path(`/${infected.uploadId}/download?includeDeleted=true`))).status).toBe(
+      404,
+    )
+    expect((await request(path(`/${retry.uploadId}?includeDeleted=true`), 'DELETE')).status).toBe(
+      404,
+    )
   })
 })
 

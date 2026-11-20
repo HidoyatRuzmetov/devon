@@ -373,6 +373,16 @@ describe('nested event controls mutate only their actual parent event', () => {
     expect(
       (await read(`${own}/photos`, f.headSession, photoListResponseSchema)).items,
     ).toHaveLength(1)
+    expect((await remove(`${own}/photos/${photo.id}`, f.headSession)).status).toBe(204)
+    expect((await remove(`${own}/photos/${photo.id}`, f.headSession)).status).toBe(404)
+    expect(
+      (await read(`${own}/photos`, f.headSession, photoListResponseSchema)).items,
+    ).toHaveLength(0)
+    expect(
+      await superuserQuery(db, 'select url, deleted_at from app.event_photos where id=$1', [
+        photo.id,
+      ]),
+    ).toMatchObject([{ url: 'https://example.test/local-photo.png', deleted_at: expect.any(Date) }])
     expect(
       (await read(`${own}/comments`, f.headSession, commentListResponseSchema)).items,
     ).toHaveLength(1)

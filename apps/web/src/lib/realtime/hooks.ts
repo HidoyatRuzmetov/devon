@@ -223,7 +223,20 @@ const INVALIDATIONS: ReadonlyArray<{
   },
   {
     match: /^departments\.(membership\.changed|join_request\.decided)$/,
-    keys: [['departments'], ['me'], ['people'], ['structure'], ['projects'], ['work']],
+    keys: [
+      ['departments'],
+      ['me'],
+      ['people'],
+      ['structure'],
+      ['projects'],
+      ['work'],
+      ['ai'],
+      ['checkins'],
+      ['events'],
+      ['pages'],
+      ['telegram'],
+      ['admin'],
+    ],
     mutationKeys: [
       ['departments', 'pendingAction'],
       ['work', 'card-write'],
@@ -232,7 +245,7 @@ const INVALIDATIONS: ReadonlyArray<{
   },
   {
     match: /^departments\.(?!(membership\.changed|join_request\.decided)$)/,
-    keys: [['departments'], ['people']],
+    keys: [['departments'], ['people'], ['me']],
   },
   // Personal delivery updates reminders and file approvals, including the superadmin queue
   // whose requests can originate outside the administrator's active department.

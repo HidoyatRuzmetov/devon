@@ -220,15 +220,20 @@ export async function listTraces(
 
 // --- the Friday department briefing (AI-AUDIT §5 fix 17) ------------------------------------
 
-/** The head of a department, or `null` when it has none. The weekly digest bills its one AI call to
- * that person, because the briefing is theirs: a trace with no owner would be unattributable in the
- * Usage tab, and inventing a system user would put a row in `app.users` that nobody is. */
-export async function headUserId(tx: Tx, departmentId: string): Promise<string | null> {
+/** One billing actor for a shared department briefing, never the department's exclusive leader.
+ * Manual refreshes are attributed to the requesting active head; scheduled jobs choose a stable
+ * active head once, so adding heads does not multiply AI calls or shared group announcements. */
+export async function headUserId(
+  tx: Tx,
+  departmentId: string,
+  requestedBy: string | null = null,
+): Promise<string | null> {
   const rows = await tx.raw<{ user_id: string }>(sql`
-    select user_id from app.memberships
-    where department_id = ${departmentId} and role = 'head' and status = 'active'
-      and deleted_at is null
-    order by created_at asc
+    select m.user_id from app.memberships m join app.users u on u.id=m.user_id
+    where m.department_id = ${departmentId} and m.role = 'head' and m.status = 'active'
+      and m.deleted_at is null and u.status='active' and u.deleted_at is null
+      and (${requestedBy}::uuid is null or m.user_id=${requestedBy}::uuid)
+    order by m.created_at asc, m.user_id
     limit 1
   `)
   return rows[0]?.user_id ?? null

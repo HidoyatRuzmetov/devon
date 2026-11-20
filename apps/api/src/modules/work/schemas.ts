@@ -149,6 +149,13 @@ export const activitySchema = z.object({
 })
 
 export const cardDetailSchema = cardSchema.extend({
+  history: z
+    .object({
+      projectTitle: z.string().nullable(),
+      canRestore: z.boolean(),
+      people: z.array(z.object({ id: z.uuid(), name: z.string() })),
+    })
+    .optional(),
   checklist: z.array(checklistItemSchema),
   comments: z.array(commentSchema),
   activity: z.array(activitySchema),

@@ -1,0 +1,23 @@
+:8080 {
+  handle_path /review/* {
+    root * /srv/review
+    file_server
+  }
+  handle /api/* {
+    reverse_proxy api:3000 {
+      header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+    }
+  }
+  handle /healthz {
+    reverse_proxy api:3000
+  }
+  handle /readyz {
+    reverse_proxy api:3000
+  }
+  handle /connection/* {
+    reverse_proxy centrifugo:8000
+  }
+  handle {
+    reverse_proxy web:8080
+  }
+}

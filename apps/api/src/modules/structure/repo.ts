@@ -665,6 +665,7 @@ type MemberRow = {
   title: string | null
   avatar_key: string | null
   membership_role: 'head' | 'member'
+  account_status: 'active' | 'locked' | 'deleted'
   unit_id: string | null
   unit_role: 'head' | 'deputy' | 'member' | null
 }
@@ -680,7 +681,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
           (select p.updated_at::text from app.personnel_records p
             where p.department_id=m.department_id and p.owner_user_id=u.id)
           else null end as personnel_updated_at,
-        m.role as membership_role, ur.unit_id, ur.role as unit_role
+        m.role as membership_role, u.status as account_status, ur.unit_id, ur.role as unit_role
       from app.memberships m
       join app.users u on u.id = m.user_id and u.deleted_at is null
       left join app.directory_birth_dates() bd on bd.owner_user_id = u.id
@@ -702,6 +703,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
       resumeUpdatedAt: r.resume_updated_at,
       personnelUpdatedAt: r.personnel_updated_at,
       membershipRole: r.membership_role,
+      accountStatus: r.account_status,
       unitId: r.unit_id,
       unitRole: r.unit_role,
     }))

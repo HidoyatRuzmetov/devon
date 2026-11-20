@@ -728,6 +728,13 @@ describe('check-in lifecycle and source integrity', () => {
     const f = await fixture(),
       other = await fixture(true)
     const id = await add(f)
+    // This migration targets 2 November, regardless of the wall-clock fortnight of this run.
+    // Keep fixture deadlines open so the runtime scheduler cannot re-lock the repaired rows.
+    await superuserQuery(
+      db,
+      "update app.checkin_cycles set starts_on='2026-11-02',ends_on='2026-11-13',checkin_deadline=now()+interval '1 day',checkout_deadline=now()+interval '2 days' where id=any($1::uuid[])",
+      [[f.cycleId, other.cycleId]],
+    )
     const second = await seedMember(db, f.department.id, { role: 'member' })
     await superuserQuery(
       db,

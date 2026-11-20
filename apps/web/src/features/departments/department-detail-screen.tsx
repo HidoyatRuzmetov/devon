@@ -45,6 +45,7 @@ import { useMeQuery, useDepartment } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
 import { adminResetPassword } from '../accounts/api.js'
 import { ConfirmDialog } from './components/confirm-dialog.js'
+import { useInvitePassword } from './use-invite-refresh.js'
 import {
   decideJoinRequest,
   fetchDepartment,
@@ -62,6 +63,7 @@ import {
   setJoinApproval,
   setJoinPassword,
   transferHeadship,
+  setMemberRole,
   type JoinRequest,
   type Member,
 } from './api.js'
@@ -81,25 +83,32 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
   const [allowSelfAssign, setAllowSelfAssign] = React.useState(true)
   const [allowStructureEdit, setAllowStructureEdit] = React.useState(true)
   const [telegramPerm, setTelegramPerm] = React.useState<'everyone' | 'head'>('everyone')
-  const dirty = React.useRef(false)
+  const dirtyFields = React.useRef(
+    new Set<'allowSelfAssign' | 'allowStructureEdit' | 'whoCanConnectTelegramGroup'>(),
+  )
 
   React.useEffect(() => {
-    if (!isHead) dirty.current = false
-    if (deptQuery.data && !dirty.current) {
-      setAllowSelfAssign(deptQuery.data.settings.allowSelfAssign)
-      setAllowStructureEdit(deptQuery.data.settings.allowStructureEdit)
-      setTelegramPerm(deptQuery.data.settings.whoCanConnectTelegramGroup)
+    if (!isHead) {
+      dirtyFields.current.clear()
+    }
+    if (deptQuery.data) {
+      if (!dirtyFields.current.has('allowSelfAssign'))
+        setAllowSelfAssign(deptQuery.data.settings.allowSelfAssign)
+      if (!dirtyFields.current.has('allowStructureEdit'))
+        setAllowStructureEdit(deptQuery.data.settings.allowStructureEdit)
+      if (!dirtyFields.current.has('whoCanConnectTelegramGroup'))
+        setTelegramPerm(deptQuery.data.settings.whoCanConnectTelegramGroup)
     }
   }, [deptQuery.data, isHead])
 
   const save = useMutation({
     mutationFn: (settings: {
-      allowSelfAssign: boolean
-      allowStructureEdit: boolean
-      whoCanConnectTelegramGroup: 'everyone' | 'head'
+      allowSelfAssign?: boolean
+      allowStructureEdit?: boolean
+      whoCanConnectTelegramGroup?: 'everyone' | 'head'
     }) => patchDepartmentSettings(id, settings, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => {
-      dirty.current = false
+      dirtyFields.current.clear()
       toast(t('departments.settings.saved'))
       void queryClient.invalidateQueries({
         queryKey: ['departments', 'detail', id],
@@ -155,9 +164,11 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
               loading={save.isPending}
               onClick={() =>
                 save.mutate({
-                  allowSelfAssign,
-                  allowStructureEdit,
-                  whoCanConnectTelegramGroup: telegramPerm,
+                  ...(dirtyFields.current.has('allowSelfAssign') ? { allowSelfAssign } : {}),
+                  ...(dirtyFields.current.has('allowStructureEdit') ? { allowStructureEdit } : {}),
+                  ...(dirtyFields.current.has('whoCanConnectTelegramGroup')
+                    ? { whoCanConnectTelegramGroup: telegramPerm }
+                    : {}),
                 })
               }
             >
@@ -180,7 +191,7 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
               checked={allowSelfAssign}
               disabled={!isHead || save.isPending}
               onCheckedChange={(value) => {
-                dirty.current = true
+                dirtyFields.current.add('allowSelfAssign')
                 setAllowSelfAssign(value)
               }}
             />
@@ -193,7 +204,7 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
               checked={allowStructureEdit}
               disabled={!isHead || save.isPending}
               onCheckedChange={(value) => {
-                dirty.current = true
+                dirtyFields.current.add('allowStructureEdit')
                 setAllowStructureEdit(value)
               }}
             />
@@ -205,7 +216,7 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
             <RadioGroup
               value={telegramPerm}
               onValueChange={(v) => {
-                dirty.current = true
+                dirtyFields.current.add('whoCanConnectTelegramGroup')
                 setTelegramPerm(v as typeof telegramPerm)
               }}
             >
@@ -239,7 +250,7 @@ function InviteTab({ id }: { id: string }) {
     queryKey: ['departments', 'invite', id],
     queryFn: () => fetchInvite(id),
   })
-  const [revealedPassword, setRevealedPassword] = React.useState<string | null>(null)
+  const [revealedPassword, revealPassword] = useInvitePassword(id, inviteQuery.data?.revision)
   const [customPassword, setCustomPassword] = React.useState('')
   const [confirmRotate, setConfirmRotate] = React.useState<'key' | 'password' | null>(null)
 
@@ -258,7 +269,7 @@ function InviteTab({ id }: { id: string }) {
     mutationKey: departmentActionKey(id),
     mutationFn: () => rotateJoinPassword(id, meQuery.data?.csrfToken ?? ''),
     onSuccess: (result) => {
-      setRevealedPassword(result.password)
+      revealPassword(result)
       setConfirmRotate(null)
       void invalidate()
     },
@@ -266,8 +277,8 @@ function InviteTab({ id }: { id: string }) {
   const setPassword = useMutation({
     mutationKey: departmentActionKey(id),
     mutationFn: () => setJoinPassword(id, customPassword, meQuery.data?.csrfToken ?? ''),
-    onSuccess: () => {
-      setRevealedPassword(customPassword)
+    onSuccess: (result) => {
+      revealPassword({ password: customPassword, revision: result.revision })
       setCustomPassword('')
       void invalidate()
     },
@@ -832,6 +843,9 @@ function MemberRow({
   onLeave,
   onResetPassword,
   actionPending,
+  headCount,
+  onPromote,
+  onDemote,
 }: {
   member: Member
   isHead: boolean
@@ -842,6 +856,9 @@ function MemberRow({
   onLeave: () => void
   onResetPassword: () => void
   actionPending: boolean
+  headCount: number
+  onPromote: () => void
+  onDemote: () => void
 }) {
   const t = useT()
   const locale = useLocale()
@@ -850,7 +867,15 @@ function MemberRow({
   // v1.1 SPEC §2.2: a head may now reset an ordinary member's password (the department-scoped route);
   // a super admin may reset anyone's (the instance route). Resetting another *head*'s password is
   // refused by the server, so the item is not offered either.
-  const canResetAsHead = isHead && !isMe && member.role !== 'head' && member.status === 'active'
+  const canResetAsHead =
+    isHead &&
+    !isMe &&
+    member.role !== 'head' &&
+    member.status === 'active' &&
+    member.accountStatus === 'active'
+  const isLastHead = member.role === 'head' && headCount <= 1 && member.accountStatus === 'active'
+  const canAppoint =
+    member.role === 'member' && member.status === 'active' && member.accountStatus === 'active'
   const hasMenu = (isHead && !isMe) || (isSuperAdmin && !isMe)
 
   return (
@@ -868,11 +893,6 @@ function MemberRow({
       }
       trailing={
         <>
-          {isMe ? (
-            <Button size="sm" variant="ghost" disabled={actionPending} onClick={onLeave}>
-              {t('departments.members.leave')}
-            </Button>
-          ) : null}
           {hasMenu ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -890,10 +910,22 @@ function MemberRow({
               <DropdownMenuContent align="end">
                 {isHead && !isMe ? (
                   <>
-                    <DropdownMenuItem disabled={actionPending} onSelect={onTransfer}>
-                      {t('departments.members.transfer')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem disabled={actionPending} onSelect={onRemove}>
+                    {canAppoint ? (
+                      <>
+                        <DropdownMenuItem disabled={actionPending} onSelect={onPromote}>
+                          {t('departments.members.appointHead')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled={actionPending} onSelect={onTransfer}>
+                          {t('departments.members.transfer')}
+                        </DropdownMenuItem>
+                      </>
+                    ) : null}
+                    {member.role === 'head' && member.status === 'active' ? (
+                      <DropdownMenuItem disabled={actionPending || isLastHead} onSelect={onDemote}>
+                        {t('departments.members.removeHead')}
+                      </DropdownMenuItem>
+                    ) : null}
+                    <DropdownMenuItem disabled={actionPending || isLastHead} onSelect={onRemove}>
                       {t('departments.members.remove')}
                     </DropdownMenuItem>
                   </>
@@ -909,7 +941,7 @@ function MemberRow({
         </>
       }
     >
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="truncate text-body text-foreground">
           {name}{' '}
           {member.title ? <span className="text-muted-foreground">· {member.title}</span> : null}
@@ -928,17 +960,45 @@ function MemberRow({
           {member.status === 'pending_approval' ? (
             <Badge tone="warning">{t('departments.members.statusPending')}</Badge>
           ) : null}
+          {member.accountStatus !== 'active' ? (
+            <Badge tone="warning">{t('departments.members.accountUnavailable')}</Badge>
+          ) : null}
           {t('departments.members.joinedAt', {
             date: formatDate(new Date(member.joinedAt), locale),
           })}
         </span>
+        {isMe ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="max-w-full text-left"
+              disabled={actionPending || isLastHead}
+              onClick={onLeave}
+              title={isLastHead ? t('departments.members.leaveBlockedHead') : undefined}
+            >
+              {t('departments.members.leave')}
+            </Button>
+            {isHead && !isLastHead ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="max-w-full text-left"
+                disabled={actionPending}
+                onClick={onDemote}
+              >
+                {t('departments.members.stepDown')}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </DataRow>
   )
 }
 
 type MemberAction = {
-  kind: 'transfer' | 'remove' | 'leave' | 'resetPassword'
+  kind: 'transfer' | 'remove' | 'leave' | 'resetPassword' | 'promote' | 'demote'
   member?: Member
 }
 
@@ -1002,6 +1062,29 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     },
     onSettled: settleAction,
   })
+  const changeRole = useMutation({
+    mutationKey: departmentActionKey(id),
+    mutationFn: (action: MemberAction) =>
+      setMemberRole(
+        id,
+        action.member!,
+        action.kind === 'promote' ? 'head' : 'member',
+        meQuery.data?.csrfToken ?? '',
+      ),
+    onSuccess: (_result, action) => {
+      toast(
+        t(
+          action.kind === 'promote'
+            ? 'departments.members.headAppointed'
+            : 'departments.members.headRemoved',
+        ),
+      )
+      closeCompletedAction(action)
+      invalidate()
+    },
+    onError: () => invalidate(),
+    onSettled: settleAction,
+  })
   const leave = useMutation({
     mutationKey: departmentActionKey(id),
     mutationFn: (_action: MemberAction) => leaveDepartment(id, meQuery.data?.csrfToken ?? ''),
@@ -1014,7 +1097,8 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     onError: (error) =>
       toast.error(
         t(
-          error instanceof ApiError && error.status === 409
+          error instanceof ApiError &&
+            error.errors.some((entry) => entry.code === 'last_department_head')
             ? 'departments.members.leaveBlockedHead'
             : 'toast.saveError',
         ),
@@ -1043,6 +1127,7 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     onSettled: settleAction,
   })
   const actionPending =
+    changeRole.isPending ||
     transfer.isPending ||
     remove.isPending ||
     leave.isPending ||
@@ -1053,6 +1138,7 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     if (pendingAction.current || queryClient.isMutating({ mutationKey: departmentActionKey(id) }))
       return
     if (action.kind === 'transfer') transfer.reset()
+    else if (action.kind === 'promote' || action.kind === 'demote') changeRole.reset()
     else if (action.kind === 'remove') remove.reset()
     else if (action.kind === 'resetPassword') resetPassword.reset()
     else leave.reset()
@@ -1077,10 +1163,51 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
 
   // Removed memberships remain in the API for history, but are no longer people in this team.
   const members = membersQuery.data.members.filter((member) => member.status !== 'removed')
+  const heads = members.filter(
+    (member) =>
+      member.role === 'head' && member.status === 'active' && member.accountStatus === 'active',
+  )
+  const changingRole = confirmAction?.kind === 'promote' || confirmAction?.kind === 'demote'
+  const mutationError = changingRole
+    ? changeRole.error
+    : confirmAction?.kind === 'transfer'
+      ? transfer.error
+      : confirmAction?.kind === 'remove'
+        ? remove.error
+        : confirmAction?.kind === 'resetPassword'
+          ? resetPassword.error
+          : leave.error
+  const errorMessage =
+    mutationError instanceof ApiError && mutationError.status === 409
+      ? t(
+          mutationError.errors.some((entry) => entry.code === 'last_department_head')
+            ? 'departments.members.leaveBlockedHead'
+            : 'departments.members.roleConflict',
+        )
+      : mutationError
+        ? t('toast.saveError')
+        : undefined
 
   return (
     <div className="flex flex-col gap-4">
       {isHead ? <JoinRequestsCard id={id} /> : null}
+      <SettingsSection
+        title={t('departments.members.headsTitle', { count: heads.length })}
+        description={t(
+          isHead
+            ? 'departments.members.headsDescription'
+            : 'departments.members.headsReadOnlyDescription',
+        )}
+      >
+        <p className="text-body text-foreground">
+          {heads.map((head) => `${head.givenName} ${head.familyName}`).join(', ')}
+        </p>
+        {isHead && heads.length === 1 ? (
+          <p className="mt-2 text-small text-muted-foreground">
+            {t('departments.members.leaveBlockedHead')}
+          </p>
+        ) : null}
+      </SettingsSection>
       {members.length === 0 ? (
         <StateView kind="empty" titleKey="departments.members.empty.title" compact />
       ) : (
@@ -1094,6 +1221,9 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
                 isSuperAdmin={isSuperAdmin}
                 myUserId={myUserId}
                 actionPending={actionPending}
+                headCount={heads.length}
+                onPromote={() => openAction({ kind: 'promote', member: m })}
+                onDemote={() => openAction({ kind: 'demote', member: m })}
                 onTransfer={() => openAction({ kind: 'transfer', member: m })}
                 onRemove={() => openAction({ kind: 'remove', member: m })}
                 onLeave={() => openAction({ kind: 'leave' })}
@@ -1108,56 +1238,69 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
         open={confirmAction !== null}
         onOpenChange={(open) => !open && setConfirmAction(null)}
         destructive={confirmAction?.kind === 'remove' || confirmAction?.kind === 'leave'}
-        title={t(
-          confirmAction?.kind === 'transfer'
-            ? 'departments.members.transferDialogTitle'
-            : confirmAction?.kind === 'remove'
-              ? 'departments.members.removeDialogTitle'
-              : confirmAction?.kind === 'resetPassword'
-                ? 'accounts.admin.resetPassword.title'
-                : 'departments.members.leaveDialogTitle',
-        )}
+        title={
+          changingRole
+            ? t(
+                confirmAction.kind === 'promote'
+                  ? 'departments.members.appointHead'
+                  : 'departments.members.removeHead',
+              )
+            : t(
+                confirmAction?.kind === 'transfer'
+                  ? 'departments.members.transferDialogTitle'
+                  : confirmAction?.kind === 'remove'
+                    ? 'departments.members.removeDialogTitle'
+                    : confirmAction?.kind === 'resetPassword'
+                      ? 'accounts.admin.resetPassword.title'
+                      : 'departments.members.leaveDialogTitle',
+              )
+        }
         body={
-          confirmAction?.kind === 'transfer'
-            ? t('departments.members.transferConfirm', {
-                name: confirmAction.member
-                  ? `${confirmAction.member.givenName} ${confirmAction.member.familyName}`
-                  : '',
-              })
-            : confirmAction?.kind === 'remove'
-              ? t('departments.members.removeConfirm', {
+          changingRole
+            ? t(
+                confirmAction.kind === 'promote'
+                  ? 'departments.members.appointConfirm'
+                  : 'departments.members.demoteConfirm',
+                {
+                  name: `${confirmAction.member?.givenName ?? ''} ${confirmAction.member?.familyName ?? ''}`,
+                },
+              )
+            : confirmAction?.kind === 'transfer'
+              ? t('departments.members.transferConfirm', {
                   name: confirmAction.member
                     ? `${confirmAction.member.givenName} ${confirmAction.member.familyName}`
                     : '',
                 })
-              : confirmAction?.kind === 'resetPassword'
-                ? t('accounts.admin.resetPassword.confirm')
-                : t('departments.members.leaveConfirm')
+              : confirmAction?.kind === 'remove'
+                ? t('departments.members.removeConfirm', {
+                    name: confirmAction.member
+                      ? `${confirmAction.member.givenName} ${confirmAction.member.familyName}`
+                      : '',
+                  })
+                : confirmAction?.kind === 'resetPassword'
+                  ? t('accounts.admin.resetPassword.confirm')
+                  : t('departments.members.leaveConfirm')
         }
-        confirmLabel={t(
-          confirmAction?.kind === 'transfer'
-            ? 'departments.members.transfer'
-            : confirmAction?.kind === 'remove'
-              ? 'departments.members.remove'
-              : confirmAction?.kind === 'resetPassword'
-                ? 'accounts.admin.resetPassword.button'
-                : 'departments.members.leave',
-        )}
+        confirmLabel={
+          changingRole
+            ? t(
+                confirmAction.kind === 'promote'
+                  ? 'departments.members.appointHead'
+                  : 'departments.members.removeHead',
+              )
+            : t(
+                confirmAction?.kind === 'transfer'
+                  ? 'departments.members.transfer'
+                  : confirmAction?.kind === 'remove'
+                    ? 'departments.members.remove'
+                    : confirmAction?.kind === 'resetPassword'
+                      ? 'accounts.admin.resetPassword.button'
+                      : 'departments.members.leave',
+              )
+        }
         cancelLabel={t('departments.common.cancel')}
         loading={actionPending}
-        error={
-          (
-            confirmAction?.kind === 'transfer'
-              ? transfer.isError
-              : confirmAction?.kind === 'remove'
-                ? remove.isError
-                : confirmAction?.kind === 'resetPassword'
-                  ? resetPassword.isError
-                  : leave.isError
-          )
-            ? t('toast.saveError')
-            : undefined
-        }
+        error={errorMessage}
         onConfirm={() => {
           if (
             !confirmAction ||
@@ -1166,7 +1309,12 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
           )
             return
           pendingAction.current = confirmAction
-          if (confirmAction.kind === 'transfer' && confirmAction.member)
+          if (
+            (confirmAction.kind === 'promote' || confirmAction.kind === 'demote') &&
+            confirmAction.member
+          )
+            changeRole.mutate(confirmAction)
+          else if (confirmAction.kind === 'transfer' && confirmAction.member)
             transfer.mutate(confirmAction)
           else if (confirmAction.kind === 'remove' && confirmAction.member)
             remove.mutate(confirmAction)

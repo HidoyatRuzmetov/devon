@@ -157,6 +157,14 @@ function AccountsBody() {
 
   const csrfToken = meQuery.data?.csrfToken ?? ''
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin'] })
+  const admissionErrorMessage = (error: Error) =>
+    t(
+      error instanceof ApiError &&
+        error.errors.some((entry) => entry.code === 'last_department_head')
+        ? 'departments.members.adminLastHead'
+        : 'admin.console.operationFailed',
+    )
+  const admissionError = (error: Error) => toast.error(admissionErrorMessage(error))
 
   const lock = useMutation({
     mutationFn: () => lockUser(lockTarget!.id, reason, csrfToken),
@@ -166,7 +174,7 @@ function AccountsBody() {
       setReason('')
       invalidate()
     },
-    onError: () => toast(t('admin.console.operationFailed')),
+    onError: admissionError,
   })
   const unlock = useMutation({
     mutationFn: (id: string) => unlockUser(id, csrfToken),
@@ -194,7 +202,7 @@ function AccountsBody() {
       setAnonymizeTarget(null)
       invalidate()
     },
-    onError: () => toast(t('admin.console.operationFailed')),
+    onError: admissionError,
   })
   const correctIdentity = useMutation({
     mutationFn: () =>
@@ -335,13 +343,17 @@ function AccountsBody() {
                         user={u}
                         busy={rowBusy}
                         onLock={() => {
+                          lock.reset()
                           setReason('')
                           setLockTarget(u)
                         }}
                         onUnlock={() => unlock.mutate(u.id)}
                         onResetPassword={() => resetPassword.mutate(u.id)}
                         onForceTwoFactorReset={() => forceReset2fa.mutate(u.id)}
-                        onAnonymize={() => setAnonymizeTarget(u)}
+                        onAnonymize={() => {
+                          anonymize.reset()
+                          setAnonymizeTarget(u)
+                        }}
                       />
                     </td>
                   </StaggerItem>
@@ -376,6 +388,11 @@ function AccountsBody() {
       <Dialog open={lockTarget !== null} onOpenChange={(open) => !open && setLockTarget(null)}>
         <DialogContent title={t('admin.console.accounts.lockDialogTitle')}>
           <div className="flex flex-col gap-3 pt-4">
+            {lock.isError ? (
+              <p role="alert" className="text-small text-destructive">
+                {admissionErrorMessage(lock.error)}
+              </p>
+            ) : null}
             <label className="flex flex-col gap-1.5">
               <span className="text-small text-foreground">
                 {t('admin.console.accounts.lockReasonLabel')}
@@ -423,6 +440,11 @@ function AccountsBody() {
       >
         <DialogContent title={t('admin.console.accounts.anonymizeDialogTitle')}>
           <div className="flex flex-col gap-3 pt-4">
+            {anonymize.isError ? (
+              <p role="alert" className="text-small text-destructive">
+                {admissionErrorMessage(anonymize.error)}
+              </p>
+            ) : null}
             <p className="font-medium text-foreground">
               {anonymizeTarget?.givenName} {anonymizeTarget?.familyName}
               {anonymizeTarget ? ` (@${anonymizeTarget.login})` : ''}

@@ -79,6 +79,7 @@ for (const role of ['head', 'member'] as const) {
       await expect(checkbox).not.toBeChecked()
       await checkbox.click()
       await expect(checkbox).toBeChecked()
+      await expect(page.getByText('Checklist complete', { exact: true })).toBeVisible()
       await expect
         .poll(async () => {
           const saved = (await (
@@ -95,6 +96,7 @@ for (const role of ['head', 'member'] as const) {
       await expect(
         dialog.getByRole('checkbox', { name: 'Review guide', exact: true }),
       ).toBeChecked()
+      await expect(page.getByText('Checklist complete', { exact: true })).toHaveCount(0)
       await dialog.getByRole('button', { name: 'Close', exact: true }).click()
       await page.goto('/work/mine')
       await page

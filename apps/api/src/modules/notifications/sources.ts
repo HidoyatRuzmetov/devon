@@ -88,9 +88,9 @@ async function departmentName(tx: Tx, departmentId: string | null): Promise<stri
 async function headsOf(tx: Tx, departmentId: string | null): Promise<string[]> {
   if (!departmentId) return []
   const rows = await tx.raw<{ user_id: string }>(
-    sql`select user_id from app.memberships
-        where department_id = ${departmentId} and role = 'head' and status = 'active'
-          and deleted_at is null`,
+    sql`select m.user_id from app.memberships m join app.users u on u.id=m.user_id
+        where m.department_id = ${departmentId} and m.role = 'head' and m.status = 'active'
+          and m.deleted_at is null and u.status='active' and u.deleted_at is null`,
   )
   return rows.map((r) => r.user_id)
 }

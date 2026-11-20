@@ -279,11 +279,13 @@ export async function getCard(
   ctx: RequestContext,
   departmentId: string,
   cardId: string,
+  includeDeleted = false,
 ): Promise<CardDTO | null> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<CardRow>(
       sql`${cardSelect(ctx.userId)}
-          where c.department_id = ${departmentId} and c.id = ${cardId} and c.deleted_at is null`,
+          where c.department_id = ${departmentId} and c.id = ${cardId}
+          ${includeDeleted ? sql`` : sql`and c.deleted_at is null`}`,
     )
     return rows[0] ? toCardDTO(rows[0]) : null
   })
@@ -325,6 +327,7 @@ export async function getCardOwners(
   ctx: RequestContext,
   departmentId: string,
   cardId: string,
+  includeDeleted = false,
 ): Promise<CardOwners | null> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
@@ -334,7 +337,8 @@ export async function getCardOwners(
     }>(sql`
       select created_by_user_id, giver_user_id, assignee_user_id
       from app.cards
-      where id = ${cardId} and department_id = ${departmentId} and deleted_at is null
+      where id = ${cardId} and department_id = ${departmentId}
+        ${includeDeleted ? sql`` : sql`and deleted_at is null`}
     `)
     const row = rows[0]
     if (!row) return null
@@ -375,11 +379,19 @@ export async function cardExists(
   return withContext(ctx, async (tx) => cardIsVisible(tx, departmentId, cardId))
 }
 
-export async function getChecklist(ctx: RequestContext, cardId: string) {
-  return getChecklists(ctx, [cardId])
+export async function getChecklist(
+  ctx: RequestContext,
+  cardId: string,
+  includeDeletedCard = false,
+) {
+  return getChecklists(ctx, [cardId], includeDeletedCard)
 }
 
-export async function getChecklists(ctx: RequestContext, cardIds: string[]) {
+export async function getChecklists(
+  ctx: RequestContext,
+  cardIds: string[],
+  includeDeletedCard = false,
+) {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
       id: string
@@ -401,7 +413,8 @@ export async function getChecklists(ctx: RequestContext, cardIds: string[]) {
           exists(select 1 from app.checkin_entries e where e.checklist_item_id=i.id and e.removed_at is null) as deletion_protected
           from app.card_checklist_items i
           where card_id = any(${sql.param(cardIds)}::uuid[]) and deleted_at is null
-            and exists(select 1 from app.cards c where c.id=i.card_id and c.deleted_at is null)
+            and exists(select 1 from app.cards c where c.id=i.card_id and c.department_id=i.department_id
+              ${includeDeletedCard ? sql`` : sql`and c.deleted_at is null`})
           order by order_key asc, created_at asc, id asc`,
     )
     return rows.map((r) => ({
@@ -425,6 +438,7 @@ export async function getComments(
   ctx: RequestContext,
   cardId: string,
   checklistItemId: string | null = null,
+  includeChecklistThreads = false,
 ) {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
@@ -440,7 +454,12 @@ export async function getComments(
       sql`select id, card_id, checklist_item_id, author_user_id, body, mentions, edited_at, created_at
           from app.card_comments
           where card_id = ${cardId} and deleted_at is null
-            and checklist_item_id is not distinct from ${checklistItemId}::uuid
+            and ${
+              includeChecklistThreads
+                ? sql`(checklist_item_id is null or exists(select 1 from app.card_checklist_items i
+                  where i.id=checklist_item_id and i.card_id=${cardId} and i.deleted_at is null))`
+                : sql`checklist_item_id is not distinct from ${checklistItemId}::uuid`
+            }
           order by created_at asc, id asc`,
     )
     return rows.map((r) => ({
@@ -455,6 +474,24 @@ export async function getComments(
       editedAt: r.edited_at ? new Date(r.edited_at).toISOString() : null,
       createdAt: new Date(r.created_at).toISOString(),
     }))
+  })
+}
+
+/** Resolve the retained identities on a specific card, including colleagues who left the roster. */
+export function getHistoricalAttribution(ctx: RequestContext, cardId: string) {
+  return withContext(ctx, async (tx) => {
+    const [record] = await tx.raw<{
+      projectTitle: string | null
+      people: { id: string; name: string }[]
+    }>(sql`
+      select p.title as "projectTitle", coalesce((
+        select json_agg(json_build_object('id',u.id,'name',trim(concat_ws(' ',u.given_name,u.family_name))))
+        from app.users u where u.id in (c.created_by_user_id,c.assignee_user_id,c.giver_user_id)
+          or exists(select 1 from app.card_comments m where m.card_id=c.id and m.author_user_id=u.id and m.deleted_at is null)
+      ),'[]') as people
+      from app.cards c left join app.projects p on p.id=c.project_id and p.department_id=c.department_id
+      where c.id=${cardId} and c.department_id=${ctx.departmentId}`)
+    return record
   })
 }
 

@@ -214,7 +214,7 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
       // per thousand rather than one per key (TECH-SPEC §16: "no query in a loop").
       const chunks: string[][] = []
       for (let i = 0; i < keys.length; i += 1000) chunks.push(keys.slice(i, i + 1000))
-      await Promise.all(
+      const responses = await Promise.all(
         chunks.map((chunk) =>
           storageBreaker.execute(() =>
             client.send(
@@ -227,6 +227,9 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
           ),
         ),
       )
+      if (responses.some((response) => response.Errors?.length)) {
+        throw new Error('Storage could not remove all requested objects')
+      }
     },
 
     async ping() {

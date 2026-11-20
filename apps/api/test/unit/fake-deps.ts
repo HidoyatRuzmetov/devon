@@ -65,6 +65,8 @@ export type FakeState = {
    * insertion order -- a test reads the status transitions (`pending` -> `finalized`/`rejected`/
    * `infected`/...) straight off these objects. */
   uploads: UploadRecord[]
+  erasedAccounts: Set<string>
+  avatarErasures: { id: string; userId: string; token: string }[]
 }
 
 export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
@@ -85,6 +87,8 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
     migrationsApplied: true,
     forceSetupRaceLoss: false,
     uploads: [],
+    erasedAccounts: new Set(),
+    avatarErasures: [],
     ...overrides,
   }
 }
@@ -311,17 +315,17 @@ export function createFakeDeps(state: FakeState): Deps {
     },
 
     async setUserAvatar(userId, next, ctx) {
+      if (state.erasedAccounts.has(userId)) return null
       const user = state.users.find((u) => u.id === userId)
       if (!user) throw new Error('user not found')
       const before = user.avatarKey
-      user.avatarKey = next.avatarKey
       if (next.uploadId) {
         const upload = state.uploads.find((u) => u.id === next.uploadId && u.userId === userId)
-        if (upload) {
-          upload.status = 'finalized'
-          upload.finalizedAt = new Date()
-        }
+        if (!upload || upload.status !== 'pending') return before === next.avatarKey ? user : null
+        upload.status = 'finalized'
+        upload.finalizedAt = new Date()
       }
+      user.avatarKey = next.avatarKey
       state.auditEvents.push({
         action: next.avatarKey ? 'accounts.avatar_updated' : 'accounts.avatar_removed',
         subjectType: 'user',
@@ -330,6 +334,24 @@ export function createFakeDeps(state: FakeState): Deps {
         after: { before: { avatarKey: before }, after: { avatarKey: user.avatarKey } },
       })
       return user
+    },
+
+    async isPublishedAvatar(userId, avatarKey) {
+      return (
+        !state.erasedAccounts.has(userId) &&
+        state.users.some((user) => user.id === userId && user.avatarKey === avatarKey)
+      )
+    },
+    async requeueAvatarIfErased(userId, uploadId) {
+      if (!state.erasedAccounts.has(userId)) return
+      state.avatarErasures = state.avatarErasures.filter((row) => row.id !== uploadId)
+      state.avatarErasures.push({ id: uploadId, userId, token: randomUUID() })
+    },
+    async listAvatarsForErasure(limit) {
+      return state.avatarErasures.slice(0, limit)
+    },
+    async acknowledgeAvatarErasure(tokens) {
+      state.avatarErasures = state.avatarErasures.filter((row) => !tokens.includes(row.token))
     },
 
     async expirePendingUploads(before, limit) {

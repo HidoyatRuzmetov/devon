@@ -138,6 +138,7 @@ const inviteViewSchema = z.object({
   joinUrl: z.string().nullable(),
   joinRequiresApproval: z.boolean(),
   hasPassword: z.boolean(),
+  revision: z.number().int().positive().default(1),
 })
 export type InviteView = z.infer<typeof inviteViewSchema>
 export function fetchInvite(id: string) {
@@ -155,15 +156,15 @@ export function rotateJoinPassword(id: string, csrfToken: string) {
   return apiClient.post(
     `/api/v1/departments/${id}/invite/rotate-password`,
     {},
-    z.object({ password: z.string() }),
+    z.object({ password: z.string(), revision: z.number().int().positive() }),
     csrfToken,
   )
 }
 export function setJoinPassword(id: string, password: string, csrfToken: string) {
   return apiClient.post(
     `/api/v1/departments/${id}/invite/password`,
-    { password },
-    z.void(),
+    { password, returnRevision: true },
+    z.object({ revision: z.number().int().positive() }),
     csrfToken,
   )
 }
@@ -196,6 +197,8 @@ export function joinDepartment(key: string, password: string, csrfToken: string)
 
 const memberSchema = z.object({
   userId: z.string().uuid(),
+  version: z.number().int().positive().default(1),
+  accountStatus: z.enum(['active', 'locked', 'deleted']).default('active'),
   givenName: z.string(),
   familyName: z.string(),
   patronymic: z.string().nullable(),
@@ -221,6 +224,19 @@ export function removeMember(id: string, userId: string, csrfToken: string) {
 }
 export function leaveDepartment(id: string, csrfToken: string) {
   return apiClient.post(`/api/v1/departments/${id}/leave`, {}, z.void(), csrfToken)
+}
+export function setMemberRole(
+  id: string,
+  member: Member,
+  role: 'head' | 'member',
+  csrfToken: string,
+) {
+  return apiClient.patch(
+    `/api/v1/departments/${id}/members/${member.userId}/role`,
+    { role, expectedVersion: member.version },
+    z.void(),
+    csrfToken,
+  )
 }
 export function transferHeadship(id: string, userId: string, csrfToken: string) {
   return apiClient.post(

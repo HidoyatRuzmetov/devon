@@ -7,13 +7,19 @@ import { useRestoreCardMutation } from '../hooks.js'
 import { ApiError } from '../../../lib/api-client.js'
 import { useProjectRestoreDetails, useRestoreProjectAndCardMutation } from '../../projects/hooks.js'
 
-export function RestoreCardButton({ card }: { card: Card }) {
+export function RestoreCardButton({
+  card,
+  canRestore = card.canEdit !== false,
+}: {
+  card: Card
+  canRestore?: boolean | undefined
+}) {
   const t = useT()
   const restore = useRestoreCardMutation()
   const [projectPrompt, setProjectPrompt] = React.useState(false)
   const project = useProjectRestoreDetails(projectPrompt ? card.projectId : null)
   const restoreGroup = useRestoreProjectAndCardMutation()
-  const denied = card.canEdit === false
+  const denied = !canRestore
   return (
     <>
       <span

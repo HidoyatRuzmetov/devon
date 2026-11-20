@@ -4,11 +4,13 @@
 // audit + outbox rows, the retention sweep) by driving the same HTTP flow end to end through
 // `createRepo()` on a migrated Testcontainers database, with the local-disk storage driver in a temp
 // directory. Run with `pnpm --filter @devon/api avatar:prove`.
-import { mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Client } from 'pg'
 import sharp from 'sharp'
+import type { AuditCtx } from '../../src/types.js'
 import { startProveDatabase } from './pg-fixture.js'
 import { startProveServer } from './server-fixture.js'
 import { step, assertEqual, assertTrue, parseCookies, cookieHeader } from './http.js'
@@ -49,6 +51,14 @@ async function main(): Promise<void> {
     assertEqual(registered.csrfToken, csrf, 'register body csrfToken equals the devon_csrf cookie')
     assertTrue(csrf.length > 20, 'csrf token is non-trivial')
     const userId = registered.user.id
+    const ctx: AuditCtx = {
+      requestId: randomUUID(),
+      userId,
+      actorRole: 'member',
+      actingForUserId: null,
+      ip: '127.0.0.1',
+      userAgent: 'Local proof',
+    }
     const authed = { cookie, 'x-csrf-token': csrf }
 
     step('POST /accounts/avatar/upload-url -> app.uploads row (pending)')
@@ -179,6 +189,18 @@ async function main(): Promise<void> {
     assertEqual(sweptRow.rows[0]?.status, 'expired', 'app.uploads.status after sweep')
 
     step('DELETE /accounts/avatar clears avatar_key (setUserAvatar SQL, null branch)')
+    await sql.query('update app.users set deleted_at=now() where id=$1', [userId])
+    assertEqual(
+      await server.deps.isPublishedAvatar(userId, prefix),
+      true,
+      'ordinary tombstone preserves the last photo for authorized history',
+    )
+    assertEqual(
+      (await server.deps.listAvatarsForErasure(20)).length,
+      0,
+      'administrative tombstone does not queue a purge',
+    )
+    await sql.query('update app.users set deleted_at=null where id=$1', [userId])
     const del = await fetch(`${server.baseUrl}/api/v1/accounts/avatar`, {
       method: 'DELETE',
       headers: authed,
@@ -193,6 +215,80 @@ async function main(): Promise<void> {
       },
     )
     assertEqual(gone.status, 404, 'variant gone after removal')
+    assertEqual(
+      await server.deps.setUserAvatar(
+        userId,
+        { avatarKey: prefix, uploadId: presigned.uploadId },
+        ctx,
+      ),
+      null,
+      'duplicate late finalizer cannot republish a removed photo',
+    )
+    assertTrue(
+      existsSync(join(storageDir, prefix, '512.webp')),
+      'approved variant retained privately',
+    )
+
+    step(
+      'only explicit completed erasure queues avatar bytes and a late writer requeues its own receipt',
+    )
+    const pending = (await (
+      await fetch(`${server.baseUrl}/api/v1/accounts/avatar/upload-url`, {
+        method: 'POST',
+        headers: { ...authed, 'content-type': 'application/json' },
+        body: JSON.stringify({ contentType: 'image/png', size: png.length }),
+      })
+    ).json()) as { uploadId: string }
+    await sql.query(
+      'insert into app.account_deletion_requests (user_id,scheduled_for) values ($1,now())',
+      [userId],
+    )
+    assertEqual(
+      (await server.deps.listAvatarsForErasure(20)).length,
+      0,
+      'a request during the grace period does not erase',
+    )
+    await sql.query(
+      'update app.account_deletion_requests set completed_at=now() where user_id=$1',
+      [userId],
+    )
+    assertEqual(
+      (await server.deps.listAvatarsForErasure(20)).length,
+      0,
+      'a signed PUT must expire before the final byte purge',
+    )
+    await sql.query(
+      "update app.uploads set expires_at=now()-interval '1 second' where user_id=$1",
+      [userId],
+    )
+    const receipts = await server.deps.listAvatarsForErasure(20)
+    assertTrue(
+      receipts.some((row) => row.id === presigned.uploadId),
+      'completion queued the retired upload',
+    )
+    const queued = receipts.find((row) => row.id === pending.uploadId)
+    assertTrue(Boolean(queued), 'completion queued the pending upload')
+    await server.deps.acknowledgeAvatarErasure(receipts.map((r) => r.token))
+    const late = await server.deps.setUserAvatar(
+      userId,
+      { avatarKey: `avatars/${userId}/${pending.uploadId}`, uploadId: pending.uploadId },
+      ctx,
+    )
+    assertEqual(late, null, 'a late finalizer is refused')
+    await server.deps.acknowledgeAvatarErasure([queued!.token])
+    const retry = (await server.deps.listAvatarsForErasure(20)).find(
+      (row) => row.id === pending.uploadId,
+    )
+    assertTrue(
+      Boolean(retry && retry.token !== queued!.token),
+      'a prior storage receipt cannot consume the later write',
+    )
+    await server.deps.acknowledgeAvatarErasure([retry!.token])
+    assertEqual(
+      (await server.deps.listAvatarsForErasure(20)).length,
+      0,
+      'current receipt acknowledged',
+    )
 
     console.log('\navatar:prove PASSED')
   } finally {

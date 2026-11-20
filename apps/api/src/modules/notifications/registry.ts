@@ -295,6 +295,18 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     notify: false,
     why: 'Membership invalidation refreshes access and directories; the specific membership decision events supply notifications.',
   },
+  'departments.settings.updated': {
+    notify: false,
+    why: 'Department settings refresh for every head and member without an inbox item.',
+  },
+  'departments.features.updated': {
+    notify: false,
+    why: 'Capability changes refresh every open department workspace.',
+  },
+  'departments.invite.changed': {
+    notify: false,
+    why: 'Co-head invitation changes refresh the invitation and hide stale revealed credentials.',
+  },
   'accounts.profile.updated': {
     notify: false,
     why: 'Self-service identity edits update the directory without notifying every colleague.',

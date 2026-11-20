@@ -662,8 +662,8 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   // Any signed-in user may see any user's photo: it is `public`-tier profile data within the
   // instance, exactly like the name it sits beside (design.md §3.2). v1.1 added `{kind:'authenticated'}`
   // to `can()` so that statement is the subject itself (PERMISSIONS-AUDIT D11).
-  // Content-addressed by upload id (a new photo is always a new URL), so the variant is immutable and
-  // cacheable for a day; no database read happens here at all.
+  // Each eligible account has one published version. Removed and replaced versions
+  // stay private even if a colleague has saved an old photo URL.
   app.get(
     '/avatar/:userId/:uploadId/:size',
     {
@@ -682,7 +682,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const { userId, uploadId, size } = req.params
-      const key = avatarVariantKey(avatarKeyPrefix(userId, uploadId), Number(size))
+      const prefix = avatarKeyPrefix(userId, uploadId)
+      if (!(await app.devon.isPublishedAvatar(userId, prefix)))
+        return sendProblem(reply, 'not_found')
+      const key = avatarVariantKey(prefix, Number(size))
       const bytes = await app.storage.store.get(key, {
         maxBytes: AVATAR_VARIANT_MAX_BYTES,
       })
@@ -693,7 +696,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       reply
         .header('content-type', 'image/webp')
         .header('content-length', bytes.length)
-        .header('cache-control', 'private, max-age=86400, immutable')
+        .header('cache-control', 'private, no-store')
         .header('x-content-type-options', 'nosniff')
         .send(bytes)
     },

@@ -21,6 +21,11 @@ import type { AuditCtx } from '../../types.js'
 import type { Locale } from '../../schemas.js'
 import type { CreateDepartmentRequestBody } from './schemas.js'
 import { requestedUnitColour } from './unit-colour.js'
+import {
+  hasOtherActiveHead,
+  LastDepartmentHeadError,
+  lockDepartmentHeads,
+} from '../../lib/department-heads.js'
 
 export type DepartmentUnit = { name: string; colour?: string }
 
@@ -526,6 +531,8 @@ export async function updateDepartmentSettings(
   ctx: AuditCtx,
 ): Promise<void> {
   await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    // Merge independent edits from different heads against the latest committed settings.
+    await tx.raw(sql`select id from app.departments where id=${departmentId} for update`)
     const dept = await selectDepartmentCore(tx, departmentId)
     if (!dept) throw new Error('department not found')
     const merged = normalizeSettings(dept.settings)
@@ -561,6 +568,11 @@ export async function updateDepartmentSettings(
       departmentId,
       after: patch as Record<string, unknown>,
     })
+    tx.emit({
+      type: 'departments.settings.updated',
+      departmentId,
+      payload: { actorUserId: userId },
+    })
   })
 }
 
@@ -589,6 +601,7 @@ export async function getInvite(
   joinKey: string | null
   joinRequiresApproval: boolean
   hasPassword: boolean
+  revision: number
 } | null> {
   return withContext(
     deptCtx(
@@ -608,8 +621,9 @@ export async function getInvite(
         join_key: string | null
         join_requires_approval: boolean
         join_password_hash: string | null
+        version: number
       }>(
-        sql`select join_key, join_requires_approval, join_password_hash from app.departments where id = ${departmentId}`,
+        sql`select join_key, join_requires_approval, join_password_hash, version from app.departments where id = ${departmentId}`,
       )
       const row = rows[0]
       if (!row) return null
@@ -617,6 +631,7 @@ export async function getInvite(
         joinKey: row.join_key,
         joinRequiresApproval: row.join_requires_approval,
         hasPassword: row.join_password_hash !== null,
+        revision: row.version,
       }
     },
   )
@@ -625,23 +640,33 @@ export async function getInvite(
 export async function rotateJoinKey(departmentId: string, ctx: AuditCtx): Promise<string> {
   const joinKey = generateJoinKey()
   await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
-    await tx.raw(sql`update app.departments set join_key = ${joinKey} where id = ${departmentId}`)
+    const rows = await tx.raw<{ version: number }>(
+      sql`update app.departments set join_key = ${joinKey}, version=version+1 where id = ${departmentId} returning version`,
+    )
     tx.audit({
       action: 'departments.invite_key_rotated',
       subjectType: 'department',
       subjectId: departmentId,
       departmentId,
     })
+    tx.emit({
+      type: 'departments.invite.changed',
+      departmentId,
+      payload: { actorUserId: ctx.userId, revision: rows[0]!.version },
+    })
   })
   return joinKey
 }
 
-export async function rotateJoinPassword(departmentId: string, ctx: AuditCtx): Promise<string> {
+export async function rotateJoinPassword(
+  departmentId: string,
+  ctx: AuditCtx,
+): Promise<{ password: string; revision: number }> {
   const password = generateJoinPassword()
   const hash = await hashPassword(password)
-  await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
-    await tx.raw(
-      sql`update app.departments set join_password_hash = ${hash} where id = ${departmentId}`,
+  const revision = await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    const rows = await tx.raw<{ version: number }>(
+      sql`update app.departments set join_password_hash = ${hash}, version=version+1 where id = ${departmentId} returning version`,
     )
     tx.audit({
       action: 'departments.invite_password_rotated',
@@ -649,19 +674,25 @@ export async function rotateJoinPassword(departmentId: string, ctx: AuditCtx): P
       subjectId: departmentId,
       departmentId,
     })
+    tx.emit({
+      type: 'departments.invite.changed',
+      departmentId,
+      payload: { actorUserId: ctx.userId, revision: rows[0]!.version },
+    })
+    return rows[0]!.version
   })
-  return password
+  return { password, revision }
 }
 
 export async function setJoinPassword(
   departmentId: string,
   password: string,
   ctx: AuditCtx,
-): Promise<void> {
+): Promise<number> {
   const hash = await hashPassword(password)
-  await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
-    await tx.raw(
-      sql`update app.departments set join_password_hash = ${hash} where id = ${departmentId}`,
+  return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    const rows = await tx.raw<{ version: number }>(
+      sql`update app.departments set join_password_hash = ${hash}, version=version+1 where id = ${departmentId} returning version`,
     )
     tx.audit({
       action: 'departments.invite_password_set',
@@ -669,6 +700,12 @@ export async function setJoinPassword(
       subjectId: departmentId,
       departmentId,
     })
+    tx.emit({
+      type: 'departments.invite.changed',
+      departmentId,
+      payload: { actorUserId: ctx.userId, revision: rows[0]!.version },
+    })
+    return rows[0]!.version
   })
 }
 
@@ -687,6 +724,11 @@ export async function setJoinApproval(
       subjectId: departmentId,
       departmentId,
       after: { joinRequiresApproval },
+    })
+    tx.emit({
+      type: 'departments.settings.updated',
+      departmentId,
+      payload: { actorUserId: ctx.userId },
     })
   })
 }
@@ -797,7 +839,7 @@ export async function joinByKeyAndPassword(
       status: 'active' | 'pending_approval' | 'removed'
     }>(
       sql`select status from app.memberships
-          where department_id = ${dept.id} and user_id = ${userId} and deleted_at is null`,
+          where department_id = ${dept.id} and user_id = ${userId} and deleted_at is null for update`,
     )
     if (existing[0] && existing[0].status !== 'removed') {
       return { ok: true, departmentId: dept.id, status: existing[0].status }
@@ -809,13 +851,23 @@ export async function joinByKeyAndPassword(
     // it is retargeted here, inside the same transaction (`SET LOCAL` semantics, still scoped to this
     // transaction alone), now that `dept.id` is.
     await tx.raw(sql`select set_config('app.department_id', ${dept.id}, true)`)
-    await tx.raw(
+    const joined = await tx.raw<{ status: 'active' | 'pending_approval' }>(
       sql`insert into app.memberships (department_id, user_id, role, status)
           values (${dept.id}, ${userId}, 'member', ${status})
           on conflict (department_id, user_id) where deleted_at is null
-          do update set status = excluded.status, left_at = null,
-                        version = app.memberships.version + 1, updated_at = now()`,
+          do update set status = excluded.status, role = 'member', left_at = null,
+                        version = app.memberships.version + 1, updated_at = now()
+          where app.memberships.status = 'removed'
+          returning status`,
     )
+    if (!joined.length) {
+      const [current] = await tx.raw<{ status: 'active' | 'pending_approval' }>(sql`
+        select status from app.memberships where department_id=${dept.id} and user_id=${userId}
+          and deleted_at is null`)
+      return current
+        ? { ok: true, departmentId: dept.id, status: current.status }
+        : { ok: false, reason: 'invalid' }
+    }
     tx.audit({
       action: 'departments.joined',
       subjectType: 'membership',
@@ -837,6 +889,8 @@ export async function joinByKeyAndPassword(
 
 export type MemberRow = {
   userId: string
+  version: number
+  accountStatus: 'active' | 'locked' | 'deleted'
   givenName: string
   familyName: string
   patronymic: string | null
@@ -869,6 +923,8 @@ export async function listMembers(
       const rows = await tx.drizzle
         .select({
           userId: schema.memberships.userId,
+          version: schema.memberships.version,
+          accountStatus: schema.users.status,
           role: schema.memberships.role,
           status: schema.memberships.status,
           joinedAt: schema.memberships.joinedAt,
@@ -898,6 +954,14 @@ export async function removeMember(
   ctx: AuditCtx,
 ): Promise<boolean> {
   return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    await lockDepartmentHeads(tx, departmentId)
+    const locked = await lockLeadershipMembers(tx, departmentId, ctx.userId, targetUserId)
+    if (!locked || targetUserId === ctx.userId || locked.target.status === 'removed') return false
+    if (
+      locked.target.role === 'head' &&
+      !(await hasOtherActiveHead(tx, departmentId, targetUserId))
+    )
+      throw new LastDepartmentHeadError()
     const rows = await tx.drizzle
       .update(schema.memberships)
       .set({
@@ -910,6 +974,7 @@ export async function removeMember(
         and(
           eq(schema.memberships.departmentId, departmentId),
           eq(schema.memberships.userId, targetUserId),
+          isNull(schema.memberships.deletedAt),
         ),
       )
       .returning({ id: schema.memberships.id })
@@ -933,7 +998,7 @@ export async function leaveDepartment(
   departmentId: string,
   userId: string,
   ctx: AuditCtx,
-): Promise<{ ok: true } | { ok: false; reason: 'is_only_head' }> {
+): Promise<{ ok: true } | { ok: false; reason: 'is_only_head' | 'membership_changed' }> {
   return withContext(deptCtx(ctx, departmentId, 'member'), async (tx) => {
     const own = await tx.drizzle
       .select({ role: schema.memberships.role })
@@ -942,11 +1007,19 @@ export async function leaveDepartment(
         and(
           eq(schema.memberships.departmentId, departmentId),
           eq(schema.memberships.userId, userId),
+          eq(schema.memberships.status, 'active'),
+          isNull(schema.memberships.deletedAt),
         ),
       )
       .limit(1)
-    if (own[0]?.role === 'head') {
-      return { ok: false, reason: 'is_only_head' as const }
+    if (!own.length) return { ok: true }
+    const wasHead = own[0]?.role === 'head'
+    if (wasHead) {
+      await lockDepartmentHeads(tx, departmentId)
+      const locked = await lockLeadershipMembers(tx, departmentId, userId, userId)
+      if (!locked) return { ok: false, reason: 'membership_changed' }
+      if (!(await hasOtherActiveHead(tx, departmentId, userId)))
+        return { ok: false, reason: 'is_only_head' as const }
     }
     const left = await tx.drizzle
       .update(schema.memberships)
@@ -961,11 +1034,12 @@ export async function leaveDepartment(
           eq(schema.memberships.departmentId, departmentId),
           eq(schema.memberships.userId, userId),
           eq(schema.memberships.status, 'active'),
+          eq(schema.memberships.role, wasHead ? 'head' : 'member'),
           isNull(schema.memberships.deletedAt),
         ),
       )
       .returning({ id: schema.memberships.id })
-    if (!left.length) return { ok: true }
+    if (!left.length) return { ok: false, reason: 'membership_changed' }
     tx.audit({
       action: 'departments.left',
       subjectType: 'membership',
@@ -989,6 +1063,7 @@ export async function transferHeadship(
 ): Promise<boolean> {
   if (fromUserId !== ctx.userId || fromUserId === toUserId) return false
   return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    await lockDepartmentHeads(tx, departmentId)
     // Account locks precede membership locks in the same sorted order as password reset and
     // account administration. Every eligibility check belongs to this writing transaction.
     const users = await tx.raw<{ id: string; status: string; role: string; deleted: boolean }>(sql`
@@ -1055,6 +1130,81 @@ export async function transferHeadship(
       type: 'departments.membership.changed',
       departmentId,
       payload: { userIds: [fromUserId, toUserId], actorUserId: ctx.userId },
+    })
+    return true
+  })
+}
+
+type LeadershipMembership = {
+  user_id: string
+  role: 'head' | 'member'
+  status: string
+  version: number
+}
+
+/** Eligibility is re-read in the writing transaction: a request admitted before demotion cannot
+ * appoint another head afterwards. Account locks precede membership locks, both sorted by user. */
+async function lockLeadershipMembers(
+  tx: Tx,
+  departmentId: string,
+  actorId: string | null,
+  targetId: string,
+) {
+  if (!actorId) return null
+  const users = await tx.raw<{ id: string; status: string; role: string; deleted: boolean }>(sql`
+    select id,status,role,deleted_at is not null as deleted from app.users
+    where id in (${actorId},${targetId}) order by id for share`)
+  const actor = users.find((user) => user.id === actorId)
+  const targetUser = users.find((user) => user.id === targetId)
+  if (
+    !actor ||
+    actor.status !== 'active' ||
+    actor.deleted ||
+    !targetUser ||
+    targetUser.role === 'super_admin'
+  )
+    return null
+  const memberships = await tx.raw<LeadershipMembership>(sql`
+    select user_id,role,status,version from app.memberships
+    where department_id=${departmentId} and user_id in (${actorId},${targetId})
+      and deleted_at is null order by user_id for update`)
+  const acting = memberships.find((member) => member.user_id === actorId)
+  const target = memberships.find((member) => member.user_id === targetId)
+  if (!acting || acting.role !== 'head' || acting.status !== 'active' || !target) return null
+  return { target, targetUser }
+}
+
+export async function setMemberRole(
+  departmentId: string,
+  targetUserId: string,
+  role: 'head' | 'member',
+  expectedVersion: number,
+  ctx: AuditCtx,
+): Promise<boolean> {
+  return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    await lockDepartmentHeads(tx, departmentId)
+    const locked = await lockLeadershipMembers(tx, departmentId, ctx.userId, targetUserId)
+    if (!locked || locked.target.status !== 'active' || locked.target.version !== expectedVersion)
+      return false
+    if (role === 'head' && (locked.targetUser.status !== 'active' || locked.targetUser.deleted))
+      return false
+    if (locked.target.role === role) return true
+    if (role === 'member' && !(await hasOtherActiveHead(tx, departmentId, targetUserId)))
+      throw new LastDepartmentHeadError()
+    await tx.raw(sql`update app.memberships set role=${role},version=version+1,updated_at=now()
+      where department_id=${departmentId} and user_id=${targetUserId} and deleted_at is null`)
+    tx.audit({
+      action: 'departments.member_role_changed',
+      subjectType: 'membership',
+      subjectId: targetUserId,
+      departmentId,
+      before: { role: locked.target.role, version: expectedVersion },
+      after: { role, version: expectedVersion + 1 },
+    })
+    tx.emit({
+      type: 'departments.membership.changed',
+      departmentId,
+      payload: { userId: targetUserId, role, actorUserId: ctx.userId },
     })
     return true
   })
@@ -1221,7 +1371,7 @@ export async function updateFeatures(
 ): Promise<FeatureFlags> {
   return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
     const before = await tx.raw<{ features: unknown }>(
-      sql`select features from app.departments where id = ${departmentId}`,
+      sql`select features from app.departments where id = ${departmentId} for update`,
     )
     const previous = resolveFeatures(before[0]?.features)
     const merged = { ...previous, ...patch }
@@ -1236,6 +1386,11 @@ export async function updateFeatures(
       departmentId,
       before: previous,
       after: merged,
+    })
+    tx.emit({
+      type: 'departments.features.updated',
+      departmentId,
+      payload: { actorUserId: ctx.userId },
     })
     return merged
   })

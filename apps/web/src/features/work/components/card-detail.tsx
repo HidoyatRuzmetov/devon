@@ -81,6 +81,7 @@ import { useCheckinChange, useCheckins } from '../../analytics/checkins-api.js'
 import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import { CardAttachments } from './card-attachments.js'
+import { DeletedCardDetail } from './deleted-card-detail.js'
 import { CardLinkLabel } from './card-link-label.js'
 import { ChecklistRow } from './checklist-row.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
@@ -533,6 +534,27 @@ export function CardDetailContent({
   }
 
   const project = projects.find((candidate) => candidate.id === card.projectId)
+
+  if (card.deletedAt) {
+    return (
+      <DeletedCardDetail
+        card={card}
+        members={members}
+        projectTitle={project?.title}
+        onClose={onClose}
+        presentation={presentation}
+      >
+        {card.activity.length > 0 ? (
+          <DetailDisclosure
+            title={`${t('work.field.activity')} (${card.activity.length})`}
+            icon={SlidersHorizontal}
+          >
+            <ActivityTimeline activity={card.activity} members={members} locale={locale} />
+          </DetailDisclosure>
+        ) : null}
+      </DeletedCardDetail>
+    )
+  }
 
   return (
     <div
@@ -1289,6 +1311,7 @@ function Checklist({
   card: {
     id: string
     status: 'active' | 'done'
+    version: number
     doneAt: string | null
     assigneeUserId: string | null
     title: string
@@ -1316,20 +1339,7 @@ function Checklist({
   const childrenOf = (id: string) => card.checklist.filter((i) => i.parentItemId === id)
   const done = card.checklist.filter((i) => i.doneAt !== null).length
 
-  // UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": the checklist itself gets a
-  // celebration too, the moment its *last* item lands -- not on every render of an already-full
-  // checklist (a card reopened later, or a sibling item added after completion resets `done` below
-  // `card.checklist.length` and un-arms this until it fills again).
   const checklistCelebrate = useCelebrate()
-  const wasChecklistComplete = React.useRef(false)
-  const checklistComplete = card.checklist.length > 0 && done === card.checklist.length
-  React.useEffect(() => {
-    if (checklistComplete && !wasChecklistComplete.current) {
-      checklistCelebrate.fire()
-      toast(t('work.card.checklistComplete'))
-    }
-    wasChecklistComplete.current = checklistComplete
-  }, [checklistComplete]) // eslint-disable-line react-hooks/exhaustive-deps -- fire on transition only
 
   const subtasksEnabled = useAiFeatureEnabled('subtask_breakdown')
   const subtaskAi = useRunAiFeatureMutation('subtask_breakdown')
@@ -1392,7 +1402,20 @@ function Checklist({
           item={item}
           canEdit={canEdit}
           onSave={(text) => patchItem.mutateAsync({ itemId: item.id, patch: { text } })}
-          onToggle={(done) => patchItem.mutate({ itemId: item.id, patch: { done } })}
+          onToggle={(checked) => {
+            const completesChecklist = checked && !item.doneAt && done + 1 === card.checklist.length
+            patchItem.mutate(
+              { itemId: item.id, patch: { done: checked } },
+              {
+                onSuccess: () => {
+                  if (completesChecklist) {
+                    checklistCelebrate.fire()
+                    toast(t('work.card.checklistComplete'))
+                  }
+                },
+              },
+            )
+          }}
           onDelete={() => deleteItem.mutate(item.id)}
           checkin={
             checkins.data?.members.some((member) => member.userId === assignee)

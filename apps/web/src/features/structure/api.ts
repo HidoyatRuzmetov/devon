@@ -58,6 +58,7 @@ export const memberSchema = z.object({
   resumeUpdatedAt: z.string().nullable().optional(),
   personnelUpdatedAt: z.string().nullable().optional(),
   membershipRole: membershipRoleSchema,
+  accountStatus: z.enum(['active', 'locked', 'deleted']).optional(),
   unitId: z.string().nullable(),
   unitRole: unitRoleKindSchema.nullable(),
 })

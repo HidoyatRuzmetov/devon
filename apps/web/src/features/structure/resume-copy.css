@@ -4,15 +4,27 @@
   min-width: 0;
   min-height: 24px;
   align-items: baseline;
-  column-gap: 0.3rem;
+  column-gap: 0.375rem;
   border-radius: var(--radius-sm);
   text-align: start;
   cursor: copy;
-  transition: background-color 150ms ease-out;
+  transition: box-shadow 150ms ease-out;
 }
-.resume-copy:hover,
-.resume-copy:focus-visible {
-  background-color: var(--color-accent);
+@layer components {
+  .resume-copy {
+    padding: 0.125rem 0.375rem;
+  }
+}
+:where(h2, p, dd) > .resume-copy:first-child {
+  position: relative;
+  inset-inline-start: -0.375rem;
+}
+@media (hover: hover) {
+  .resume-copy:hover {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-foreground) 12%, transparent),
+      0 1px 3px rgb(0 0 0 / 8%);
+  }
 }
 .resume-copy:focus-visible {
   outline: 2px solid var(--color-ring);
@@ -44,9 +56,6 @@
   opacity: 0;
   color: var(--color-success-text);
   transform: scale(0.7) rotate(-12deg);
-}
-.resume-copy[data-copied] {
-  background-color: color-mix(in oklab, var(--color-success) 12%, transparent);
 }
 .resume-copy[data-copied] .resume-copy-glyph {
   opacity: 0;

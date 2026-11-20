@@ -58,6 +58,7 @@ import {
   rotateJoinPassword,
 } from './api.js'
 import { PendingRequestView } from './components/pending-request-view.js'
+import { useInvitePassword } from './use-invite-refresh.js'
 
 function ChoiceCard({
   illustration,
@@ -120,7 +121,10 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
     queryKey: ['departments', 'invite', departmentId],
     queryFn: () => fetchInvite(departmentId),
   })
-  const [revealedPassword, setRevealedPassword] = React.useState<string | null>(null)
+  const [revealedPassword, revealPassword] = useInvitePassword(
+    departmentId,
+    inviteQuery.data?.revision,
+  )
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   // round2 SEV3 "copying the invite gives no inline confirmation animation (only a toast)": the
   // button itself morphs its icon to a check for a beat, the same "acted on, here is proof" shape
@@ -131,7 +135,7 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
   const rotatePassword = useMutation({
     mutationFn: () => rotateJoinPassword(departmentId, meQuery.data?.csrfToken ?? ''),
     onSuccess: (result) => {
-      setRevealedPassword(result.password)
+      revealPassword(result)
       setConfirmOpen(false)
       void queryClient.invalidateQueries({
         queryKey: ['departments', 'invite', departmentId],
@@ -304,7 +308,10 @@ function CurrentDepartmentCard({
     queryKey: ['departments', 'members', department.id],
     queryFn: () => fetchMembers(department.id),
   })
-  const head = membersQuery.data?.members.find((m) => m.role === 'head')
+  const heads =
+    membersQuery.data?.members.filter(
+      (m) => m.role === 'head' && m.status === 'active' && m.accountStatus === 'active',
+    ) ?? []
 
   // A plain if/else (not a JSX ternary chain) so no `>...<` boundary at the branch seam can ever be
   // mistaken for hard-coded text by `check-i18n.mjs`'s regex heuristic -- the same reasoning
@@ -312,17 +319,27 @@ function CurrentDepartmentCard({
   let headStat: React.ReactNode
   if (membersQuery.isPending) {
     headStat = <Skeleton className="h-5 w-24" />
-  } else if (head) {
+  } else if (membersQuery.isError) {
     headStat = (
-      <span className="flex items-center gap-2">
-        <Avatar
-          src={avatarUrl(head.avatarKey, 64)}
-          size="sm"
-          alt={`${head.givenName} ${head.familyName}`}
-          initials={initialsFromName(head.givenName, head.familyName)}
-          hueSeed={head.userId}
-        />
-        <span className="truncate">{`${head.givenName} ${head.familyName}`}</span>
+      <Button size="sm" variant="ghost" onClick={() => membersQuery.refetch()}>
+        {t('state.error.action')}
+      </Button>
+    )
+  } else if (heads.length) {
+    headStat = (
+      <span className="flex flex-col gap-3">
+        {heads.map((head) => (
+          <span key={head.userId} className="flex min-w-0 items-center gap-2">
+            <Avatar
+              src={avatarUrl(head.avatarKey, 64)}
+              size="sm"
+              alt={`${head.givenName} ${head.familyName}`}
+              initials={initialsFromName(head.givenName, head.familyName)}
+              hueSeed={head.userId}
+            />
+            <span className="min-w-0 break-words">{`${head.givenName} ${head.familyName}`}</span>
+          </span>
+        ))}
       </span>
     )
   } else {
@@ -343,7 +360,9 @@ function CurrentDepartmentCard({
             own "SIZNING ROLINGIZ" stat here. The badge already says it; this grid only needs the
             two facts it doesn't carry. */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Stat label={t('departments.hub.statHead')}>{headStat}</Stat>
+          <Stat label={t('departments.members.headsTitle', { count: heads.length })}>
+            {headStat}
+          </Stat>
           <Stat label={t('departments.hub.statMembers')}>
             <span className="flex items-center gap-1.5">
               <Users className="size-4 text-muted-foreground" aria-hidden="true" />

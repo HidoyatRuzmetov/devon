@@ -104,7 +104,7 @@
       "setPasswordSubmit": "Saqlash",
       "passwordRequirements": "Taklif paroli uchun 8–128 ta belgi kiriting.",
       "approvalToggleLabel": "Qoʻshilishni tasdiqlash",
-      "approvalToggleBody": "Yoqilgan boʻlsa, yangi xodimlar boshliq tasdigʻini kutadi.",
+      "approvalToggleBody": "Yoqilsa, har bir yangi a’zoni boshqarma boshliqlaridan biri tasdiqlashi kerak.",
       "passwordHiddenNotice": "Xavfsizlik uchun parol faqat yaratilgan yoki yangilangan paytda koʻrsatiladi.",
       "saveNowWarning": "Buni hozir saqlab qoʻying — keyinroq qayta koʻrsatilmaydi.",
       "linkDescription": "Bu havolani ochgan har kim boshqarmangizga qoʻshilishni soʻray oladi.",
@@ -123,14 +123,14 @@
         "passwordLabel": "Parol"
       },
       "submit": "Qoʻshilish",
-      "keyHint": "key= dan keyingi kalitni yoki toʻliq taklif havolasini kiriting. Boshligʻingiz bergan taklif parolini yozing.",
+      "keyHint": "key= dan keyingi kalitni yoki taklif havolasini to‘liq kiriting. Boshqarma boshliqlaridan biri bergan taklif parolini kiriting.",
       "success": "Boshqarmaga qoʻshildingiz",
-      "pendingApproval": "Soʻrovingizni boshliq tasdiqlashi kerak",
+      "pendingApproval": "So‘rovingiz boshqarma boshliqlaridan birining tasdig‘ini kutmoqda",
       "invalidKeyOrPassword": "Kalit yoki parol notoʻgʻri",
       "rateLimited": "Juda koʻp urinish boʻldi. Birozdan keyin qayta urinib koʻring.",
       "failed": "Soʻrovni bajarib boʻlmadi. Internet aloqasini tekshirib, qayta urinib koʻring.",
-      "pendingApprovalBody": "Boshqarma boshligʻiga xabar bordi. U tasdiqlagach bildirishnoma keladi va ishga kirishasiz.",
-      "approvalNotice": "Bu boshqarmaga qoʻshilish uchun boshliq tasdigʻi kerak.",
+      "pendingApprovalBody": "Boshqarma boshliqlariga bildirishnoma yuborildi. Ulardan biri so‘rovingizni tasdiqlagach, sizga bildirishnoma keladi va ish boshlashingiz mumkin.",
+      "approvalNotice": "Qo‘shilish uchun boshqarma boshliqlaridan birining tasdig‘i kerak.",
       "successBody": "Endi boshqarma ishiga kirishasiz."
     },
     "members": {
@@ -147,15 +147,28 @@
       "removedToast": "Xodim boshqarmadan chiqarildi",
       "leave": "Boshqarmadan chiqish",
       "leaveConfirm": "Rostdan ham boshqarmadan chiqmoqchimisiz?",
-      "leaveBlockedHead": "Avval boshliqlikni boshqa xodimga topshiring.",
+      "leaveBlockedHead": "Boshqarmada kamida bitta faol boshliq qolishi kerak. Chiqish yoki vakolatdan voz kechishdan oldin boshqa boshliq tayinlang yoki vakolatingizni topshiring.",
       "leftToast": "Boshqarmadan chiqdingiz",
       "transfer": "Boshliqlikni topshirish",
-      "transferConfirm": "Boshliqlik {name}ga topshiriladi. Davom etasizmi?",
+      "transferConfirm": "Boshliq vakolatingiz {name}ga topshirilsinmi? Siz oddiy aʼzo boʻlib qolasiz. Boshqa boshliqlarning vakolatlari saqlanadi.",
       "transferredToast": "Boshliqlik topshirildi",
       "transferDialogTitle": "Boshliqlikni topshirish",
       "removeDialogTitle": "Xodimni boshqarmadan chiqarish",
       "leaveDialogTitle": "Boshqarmadan chiqish",
-      "rowMenuAria": "{name} uchun amallar"
+      "rowMenuAria": "{name} uchun amallar",
+      "headsTitle": "Boshqarma boshliqlari ({count})",
+      "headsDescription": "Barcha boshliqlar boshqarmani boshqarishda teng vakolatga ega. Yana bir boshliq tayinlash uchun faol aʼzoni tanlang.",
+      "appointHead": "Boshliq etib tayinlash",
+      "removeHead": "Boshliq vakolatini bekor qilish",
+      "stepDown": "Boshliq vakolatidan voz kechish",
+      "appointConfirm": "{name}ga siz bilan teng boshqaruv vakolati berilsinmi? Siz va boshqa boshliqlar oʻz vakolatlaringizni saqlab qolasiz.",
+      "demoteConfirm": "{name}ning boshqaruv vakolati bekor qilinsinmi? U boshqarma aʼzosi boʻlib qoladi. Boshqa boshliqlarning vakolatlari saqlanadi.",
+      "headAppointed": "Boshqarma boshligʻi tayinlandi",
+      "headRemoved": "Boshliq vakolati bekor qilindi",
+      "roleConflict": "Aʼzolik maʼlumotlari oʻzgardi. Yangilangan roʻyxatni tekshirib, qayta urinib koʻring.",
+      "adminLastHead": "Bu foydalanuvchi boshqarmadagi yagona faol boshliq. Hisobini bloklash yoki oʻchirishdan oldin boshqa faol boshliq tayinlang.",
+      "accountUnavailable": "Hisob faol emas",
+      "headsReadOnlyDescription": "Barcha boshliqlar boshqarmani boshqarishda teng huquqqa ega."
     },
     "settings": {
       "title": "Boshqarma sozlamalari",
@@ -169,7 +182,7 @@
       "allowStructureEdit": "Xodimlar tuzilmani tahrirlay oladi",
       "telegramGroupLabel": "Telegram guruhini kim ulay oladi",
       "telegramEveryone": "Barcha xodimlar",
-      "telegramHeadOnly": "Faqat boshliq",
+      "telegramHeadOnly": "Faqat boshqarma boshliqlari",
       "quietHoursLabel": "Tinch soatlar",
       "quietHoursStart": "Boshlanishi",
       "quietHoursEnd": "Tugashi",
@@ -180,15 +193,15 @@
       "requestDeletionConfirm": "Soʻrovni tizim administratori koʻrib chiqadi. Buni orqaga qaytarib boʻlmaydi.",
       "deletionRequested": "Oʻchirish soʻraldi",
       "typedConfirmLabel": "Tasdiqlash uchun «{name}» deb yozing",
-      "permissionsReadOnlyDescription": "Boshqarmangizda xodimlar oʻzi qila oladigan ishlar. Ularni boshqarma boshligʻi belgilaydi.",
-      "readOnlyNotice": "Bu sozlamalarni boshqarma boshligʻi belgilaydi. Koʻrishingiz mumkin, lekin oʻzgartira olmaysiz."
+      "permissionsReadOnlyDescription": "A’zolar mustaqil bajarishi mumkin bo‘lgan amallar. Bu ruxsatlarni boshqarma boshliqlari belgilaydi.",
+      "readOnlyNotice": "Bu sozlamalarni boshqarma boshliqlari boshqaradi. Siz ularni ko‘rishingiz mumkin, ammo o‘zgartira olmaysiz."
     },
     "switcher": {
       "label": "Boshqarmani almashtirish",
       "current": "Hozirgi boshqarma"
     },
     "hub": {
-      "statHead": "Boshliq",
+      "statHead": "Boshliqlar",
       "statMembers": "Xodimlar",
       "noHead": "Hali tayinlanmagan",
       "otherMemberships": "Boshqa boshqarmalaringiz",
@@ -219,7 +232,7 @@
     "features": {
       "title": "Imkoniyatlar",
       "description": "Boshqarmangizga kerak boʻlganini yoqing. Oʻchirilgani hech kimga koʻrinmaydi.",
-      "readOnlyDescription": "Boshqarmangizda yoqilgan imkoniyatlar. Ularni boshqarma boshligʻi belgilaydi.",
+      "readOnlyDescription": "Boshqarmangizda yoqilgan imkoniyatlar. Ularni boshqarma boshliqlari belgilaydi.",
       "onToast": "Imkoniyat yoqildi",
       "offToast": "Imkoniyat oʻchirildi",
       "custom_fields": {
@@ -236,7 +249,7 @@
       },
       "workload": {
         "label": "Yuklama",
-        "description": "Kim qancha band — haftalar kesimida (faqat boshqarma boshligʻiga)."
+        "description": "Xodimlarning haftalik ish yuklamasi (faqat boshqarma boshliqlari uchun)."
       },
       "dependencies": {
         "label": "Bogʻliqliklar",

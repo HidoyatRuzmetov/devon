@@ -101,6 +101,21 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
       })
       expect(created.status()).toBe(201)
       const card = (await created.json()) as { id: string }
+      if (task.status === 'done') {
+        const item = await authedPost(head, `/api/v1/cards/${card.id}/checklist`, {
+          text: 'Confirm delivery',
+        })
+        expect(item.status()).toBe(201)
+        expect(
+          (
+            await authedPatch(
+              head,
+              `/api/v1/cards/${card.id}/checklist/${(await item.json()).id}`,
+              { done: true },
+            )
+          ).status(),
+        ).toBe(204)
+      }
       if (task.workStage || task.status)
         expect(
           (
@@ -194,7 +209,16 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     expect(briefingRequests).toEqual([])
     await page.screenshot({ path: testInfo.outputPath('member-home-desktop.png') })
     await home.getByRole('button', { name: 'Deleted 1', exact: true }).first().click()
-    await expect(work.getByRole('button', { name: /^Deleted unfinished draft/ })).toBeDisabled()
+    await work.getByRole('button', { name: /^Deleted unfinished draft/ }).click()
+    const cardDrawer = page.getByRole('dialog', { name: 'Card details', exact: true })
+    await expect(
+      cardDrawer.getByRole('heading', { name: 'Deleted unfinished draft' }),
+    ).toBeVisible()
+    await expect(
+      cardDrawer.getByRole('button', { name: 'Restore Deleted unfinished draft' }),
+    ).toBeEnabled()
+    await page.keyboard.press('Escape')
+    await expect(cardDrawer).toHaveCount(0)
     await expect(home.getByRole('link', { name: /Deleted unfinished draft/ })).toHaveCount(0)
     await expect(home.getByRole('checkbox')).toHaveCount(0)
     await categories.getByRole('button', { name: 'In progress 1', exact: true }).click()
@@ -221,6 +245,11 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
     ).toHaveAttribute('aria-pressed', 'true')
     await home.getByRole('button', { name: 'Completed', exact: true }).click()
     await expect(work.getByText('Submitted report', { exact: true })).toBeVisible()
+    await work.getByRole('button', { name: /^Submitted report/ }).click()
+    await expect(cardDrawer.getByRole('checkbox', { name: 'Confirm delivery' })).toBeChecked()
+    await expect(page.getByText('Checklist complete', { exact: true })).toHaveCount(0)
+    await page.keyboard.press('Escape')
+    await expect(cardDrawer).toHaveCount(0)
     await expect(work.getByText('Deleted unfinished draft', { exact: true })).toHaveCount(0)
     await expect(categories.locator('[aria-pressed="true"]')).toHaveCount(0)
     await categories.getByRole('button', { name: 'To do 1', exact: true }).click()

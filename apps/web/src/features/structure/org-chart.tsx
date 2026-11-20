@@ -9,6 +9,7 @@ import { useT } from '@devon/i18n'
 import { Button, IconButton, Sheet, SheetContent, unitHueClass, toast } from '@devon/ui'
 import { Download, Minus, Plus, RotateCcw, X } from 'lucide-react'
 import type { TreeActions, TreeNode } from './unit-tree.js'
+import type { Member } from './api.js'
 import { RoleChips } from './unit-tree.js'
 import { fullName } from './member-card.js'
 import { OrgChartAvatar } from './org-chart-avatar.js'
@@ -232,26 +233,37 @@ export function OrgChart({
       context.font = `${weight} ${size}px Arial, sans-serif`
       return Math.max(actual, context.measureText(text).width)
     }
-    const labels = new Map<string, { name: string[]; head: string[] }>()
+    const labels = new Map<
+      string,
+      { name: string[]; heads: { member: Member; lines: string[] }[] }
+    >()
     const stack = [...chartRoots]
     let extraTitleHeight = 0
     let extraHeadHeight = 0
     while (stack.length) {
       const node = stack.pop()!
-      const head = (actions.rolesByUnit.get(node.id) ?? []).find((role) => role.role === 'head')
-      const member =
+      const members =
         node.id === 'department-root'
-          ? [...actions.membersById.values()].find((member) => member.membershipRole === 'head')
-          : head
-            ? actions.membersById.get(head.userId)
-            : undefined
+          ? [...actions.membersById.values()].filter(
+              (member) =>
+                member.membershipRole === 'head' &&
+                (!member.accountStatus || member.accountStatus === 'active'),
+            )
+          : (actions.rolesByUnit.get(node.id) ?? [])
+              .filter((role) => role.role === 'head')
+              .flatMap((role) => {
+                const member = actions.membersById.get(role.userId)
+                return member ? [member] : []
+              })
       const name = wrappedLines(node.name, NODE_W - 32, (text) => measure(text, 'small'))
-      const headName = member
-        ? wrappedLines(fullName(member), NODE_W - 56, (text) => measure(text, 'caption'))
-        : []
+      const heads = members.map((member) => ({
+        member,
+        lines: wrappedLines(fullName(member), NODE_W - 56, (text) => measure(text, 'caption')),
+      }))
       extraTitleHeight = Math.max(extraTitleHeight, Math.max(0, name.length - 2) * 18)
-      extraHeadHeight = Math.max(extraHeadHeight, Math.max(0, headName.length - 1) * 18)
-      labels.set(node.id, { name, head: headName })
+      for (const head of heads)
+        extraHeadHeight = Math.max(extraHeadHeight, Math.max(0, head.lines.length - 1) * 18)
+      labels.set(node.id, { name, heads })
       stack.push(...node.children)
     }
     return { labels, extraTitleHeight, extraHeadHeight }
@@ -267,14 +279,17 @@ export function OrgChart({
       ]),
   )
   const baseHeight = NODE_H + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight
+  const headRowHeight = MEMBER_ROW_H + nodeLabels.extraHeadHeight
+  const headingHeight = (id: string) =>
+    baseHeight + Math.max(0, (nodeLabels.labels.get(id)?.heads.length ?? 0) - 1) * headRowHeight
   const nodeHeights = new Map(
     [...memberRows].map(([id, rows]) => [
       id,
       // Keep the count below the last member's title, including in the exported SVG/PNG.
-      baseHeight + rows.length * MEMBER_ROW_H + (rows.length ? MEMBER_FOOTER_H : 0),
+      headingHeight(id) + rows.length * MEMBER_ROW_H + (rows.length ? MEMBER_FOOTER_H : 0),
     ]),
   )
-  nodeHeights.set('department-root', baseHeight)
+  nodeHeights.set('department-root', headingHeight('department-root'))
   const { nodes, width, height } = layout(chartRoots, textScale, nodeHeights)
   const smallTextStyle = { fontSize: `calc(var(--text-small) / ${textScale})` }
   const captionTextStyle = { fontSize: `calc(var(--text-caption) / ${textScale})` }
@@ -544,13 +559,7 @@ export function OrgChart({
             )}
             {nodes.map((node) => {
               const isDepartment = node.id === 'department-root'
-              const roles = actions.rolesByUnit.get(node.id) ?? []
-              const head = roles.find((r) => r.role === 'head')
-              const headMember = isDepartment
-                ? [...actions.membersById.values()].find((m) => m.membershipRole === 'head')
-                : head
-                  ? actions.membersById.get(head.userId)
-                  : undefined
+              const headLabels = nodeLabels.labels.get(node.id)?.heads ?? []
               const isFocused = node.id === focusedId
               return (
                 <g
@@ -574,7 +583,9 @@ export function OrgChart({
                 >
                   <title>
                     {node.name}
-                    {headMember ? ` — ${fullName(headMember)}` : ''}
+                    {headLabels.length
+                      ? ` - ${headLabels.map((head) => fullName(head.member)).join(', ')}`
+                      : ''}
                   </title>
                   <rect
                     width={NODE_W}
@@ -604,35 +615,40 @@ export function OrgChart({
                       </tspan>
                     ))}
                   </text>
-                  {headMember ? (
-                    <>
-                      <OrgChartAvatar
-                        person={headMember}
-                        cy={70 + nodeLabels.extraTitleHeight}
-                        fill={unitFillVar(node)}
-                        textStyle={captionTextStyle}
-                      />
-                      <text
-                        x={40}
-                        y={64 + nodeLabels.extraTitleHeight}
-                        className="fill-foreground text-caption"
-                        style={captionTextStyle}
+                  {headLabels.length ? (
+                    headLabels.map(({ member: headMember, lines }, headIndex) => (
+                      <g
+                        key={headMember.userId}
+                        transform={`translate(0 ${headIndex * headRowHeight})`}
                       >
-                        {nodeLabels.labels.get(node.id)!.head.map((line, index) => (
-                          <tspan key={index} x={40} dy={index ? 18 : 0}>
-                            {line}
-                          </tspan>
-                        ))}
-                      </text>
-                      <text
-                        x={40}
-                        y={82 + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight}
-                        className="fill-muted-foreground text-caption"
-                        style={captionTextStyle}
-                      >
-                        {t('structure.units.chart.headBadge')}
-                      </text>
-                    </>
+                        <OrgChartAvatar
+                          person={headMember}
+                          cy={70 + nodeLabels.extraTitleHeight}
+                          fill={unitFillVar(node)}
+                          textStyle={captionTextStyle}
+                        />
+                        <text
+                          x={40}
+                          y={64 + nodeLabels.extraTitleHeight}
+                          className="fill-foreground text-caption"
+                          style={captionTextStyle}
+                        >
+                          {lines.map((line, index) => (
+                            <tspan key={index} x={40} dy={index ? 18 : 0}>
+                              {line}
+                            </tspan>
+                          ))}
+                        </text>
+                        <text
+                          x={40}
+                          y={82 + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight}
+                          className="fill-muted-foreground text-caption"
+                          style={captionTextStyle}
+                        >
+                          {t('structure.units.chart.headBadge')}
+                        </text>
+                      </g>
+                    ))
                   ) : (
                     <>
                       {/* A vacant head slot draws the same way an unfilled position does on a Miro/
@@ -658,7 +674,7 @@ export function OrgChart({
                     </>
                   )}
                   {(memberRows.get(node.id) ?? []).map((member, index) => {
-                    const y = baseHeight + index * MEMBER_ROW_H
+                    const y = headingHeight(node.id) + index * MEMBER_ROW_H
                     return (
                       <g key={member.userId}>
                         <path
