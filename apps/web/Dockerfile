@@ -42,9 +42,14 @@ RUN pnpm --filter @devon/web build
 RUN NODE_ENV=production pnpm --filter @devon/miniapp build
 
 FROM ${NGINX_IMAGE} AS runtime
-# nginx 1.30.6 fixes CVE-2026-15176, CVE-2026-93479 and CVE-2026-97205, with matching
-# upstream modules. Patch remaining libraries and restore the non-root user afterwards.
+# Keep the pinned unprivileged base and install the signed 1.30.7 security release with
+# matching modules. The upstream 1.30.7 image tag is not published yet.
+# https://nginx.org/en/security_advisories.html
 USER root
+RUN apk add --no-cache --repository https://nginx.org/packages/alpine/v3.24/main \
+    nginx=1.30.7-r1 nginx-module-geoip=1.30.7-r1 nginx-module-image-filter=1.30.7-r1 \
+    nginx-module-njs=1.30.7.1.0.2-r1 nginx-module-xslt=1.30.7-r1
+ENV NGINX_VERSION=1.30.7
 # The pinned upstream image predates these library fixes, including libexpat
 # CVE-2026-117610 / CVE-2026-118370 and zlib CVE-2026-85091.
 RUN apk add --no-cache tiff=4.7.2-r0 libexpat=2.10.0-r0 libx11=1.8.14-r0 \
