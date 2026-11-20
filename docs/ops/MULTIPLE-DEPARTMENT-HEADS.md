@@ -1,6 +1,6 @@
 # Multiple department heads — review notes
 
-Implementation and Docker verification: 20 November 2026. Production deployment is pending user approval of the Docker screenshot review.
+Implementation and Docker verification: 20 November 2026. The user approved deployment and public GitHub publication on 20 November. Production rollout remains conditional on successful CI for the exact release commit.
 
 ## Behavior
 
@@ -39,7 +39,7 @@ Implementation and Docker verification: 20 November 2026. Production deployment 
 
 ## Review source and preservation
 
-The original staged index is byte-for-byte unchanged. Pre-existing working files are checked against the pre-edit hash inventory. Both tutorial implementations remain untouched, and existing uncommitted bug fixes remain in the user's workspace. No commit, push, production migration or production deployment was performed. Local migrations ran only against the separate review database and disposable test databases.
+The original staged index is byte-for-byte unchanged. Pre-existing working files are checked against the pre-edit hash inventory. Both tutorial implementations remain untouched, and existing uncommitted bug fixes remain in the user's workspace. The screenshot review used only the separate review database and disposable test databases. Following approval, the release was committed and published from the isolated review checkout; the original staged index was not committed.
 
 The current isolated review source lives at `.scratch/multiple-heads-docker-review` within this repository. It was reconstructed from the earlier reviewed patch and the original HEAD; the one old manifest mismatch was line endings only. Its scope excludes the unfinished introduction/tutorial work, new workload-estimation feature and new Pomodoro artwork, while preserving the related pre-existing production behavior. Mixed files retain the bug-fix changes. The original workspace still contains all deferred work. The earlier `C:\workspace\workportal-heads-review` copy remains untouched.
 
@@ -80,4 +80,4 @@ The local stack uses the production-built images with development configuration,
 
 From the isolated review source, run `node scripts/multiple-heads-docker-review.mjs up` to start or resume the stack, `status` to inspect it, and `stop` to stop it while retaining the review database. The Docker images must first be built with tags `devon-api:multiple-heads-review` and `devon-web:multiple-heads-review` from this isolated source. Never build the release from the tutorial-bearing original working tree.
 
-Next gate: user screenshot approval, then deploy the exact reviewed source/images with the existing backup/rollback procedure and verify production health and multiple-head behavior on the deployed version. No production action is authorized until that approval.
+The approved deployment uses the exact reviewed source with the existing CI, backup, migration, readiness and rollback procedure. Deployment receipts and the read-only production verification are recorded locally under `artifacts/qa/multiple-heads/deployment`; the GitHub Actions run is the authoritative deployment result. The source and review artifacts do not by themselves prove that production rollout succeeded.

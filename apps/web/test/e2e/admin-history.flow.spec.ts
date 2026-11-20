@@ -2,19 +2,22 @@ import { expect, test } from '@playwright/test'
 import '@devon/i18n/catalogues'
 import { isLocale, translate } from '@devon/i18n'
 import {
+  authedPatch,
   authedPost,
   createApprovedDepartment,
   examplePassword,
+  joinDepartmentAsNewUser,
   loginAsSuperAdmin,
   newFlowContext,
   uniqueLogin,
 } from './flow-api.js'
 
-test('@flow admin deletion preserves identity, head role, audit history and visible activity bars', async ({
+test('@flow admin deletion protects the last head and preserves identity, role, audit history and activity bars', async ({
   browser,
 }) => {
   const admin = await newFlowContext(browser)
   const head = await newFlowContext(browser)
+  const replacement = await newFlowContext(browser)
   try {
     await loginAsSuperAdmin(admin)
     // This administrator is shared with concurrent console flows. Read its locale without
@@ -26,7 +29,7 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
     if (!isLocale(locale)) throw new Error('The administrator locale must be recognized')
     const label = (key: string) => translate(locale, key)
     const headLogin = uniqueLogin('history.head')
-    await createApprovedDepartment(head, admin, {
+    const department = await createApprovedDepartment(head, admin, {
       headLogin,
       headPassword: examplePassword(),
       departmentName: uniqueLogin('History department'),
@@ -67,6 +70,36 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
       name: label('admin.console.accounts.anonymizeDialogTitle'),
     })
     await expect(dialog.getByText(new RegExp(headLogin.replace(/\./g, '\\.')))).toBeVisible()
+    const blocked = page.waitForResponse((response) =>
+      response.url().endsWith(`/api/v1/admin/accounts/${identity.user.id}/anonymize`),
+    )
+    await dialog
+      .getByRole('button', {
+        name: label('admin.console.accounts.anonymizeSubmit'),
+        exact: true,
+      })
+      .click()
+    expect((await blocked).status()).toBe(409)
+    await expect(dialog.getByRole('alert')).toHaveText(label('departments.members.adminLastHead'))
+    expect((await head.request.get('/api/v1/me')).status()).toBe(200)
+
+    await joinDepartmentAsNewUser(replacement, {
+      login: uniqueLogin('history.replacement'),
+      password: examplePassword(),
+      joinKey: department.joinKey,
+      joinPassword: department.joinPassword,
+    })
+    const replacementId = (await (await replacement.request.get('/api/v1/me')).json()).user
+      .id as string
+    expect(
+      (
+        await authedPatch(
+          head,
+          `/api/v1/departments/${department.departmentId}/members/${replacementId}/role`,
+          { role: 'head', expectedVersion: 1 },
+        )
+      ).status(),
+    ).toBe(204)
     await dialog
       .getByRole('button', {
         name: label('admin.console.accounts.anonymizeSubmit'),
@@ -106,6 +139,11 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
     })
     expect(saved.login).toMatch(new RegExp(`^${headLogin.replace(/\./g, '\\.')}\\.deleted-`))
     expect((await head.request.get('/api/v1/me')).status()).toBe(401)
+    expect(
+      (
+        await replacement.request.get(`/api/v1/departments/${department.departmentId}/invite`)
+      ).status(),
+    ).toBe(200)
     const history = (await (
       await admin.request.get(`/api/v1/admin/audit/events?actorUserId=${identity.user.id}`)
     ).json()) as { events: { actorName: string; actorStatus: string }[] }
@@ -152,6 +190,6 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
       page.getByRole('heading', { name: label('admin.usage.title'), exact: true }),
     ).toBeVisible()
   } finally {
-    await Promise.all([admin.close(), head.close()])
+    await Promise.all([admin.close(), head.close(), replacement.close()])
   }
 })

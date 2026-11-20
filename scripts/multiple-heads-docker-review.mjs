@@ -69,9 +69,12 @@ else {
       password: `ReviewExample-${randomBytes(24).toString('base64url')}Aa1`,
     }
     const response = await fetch(
+      // Review credentials stay on this fixed loopback endpoint; redirects are forbidden below.
+      // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request
       `http://127.0.0.1:48931/api/v1/setup/${decodeURIComponent(token)}`,
       {
         method: 'POST',
+        redirect: 'error',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ ...admin, givenName: 'Review', familyName: 'Administrator' }),
         signal: AbortSignal.timeout(15_000),
@@ -80,7 +83,10 @@ else {
     if (response.status !== 201) throw new Error(`Review setup failed: ${response.status}`)
     writeFileSync(adminFile, JSON.stringify(admin), { mode: 0o600 })
   }
+  // Local Docker readiness only: this fixed loopback URL cannot follow redirects off-machine.
+  // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request
   const response = await fetch('http://127.0.0.1:48932/readyz', {
+    redirect: 'error',
     signal: AbortSignal.timeout(15_000),
   })
   if (!response.ok) throw new Error(`Review readiness failed: ${response.status}`)

@@ -200,7 +200,13 @@ test('@qa custom invitation password persists and only its new value admits a ne
       new URL(response.url()).pathname.endsWith('/invite/password'),
     )
     await page.getByRole('button', { name: 'Save', exact: true }).click()
-    expect((await saved).status()).toBe(204)
+    const response = await saved
+    expect(response.status()).toBe(200)
+    expect(response.request().postDataJSON()).toEqual({
+      password: customPassword,
+      returnRevision: true,
+    })
+    expect(await response.json()).toEqual({ revision: expect.any(Number) })
     await expect(page.getByLabel('Set my own password', { exact: true })).toHaveValue('')
     await expect(page.getByLabel('Password', { exact: true })).toHaveValue(customPassword)
     expect(

@@ -358,7 +358,8 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      return reply.send(await repo.rotateJoinPassword(req.params.id, auditCtx(req)))
+      const { password, revision } = await repo.rotateJoinPassword(req.params.id, auditCtx(req))
+      return reply.send({ password, revision })
     },
   )
 
