@@ -147,7 +147,19 @@ export const adminAnalyticsSchema = z.object({
 // for the work/analytics filters ("masalan: admin.user.locked"). `category` replaces it with the
 // same chip-filter shape the rest of the app uses -- one of the known module prefixes, or the
 // `OTHER_CATEGORY` sentinel for "everything not in the named categories".
-export const AUDIT_CATEGORIES = ['session', 'accounts', 'admin', 'departments'] as const
+export const AUDIT_CATEGORIES = [
+  'session',
+  'accounts',
+  'admin',
+  'departments',
+  'work',
+  'projects',
+  'events',
+  'personal',
+  'onboarding',
+  'ai',
+  'data',
+] as const
 export const OTHER_CATEGORY = '__other__'
 
 export const auditEventQuerySchema = z
@@ -222,7 +234,10 @@ export const maintenanceStateSchema = z.object({
   message: maintenanceMessageSchema.nullable(),
 })
 export const patchMaintenanceBodySchema = z
-  .object({ enabled: z.boolean(), message: maintenanceMessageSchema.nullable() })
+  .object({
+    enabled: z.boolean(),
+    message: maintenanceMessageSchema.nullable(),
+  })
   .strict()
 
 export const patchRegistrationBodySchema = z.object({ open: z.boolean() }).strict()

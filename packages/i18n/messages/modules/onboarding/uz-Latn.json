@@ -1,0 +1,246 @@
+{
+  "onboarding": {
+    "title": "Ishni boshlash",
+    "reading": "Boshqarma bilan tanishish",
+    "tour": "Portal bilan tanishish",
+    "telegram": "Telegramni ulash",
+    "account": "Hisob maʼlumotlari",
+    "resume": "Rezyume",
+    "personnel": "Maʼlumotnoma",
+    "chapter": "{total} bobdan {current}-bob",
+    "readerHint": "Boshqarmangiz materiallari. Shoshilmay oʻqing.",
+    "loadError": "Yuklab boʻlmadi. Natijalaringiz saqlangan.",
+    "retry": "Qayta urinish",
+    "loading": "Yuklanmoqda…",
+    "reload": "Qayta yuklash",
+    "finishReading": "Oʻqib boʻldim",
+    "closePreview": "Koʻrishni yopish",
+    "welcome": "Boshqarmangizga xush kelibsiz",
+    "readFirst": "Avval boshqarma materiallarini oʻqing. Keyin hisobingizni sozlab, WorkPortal bilan tanishamiz.",
+    "setupTitle": "Hisobingizni ishga tayyorlang",
+    "setupDescription": "Portalni ochish uchun toʻrt boʻlimni toʻldiring. Natijalar saqlanadi. Faqat saqlangan maʼlumotlar hisobga olinadi; boʻsh boʻlimlar tugallanmagan qoladi.",
+    "openIntroduction": "Kirish materiallarini oʻqish",
+    "setupProgress": "{total} qadamdan {complete} tasi bajarildi",
+    "complete": "Bajarildi",
+    "telegramRequirement": "Vazifa yangiliklari va eslatmalar uchun shaxsiy Telegram hisobingizni ulang.",
+    "accountRequirement": "Ism, familiya, lavozim, tugʻilgan sana va ish boshlagan sanani saqlang. Surat va e-pochta ixtiyoriy.",
+    "resumeRequirement": "Qisqa tanishtiruv, kamida bitta koʻnikma va taʼlim yoki ish tajribasini kiriting. Soʻng saqlang.",
+    "personnelRequirement": "Maʼlumotnomani toʻldirib saqlang: shaxsiy maʼlumotlar, tugʻilgan sana va joy, millat, maʼlumot, mutaxassislik va mehnat faoliyati.",
+    "checkProgress": "Tekshirish va davom etish",
+    "saveError": "Natijani saqlab boʻlmadi. Qayta urinib koʻring.",
+    "readingComplete": "Kirish materiallari oʻqildi",
+    "back": "Orqaga",
+    "pause": "Qoʻllanmani toʻxtatib turish",
+    "next": "Keyingi",
+    "showAction": "Sinab koʻrish",
+    "finish": "Qoʻllanmani yakunlash",
+    "finishedTitle": "Tanishtiruv tugadi",
+    "finishedBody": "Qaytish uchun bosh sahifadagi «Ishni boshlash»ni oching.",
+    "targetMissing": "Bu boshqaruv joriy koʻrinishda mavjud emas. Davom etib, keyin qaytishingiz mumkin.",
+    "centerDescription": "Kundalik ish uchun qisqa qoʻllanma. Istalgan bobga kerak boʻlganda qayting.",
+    "guide": "Portal qoʻllanmasi",
+    "joinFirst": "Tanishishni boshlash uchun boshqarmaga qoʻshiling.",
+    "sevenChapters": "7 ta qisqa bob",
+    "centerTitle": "WorkPortal bilan tanishing",
+    "centerHint": "Haqiqiy sahifalarni koʻring, namuna loyihani sinang va kerakli imkoniyatlarni toping. Natija har qadamda saqlanadi.",
+    "resumeGuide": "Davom ettirish",
+    "startGuide": "Boshlash",
+    "checklistTitle": "Birinchi vazifangiz",
+    "openTask": "Tanishish vazifasini ochish",
+    "documents": {
+      "tab": "Boshqarma materiallari",
+      "title": "Boshqarmangizning ilk tanishtiruvi",
+      "description": "Har bir aʼzo HTML material yuborishi mumkin. Yangi aʼzolar koʻrishidan oldin boshqarma boshligʻi koʻrib, tasdiqlaydi.",
+      "name": "Sarlavha",
+      "placeholder": "Boshqarmamizga xush kelibsiz",
+      "file": "HTML fayl",
+      "fileHint": "Mustaqil .html yoki .htm fayl, 2 MB gacha. Mahalliy resurslarni fayl ichiga joylang; tashqi manbalar uchun HTTPS ishlating.",
+      "invalid": "2 MB dan oshmaydigan, boʻsh boʻlmagan HTML faylni tanlang.",
+      "submit": "Tasdiqlash uchun yuborish",
+      "submitted": "Yuborildi. Boshqarma boshligʻi endi koʻrib chiqishi mumkin.",
+      "conflict": "Nashr oʻzgardi yoki amal bajarilmadi. Roʻyxat yangilandi; tekshirib, qayta urining.",
+      "empty": "Hozircha kirish materiali yoʻq. Yangi aʼzolar hisobni sozlab, portal qoʻllanmasidan oʻtishi mumkin.",
+      "published": "Nashr qilingan",
+      "rejected": "Rad etilgan",
+      "pending": "Tasdiq kutilmoqda",
+      "preview": "Koʻrish",
+      "reviewFirst": "Nashr qilishdan oldin faylni koʻrib chiqing.",
+      "publish": "Tasdiqlash va nashr qilish",
+      "reject": "Rad etish",
+      "versionHint": "Nashr qilish kelajakdagi yangi aʼzolar uchun materialni almashtiradi. Oʻqishni boshlaganlar joriy nusxada davom etadi."
+    },
+    "chapters": {
+      "0": "Profil va sozlamalar",
+      "1": "Bosh sahifa va yordamchi",
+      "2": "Kartochkalaringiz",
+      "3": "Guruh loyihalari",
+      "4": "Shaxsiy makoningiz",
+      "5": "Boshqarmangiz",
+      "6": "Natijalar va qoʻllanma"
+    },
+    "chapterHints": {
+      "0": "Hisob, rezyume, maʼlumotnoma va sozlamalar",
+      "1": "Kunni boshlang va yordam oling",
+      "2": "Ishni toping va tartiblang",
+      "3": "Haqiqiy koʻrinishda vaqtinchalik mashq",
+      "4": "Taqvim, shaxsiy kartochkalar va taymer",
+      "5": "Tadbirlar, hamkasblar va tuzilma",
+      "6": "Davr natijalari va qoʻllanmaga qaytish"
+    },
+    "steps": {
+      "profile": {
+        "title": "Hisob maʼlumotlari",
+        "body": "Ism, lavozim, sanalar va hisob maʼlumotlarini shu yerda yangilang. Ish boshlagan sana profilingizda saqlanadi."
+      },
+      "home": {
+        "title": "Bosh sahifa",
+        "body": "Bosh sahifa asosiy yangilik va vazifalarni jamlaydi. Kun boshida nimalarga eʼtibor kerakligini shu yerdan koʻring."
+      },
+      "assistant": {
+        "title": "AI yordamchi",
+        "body": "Ishingiz haqida soʻrang, maʼlumot toping yoki WorkPortalda amal bajarishda yordam oling. Bu portalning asosiy yordamchisi. Muhim javob va taklif etilgan oʻzgarishlarni tekshiring."
+      },
+      "column": {
+        "title": "Sizning ustuningiz",
+        "body": "Boshqalarning kartochkalarini qidirmasdan, oʻz vazifalaringizga oʻtish uchun «Mening ustunim»ni bosing."
+      },
+      "collapse": {
+        "title": "Barcha ustunlarni yigʻish",
+        "body": "Bu tugma barcha ustunlarni yigʻadi. Jamoani ixcham koʻrinishda koʻrish uchun sinab koʻring."
+      },
+      "expand": {
+        "title": "Barcha ustunlarni ochish",
+        "body": "Shu tugma endi barcha ustunlarni yoyadi. Kartochkalarni koʻrish uchun yana bosing."
+      },
+      "drawer": {
+        "title": "Kartochka tafsilotlari",
+        "body": "Yon panelda tavsif, ishtirokchilar, sanalar, roʻyxat va muhokama bor. Tanishish roʻyxati bajarilgan sozlama va qoʻllanma qadamlariga qarab yangilanadi."
+      },
+      "convert": {
+        "title": "Guruh loyihasiga aylantirish",
+        "body": "Bu tugma kartochkani guruh loyihasiga aylantiradi. Hozir uni faqat koʻrsatyapmiz. Keyin sinov misolini bajarasiz."
+      },
+      "projects": {
+        "title": "Guruh loyihalari",
+        "body": "Guruh loyihalari odamlar va alohida vazifalarni birlashtiradi. Har kim oʻz vazifasiga ega, loyiha esa umumiy natijani koʻrsatadi. Haqiqiy ish yaratmasdan mashq qilamiz."
+      },
+      "practice": {
+        "title": "Namuna loyihani sinang",
+        "body": "Namuna loyiha yarating, vazifa qoʻshing va uni roʻyxat bandlariga ajrating."
+      },
+      "events": {
+        "title": "Tadbirlar",
+        "body": "Tadbirlar uchrashuvlar va boshqarma faoliyatini jamlaydi. Vaqt, joy, ishtirokchilar va tafsilotlar uchun tadbirni oching."
+      },
+      "people": {
+        "title": "Xodimlar",
+        "body": "Xodimlar sahifasida hamkasblar va ularning kasbiy profillarini topasiz. Kim nima bilan shugʻullanishini shu yerdan bilib oling."
+      },
+      "structure": {
+        "title": "Boshqarma tuzilmasi",
+        "body": "Tuzilma boʻlimlar va rahbarlarni koʻrsatadi. Boshqarmada bir nechta boshliq boʻlishi mumkin; bu koʻrinish jamoani tushunishga yordam beradi."
+      },
+      "checkin": {
+        "title": "Check-in",
+        "body": "Ikki haftalik davr uchun chek-list bandlarini tanlang. Boshqarma boshligʻi rejani kelishadi. Keyin holatni yangilash va bandlar qoʻshish mumkin. Qoʻllanma hech narsani oʻzgartirmaydi."
+      },
+      "checkout": {
+        "title": "Check-out",
+        "body": "Har bir bandni bajarildi, kutilmoqda yoki toʻsiq bor deb belgilang. Boshliq davr natijalarini qulflaydi. Oldingi davrlarni «Natijalar» boʻlimida koʻring."
+      },
+      "finish": {
+        "title": "Ishni boshlash",
+        "body": "«Ishni boshlash» doim bosh sahifada. Toʻliq qoʻllanmani, alohida bobni yoki boshqarma materiallarini istalgan payt qayta oching."
+      },
+      "firstCard": {
+        "title": "Boshlangʻich kartochkangiz",
+        "body": "Ishni boshlash vazifasini oching. Undagi oltita band kirish materiallari, portal qoʻllanmasi, Telegram, hisob, rezyume va maʼlumotnoma holatini kuzatadi."
+      },
+      "welcome": {
+        "title": "WorkPortal bilan tanishing",
+        "body": "Vazifalaringiz, hamkasblar va shaxsiy vositalar qayerdaligini koʻrib chiqing. Sinov loyihasini ham bajarib koʻrasiz — bu misol portalda saqlanmaydi."
+      },
+      "resume": {
+        "title": "Rezyume",
+        "body": "Bu yerda oʻzingiz, taʼlim, tajriba va koʻnikmalar haqidagi maʼlumotlarni yangilang. Hamkasblar bu profilni «Xodimlar»da koʻradi."
+      },
+      "personnel": {
+        "title": "Maʼlumotnoma",
+        "body": "Bu rasmiy shaxsiy maʼlumotlar varaqasi. Uni yangilang, oldindan koʻring va kerak boʻlganda yuklab oling."
+      },
+      "settings": {
+        "title": "Sozlamalar",
+        "body": "Bu menyuda bildirishnomalar, Telegram, taqvim ulanishi va hisob xavfsizligi jamlangan. Kerakli boʻlimni shu yerdan tanlang."
+      },
+      "personalCalendar": {
+        "title": "Shaxsiy taqvim",
+        "body": "«Shaxsiy» boʻlimidan «Taqvim»ni tanlang. Oʻz jadvalingizni koʻring va shaxsiy vaqtingizni rejalang."
+      },
+      "personalCards": {
+        "title": "Shaxsiy vazifalar",
+        "body": "Ikkinchi ichki boʻlim shaxsiy kartochkalar uchun. Eslatmalar va oʻz ishlaringizni boshqarma doskasiga qoʻshmasdan tartiblang."
+      },
+      "personalTimer": {
+        "title": "Diqqat taymeri",
+        "body": "Taymer ish va tanaffus vaqtini navbatlaydi. Diqqat bilan ishlash uchun uni yoqing; bu tanishtiruv taymerni ishga tushirmaydi."
+      },
+      "peopleProfile": {
+        "title": "Kasbiy profil",
+        "body": "Xodimni bossangiz, shu yon panel ochiladi. Unda aloqa maʼlumotlari, taʼlim, tajriba va koʻnikmalar bor; mavjud rezyumeni yuklab olish mumkin."
+      },
+      "orgChart": {
+        "title": "Tashkiliy sxema",
+        "body": "Boʻlinmalar va rahbarlar qanday bogʻlanganini sxemada koʻring. Kerakli qismni koʻrish uchun uni yaqinlashtiring yoki suring."
+      }
+    },
+    "practice": {
+      "title": "Namuna guruh loyihasi",
+      "badge": "Faqat mashq",
+      "notice": "Bu faqat brauzerdagi namuna. Haqiqiy loyiha, vazifa yoki bildirishnoma yaratilmaydi.",
+      "stage0": "Umumiy natijani nomlang",
+      "hint0": "Namuna loyihaga qisqa, aniq nom bering.",
+      "stage1": "Bitta ishtirokchi vazifasini qoʻshing",
+      "hint1": "Guruh loyihasi alohida vazifalardan iborat. Oʻzingizga biriktirilgan bitta vazifadan boshlang.",
+      "stage2": "Qadamlarga ajrating",
+      "hint2": "Roʻyxat vazifani bajarishni osonlashtiradi. Bitta aniq amal qoʻshing.",
+      "stage3": "Bitta qadamni belgilang",
+      "hint3": "Roʻyxat bandini belgilang. Loyiha natijasi yakunlangan bosqichlar orqali hisoblanadi.",
+      "projectName": "Loyiha nomi",
+      "projectPlaceholder": "Jamoa seminarini tayyorlash",
+      "create": "Namuna yaratish",
+      "you": "Namuna jamoa · Siz",
+      "taskName": "Vazifa nomi",
+      "taskPlaceholder": "Kun tartibini tayyorlash",
+      "addTask": "Namuna vazifa qoʻshish",
+      "assignee": "Sizga biriktirilgan · Namuna",
+      "checklist": "Roʻyxat bandi",
+      "itemPlaceholder": "Uchta muhokama mavzusini yozish",
+      "addItem": "Band qoʻshish",
+      "done": "Tayyor — davom etish",
+      "localOnly": "Portalga hech narsa saqlanmaydi.",
+      "projectDescription": "Umumiy natija, shaxsiy kartochkalar va koʻrinadigan taraqqiyot.",
+      "milestone": "Uchrashuvga tayyor",
+      "individualCards": "Shaxsiy kartochkalar",
+      "colleague": "Malika · Sinov hamkasbi",
+      "teammateHint": "Har bir ishtirokchining topshiriqlari uchun oʻz boʻlimi bor.",
+      "discussionHint": "Haqiqiy loyihada shu yerda jamoa muhokamasi boʻladi. Mashqda xabar yuborilmaydi.",
+      "filesHint": "Loyiha fayllari shu yerda. Mashqda fayllar yuklanmaydi va saqlanmaydi.",
+      "backToProject": "Loyihaga qaytish",
+      "cardDescription": "Kartochkaning masʼuli bor. Quyida aniq qadamlarni qoʻshing; bajarilganda taraqqiyot yangilanadi."
+    },
+    "resumeDepartment": "Sozlash boshlangan boshqarmaga qaytish",
+    "managedItem": "Sozlash va qoʻllanma bajarilganda avtomatik yangilanadi.",
+    "mobileColumns": "Oʻz ishingizga oʻtish uchun «Mening ustunim»ni bosing. Telefonda xodimni tanlang yoki ustunlarni suring. Katta ekranda barcha ustunlarni yigʻish va yoyish orqali butun jamoani koʻrish mumkin.",
+    "finishSection": "Avval ushbu boʻlimni toʻldirib, saqlang.",
+    "resumeMissing": {
+      "about": "Oʻzingiz haqingizda qisqacha yozing.",
+      "skills": "Kamida bitta koʻnikma kiriting.",
+      "education": "Taʼlim yoki ish tajribasi haqida kamida bitta yozuv kiriting."
+    },
+    "beginWalkthrough": "Boshlash",
+    "mobileMenu": "Bu boʻlimni menyu orqali ochishingiz mumkin.",
+    "existingCardBody": "Tafsilotlar va nazorat roʻyxatini koʻrish uchun kartochkani oching. Tanishtiruv faqat boshqaruvlarni koʻrsatadi.",
+    "existingDrawerBody": "Yon panelda tavsif, ishtirokchilar, sanalar, nazorat roʻyxati va muhokama bor.",
+    "page": "{total} dan {current}-sahifa"
+  }
+}

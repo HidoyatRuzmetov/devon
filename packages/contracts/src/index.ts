@@ -157,9 +157,12 @@ export {
   type ProfessionalProfile,
 } from './professional-profile.js'
 
+export * from './onboarding.js'
 export * from './personal-calendar.js'
 export * from './personnel-record.js'
 export * from './personnel-script.js'
 export * as personnelTemplate from './personnel-template.js'
 
 export { aiActionBindingSchema } from './ai-chat.js'
+export * from './public-dashboard.js'
+export * from './unit-colours.js'

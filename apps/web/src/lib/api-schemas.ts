@@ -42,9 +42,14 @@ const publicUserSchema = z.object({
 export type PublicUser = z.infer<typeof publicUserSchema>
 
 export const meSchema = z.object({
+  onboardingRequired: z.boolean().default(false),
   user: publicUserSchema,
   memberships: z.array(
-    z.object({ departmentId: z.string(), name: z.string(), role: z.enum(['head', 'member']) }),
+    z.object({
+      departmentId: z.string(),
+      name: z.string(),
+      role: z.enum(['head', 'member']),
+    }),
   ),
   membershipCount: z.number().int(),
   activeDepartmentId: z.string().nullable(),

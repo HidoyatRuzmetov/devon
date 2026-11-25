@@ -112,6 +112,7 @@ export const cardSchema = z.object({
 export type CardDTO = z.infer<typeof cardSchema>
 
 export const checklistItemSchema = z.object({
+  onboardingKey: z.string().nullable().optional(),
   commentCount: z.number().int().nonnegative().default(0),
   deletionProtected: z.boolean().optional(),
   textLocked: z.boolean().optional(),

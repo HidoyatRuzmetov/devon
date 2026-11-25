@@ -7,7 +7,7 @@ import {
   authedPatch,
   examplePassword,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   uniqueLogin,
 } from './flow-api.js'
 import { setTextScale, settleCapture } from './platform-capture.js'

@@ -8,6 +8,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
 import { can, type Action, type Subject } from '@devon/contracts'
 import { sendProblem } from '../lib/problem-reply.js'
+import { allowedDuringOnboarding } from '../lib/onboarding-gate.js'
 import { requestIp, requestUserAgent } from './session.js'
 
 declare module 'fastify' {
@@ -46,6 +47,7 @@ export const PUBLIC_ROUTES: ReadonlyArray<{ method: string; url: string }> = Obj
   { method: 'GET', url: '/metrics' },
   { method: 'GET', url: '/api/v1/openapi.json' },
   { method: 'GET', url: '/api/v1/instance' },
+  { method: 'GET', url: '/api/v1/public-dashboard' },
   { method: 'POST', url: '/api/v1/setup/:token' },
   { method: 'POST', url: '/api/v1/auth/login' },
   // EPIC-001: a fresh visitor has no session yet by definition.
@@ -220,7 +222,17 @@ export default fp(async function authorizePlugin(app: FastifyInstance) {
     if (!permission) return
     if ('public' in permission && permission.public) return
     if ('action' in permission) {
-      await denyForSubject(req, reply, permission.action, permission.subject(req))
+      if (!(await denyForSubject(req, reply, permission.action, permission.subject(req)))) return
+      if (
+        req.actorUser?.onboardingRequired &&
+        req.actor?.departmentId &&
+        req.actor.role !== 'super_admin' &&
+        !req.actor.viewAs &&
+        !allowedDuringOnboarding(req.routeOptions.url ?? '')
+      ) {
+        reply.header('x-devon-setup-required', 'true')
+        sendProblem(reply, 'forbidden')
+      }
     }
   })
 })

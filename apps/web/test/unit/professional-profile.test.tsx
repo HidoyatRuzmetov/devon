@@ -16,7 +16,10 @@ vi.mock('../../src/lib/session.js', async () => {
     useMeQuery: () => useQuery({ queryKey: ['me'], queryFn: async () => null, enabled: false }),
   }
 })
-vi.mock('@devon/ui', async (original) => ({ ...(await original<typeof UI>()), toast: vi.fn() }))
+vi.mock('@devon/ui', async (original) => ({
+  ...(await original<typeof UI>()),
+  toast: vi.fn(),
+}))
 import { toast } from '@devon/ui'
 
 const profile = (about: string, version = 1) => ({
@@ -24,8 +27,11 @@ const profile = (about: string, version = 1) => ({
   version,
 })
 const key = (owner: string) => ['accounts', 'professional-profile', owner]
-const account = (owner: string) => ({ user: { id: owner }, csrfToken: `csrf-${owner}` })
-function setup() {
+const account = (owner: string) => ({
+  user: { id: owner },
+  csrfToken: `csrf-${owner}`,
+})
+function setup(setupRequired = false) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -39,7 +45,7 @@ function setup() {
   )
   const tree = () => (
     <QueryClientProvider client={client}>
-      <ProfessionalProfileSection />
+      <ProfessionalProfileSection setupRequired={setupRequired} />
     </QueryClientProvider>
   )
   return { client, tree, view: render(tree()) }
@@ -51,6 +57,31 @@ beforeEach(() => {
 })
 
 describe('professional profile ownership and form submission', () => {
+  it('explains missing onboarding fields, focuses the first one and saves once corrected', async () => {
+    mocks.put.mockImplementation(async (_path, body) => ({
+      ...body,
+      version: body.version + 1,
+    }))
+    const { client } = setup(true)
+    const user = userEvent.setup()
+    const about = await screen.findByRole('textbox', { name: 'About' })
+    await user.clear(about)
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(mocks.put).not.toHaveBeenCalled()
+    expect(about).toHaveFocus()
+    expect(about).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('Write a short introduction.')).toBeVisible()
+    expect(screen.getByText('Add at least one skill.')).toBeVisible()
+    expect(screen.getByText('Add at least one education or work experience entry.')).toBeVisible()
+    await user.type(about, 'I coordinate digital services.')
+    await user.type(screen.getByRole('textbox', { name: /^Skills/ }), 'Analysis')
+    await user.click(screen.getByRole('button', { name: 'Add education' }))
+    await user.type(screen.getByRole('textbox', { name: /Institution/ }), 'Example University')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce())
+    client.clear()
+  })
+
   it('recovers an old draft without losing unfinished text, links or the original save version', async () => {
     const draftKey = 'devon.profile.resume.v2:a'
     const unfinishedAbout = 'Policy research in progress '
@@ -66,7 +97,10 @@ describe('professional profile ownership and form submission', () => {
         },
       }),
     )
-    mocks.put.mockImplementation(async (_path, body) => ({ ...body, version: 8 }))
+    mocks.put.mockImplementation(async (_path, body) => ({
+      ...body,
+      version: 8,
+    }))
     const { client } = setup()
     const about = await screen.findByRole('textbox', { name: 'About' })
     expect(about).toHaveValue(unfinishedAbout)
@@ -93,14 +127,19 @@ describe('professional profile ownership and form submission', () => {
   })
 
   it('requires a named education entry and never changes years when scrolling or pressing arrows', async () => {
-    mocks.put.mockImplementation(async (_path, body) => ({ ...body, version: body.version + 1 }))
+    mocks.put.mockImplementation(async (_path, body) => ({
+      ...body,
+      version: body.version + 1,
+    }))
     const { client } = setup()
     const user = userEvent.setup()
     await screen.findByDisplayValue('A profile')
     await user.click(screen.getByRole('button', { name: 'Add education' }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(mocks.put).not.toHaveBeenCalled()
-    const institution = screen.getByRole('textbox', { name: /University|Institution/ })
+    const institution = screen.getByRole('textbox', {
+      name: /University|Institution/,
+    })
     expect(institution).toHaveAttribute('aria-invalid', 'true')
     expect(institution).toHaveAttribute('required')
     await user.type(institution, 'Example University')
@@ -141,7 +180,10 @@ describe('professional profile ownership and form submission', () => {
   })
 
   it('saves comma-separated skills and languages when Enter submits the focused input', async () => {
-    mocks.put.mockImplementation(async (_path, body) => ({ ...body, version: body.version + 1 }))
+    mocks.put.mockImplementation(async (_path, body) => ({
+      ...body,
+      version: body.version + 1,
+    }))
     const { client } = setup()
     const user = userEvent.setup()
     await screen.findByDisplayValue('A profile')

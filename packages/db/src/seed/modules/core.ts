@@ -52,6 +52,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         id: user.id,
         login: user.login,
         passwordHash,
+        onboardingRequired: false, // Demo users model established accounts.
         givenName: user.givenName,
         familyName: user.familyName,
         title: user.title,

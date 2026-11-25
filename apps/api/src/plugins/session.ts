@@ -46,6 +46,8 @@ export default fp(async function sessionPlugin(app: FastifyInstance) {
   // phase is free. `app.ts` registers this plugin before `authorize`, and Fastify runs same-phase
   // hooks in registration order, so the actor still exists by the time the permission is resolved.
   app.addHook('preValidation', async (req) => {
+    // Shared dashboards have token-only authority, even if a signed-in browser sends cookies.
+    if (req.routeOptions.url === '/api/v1/public-dashboard') return
     const cookieName = app.devonConfig.SESSION_COOKIE_NAME
     const raw = req.cookies[cookieName]
     if (!raw) return

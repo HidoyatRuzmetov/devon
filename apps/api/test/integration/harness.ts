@@ -95,6 +95,7 @@ export async function seedMember(
     instanceRole?: 'member' | 'super_admin'
     login?: string
     passwordHash?: string
+    onboardingRequired?: boolean
   },
 ): Promise<SeededUser> {
   userSeq += 1
@@ -103,9 +104,9 @@ export async function seedMember(
   const passwordHash = opts.passwordHash ?? (await hashPassword(PASSWORD))
   await withSuperuser(db, async (c) => {
     await c.query(
-      `insert into app.users (id, login, password_hash, given_name, family_name, role)
-       values ($1, $2, $3, 'Test', 'User', $4)`,
-      [id, login, passwordHash, opts.instanceRole ?? 'member'],
+      `insert into app.users (id, login, password_hash, given_name, family_name, role, onboarding_required)
+       values ($1, $2, $3, 'Test', 'User', $4, $5)`,
+      [id, login, passwordHash, opts.instanceRole ?? 'member', opts.onboardingRequired ?? false],
     )
     await c.query(
       `insert into app.memberships (id, department_id, user_id, role) values ($1, $2, $3, $4)`,
@@ -119,7 +120,11 @@ export async function seedMember(
  * who is never also a department member per I-8b). */
 export async function seedBareUser(
   db: Db,
-  opts: { instanceRole?: 'member' | 'super_admin'; login?: string } = {},
+  opts: {
+    instanceRole?: 'member' | 'super_admin'
+    login?: string
+    onboardingRequired?: boolean
+  } = {},
 ): Promise<SeededUser> {
   userSeq += 1
   const id = randomUUID()
@@ -127,9 +132,9 @@ export async function seedBareUser(
   const passwordHash = await hashPassword(PASSWORD)
   await withSuperuser(db, (c) =>
     c.query(
-      `insert into app.users (id, login, password_hash, given_name, family_name, role)
-       values ($1, $2, $3, 'Test', 'User', $4)`,
-      [id, login, passwordHash, opts.instanceRole ?? 'member'],
+      `insert into app.users (id, login, password_hash, given_name, family_name, role, onboarding_required)
+       values ($1, $2, $3, 'Test', 'User', $4, $5)`,
+      [id, login, passwordHash, opts.instanceRole ?? 'member', opts.onboardingRequired ?? false],
     ),
   )
   return { id, login }

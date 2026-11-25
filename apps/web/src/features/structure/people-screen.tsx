@@ -81,9 +81,19 @@ function groupByUnit(units: Unit[], members: Member[]): Group[] {
     }))
     .filter((g) => g.members.length > 0)
   if (leadership.length > 0)
-    groups.unshift({ scope: 'department', unit: null, label: '', members: leadership })
+    groups.unshift({
+      scope: 'department',
+      unit: null,
+      label: '',
+      members: leadership,
+    })
   if (unassigned.length > 0)
-    groups.push({ scope: 'unassigned', unit: null, label: '', members: unassigned })
+    groups.push({
+      scope: 'unassigned',
+      unit: null,
+      label: '',
+      members: unassigned,
+    })
   return groups
 }
 
@@ -180,7 +190,10 @@ export default function PeopleScreen() {
         kind="offline"
         titleKey="state.offline.banner"
         bodyKey="state.offline.empty"
-        action={{ labelKey: 'state.error.action', onAction: () => window.location.reload() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => window.location.reload(),
+        }}
       />
     )
   }
@@ -194,7 +207,10 @@ export default function PeopleScreen() {
         kind="forbidden"
         titleKey="state.denied.title"
         bodyKey="state.denied.body"
-        action={{ labelKey: 'state.denied.action', onAction: () => window.history.back() }}
+        action={{
+          labelKey: 'state.denied.action',
+          onAction: () => window.history.back(),
+        }}
       />
     )
   }
@@ -204,7 +220,10 @@ export default function PeopleScreen() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => membersQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => membersQuery.refetch(),
+        }}
       />
     )
   }
@@ -213,7 +232,10 @@ export default function PeopleScreen() {
       <StateView
         kind="empty"
         titleKey="structure.people.empty.title"
-        action={{ labelKey: 'state.error.action', onAction: () => window.location.reload() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => window.location.reload(),
+        }}
       />
     )
   }
@@ -324,7 +346,7 @@ export default function PeopleScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div data-onboarding="people" className="flex flex-col gap-6">
       <DepartmentHeader
         titleKey="structure.people.title"
         subtitleKey="structure.people.subtitle"
@@ -354,7 +376,9 @@ export default function PeopleScreen() {
             >
               <Building2 className="size-4" />
               {unitFilter.length
-                ? t('peopleDownloads.unitsSelected', { count: unitFilter.length })
+                ? t('peopleDownloads.unitsSelected', {
+                    count: unitFilter.length,
+                  })
                 : t('structure.people.filters.all')}
               <ChevronDown className="size-4" />
             </Button>

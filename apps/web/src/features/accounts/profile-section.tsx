@@ -19,6 +19,7 @@ const PROFILE_FIELDS = [
   'login',
   'email',
   'dateOfBirth',
+  'workStartDate',
 ] as const
 
 /** Refresh each untouched field without erasing typing in another one. */
@@ -38,9 +39,12 @@ type ProfileSaveCommand = {
   csrfToken: string
 }
 
-export function ProfileSection() {
+export function ProfileSection({ setupRequired = false }: { setupRequired?: boolean }) {
   const t = useT()
-  const query = useQuery({ queryKey: ['accounts', 'profile'], queryFn: fetchProfile })
+  const query = useQuery({
+    queryKey: ['accounts', 'profile'],
+    queryFn: fetchProfile,
+  })
   return (
     <SettingsSection
       id="section-profile"
@@ -52,15 +56,24 @@ export function ProfileSection() {
         <StateView
           kind="error"
           titleKey="state.error.title"
-          action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => void query.refetch(),
+          }}
         />
       ) : null}
-      {query.data ? <ProfileForm profile={query.data} /> : null}
+      {query.data ? <ProfileForm profile={query.data} setupRequired={setupRequired} /> : null}
     </SettingsSection>
   )
 }
 
-function ProfileForm({ profile }: { profile: AccountProfile }) {
+function ProfileForm({
+  profile,
+  setupRequired,
+}: {
+  profile: AccountProfile
+  setupRequired: boolean
+}) {
   const t = useT()
   const fieldId = React.useId()
   const qc = useQueryClient()
@@ -102,11 +115,14 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
       qc.setQueryData(['accounts', 'profile'], acknowledged)
       void qc.invalidateQueries({ queryKey: ['accounts', 'profile'] })
       if ('dateOfBirth' in patch) void qc.invalidateQueries({ queryKey: ['birthday'] })
-      void qc.invalidateQueries({ queryKey: ['accounts', 'professional-profile'] })
+      void qc.invalidateQueries({
+        queryKey: ['accounts', 'professional-profile'],
+      })
       void qc.invalidateQueries({ queryKey: ['me'] })
       void qc.invalidateQueries({ queryKey: ['people'] })
       void qc.invalidateQueries({ queryKey: ['structure', 'members'] })
       void qc.invalidateQueries({ queryKey: ['work'] })
+      void qc.invalidateQueries({ queryKey: ['onboarding'] })
       toast(t('profileEdit.saved'))
     },
   })
@@ -115,6 +131,9 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
     currentValues.current = next
     setValues(next)
   }
+  const required = (field: string) =>
+    ['givenName', 'familyName', 'login'].includes(field) ||
+    (setupRequired && ['title', 'dateOfBirth', 'workStartDate'].includes(field))
   return (
     <form
       className="flex flex-col gap-3"
@@ -143,7 +162,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
           <div key={field} className="flex flex-col gap-1.5 text-small">
             <label htmlFor={`${fieldId}-${field}`}>
               {t(field === 'dateOfBirth' ? 'birthday.dateOfBirth' : `profileEdit.${field}`)}
-              {['givenName', 'familyName', 'login'].includes(field) ? (
+              {required(field) ? (
                 <span className="ml-1 text-destructive" aria-hidden="true">
                   *
                 </span>
@@ -154,6 +173,8 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                 id={`${fieldId}-${field}`}
                 className="h-11 rounded-md border border-border bg-card px-3"
                 value={values.title ?? ''}
+                required={required(field)}
+                aria-required={required(field)}
                 onChange={(e) => updateField('title', e.target.value || null)}
               >
                 <option value="">{t('profileChoices.choose')}</option>
@@ -163,15 +184,21 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                   </option>
                 ))}
               </select>
-            ) : field === 'dateOfBirth' ? (
+            ) : field === 'dateOfBirth' || field === 'workStartDate' ? (
               <BirthDateInput
                 id={`${fieldId}-${field}`}
-                aria-describedby={`${fieldId}-${field}-hint`}
-                autoComplete="bday"
-                value={values.dateOfBirth ?? ''}
+                aria-describedby={field === 'dateOfBirth' ? `${fieldId}-${field}-hint` : undefined}
+                autoComplete={field === 'dateOfBirth' ? 'bday' : undefined}
+                required={required(field)}
+                aria-required={required(field)}
+                value={values[field] ?? ''}
                 min="1900-01-01"
-                max={new Date(Date.now() + 18_000_000).toISOString().slice(0, 10)}
-                onValueChange={(value) => updateField('dateOfBirth', value || null)}
+                {...(field === 'dateOfBirth'
+                  ? {
+                      max: new Date(Date.now() + 18_000_000).toISOString().slice(0, 10),
+                    }
+                  : {})}
+                onValueChange={(value) => updateField(field, value || null)}
               />
             ) : (
               <Input
@@ -190,7 +217,7 @@ function ProfileForm({ profile }: { profile: AccountProfile }) {
                           ? 'email'
                           : 'username'
                 }
-                required={['givenName', 'familyName', 'login'].includes(field)}
+                required={required(field)}
                 maxLength={field === 'email' ? 256 : field === 'login' ? 64 : 100}
                 {...(field === 'login' ? { minLength: 3, pattern: '[a-z0-9._\\-]+' } : {})}
                 onChange={(e) =>

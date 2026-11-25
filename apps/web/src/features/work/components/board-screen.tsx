@@ -584,6 +584,8 @@ function BoardScreenInner() {
               ? 'work.board.expandAllColumns'
               : 'work.board.collapseAllColumns',
           )}
+          data-onboarding="columns"
+          data-collapsed={collapsedCount === columnKeys.length}
           onClick={() => setAllCollapsed(collapsedCount !== columnKeys.length)}
         >
           {collapsedCount === columnKeys.length ? (
@@ -601,7 +603,11 @@ function BoardScreenInner() {
           value={isFiltering ? 'all' : scope}
           onValueChange={(next) => void changeScope(next)}
           options={[
-            { value: 'all', label: t('work.board.scopeAll'), count: board.members.length },
+            {
+              value: 'all',
+              label: t('work.board.scopeAll'),
+              count: board.members.length,
+            },
             { value: 'mine', label: t('work.board.scopeMine') },
           ]}
         />

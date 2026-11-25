@@ -3,7 +3,7 @@ import {
   authedPatch,
   examplePassword,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   uniqueLogin,
 } from './flow-api.js'
 import { THEME_STORAGE_KEY } from '../../src/lib/constants.js'

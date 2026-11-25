@@ -16,3 +16,16 @@ const built = spawnSync(
 )
 if (built.error) throw built.error
 process.exitCode = built.status ?? 1
+if (process.exitCode === 0) {
+  const dashboard = spawnSync(
+    process.execPath,
+    [vite, 'build', '--config', 'src/public-dashboard.vite.config.ts'],
+    {
+      cwd: webRoot,
+      env: { ...process.env, NODE_ENV: 'production' },
+      stdio: 'inherit',
+    },
+  )
+  if (dashboard.error) throw dashboard.error
+  process.exitCode = dashboard.status ?? 1
+}

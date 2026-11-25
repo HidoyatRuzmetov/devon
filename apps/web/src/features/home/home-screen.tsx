@@ -13,7 +13,7 @@ import { RouterLink, navigate, replaceSearchParam, useSearchParams } from '../..
 import { formatHomeDateLine, greetingKey, greetingName, tashkentHour } from '../../lib/greeting.js'
 import { InboxPanel } from '../inbox/inbox-screen.js'
 import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
-import { HelpCircle } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 
 const HomeCardPeekDialog = React.lazy(() =>
@@ -91,7 +91,7 @@ export default function HomeScreen() {
   const now = new Date()
 
   const header = (
-    <div className="flex shrink-0 items-start justify-between gap-3">
+    <div data-onboarding="home" className="flex shrink-0 items-start justify-between gap-3">
       <Reveal className="min-w-0 flex flex-col gap-1">
         <h1
           tabIndex={-1}
@@ -104,12 +104,13 @@ export default function HomeScreen() {
         </p>
       </Reveal>
       <RouterLink
-        href="/help?from=overview"
-        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-transparent px-2.5 text-small text-muted-foreground transition-colors hover:border-border hover:bg-card/70 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+        href="/help"
+        data-onboarding="help"
+        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/5 px-3 text-small font-medium text-primary transition-colors hover:border-primary/40 hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <HelpCircle className="size-4" aria-hidden="true" />
-        <span className="hidden sm:inline">{t('help.title')}</span>
-        <span className="sr-only sm:hidden">{t('help.title')}</span>
+        <BookOpen className="size-4" aria-hidden="true" />
+        <span className="hidden sm:inline">{t('onboarding.title')}</span>
+        <span className="sr-only sm:hidden">{t('onboarding.title')}</span>
       </RouterLink>
     </div>
   )
@@ -159,7 +160,12 @@ function PersonalHome({
   entry,
 }: {
   header: React.ReactNode
-  entry: { titleKey: string; bodyKey: string; actionKey: string; onAction: () => void }
+  entry: {
+    titleKey: string
+    bodyKey: string
+    actionKey: string
+    onAction: () => void
+  }
 }) {
   const t = useT()
   const [viewportRef, height] = useViewportBoundedHeight<HTMLDivElement>(0, true)

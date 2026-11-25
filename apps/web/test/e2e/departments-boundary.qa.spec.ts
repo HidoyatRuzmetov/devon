@@ -10,7 +10,7 @@ import {
   loginAsSuperAdmin,
   login,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   uniqueLogin,
 } from './flow-api.js'
 import {

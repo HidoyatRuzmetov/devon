@@ -8,7 +8,7 @@ import {
   joinDepartmentAsNewUser,
   loginAsSuperAdmin,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   stripSecureCookies,
   uniqueLogin,
 } from './flow-api.js'

@@ -9,6 +9,7 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import { test, type APIResponse, type Browser, type BrowserContext } from '@playwright/test'
 import { FLOW_SUPERADMIN_FILE, FLOW_WEB_BASE_URL, type FlowSuperAdmin } from './flow-env.js'
 import { localResponseCookie } from './flow-cookie-options.js'
+import { markFlowUserEstablished } from './flow-db.js'
 
 let clientSequence = 0
 
@@ -119,6 +120,23 @@ export async function login(
   await applySetCookies(context, res)
 }
 
+/** Existing-workflow fixtures explicitly model pre-release accounts. Newcomer tests use
+ * registerUser directly, retaining the real required-onboarding default. */
+export async function registerEstablishedUser(
+  context: BrowserContext,
+  opts: Parameters<typeof registerUser>[1],
+): Promise<void> {
+  await registerUser(context, opts)
+  await markEstablishedAccount(context)
+}
+
+export async function markEstablishedAccount(context: BrowserContext): Promise<void> {
+  const response = await context.request.get('/api/v1/me')
+  if (response.status() !== 200) throw new Error('Fixture account is not authenticated')
+  const me = (await response.json()) as { user: { id: string } }
+  markFlowUserEstablished(me.user.id)
+}
+
 export function readSuperAdmin(): FlowSuperAdmin {
   return JSON.parse(readFileSync(FLOW_SUPERADMIN_FILE, 'utf8')) as FlowSuperAdmin
 }
@@ -134,7 +152,7 @@ export async function createApprovedDepartment(
   superAdminContext: BrowserContext,
   opts: { headLogin: string; headPassword: string; departmentName: string },
 ): Promise<{ departmentId: string; joinKey: string; joinPassword: string }> {
-  await registerUser(headContext, {
+  await registerEstablishedUser(headContext, {
     login: opts.headLogin,
     password: opts.headPassword,
     givenName: 'Test',
@@ -176,7 +194,7 @@ export async function joinDepartmentAsNewUser(
   context: BrowserContext,
   opts: { login: string; password: string; joinKey: string; joinPassword: string },
 ): Promise<void> {
-  await registerUser(context, {
+  await registerEstablishedUser(context, {
     login: opts.login,
     password: opts.password,
     givenName: 'Test',

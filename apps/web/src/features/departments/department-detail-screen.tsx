@@ -1,5 +1,6 @@
 import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from '../accounts/settings-section.js'
+import { PublicDashboardLinks } from './public-dashboard-links.js'
 import { avatarUrl } from '../../lib/avatar.js'
 // `/department?id=<uuid>` -- detail, settings, invite and membership management for one department
 // (TECH-SPEC §2.2, §2.3). Query-string id, not a path param: `src/lib/router.tsx` supports exact
@@ -38,7 +39,7 @@ import {
   TabsTrigger,
   toast,
 } from '@devon/ui'
-import { Copy, Lock, MoreVertical, RefreshCw } from 'lucide-react'
+import { Copy, Lock, LogOut, MoreVertical, RefreshCw } from 'lucide-react'
 import { FEATURES, FEATURE_KEYS, type FeatureKey } from '@devon/contracts'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery, useDepartment } from '../../lib/session.js'
@@ -68,7 +69,7 @@ import {
   type Member,
 } from './api.js'
 
-type Tab = 'general' | 'invite' | 'members' | 'danger'
+type Tab = 'general' | 'invite' | 'members' | 'public' | 'danger'
 const departmentActionKey = (id: string) => ['departments', 'pendingAction', id] as const
 
 function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
@@ -876,7 +877,7 @@ function MemberRow({
   const isLastHead = member.role === 'head' && headCount <= 1 && member.accountStatus === 'active'
   const canAppoint =
     member.role === 'member' && member.status === 'active' && member.accountStatus === 'active'
-  const hasMenu = (isHead && !isMe) || (isSuperAdmin && !isMe)
+  const hasMenu = (isHead && (!isMe || !isLastHead)) || (isSuperAdmin && !isMe)
 
   return (
     <DataRow
@@ -893,6 +894,19 @@ function MemberRow({
       }
       trailing={
         <>
+          {isMe ? (
+            <IconButton
+              aria-label={t('departments.members.leave')}
+              tooltip={t(
+                isLastHead ? 'departments.members.leaveBlockedHead' : 'departments.members.leave',
+              )}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/85 hover:text-destructive-foreground"
+              disabled={actionPending || isLastHead}
+              onClick={onLeave}
+            >
+              <LogOut aria-hidden="true" />
+            </IconButton>
+          ) : null}
           {hasMenu ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -908,6 +922,11 @@ function MemberRow({
                 </IconButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {isMe && isHead && !isLastHead ? (
+                  <DropdownMenuItem disabled={actionPending} onSelect={onDemote}>
+                    {t('departments.members.stepDown')}
+                  </DropdownMenuItem>
+                ) : null}
                 {isHead && !isMe ? (
                   <>
                     {canAppoint ? (
@@ -967,31 +986,6 @@ function MemberRow({
             date: formatDate(new Date(member.joinedAt), locale),
           })}
         </span>
-        {isMe ? (
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="max-w-full text-left"
-              disabled={actionPending || isLastHead}
-              onClick={onLeave}
-              title={isLastHead ? t('departments.members.leaveBlockedHead') : undefined}
-            >
-              {t('departments.members.leave')}
-            </Button>
-            {isHead && !isLastHead ? (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="max-w-full text-left"
-                disabled={actionPending}
-                onClick={onDemote}
-              >
-                {t('departments.members.stepDown')}
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </DataRow>
   )
@@ -1037,7 +1031,9 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
       queryKey: ['departments', 'members', id],
     })
     void queryClient.invalidateQueries({ queryKey: ['departments', 'mine'] })
-    void queryClient.invalidateQueries({ queryKey: ['departments', 'detail', id] })
+    void queryClient.invalidateQueries({
+      queryKey: ['departments', 'detail', id],
+    })
     void queryClient.invalidateQueries({ queryKey: ['me'] })
   }
   const remove = useMutation({
@@ -1367,7 +1363,9 @@ function DangerTab({ id, departmentName }: { id: string; departmentName: string 
     onSuccess: () => {
       toast(t('departments.settings.deletionRequested'))
       setConfirmOpen(false)
-      void queryClient.invalidateQueries({ queryKey: ['departments', 'detail', id] })
+      void queryClient.invalidateQueries({
+        queryKey: ['departments', 'detail', id],
+      })
       void queryClient.invalidateQueries({ queryKey: ['departments', 'mine'] })
     },
   })
@@ -1424,6 +1422,7 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
   const requestedTab = params.get('tab')
   const [tab, setTab] = React.useState<Tab>(
     requestedTab === 'invite' ||
+      requestedTab === 'public' ||
       requestedTab === 'members' ||
       requestedTab === 'danger' ||
       requestedTab === 'general'
@@ -1481,7 +1480,9 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
 
   return (
     <Tabs
-      value={!isHead && (tab === 'invite' || tab === 'danger') ? 'general' : tab}
+      value={
+        !isHead && (tab === 'invite' || tab === 'public' || tab === 'danger') ? 'general' : tab
+      }
       onValueChange={(v) => setTab(v as Tab)}
       className="flex min-w-0 flex-col gap-4"
     >
@@ -1493,6 +1494,7 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
               <TabsTrigger value="invite">{t('departments.invite.title')}</TabsTrigger>
             ) : null}
             <TabsTrigger value="members">{t('departments.members.title')}</TabsTrigger>
+            {isHead && <TabsTrigger value="public">{t('publicDashboard.title')}</TabsTrigger>}
             {isHead ? (
               <TabsTrigger value="danger">{t('departments.settings.dangerZone')}</TabsTrigger>
             ) : null}
@@ -1509,6 +1511,7 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
                 <TabsTrigger value="invite">{t('departments.invite.title')}</TabsTrigger>
               ) : null}
               <TabsTrigger value="members">{t('departments.members.title')}</TabsTrigger>
+              {isHead && <TabsTrigger value="public">{t('publicDashboard.title')}</TabsTrigger>}
               {isHead ? (
                 <TabsTrigger value="danger">{t('departments.settings.dangerZone')}</TabsTrigger>
               ) : null}
@@ -1528,6 +1531,11 @@ export default function DepartmentDetailScreen({ embedded = false }: { embedded?
       <TabsContent value="members">
         <MembersTab key={id} id={id} isHead={isHead} myUserId={myUserId} />
       </TabsContent>
+      {isHead && (
+        <TabsContent value="public">
+          <PublicDashboardLinks key={id} departmentId={id} />
+        </TabsContent>
+      )}
       {isHead ? (
         <TabsContent value="danger">
           <DangerTab key={id} id={id} departmentName={dept.name} />

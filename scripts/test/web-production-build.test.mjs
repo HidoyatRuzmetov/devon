@@ -32,6 +32,21 @@ test('the supported web build emits React production code despite a development 
       join(fixture, 'src/vite.config.ts'),
       "import { defineConfig } from 'vite'; import { fileURLToPath } from 'node:url'; export default defineConfig({ root: fileURLToPath(new URL('.', import.meta.url)), envDir: '..', publicDir: false, build: { outDir: '../dist', sourcemap: true } });",
     )
+    // The supported build now emits both the authenticated portal and its isolated public view.
+    // Give each build a real React entry so the runtime assertion covers both outputs.
+    mkdirSync(join(fixture, 'src/public-dashboard'))
+    writeFileSync(
+      join(fixture, 'src/public-dashboard/index.html'),
+      readFileSync(join(fixture, 'src/index.html')),
+    )
+    writeFileSync(
+      join(fixture, 'src/public-dashboard/main.js'),
+      readFileSync(join(fixture, 'src/main.js')),
+    )
+    writeFileSync(
+      join(fixture, 'src/public-dashboard.vite.config.ts'),
+      "import { defineConfig } from 'vite'; import { fileURLToPath } from 'node:url'; export default defineConfig({ root: fileURLToPath(new URL('./public-dashboard', import.meta.url)), envDir: '../..', publicDir: false, base: '/view/', build: { outDir: '../../dist/view', sourcemap: true } });",
+    )
     const entry = JSON.parse(readFileSync(join(web, 'package.json'), 'utf8')).scripts.build.split(
       ' && ',
     )[0]
@@ -57,14 +72,14 @@ test('the supported web build emits React production code despite a development 
       timeout: 60_000,
     })
     assert.equal(built.status, 0, built.stderr || built.error?.message || 'fixture build failed')
-    const sources = readdirSync(join(fixture, 'dist/assets'))
-      .filter((file) => file.endsWith('.map'))
-      .flatMap(
-        (file) => JSON.parse(readFileSync(join(fixture, 'dist/assets', file), 'utf8')).sources,
-      )
-    assert.ok(sources.some((source) => source.endsWith('/react-dom-client.production.js')))
-    assert.ok(sources.some((source) => source.endsWith('/react.production.js')))
-    assert.ok(!sources.some((source) => /react[^/]*\/cjs\/[^/]*\.development\.js$/.test(source)))
+    for (const assets of ['dist/assets', 'dist/view/assets']) {
+      const sources = readdirSync(join(fixture, assets))
+        .filter((file) => file.endsWith('.map'))
+        .flatMap((file) => JSON.parse(readFileSync(join(fixture, assets, file), 'utf8')).sources)
+      assert.ok(sources.some((source) => source.endsWith('/react-dom-client.production.js')))
+      assert.ok(sources.some((source) => source.endsWith('/react.production.js')))
+      assert.ok(!sources.some((source) => /react[^/]*\/cjs\/[^/]*\.development\.js$/.test(source)))
+    }
   } finally {
     assert.equal(dirname(fixture), scratch)
     rmSync(fixture, { recursive: true, force: true })

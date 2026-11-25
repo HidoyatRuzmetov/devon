@@ -5,6 +5,7 @@ import { ApiError, apiClient } from '../../lib/api-client.js'
 import type { Locale } from '@devon/i18n'
 
 const profileSchema = z.object({
+  workStartDate: z.string().nullable().default(null),
   dateOfBirth: z.string().nullable().default(null),
   login: z.string(),
   email: z.string().nullable(),
@@ -50,7 +51,10 @@ const publicUserSchema = z.object({
   mustChangePassword: z.boolean(),
 })
 
-const registerResultSchema = z.object({ user: publicUserSchema, csrfToken: z.string() })
+const registerResultSchema = z.object({
+  user: publicUserSchema,
+  csrfToken: z.string(),
+})
 
 export function registerAccount(input: RegisterInput) {
   return apiClient.post('/api/v1/accounts/register', input, registerResultSchema)
@@ -86,7 +90,10 @@ export function fetchTwoFactorStatus() {
   return apiClient.get('/api/v1/accounts/2fa', twoFactorStatusSchema)
 }
 
-const totpEnrollResultSchema = z.object({ secret: z.string(), otpauthUri: z.string() })
+const totpEnrollResultSchema = z.object({
+  secret: z.string(),
+  otpauthUri: z.string(),
+})
 export function enrollTotp(csrfToken: string) {
   return apiClient.post('/api/v1/accounts/2fa/totp/enroll', {}, totpEnrollResultSchema, csrfToken)
 }

@@ -8,7 +8,7 @@ import {
   joinDepartmentAsNewUser,
   loginAsSuperAdmin,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   uniqueLogin,
 } from './flow-api.js'
 import { settleCapture } from './platform-capture.js'

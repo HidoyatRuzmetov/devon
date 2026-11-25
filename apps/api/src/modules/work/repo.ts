@@ -403,11 +403,12 @@ export async function getChecklists(
       due_at: Date | null
       order_key: string
       version: number
+      onboarding_key: string | null
       text_locked: boolean
       deletion_protected: boolean
       comment_count: number
     }>(
-      sql`select id, card_id, parent_item_id, text, done_at, assignee_user_id, due_at, order_key, version,
+      sql`select id, card_id, parent_item_id, text, done_at, assignee_user_id, due_at, order_key, version, onboarding_key,
           app.checkin_item_locked(i.id) as text_locked,
           (select count(*) from app.card_comments cm where cm.checklist_item_id=i.id and cm.deleted_at is null) as comment_count,
           exists(select 1 from app.checkin_entries e where e.checklist_item_id=i.id and e.removed_at is null) as deletion_protected
@@ -427,6 +428,7 @@ export async function getChecklists(
       dueAt: r.due_at ? new Date(r.due_at).toISOString() : null,
       orderKey: r.order_key,
       version: r.version,
+      onboardingKey: r.onboarding_key,
       textLocked: r.text_locked,
       deletionProtected: r.deletion_protected,
       commentCount: Number(r.comment_count),
@@ -604,11 +606,16 @@ export async function createCardInTx(
   tx: Tx,
   input: CreateCardInput,
 ): Promise<CardDTO> {
-  if (ctx.departmentRole === 'member') {
+  // Department board cards retain the self-only rule. A group project is shared work:
+  // any active department member may create an assignment for a colleague in that project.
+  // The project and both named people are still checked and locked below in this transaction.
+  if (ctx.departmentRole === 'member' && !input.projectId) {
     if (input.assigneeUserId !== undefined && input.assigneeUserId !== ctx.userId)
       throw Object.assign(new Error('own_task_required'), { statusCode: 403 })
     input = { ...input, assigneeUserId: ctx.userId }
   }
+  if (input.projectId && input.assigneeUserId === undefined)
+    input = { ...input, assigneeUserId: ctx.userId }
   await lockCardOrder(tx, input.departmentId)
   // The creator remains historical attribution. Only newly named assignee/giver references
   // require current membership; the existing default giver=creator semantics stay intact.
@@ -680,6 +687,10 @@ export async function createCardInTx(
     after: {
       title: input.title,
       assigneeUserId: input.assigneeUserId ?? null,
+      projectId: input.projectId ?? null,
+      projectScope: input.projectScope ?? (input.projectId ? 'subjective' : 'none'),
+      createdByUserId: input.createdByUserId,
+      giverUserId: input.giverUserId ?? input.createdByUserId,
     },
   })
   // The notification registry (`notifications/registry.ts`) resolves "who cares" from the card
@@ -1093,7 +1104,7 @@ export async function patchChecklistItem(
     if (patch.orderKey !== undefined) sets.push(sql`order_key = ${patch.orderKey}`)
     const result = await tx.raw<{ card_id: string }>(
       sql`update app.card_checklist_items set ${sql.join(sets, sql`, `)}
-          where id = ${itemId} and card_id = ${cardId} and department_id = ${departmentId} and deleted_at is null
+          where id = ${itemId} and card_id = ${cardId} and department_id = ${departmentId} and deleted_at is null and onboarding_key is null
           returning card_id`,
     )
     if (result.length > 0) {
@@ -1141,7 +1152,7 @@ export async function deleteChecklistItem(
               where child.card_id = ${cardId} and child.department_id = ${departmentId} and child.deleted_at is null
           )
           update app.card_checklist_items set deleted_at = now(), updated_at = now(), version = version + 1
-          where id in (select id from subtree) returning id`,
+          where id in (select id from subtree) and onboarding_key is null returning id`,
     )
     if (result.length > 0) {
       await tx.raw(sql`insert into app.card_activity(id,department_id,card_id,actor_user_id,kind,data)
@@ -1395,7 +1406,12 @@ export async function restoreCard(
     if (!card.deleted_at) return 'ok'
     await tx.raw(sql`update app.cards set deleted_at=null,deleted_by_user_id=null,deleted_by_project_id=null,
       updated_at=now(),version=version+1 where id=${cardId}`)
-    tx.audit({ action: 'work.card_restored', subjectType: 'card', subjectId: cardId, departmentId })
+    tx.audit({
+      action: 'work.card_restored',
+      subjectType: 'card',
+      subjectId: cardId,
+      departmentId,
+    })
     tx.emit({
       type: 'work.card.restored',
       departmentId,
@@ -1526,7 +1542,9 @@ async function checklistIsVisible(
   itemId: string,
   lock = false,
 ) {
-  const rows = await tx.raw<{ id: string }>(sql`select i.id from app.card_checklist_items i
+  const rows = await tx.raw<{
+    id: string
+  }>(sql`select i.id from app.card_checklist_items i
     join app.cards c on c.id=i.card_id and c.department_id=i.department_id and c.deleted_at is null
     where i.id=${itemId} and i.card_id=${cardId} and i.department_id=${departmentId} and i.deleted_at is null ${lock ? sql`for share of i` : sql``}`)
   return rows.length > 0

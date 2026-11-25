@@ -23,6 +23,7 @@ export function ChecklistRow({
     doneAt: string | null
     textLocked?: boolean | undefined
     deletionProtected?: boolean | undefined
+    onboardingKey?: string | null | undefined
     commentCount?: number | undefined
   }
   canEdit: boolean
@@ -30,7 +31,12 @@ export function ChecklistRow({
   onSave: (text: string) => SaveResult
   onDelete: () => void
   checkin?:
-    | { selected: boolean; disabled: boolean; reason?: string | undefined; toggle: () => void }
+    | {
+        selected: boolean
+        disabled: boolean
+        reason?: string | undefined
+        toggle: () => void
+      }
     | undefined
 }) {
   const t = useT()
@@ -69,7 +75,7 @@ export function ChecklistRow({
         <Checkbox
           id={checkboxId}
           checked={item.doneAt !== null}
-          disabled={!canEdit}
+          disabled={!canEdit || !!item.onboardingKey}
           onCheckedChange={(v) => onToggle(v === true)}
           celebrate
           size="sm"
@@ -137,21 +143,25 @@ export function ChecklistRow({
               }}
               onDelete={onDelete}
               editReason={
-                !canEdit
-                  ? t('state.denied.body')
-                  : item.textLocked
-                    ? t('checklistDiscussion.textLocked')
-                    : undefined
+                item.onboardingKey
+                  ? t('onboarding.managedItem')
+                  : !canEdit
+                    ? t('state.denied.body')
+                    : item.textLocked
+                      ? t('checklistDiscussion.textLocked')
+                      : undefined
               }
               deleteReason={
-                !canEdit
-                  ? t('state.denied.body')
-                  : item.deletionProtected
-                    ? t('cardActions.checkinProtected')
-                    : undefined
+                item.onboardingKey
+                  ? t('onboarding.managedItem')
+                  : !canEdit
+                    ? t('state.denied.body')
+                    : item.deletionProtected
+                      ? t('cardActions.checkinProtected')
+                      : undefined
               }
               checkin={
-                checkin
+                checkin && !item.onboardingKey
                   ? {
                       ...checkin,
                       disabled: !canEdit || checkin.disabled,

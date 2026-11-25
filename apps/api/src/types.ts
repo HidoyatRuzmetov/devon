@@ -13,11 +13,13 @@ export type UserRecord = {
   familyName: string
   patronymic: string | null
   title: string | null
+  workStartDate?: string | null
   avatarKey: string | null
   locale: string
   timezone: string
   role: Role
   status: 'active' | 'locked' | 'deleted'
+  onboardingRequired?: boolean
   mustChangePassword: boolean
   lastLoginAt: Date | null
 }

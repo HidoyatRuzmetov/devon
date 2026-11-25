@@ -1,3 +1,8 @@
+import {
+  ProjectWorkspaceHeading,
+  ProjectAssignmentComposer,
+  ProjectMemberPanel,
+} from './project-workspace-parts.js'
 import { ViewSkeleton } from '../../../lib/view-skeleton.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // Project cards are loaded by immutable project id and paginated, so renaming a project or sharing
@@ -9,15 +14,12 @@ import { useQuery } from '@tanstack/react-query'
 import { CalendarClock, ChevronLeft, ListTodo } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
-  Avatar,
   AvatarStack,
-  Badge,
   Button,
   Checkbox,
   cn,
   initialsFromName,
   Input,
-  ProgressRing,
   SparkleButton,
   Stagger,
   StaggerItem,
@@ -205,6 +207,10 @@ export default function ProjectPageScreen() {
     ownerUserIds: [project.ownerUserId, ...project.members],
   }).allowed
   const cards = cardsQuery.data ?? []
+  const canAddAssignment = can(actor, 'create', {
+    kind: 'department_child',
+    departmentId: actor?.departmentId ?? '',
+  }).allowed
   const assignments = cards
   const percent = Math.round(project.progress * 100)
   const canDelete = can(actor, 'delete', {
@@ -380,40 +386,14 @@ export default function ProjectPageScreen() {
           {t('projects.title')}
         </RouterLink>
         <header className="flex flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <ProgressRing
-              value={percent}
-              size={56}
-              strokeWidth={4.5}
-              label={t('projects.tile.progressAria', { percent })}
-              toneClassName={project.status === 'done' ? 'text-success' : 'text-primary'}
-            >
-              {percent}
-            </ProgressRing>
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <h1 className="break-words font-display text-h3 text-foreground sm:text-h2">
-                {project.title}
-              </h1>
-              <div className="flex items-center gap-2">
-                <span
-                  className="size-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: project.colour }}
-                  aria-hidden="true"
-                />
-                <Badge tone="neutral">{t(`projects.status.${project.status}`)}</Badge>
-              </div>
-              {project.description ? (
-                <p className="max-w-160 text-body text-muted-foreground">
-                  {project.description.text}
-                </p>
-              ) : null}
-            </div>
-            {canEdit ? (
-              <div className="shrink-0">
-                <EditProjectDialog project={project} />
-              </div>
-            ) : null}
-          </div>
+          <ProjectWorkspaceHeading
+            title={project.title}
+            description={project.description?.text}
+            percent={percent}
+            status={project.status}
+            colour={project.colour}
+            actions={canEdit ? <EditProjectDialog project={project} /> : null}
+          />
           <p className="text-caption text-muted-foreground">{t('projectLifecycle.progressHint')}</p>
           {project.members.length > 0 ? (
             <AvatarStack
@@ -575,7 +555,9 @@ export default function ProjectPageScreen() {
                     className="min-w-0"
                     value={newMilestone}
                     maxLength={WORK_TITLE_MAX}
-                    title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
+                    title={t('portal.cards.titleLimit', {
+                      count: WORK_TITLE_MAX,
+                    })}
                     onChange={(e) => setNewMilestone(e.target.value)}
                     placeholder={t('projects.milestone.addPlaceholder')}
                     aria-label={t('projects.milestone.addPlaceholder')}
@@ -691,25 +673,14 @@ export default function ProjectPageScreen() {
                   if (!member) return null
                   const memberTasks = assignments.filter((c) => c.assigneeUserId === memberId)
                   return (
-                    <div
+                    <ProjectMemberPanel
                       key={memberId}
-                      className="flex flex-col gap-1 rounded-md border border-border p-2"
+                      name={fullName(member)}
+                      givenName={member.givenName}
+                      familyName={member.familyName}
+                      avatar={avatarUrl(member.avatarKey, 64)}
+                      count={`${memberTasks.filter(isCardCompleted).length}/${memberTasks.length}`}
                     >
-                      <div className="flex items-center gap-2">
-                        <Avatar
-                          size="sm"
-                          src={avatarUrl(member.avatarKey, 64)}
-                          alt={fullName(member)}
-                          initials={initialsFromName(member.givenName, member.familyName)}
-                          hueSeed={memberId}
-                        />
-                        <span className="text-small font-medium text-foreground">
-                          {fullName(member)}
-                        </span>
-                        <span className="text-caption text-muted-foreground">
-                          {memberTasks.filter(isCardCompleted).length}/{memberTasks.length}
-                        </span>
-                      </div>
                       {memberTasks.map((card) => (
                         <TaskRow
                           key={card.id}
@@ -720,14 +691,14 @@ export default function ProjectPageScreen() {
                           loading={checklistsQuery.isPending}
                         />
                       ))}
-                      {canEdit ? (
+                      {canAddAssignment ? (
                         <SubjectiveAddRow
                           projectId={project.id}
                           assigneeUserId={memberId}
-                          giverUserId={project.ownerUserId}
+                          giverUserId={actor!.userId}
                         />
                       ) : null}
-                    </div>
+                    </ProjectMemberPanel>
                   )
                 })}
               </TabsContent>
@@ -800,15 +771,14 @@ function SubjectiveAddRow({
   assigneeUserId: string
   giverUserId: string
 }) {
-  const t = useT()
   const [text, setText] = React.useState('')
   const createCard = useCreateCardMutation()
   return (
-    <form
-      className="flex gap-2 pt-1"
-      onSubmit={(e) => {
-        e.preventDefault()
-        if (!text.trim() || createCard.isPending) return
+    <ProjectAssignmentComposer
+      value={text}
+      onChange={setText}
+      pending={createCard.isPending}
+      onSubmit={() =>
         createCard.mutate(
           {
             title: text.trim(),
@@ -820,24 +790,7 @@ function SubjectiveAddRow({
           },
           { onSuccess: () => setText('') },
         )
-      }}
-    >
-      <Input
-        value={text}
-        maxLength={WORK_TITLE_MAX}
-        title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={t('projects.card.addSubjectivePlaceholder')}
-        aria-label={t('projects.card.addSubjectivePlaceholder')}
-      />
-      <Button
-        type="submit"
-        size="sm"
-        variant="secondary"
-        disabled={!text.trim() || createCard.isPending}
-      >
-        {t('work.action.save')}
-      </Button>
-    </form>
+      }
+    />
   )
 }

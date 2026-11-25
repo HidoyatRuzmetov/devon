@@ -9,6 +9,7 @@ import {
   examplePassword,
   flowClientHeaders,
   loginAsSuperAdmin,
+  markEstablishedAccount,
   newFlowContext,
   stripSecureCookies,
   uniqueLogin,
@@ -32,6 +33,10 @@ test('@flow register -> department request -> super_admin approval -> invite -> 
   await page.getByLabel('Parol').fill(headPassword)
   await page.getByRole('button', { name: 'Hisob yaratish' }).click()
   await expect(page).toHaveURL(/\/departments$/)
+  // This actor exercises the existing head's department controls; the second actor below remains
+  // a real newcomer. The full required-setup journey has its dedicated Docker browser coverage.
+  await stripSecureCookies(page.context())
+  await markEstablishedAccount(page.context())
 
   // 2. File a department request through the real 3-step stepper (create-request-screen.tsx). A
   //    brand-new head has no departments yet, so `/departments` itself would show the landing choice

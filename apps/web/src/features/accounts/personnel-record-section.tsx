@@ -53,7 +53,10 @@ export function PersonnelRecordSection({
       <StateView
         kind="error"
         titleKey="state.error.title"
-        action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => query.refetch(),
+        }}
       />
     )
   if (!query.data) return <ViewSkeleton view="personnel" />
@@ -147,7 +150,10 @@ function PersonnelEditor({
     onSuccess: (record) => {
       draft.acknowledge(data, record.version)
       qc.setQueryData(['accounts', 'personnel', departmentId, owner], record)
-      void qc.invalidateQueries({ queryKey: ['structure', 'members', departmentId] })
+      void qc.invalidateQueries({
+        queryKey: ['structure', 'members', departmentId],
+      })
+      void qc.invalidateQueries({ queryKey: ['onboarding'] })
       toast.success(t('profileEdit.saved'))
     },
     onError: () => toast.error(t('portal.profile.saveError')),
@@ -241,7 +247,11 @@ function PersonnelEditor({
         scope?.querySelector<HTMLElement>('input:not([type="file"]),textarea,select,button') ||
         scope
       target?.focus({ preventScroll: true })
-      target?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' })
+      target?.scrollIntoView({
+        block: 'center',
+        inline: 'center',
+        behavior: 'instant',
+      })
       if (
         showError &&
         (target instanceof HTMLInputElement ||

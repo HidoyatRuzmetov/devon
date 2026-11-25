@@ -292,7 +292,10 @@ export function CardDetailContent({
           kind="error"
           titleKey="state.error.title"
           bodyKey="state.error.body"
-          action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => void query.refetch(),
+          }}
         />
       </div>
     )
@@ -753,7 +756,10 @@ export function CardDetailContent({
                 onChange={(userId) => {
                   const previous = card.assigneeUserId
                   void patchCard
-                    .mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
+                    .mutateAsync({
+                      id: card.id,
+                      patch: { assigneeUserId: userId },
+                    })
                     .then(() => {
                       assigneeFlash.flash()
                       toastWithUndo({
@@ -825,7 +831,10 @@ export function CardDetailContent({
                   .then(priorityFlash.flash)
                   .catch(priorityFlash.reject)
               }
-              options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
+              options={PRIORITIES.map((p) => ({
+                value: p,
+                label: t(PRIORITY_LABEL_KEY[p]),
+              }))}
             />
           </Field>
           <Field
@@ -841,7 +850,10 @@ export function CardDetailContent({
               selected={toDateInputValue(card.dueAt)}
               onSelect={(date) =>
                 void patchCard
-                  .mutateAsync({ id: card.id, patch: { dueAt: dateToIso(date) } })
+                  .mutateAsync({
+                    id: card.id,
+                    patch: { dueAt: dateToIso(date) },
+                  })
                   .then(dueFlash.flash)
                   .catch(dueFlash.reject)
               }
@@ -940,7 +952,10 @@ export function CardDetailContent({
                 onChange={(userId) => {
                   const previous = card.giverUserId
                   void patchCard
-                    .mutateAsync({ id: card.id, patch: { giverUserId: userId } })
+                    .mutateAsync({
+                      id: card.id,
+                      patch: { giverUserId: userId },
+                    })
                     .then(() => {
                       giverFlash.flash()
                       toastWithUndo({
@@ -973,7 +988,10 @@ export function CardDetailContent({
                 selected={toDateInputValue(card.startAt)}
                 onSelect={(date) =>
                   void patchCard
-                    .mutateAsync({ id: card.id, patch: { startAt: dateToIso(date) } })
+                    .mutateAsync({
+                      id: card.id,
+                      patch: { startAt: dateToIso(date) },
+                    })
                     .then(startFlash.flash)
                     .catch(startFlash.reject)
                 }
@@ -1010,7 +1028,10 @@ export function CardDetailContent({
                       return (
                         <Chip
                           key={label.id}
-                          style={{ backgroundColor: background, color: foreground }}
+                          style={{
+                            backgroundColor: background,
+                            color: foreground,
+                          }}
                         >
                           {label.name}
                         </Chip>
@@ -1093,7 +1114,9 @@ export function CardDetailContent({
                   <CardLinkLabel url={link.url} title={link.title} />
                   {canEdit ? (
                     <IconButton
-                      aria-label={t('work.card.removeLink', { title: link.title })}
+                      aria-label={t('work.card.removeLink', {
+                        title: link.title,
+                      })}
                       disabled={linkPending || patchCard.isPending}
                       onClick={() => void removeLink(link.url)}
                     >
@@ -1440,7 +1463,11 @@ function Checklist({
                     const entry = checkins.data?.entries.find((e) => e.checklistItemId === item.id)
                     if (entry) changeCheckin.mutate({ kind: 'remove', id: entry.id })
                     else if (cycle)
-                      changeCheckin.mutate({ kind: 'add', cycleId: cycle.id, itemId: item.id })
+                      changeCheckin.mutate({
+                        kind: 'add',
+                        cycleId: cycle.id,
+                        itemId: item.id,
+                      })
                   },
                 }
               : undefined
@@ -1467,7 +1494,7 @@ function Checklist({
         ) : undefined
       }
     >
-      <div className="relative flex flex-col gap-1">
+      <div data-onboarding="task-checklist" className="relative flex flex-col gap-1">
         <Celebrate play={checklistCelebrate.play} onDone={checklistCelebrate.onDone} radius={30} />
         {topLevel.map(renderItem)}
         {canEdit ? (
@@ -1603,7 +1630,10 @@ function Comments({
   // It composes into the comment box and never posts -- there is no code path here that sends.
   const replyEnabled = useAiFeatureEnabled('draft_reply')
   const replyAi = useRunAiFeatureMutation('draft_reply')
-  const [reply, setReply] = React.useState<{ output: DraftReplyOutput; meta: RunMeta } | null>(null)
+  const [reply, setReply] = React.useState<{
+    output: DraftReplyOutput
+    meta: RunMeta
+  } | null>(null)
 
   function runSummarize() {
     if (comments.length === 0) return

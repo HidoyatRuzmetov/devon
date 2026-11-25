@@ -53,7 +53,7 @@
     },
     "card": {
       "addObjectivePlaceholder": "Добавить общую задачу",
-      "addSubjectivePlaceholder": "Добавить личную задачу"
+      "addSubjectivePlaceholder": "Добавить индивидуальную задачу"
     },
     "action": {
       "archive": "Архивировать проект",

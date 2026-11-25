@@ -410,6 +410,7 @@ export function CardTile({
       <div className="flex items-start justify-between gap-1.5">
         <button
           type="button"
+          data-onboarding-card-open={card.id}
           onClick={() => onOpen(card.id)}
           title={card.title}
           className={cn(
@@ -496,8 +497,12 @@ export function CardTile({
           {(card.blockedByOpenCount ?? 0) > 0 ? (
             <span
               role="img"
-              aria-label={t('work.chip.blockedBy', { count: card.blockedByOpenCount ?? 0 })}
-              title={t('work.chip.blockedBy', { count: card.blockedByOpenCount ?? 0 })}
+              aria-label={t('work.chip.blockedBy', {
+                count: card.blockedByOpenCount ?? 0,
+              })}
+              title={t('work.chip.blockedBy', {
+                count: card.blockedByOpenCount ?? 0,
+              })}
               className="inline-flex items-center gap-1 text-destructive"
             >
               <Lock className="size-3.5" aria-hidden="true" />

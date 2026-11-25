@@ -53,7 +53,7 @@
     },
     "card": {
       "addObjectivePlaceholder": "Add a shared card",
-      "addSubjectivePlaceholder": "Add a personal card"
+      "addSubjectivePlaceholder": "Add an individual card"
     },
     "action": {
       "archive": "Archive project",

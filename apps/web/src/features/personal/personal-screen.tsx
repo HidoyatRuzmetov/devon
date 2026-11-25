@@ -35,6 +35,7 @@ export default function PersonalScreen() {
 
   return (
     <Tabs
+      data-onboarding="personal"
       value={tab}
       onValueChange={(v) => replaceSearchParam('tab', v)}
       className="flex flex-col gap-6"
@@ -49,6 +50,7 @@ export default function PersonalScreen() {
           >
             {TABS.map(({ id, labelKey, icon: Icon }) => (
               <TabsTrigger
+                data-onboarding-tab={id}
                 key={id}
                 value={id}
                 className="max-sm:flex-col max-sm:gap-1 max-sm:px-1 max-sm:text-caption max-sm:whitespace-normal max-sm:text-center"

@@ -132,6 +132,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
 
   // EPIC-018/EPIC-019 realtime + calendar + web push (v1.1 SPEC §10, migration 1800).
   'app.calendar_feeds': 'global',
+  'app.public_dashboard_links': 'global',
   'app.push_subscriptions': 'user_owned',
   'app.push_vapid_keys': 'global',
   // v1.1 SPEC §7 work-plus (migration 0905): estimates, dependencies, the light time log,
@@ -217,6 +218,8 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'app.sessions and app.telegram_links above. Per-user visibility is enforced by can() plus an ' +
     'explicit user_id predicate on every authenticated query (modules/calendar/repo.ts), exactly as ' +
     'it is for those two.',
+  'app.public_dashboard_links':
+    'Hashed bearer credentials must resolve before a tenant context exists. Every management query verifies the active head and explicitly scopes department_id. Public reads recheck revocation, expiry and publisher membership, then use tenant RLS and an allow-listed projection.',
   'app.push_vapid_keys':
     'EPIC-019: one VAPID keypair identifies this whole deployment to every browser push service ' +
     '(Mozilla/Google/Apple), not one department or one user -- singleton instance configuration, ' +

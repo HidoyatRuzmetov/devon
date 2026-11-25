@@ -11,9 +11,11 @@ import { useT } from '@devon/i18n'
 import { replaceSearchParam, useSearchParams } from '../../../lib/router.js'
 import { CardDetailContent } from './card-detail.js'
 import './card-detail-drawer.css'
+import { useOptionalOnboarding } from '../../onboarding/context.js'
 
 export function CardPeekDialog() {
   const t = useT()
+  const onboarding = useOptionalOnboarding()
   const search = useSearchParams()
   const cardId = search.get('card')
   const [retainedCardId, setRetainedCardId] = React.useState(cardId)
@@ -28,14 +30,28 @@ export function CardPeekDialog() {
   }
 
   return (
-    <Dialog open={cardId !== null} onOpenChange={(open) => !open && close()}>
+    <Dialog
+      modal={!onboarding?.playing}
+      open={cardId !== null}
+      onOpenChange={(open) => !open && close()}
+    >
       {displayedCardId ? (
         <DialogContent
+          data-onboarding="card-detail"
           ref={panel}
           title={t('work.card.peekTitle')}
           titleHidden
           showClose={false}
           aria-describedby={undefined}
+          onInteractOutside={(event) => {
+            if (onboarding?.playing) event.preventDefault()
+          }}
+          onCloseAutoFocus={(event) => {
+            if (onboarding?.playing) event.preventDefault()
+          }}
+          onEscapeKeyDown={(event) => {
+            if (onboarding?.playing) event.preventDefault()
+          }}
           onOpenAutoFocus={(event) => {
             event.preventDefault()
             panel.current?.focus()

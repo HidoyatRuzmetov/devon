@@ -480,6 +480,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ) : (
               <IconButton
                 aria-label={t('shell.menu.open')}
+                data-onboarding-menu
                 size="touch"
                 onClick={() => setDrawerOpen(true)}
               >

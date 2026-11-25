@@ -21,6 +21,7 @@ export interface TopBarProps {
 export function TopBar({ leading, title, search, trailing, className }: TopBarProps) {
   return (
     <header
+      data-onboarding-topbar
       className={cn(
         'sticky top-0 z-40 flex min-h-(--height-topbar) flex-wrap items-center gap-1 border-b border-official/70 sm:gap-2',
         'bg-card px-2 py-1.5 sm:px-4',

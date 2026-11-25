@@ -10,6 +10,10 @@ import { buildTestApp } from './test-app.js'
 
 /** Every route whose subject is `{kind:'department_managed'}` -- head-only for reads AND writes. */
 const HEAD_ONLY_ROUTES: readonly string[] = [
+  'GET /api/v1/departments/:departmentId/public-links',
+  'POST /api/v1/departments/:departmentId/public-links',
+  'DELETE /api/v1/departments/:departmentId/public-links/:id',
+  'POST /api/v1/onboarding/documents/:id/decision',
   'DELETE /api/v1/departments/:departmentId/units/:unitId',
   'POST /api/v1/departments/:departmentId/units/:unitId/restore',
   'GET /api/v1/telegram/departments/:departmentId/groups',

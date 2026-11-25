@@ -587,7 +587,14 @@
           "accounts": "Accounts",
           "admin": "Admin",
           "departments": "Departments",
-          "other": "Other"
+          "other": "Other",
+          "work": "Cards",
+          "projects": "Projects",
+          "events": "Events",
+          "personal": "Personal",
+          "onboarding": "Getting started",
+          "ai": "Assistant",
+          "data": "Other saved changes"
         },
         "verb": {
           "session.created": "signed in",
@@ -804,7 +811,47 @@
           "admin.user.deleted": "deleted an account",
           "projects.comment_added": "commented on a project",
           "projects.comment_edited": "edited a project comment",
-          "projects.comment_deleted": "deleted a project comment"
+          "projects.comment_deleted": "deleted a project comment",
+          "data.record.created": "created saved data",
+          "data.record.updated": "updated saved data",
+          "data.record.deleted": "removed saved data",
+          "accounts.personnel_record_read": "opened a personnel record",
+          "accounts.personnel_record_saved": "saved a personnel record",
+          "accounts.professional_profile_updated": "updated a résumé",
+          "departments.member_role_changed": "changed a department role",
+          "onboarding.started": "started account onboarding",
+          "onboarding.document_uploaded": "submitted a department introduction",
+          "onboarding.document_published": "published a department introduction",
+          "onboarding.document_rejected": "declined a department introduction",
+          "onboarding.document_read": "finished the department introduction",
+          "onboarding.setup_completed": "completed account setup",
+          "onboarding.step_viewed": "advanced through the portal guide",
+          "onboarding.guide_paused": "paused the portal guide",
+          "onboarding.guide_resumed": "resumed the portal guide",
+          "onboarding.tour_completed": "completed the portal guide",
+          "ai.actions.confirmed": "confirmed assistant actions",
+          "ai.attachment.attached": "attached a file to a conversation",
+          "ai.conversation.metered": "recorded assistant usage",
+          "ai.personnel_export.metered": "recorded personnel export usage",
+          "ai.personnel_import.metered": "recorded personnel import usage",
+          "attachments.approval_requested": "requested file access",
+          "attachments.approval_reviewed": "reviewed file access",
+          "attachments.approval_consumed": "used approved file access",
+          "events.carpool_deleted": "removed a shared ride",
+          "events.carpool_updated": "updated a shared ride",
+          "events.comment_edited": "edited an event comment",
+          "events.thumbnail_prepared": "prepared an event image",
+          "checkins.reminder_sent": "sent a progress reminder",
+          "birthdays.group_delivery": "sent a department birthday greeting",
+          "birthdays.reminder_delivery": "sent a birthday reminder",
+          "personal.calendar.deleted": "removed a personal calendar entry",
+          "personal.calendar.reminder_sent": "sent a personal calendar reminder",
+          "telegram.group_mentioned": "sent a group mention",
+          "telegram.group_message": "sent a group message",
+          "work.checklist_plan_applied": "applied a card and checklist plan",
+          "work.plan_applied": "applied a work plan",
+          "departments.public_dashboard_created": "created a public dashboard link",
+          "departments.public_dashboard_revoked": "closed a public dashboard link"
         },
         "subjectType": {
           "session": "Session",
@@ -813,7 +860,9 @@
           "department_request": "Department request",
           "instance_settings": "Instance setting",
           "unit": "Unit",
-          "audit_export": "Audit export"
+          "audit_export": "Audit export",
+          "onboarding_document": "Department introduction",
+          "public_dashboard": "Public dashboard link"
         }
       },
       "health": {
@@ -3891,6 +3940,250 @@
       }
     }
   },
+  "onboarding": {
+    "title": "Getting started",
+    "reading": "Department introduction",
+    "tour": "Learn the portal",
+    "telegram": "Connect Telegram",
+    "account": "Account details",
+    "resume": "Résumé",
+    "personnel": "Personnel record",
+    "chapter": "Chapter {current} of {total}",
+    "readerHint": "Your department’s introduction. Read at your own pace.",
+    "loadError": "Couldn’t load this. Your progress is safe.",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "reload": "Reload document",
+    "finishReading": "Finished reading",
+    "closePreview": "Close preview",
+    "welcome": "Welcome to your department",
+    "readFirst": "Start with the department introduction. Then we’ll set up your account and explore WorkPortal together.",
+    "setupTitle": "Make your account ready",
+    "setupDescription": "Complete all four essentials to unlock the portal. Progress is saved. Only saved details count; blank sections stay unfinished.",
+    "openIntroduction": "Read introduction",
+    "setupProgress": "{complete} of {total} essentials completed",
+    "complete": "Completed",
+    "telegramRequirement": "Connect your personal Telegram account to receive card updates and reminders.",
+    "accountRequirement": "Save your name, position, date of birth, and work start date. A photo and email are optional.",
+    "resumeRequirement": "Add a short introduction, at least one skill, and an education or work experience entry. Then save.",
+    "personnelRequirement": "Fill in your personnel record and save it. Include identity, birth details, nationality, education, specialty, and work history.",
+    "checkProgress": "Check and continue",
+    "saveError": "Couldn’t save progress. Please try again.",
+    "readingComplete": "Introduction complete",
+    "back": "Back",
+    "pause": "Pause guide",
+    "next": "Next",
+    "showAction": "Try it",
+    "finish": "Finish guide",
+    "finishedTitle": "Guide complete",
+    "finishedBody": "Open Getting started on Home to come back here.",
+    "targetMissing": "This control is unavailable in your current view. You can continue and revisit it later.",
+    "centerDescription": "A short guide to your everyday work. Revisit any chapter whenever you need it.",
+    "guide": "Portal guide",
+    "joinFirst": "Join a department to start onboarding.",
+    "sevenChapters": "7 short chapters",
+    "centerTitle": "Find your way around WorkPortal",
+    "centerHint": "Explore the real screens, try a practice project, and learn where everything belongs. Progress is saved as you go.",
+    "resumeGuide": "Continue guide",
+    "startGuide": "Start guide",
+    "checklistTitle": "Your first card",
+    "openTask": "Open onboarding card",
+    "documents": {
+      "tab": "Department introduction",
+      "title": "Your department’s first welcome",
+      "description": "Any member can submit an HTML introduction. A department head previews and approves it before new members see it.",
+      "name": "Title",
+      "placeholder": "Welcome to our department",
+      "file": "HTML file",
+      "fileHint": "A standalone .html or .htm file, up to 2 MB. Embed local assets in the file; use HTTPS for external resources.",
+      "invalid": "Choose a non-empty HTML file no larger than 2 MB.",
+      "submit": "Submit for approval",
+      "submitted": "Submitted. A department head can now review it.",
+      "conflict": "The publication changed or this action failed. The list has been refreshed; review it and try again.",
+      "empty": "No introduction yet. New members can still complete account setup and the portal guide.",
+      "published": "Published",
+      "rejected": "Declined",
+      "pending": "Awaiting approval",
+      "preview": "Preview",
+      "reviewFirst": "Preview the file before publishing.",
+      "publish": "Approve and publish",
+      "reject": "Decline",
+      "versionHint": "Publishing replaces the introduction for future newcomers. People already reading keep their current version."
+    },
+    "chapters": {
+      "0": "Profile & settings",
+      "1": "Home & assistant",
+      "2": "Your cards",
+      "3": "Group projects",
+      "4": "Your personal space",
+      "5": "Your department",
+      "6": "Progress & your guide"
+    },
+    "chapterHints": {
+      "0": "Account, résumé, personnel record and preferences",
+      "1": "Start the day and get help",
+      "2": "Find, open and organise work",
+      "3": "Try the real layout with temporary examples",
+      "4": "Calendar, private cards and focus timer",
+      "5": "Events, colleagues and structure",
+      "6": "Check in, check out and find help again"
+    },
+    "steps": {
+      "profile": {
+        "title": "Account details",
+        "body": "Keep your name, position, dates and account details current here. Your work start date is part of your saved profile."
+      },
+      "home": {
+        "title": "Home",
+        "body": "Home brings your main updates and work together. Check it when you start the day to see what needs attention."
+      },
+      "assistant": {
+        "title": "AI assistant",
+        "body": "Ask about your work, find information, or get help taking action in WorkPortal. This is your main assistant for the portal. Review important answers and any proposed changes."
+      },
+      "column": {
+        "title": "Your column",
+        "body": "Click Your column to jump to your own work without searching through everyone’s cards."
+      },
+      "collapse": {
+        "title": "Collapse all columns",
+        "body": "This control collapses all columns. Try it to see a compact view of the team."
+      },
+      "expand": {
+        "title": "Expand all columns",
+        "body": "The same control now expands all columns. Open them again to see the cards."
+      },
+      "drawer": {
+        "title": "Card details",
+        "body": "The side panel holds the description, people, dates, checklist, and discussion. Your onboarding checklist updates from completed setup and guide steps."
+      },
+      "convert": {
+        "title": "Make a group project",
+        "body": "Make group project turns a suitable card into shared work. We are only pointing it out here. Next, try a separate practice example."
+      },
+      "projects": {
+        "title": "Group projects",
+        "body": "Group projects bring people and individual cards together. Each person can own a card, while the project shows the shared result. Let’s practise without creating real work."
+      },
+      "practice": {
+        "title": "Try a practice project",
+        "body": "Create an example project, add a card, and break it into checklist items."
+      },
+      "events": {
+        "title": "Events",
+        "body": "Events brings meetings and department activities together. Open an event for its time, place, participants, and details."
+      },
+      "people": {
+        "title": "People",
+        "body": "People helps you find colleagues and their professional profiles. Use it when you need to know who does what."
+      },
+      "structure": {
+        "title": "Department structure",
+        "body": "Structure shows units and leadership. A department may have several heads; this view helps you understand the team around you."
+      },
+      "checkin": {
+        "title": "Check-in",
+        "body": "Choose checklist deliverables for the two-week cycle. A department head agrees check-in. You can then update progress and add deliverables. This guide makes no changes."
+      },
+      "checkout": {
+        "title": "Check-out",
+        "body": "Update each deliverable as done, pending, or blocked. A head locks checkout to save the cycle’s results. Open Progress to review earlier cycles."
+      },
+      "finish": {
+        "title": "Getting started",
+        "body": "Getting started is always on Home. Reopen the full guide, revisit one chapter, or read your department introduction whenever you need it."
+      },
+      "firstCard": {
+        "title": "Your onboarding card",
+        "body": "Open your getting-started card. Its six checklist items track your introduction, portal guide, Telegram, account details, résumé, and personnel record."
+      },
+      "welcome": {
+        "title": "Get to know WorkPortal",
+        "body": "See where to find your tasks, your team and your personal tools. You’ll try a sample project along the way; nothing from that example is saved."
+      },
+      "resume": {
+        "title": "Résumé",
+        "body": "Open Résumé here to update your introduction, education, experience and skills. Colleagues see this professional profile in People."
+      },
+      "personnel": {
+        "title": "Personnel record",
+        "body": "This is your formal personnel information sheet. Keep it current here, preview it, and export it when needed."
+      },
+      "settings": {
+        "title": "Settings",
+        "body": "This menu brings together notifications, Telegram, calendar connections and account security. Choose a section here to change its settings."
+      },
+      "personalCalendar": {
+        "title": "Personal calendar",
+        "body": "Open Personal, then Calendar. See your own schedule and plan personal time here. This space belongs to you."
+      },
+      "personalCards": {
+        "title": "Personal to-dos",
+        "body": "The second tab holds your personal cards. Capture reminders and organise your own work without adding it to the department board."
+      },
+      "personalTimer": {
+        "title": "Focus timer",
+        "body": "The focus timer alternates work sessions and breaks. Start it when you want a focused session; this walkthrough leaves the timer stopped."
+      },
+      "peopleProfile": {
+        "title": "Professional profile",
+        "body": "Click a person to open this side panel. It brings together their contact details, education, experience and skills, with a résumé download when available."
+      },
+      "orgChart": {
+        "title": "Organisation chart",
+        "body": "Open Org chart to see how units and leadership connect. Zoom or move the chart to follow a branch."
+      }
+    },
+    "practice": {
+      "title": "A practice group project",
+      "badge": "Practice only",
+      "notice": "This is a practice example. No real project, card, or notification will be created.",
+      "stage0": "Name the shared outcome",
+      "hint0": "Give your example project a short, clear name.",
+      "stage1": "Add one person’s card",
+      "hint1": "A group project contains individual cards. Start with one card assigned to you.",
+      "stage2": "Break it into steps",
+      "hint2": "A checklist makes the card easier to finish. Add one concrete action.",
+      "stage3": "Mark one step complete",
+      "hint3": "Check the item to update its checklist. Project progress comes from milestones.",
+      "projectName": "Project name",
+      "projectPlaceholder": "Prepare the team workshop",
+      "create": "Create example",
+      "you": "Example team · You",
+      "taskName": "Card name",
+      "taskPlaceholder": "Prepare the agenda",
+      "addTask": "Add example card",
+      "assignee": "Assigned to you · Example",
+      "checklist": "Checklist item",
+      "itemPlaceholder": "List three discussion topics",
+      "addItem": "Add checklist item",
+      "done": "Done — continue guide",
+      "localOnly": "Nothing is saved to the portal.",
+      "projectDescription": "A shared outcome, individual cards and visible progress.",
+      "milestone": "Workshop ready",
+      "individualCards": "Individual cards",
+      "colleague": "Malika · Example colleague",
+      "teammateHint": "Each teammate has a section for their own assignments.",
+      "discussionHint": "In a real project, this tab holds the team’s discussion. Nothing is sent in practice.",
+      "filesHint": "Project files live here. Practice does not upload or save files.",
+      "backToProject": "Back to project",
+      "cardDescription": "A card has one responsible person. Add concrete checklist steps below; completing them updates progress."
+    },
+    "resumeDepartment": "Return to the department where you started setup",
+    "managedItem": "Updated automatically as you complete setup and the guide.",
+    "mobileColumns": "Use Your column to jump to your work. On phones, choose a person or swipe between columns. On a larger screen, Collapse all and Expand all help you scan the whole team.",
+    "finishSection": "Complete and save this section first.",
+    "resumeMissing": {
+      "about": "Write a short introduction.",
+      "skills": "Add at least one skill.",
+      "education": "Add at least one education or work experience entry."
+    },
+    "beginWalkthrough": "Start",
+    "mobileMenu": "Open the menu to find this section.",
+    "existingCardBody": "Open a card to see its details and checklist. This walkthrough only shows the controls; your work stays unchanged.",
+    "existingDrawerBody": "The side panel holds the description, people, dates, checklist and discussion. Use it to manage an individual card.",
+    "page": "Page {current} of {total}"
+  },
   "overviewChat": {
     "title": "Department assistant",
     "assistant": "Department assistant",
@@ -4461,7 +4754,8 @@
     "loginHint": "Lowercase letters, numbers, . _ -",
     "saved": "Profile saved",
     "loginTaken": "That username is already taken. Choose another.",
-    "error": "Could not save. Check the fields and try again."
+    "error": "Could not save. Check the fields and try again.",
+    "workStartDate": "Work start date"
   },
   "projectEdit": {
     "edit": "Edit project",
@@ -4558,7 +4852,7 @@
     },
     "card": {
       "addObjectivePlaceholder": "Add a shared card",
-      "addSubjectivePlaceholder": "Add a personal card"
+      "addSubjectivePlaceholder": "Add an individual card"
     },
     "action": {
       "archive": "Archive project",
@@ -4575,6 +4869,41 @@
       "catchUpPreviewTitle": "This project, the past week",
       "applyPlan": "Apply the plan"
     }
+  },
+  "publicDashboard": {
+    "title": "Public dashboard",
+    "description": "Share a limited, view-only dashboard of this department.",
+    "visible": "Visible: names, active card titles and status, and the structure list.",
+    "hidden": "Card details, files, comments, profiles and all other portal sections stay private.",
+    "anyone": "Anyone with the link can see and copy what it shows. Share only with the intended audience.",
+    "label": "Link name",
+    "defaultLabel": "Department overview",
+    "expiry": "Expires after",
+    "days7": "7 days",
+    "days30": "30 days",
+    "days90": "90 days",
+    "daysnever": "No expiry",
+    "create": "Create link",
+    "error": "Couldn’t complete this. Please try again.",
+    "ready": "Your link is ready",
+    "copyOnce": "Copy it now. For security, this address is shown only once.",
+    "link": "Public link",
+    "copied": "Link copied",
+    "copyFallback": "Select the address and copy it manually.",
+    "copy": "Copy link",
+    "preview": "Open dashboard",
+    "links": "Shared links",
+    "revokeHint": "Any department head can close a link. Open dashboards refresh every 30 seconds.",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "empty": "No links created yet.",
+    "closed": "Closed",
+    "expired": "Expired",
+    "expires": "Expires",
+    "revoke": "Close link",
+    "revokeConfirm": "Stop access through this link? It cannot be reopened. You can create a new link later.",
+    "cancel": "Cancel",
+    "limit": "You have 10 active links. Close one before creating another."
   },
   "realtime": {
     "status": {

@@ -7,7 +7,7 @@ import {
   login,
   examplePassword,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   uniqueLogin,
 } from './flow-api.js'
 import { adaptLocalUiSessionCookies, adaptLocalUiDepartmentCookie } from './flow-ui-cookies.js'

@@ -126,13 +126,19 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/profile',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
+      },
       schema: { response: { 200: profileSchema } },
     },
     async (req, reply) => {
       const user = req.actorUser!
       return reply.send({
         dateOfBirth: await repo.getAccountBirthDate(auditCtx(req)),
+        workStartDate: user.workStartDate ?? null,
         login: user.login,
         email: user.email,
         givenName: user.givenName,
@@ -147,9 +153,15 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/profile',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
-      schema: { body: patchProfileBodySchema, response: { 200: profileSchema } },
+      schema: {
+        body: patchProfileBodySchema,
+        response: { 200: profileSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -158,6 +170,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!user) return sendProblem(reply, 'not_found')
         return reply.send({
           dateOfBirth: await repo.getAccountBirthDate(auditCtx(req)),
+          workStartDate: user.workStartDate ?? null,
           login: user.login,
           email: user.email,
           givenName: user.givenName,
@@ -513,7 +526,12 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/professional-profile',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
+      },
       schema: { response: { 200: professionalProfileRecordSchema } },
     },
     async (req, reply) => {
@@ -525,7 +543,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/professional-profile',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
       schema: {
         body: professionalProfileWriteRecordSchema,

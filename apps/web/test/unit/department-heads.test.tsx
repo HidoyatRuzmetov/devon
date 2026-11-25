@@ -1,3 +1,4 @@
+import { TooltipProvider } from '@devon/ui'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { setLocale } from '@devon/i18n'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
@@ -18,7 +19,10 @@ const state = vi.hoisted(() => ({
 }))
 vi.mock('../../src/lib/session.js', () => ({
   useMeQuery: () => ({
-    data: { user: { id: state.viewer, role: 'member' }, csrfToken: 'example-csrf' },
+    data: {
+      user: { id: state.viewer, role: 'member' },
+      csrfToken: 'example-csrf',
+    },
   }),
   useDepartment: () => ({
     departmentId: 'dept',
@@ -41,7 +45,9 @@ vi.mock('../../src/features/departments/api.js', () => ({
       features: {},
     },
   }),
-  fetchMembers: async () => ({ members: state.members.map((member) => ({ ...member })) }),
+  fetchMembers: async () => ({
+    members: state.members.map((member) => ({ ...member })),
+  }),
   fetchJoinRequests: async () => ({ requests: [] }),
   setMemberRole: (...args: unknown[]) => state.change(...args),
   patchDepartmentSettings: (...args: unknown[]) => state.save(...args),
@@ -78,7 +84,9 @@ function show() {
   })
   return render(
     <QueryClientProvider client={client}>
-      <DepartmentDetailScreen />
+      <TooltipProvider>
+        <DepartmentDetailScreen />
+      </TooltipProvider>
     </QueryClientProvider>,
   )
 }
@@ -107,7 +115,8 @@ describe('department leadership controls', () => {
     await waitFor(() => expect(screen.getByText('Department heads (2)')).toBeVisible())
     expect(screen.getByText('Anvar Test, Nodira Test')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Leave department' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Step down as head' })).toBeEnabled()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Actions for Anvar Test' }))
+    expect(screen.getByRole('menuitem', { name: 'Step down as head' })).toBeEnabled()
   })
   it('disables departure of the last active head and explains how to appoint a replacement', async () => {
     state.members[1]!.accountStatus = 'locked'
@@ -157,7 +166,9 @@ describe('department leadership controls', () => {
     await user.click(await screen.findByRole('button', { name: 'Actions for Aziza Test' }))
     await user.click(screen.getByRole('menuitem', { name: 'Appoint as head' }))
     await user.click(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Appoint as head' }),
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Appoint as head',
+      }),
     )
     expect(
       await screen.findByText('Membership has changed. Review the refreshed list and try again.'),

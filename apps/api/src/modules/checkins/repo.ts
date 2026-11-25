@@ -32,7 +32,12 @@ type CycleRow = {
 }
 const cycleColumns = sql`id,starts_on::text,ends_on::text,checkin_deadline,checkout_deadline,checkin_locked_at,checkout_locked_at`
 function changed(tx: Tx, ctx: RequestContext, action: string, id: string, after?: unknown) {
-  tx.audit({ action: `checkins.${action}`, subjectType: 'checkin', subjectId: id, after })
+  tx.audit({
+    action: `checkins.${action}`,
+    subjectType: 'checkin',
+    subjectId: id,
+    after,
+  })
   tx.emit({
     type: 'checkins.updated',
     departmentId: ctx.departmentId,
@@ -67,7 +72,9 @@ export async function maintainCycles(
     const cycle = rows[0]!
     // A removed entry is a tombstone: a subsequent refresh must not re-add a declined carryover.
     // nosemgrep: query-in-loop
-    const carried = await tx.raw<{ id: string }>(sql`insert into app.checkin_entries
+    const carried = await tx.raw<{
+      id: string
+    }>(sql`insert into app.checkin_entries
       (department_id,cycle_id,checklist_item_id,card_id,member_user_id,member_name,unit_id,unit_name,unit_colour,
        card_title,project_id,project_title,text,state)
       select e.department_id,${cycle.id},e.checklist_item_id,e.card_id,e.member_user_id,e.member_name,e.unit_id,e.unit_name,e.unit_colour,
@@ -205,12 +212,14 @@ export async function addEntry(
   return withContext(ctx, async (tx) => {
     // Lock the source before the cycle, the same order used by the source-update trigger.
     const sources = await tx.raw<{ id: string }>(
-      sql`select id from app.card_checklist_items where id=${itemId} and deleted_at is null for update`,
+      sql`select id from app.card_checklist_items where id=${itemId} and deleted_at is null and onboarding_key is null for update`,
     )
     if (!sources.length) throw new CheckinError('not_found', 'checklist_not_found')
     await maintainCycles(tx, ctx)
     await cycleForEdit(tx, cycleId)
-    const rows = await tx.raw<{ id: string }>(sql`insert into app.checkin_entries
+    const rows = await tx.raw<{
+      id: string
+    }>(sql`insert into app.checkin_entries
       (department_id,cycle_id,checklist_item_id,card_id,member_user_id,member_name,unit_id,unit_name,unit_colour,card_title,project_id,project_title,text,state)
       select c.department_id,${cycleId},i.id,c.id,m.user_id,concat_ws(' ',u.given_name,u.family_name),unit.id,unit.name,unit.colour,c.title,p.id,p.title,i.text,
         case when i.done_at is null then 'pending' else 'done' end
@@ -220,7 +229,7 @@ export async function addEntry(
       left join app.unit_roles ur on ur.user_id=m.user_id and ur.department_id=m.department_id and ur.deleted_at is null
       left join app.units unit on unit.id=ur.unit_id and unit.deleted_at is null
       left join app.projects p on p.id=c.project_id and p.deleted_at is null
-      where i.id=${itemId} and i.deleted_at is null and c.deleted_at is null and m.deleted_at is null and m.status='active' and m.role<>'head'
+      where i.id=${itemId} and i.onboarding_key is null and i.deleted_at is null and c.deleted_at is null and m.deleted_at is null and m.status='active' and m.role<>'head'
         and c.status='active' and c.done_at is null and (i.done_at is null or exists(select 1 from app.checkin_entries existing where existing.cycle_id=${cycleId} and existing.checklist_item_id=i.id and existing.removed_at is null))
       on conflict(cycle_id,checklist_item_id) do update set removed_at=null,updated_at=now(),version=app.checkin_entries.version+1,
         text=case when app.checkin_entries.removed_at is null then app.checkin_entries.text else excluded.text end,
@@ -275,7 +284,7 @@ export async function updateEntry(
     const source = await tx.raw<{
       id: string
     }>(sql`select i.id from app.card_checklist_items i join app.cards c on c.id=i.card_id
-      where i.id=${entry.checklist_item_id} and i.deleted_at is null and c.deleted_at is null for update of i`)
+      where i.id=${entry.checklist_item_id} and i.onboarding_key is null and i.deleted_at is null and c.deleted_at is null for update of i`)
     await maintainCycles(tx, ctx)
     const cycle = await cycleForEdit(tx, entry.cycle_id, entry.member_user_id)
     if (
@@ -320,7 +329,9 @@ export async function lockCycle(
     )
     const cycle = rows[0]
     if (!cycle) throw new CheckinError('not_found', 'cycle_not_found')
-    const members = await tx.raw<{ id: string }>(sql`select u.id from app.users u
+    const members = await tx.raw<{
+      id: string
+    }>(sql`select u.id from app.users u
       join app.memberships m on m.user_id=u.id
       where u.id=${memberUserId} and m.department_id=${ctx.departmentId}
         and m.role<>'head' and m.status='active' and m.deleted_at is null and u.deleted_at is null
@@ -330,7 +341,9 @@ export async function lockCycle(
     if (phase === 'checkout' && tashkentDay(new Date()) < cycle.ends_on)
       throw new CheckinError('conflict', 'checkout_not_due')
     if (cycle.checkout_locked_at || (phase === 'checkin' && cycle.checkin_locked_at)) return
-    const locked = await tx.raw<{ member_user_id: string }>(sql`insert into app.checkin_member_locks
+    const locked = await tx.raw<{
+      member_user_id: string
+    }>(sql`insert into app.checkin_member_locks
       (department_id,cycle_id,member_user_id,checkin_locked_at,checkout_locked_at)
       values(${ctx.departmentId},${id},${memberUserId},coalesce(${cycle.checkin_locked_at}::timestamptz,now()),
         case when ${phase}='checkout' then now() else null end)
@@ -340,12 +353,18 @@ export async function lockCycle(
       where case when ${phase}='checkin' then app.checkin_member_locks.checkin_locked_at is null
         else app.checkin_member_locks.checkout_locked_at is null end
       returning member_user_id`)
-    if (locked.length) changed(tx, ctx, `${phase}_locked`, id, { automatic: false, memberUserId })
+    if (locked.length)
+      changed(tx, ctx, `${phase}_locked`, id, {
+        automatic: false,
+        memberUserId,
+      })
   })
 }
 
 async function requireCheckinMember(tx: Tx, cycleId: string, memberUserId: string) {
-  const rows = await tx.raw<{ id: string }>(sql`select c.id from app.checkin_cycles c
+  const rows = await tx.raw<{
+    id: string
+  }>(sql`select c.id from app.checkin_cycles c
     where c.id=${cycleId} and (exists(select 1 from app.memberships m join app.users u on u.id=m.user_id
       where m.department_id=c.department_id and m.user_id=${memberUserId} and m.role<>'head'
         and m.status='active' and m.deleted_at is null and u.deleted_at is null)
@@ -367,7 +386,7 @@ export async function candidates(
         'version',i.version,'textLocked',app.checkin_item_locked(i.id),'commentCount',
           (select count(*) from app.card_comments cm where cm.checklist_item_id=i.id and cm.deleted_at is null),'deletionProtected',
           exists(select 1 from app.checkin_entries e where e.checklist_item_id=i.id and e.removed_at is null))
-        order by i.order_key,i.created_at,i.id) from app.card_checklist_items i where i.card_id=c.id and i.deleted_at is null
+        order by i.order_key,i.created_at,i.id) from app.card_checklist_items i where i.card_id=c.id and i.onboarding_key is null and i.deleted_at is null
           and (i.done_at is null or exists(select 1 from app.checkin_entries selected where selected.cycle_id=${cycleId} and selected.checklist_item_id=i.id and selected.removed_at is null))
           and coalesce(i.assignee_user_id,c.assignee_user_id)=${memberUserId}),'[]'::jsonb) as checklist
       from app.cards c left join app.projects p on p.id=c.project_id and p.deleted_at is null
@@ -397,14 +416,20 @@ export async function saveSelection(
     const cycle = await cycleForEdit(tx, cycleId, memberUserId)
     if (removeIds.length && (cycle.checkin_locked_at || cycle.checkin_deadline <= new Date()))
       throw new CheckinError('conflict', 'checkin_locked')
-    const removals = await tx.raw<{ id: string }>(sql`select id from app.checkin_entries
+    const removals = await tx.raw<{
+      id: string
+    }>(sql`select id from app.checkin_entries
       where id=any(${sql.param(removeIds)}::uuid[]) and cycle_id=${cycleId} and member_user_id=${memberUserId}`)
     if (removals.length !== removeIds.length)
       throw new CheckinError('conflict', 'selection_changed')
-    const foreignSelections = await tx.raw<{ id: string }>(sql`select id from app.checkin_entries
+    const foreignSelections = await tx.raw<{
+      id: string
+    }>(sql`select id from app.checkin_entries
       where cycle_id=${cycleId} and checklist_item_id=any(${sql.param(addIds)}::uuid[]) and member_user_id<>${memberUserId}`)
     if (foreignSelections.length) throw new CheckinError('conflict', 'selection_changed')
-    const added = await tx.raw<{ id: string }>(sql`insert into app.checkin_entries
+    const added = await tx.raw<{
+      id: string
+    }>(sql`insert into app.checkin_entries
       (department_id,cycle_id,checklist_item_id,card_id,member_user_id,member_name,unit_id,unit_name,unit_colour,card_title,project_id,project_title,text,state)
       select c.department_id,${cycleId},i.id,c.id,m.user_id,concat_ws(' ',u.given_name,u.family_name),unit.id,unit.name,unit.colour,c.title,p.id,p.title,i.text,
         case when i.done_at is null then 'pending' else 'done' end
@@ -415,7 +440,7 @@ export async function saveSelection(
         where ur.user_id=m.user_id and ur.department_id=m.department_id and ur.deleted_at is null and un.deleted_at is null
         order by un.sort,un.id limit 1) unit on true
       left join app.projects p on p.id=c.project_id and p.deleted_at is null
-      where i.id=any(${sql.param(addIds)}::uuid[]) and m.user_id=${memberUserId} and i.deleted_at is null and c.deleted_at is null
+      where i.onboarding_key is null and i.id=any(${sql.param(addIds)}::uuid[]) and m.user_id=${memberUserId} and i.deleted_at is null and c.deleted_at is null
         and c.status='active' and c.done_at is null
         and (i.done_at is null or exists(select 1 from app.checkin_entries selected where selected.cycle_id=${cycleId} and selected.checklist_item_id=i.id and selected.removed_at is null))
         and m.deleted_at is null and m.status='active' and m.role<>'head'
@@ -461,7 +486,9 @@ export async function createIndividualTask(
       await maintainCycles(tx, ctx)
       await requireCheckinMember(tx, cycleId, memberUserId)
       await cycleForEdit(tx, cycleId, memberUserId)
-      const added = await tx.raw<{ id: string }>(sql`insert into app.checkin_entries
+      const added = await tx.raw<{
+        id: string
+      }>(sql`insert into app.checkin_entries
       (department_id,cycle_id,checklist_item_id,card_id,member_user_id,member_name,unit_id,unit_name,unit_colour,card_title,project_id,project_title,text,state)
       select c.department_id,${cycleId},i.id,c.id,m.user_id,concat_ws(' ',u.given_name,u.family_name),unit.id,unit.name,unit.colour,c.title,null,null,i.text,'pending'
       from app.cards c join app.card_checklist_items i on i.card_id=c.id and i.deleted_at is null
@@ -511,6 +538,9 @@ export async function saveLayout(
         where cycle_id=${cycleId} and member_user_id=${memberUserId} and version=${layout.version} returning cycle_id`)
       if (!updated.length) throw new CheckinError('conflict', 'layout_changed')
     }
-    changed(tx, ctx, 'layout_saved', cycleId, { memberUserId, mode: layout.mode })
+    changed(tx, ctx, 'layout_saved', cycleId, {
+      memberUserId,
+      mode: layout.mode,
+    })
   })
 }

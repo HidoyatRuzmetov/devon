@@ -160,6 +160,11 @@ export const GLOBAL_SWEEP: readonly {
   { table: 'app.telegram_link_codes', userColumns: ['user_id'], departmentColumns: [] },
   { table: 'app.telegram_links', userColumns: ['user_id'], departmentColumns: [] },
   { table: 'app.calendar_feeds', userColumns: ['user_id'], departmentColumns: [] },
+  {
+    table: 'app.public_dashboard_links',
+    userColumns: ['created_by', 'revoked_by'],
+    departmentColumns: ['department_id'],
+  },
   { table: 'app.uploads', userColumns: ['user_id'], departmentColumns: [] },
   { table: 'app.login_challenges', userColumns: ['user_id'], departmentColumns: [] },
   { table: 'app.account_deletion_requests', userColumns: ['user_id'], departmentColumns: [] },

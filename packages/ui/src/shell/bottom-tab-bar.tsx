@@ -44,6 +44,7 @@ export function BottomTabBar({
 
   return (
     <nav
+      data-onboarding-tabbar
       aria-label={label}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 flex h-(--height-tabbar) items-stretch border-t border-border',
@@ -59,6 +60,7 @@ export function BottomTabBar({
           <Link
             key={entry.id}
             href={entry.route}
+            data-onboarding-nav={entry.route}
             aria-current={active ? 'page' : undefined}
             // H5.2 "prefetch on hover/focus": no hover on touch, but keyboard focus and the earliest
             // touch contact both precede the tap that actually navigates.

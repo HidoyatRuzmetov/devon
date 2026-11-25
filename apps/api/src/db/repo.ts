@@ -85,11 +85,13 @@ function toUserRecord(row: typeof schema.users.$inferSelect): UserRecord {
     familyName: row.familyName,
     patronymic: row.patronymic,
     title: row.title,
+    workStartDate: row.workStartDate,
     avatarKey: row.avatarKey,
     locale: row.locale,
     timezone: row.timezone,
     role: row.role as Role,
     status: row.status,
+    onboardingRequired: row.onboardingRequired,
     mustChangePassword: row.mustChangePassword,
     lastLoginAt: row.lastLoginAt,
   }
@@ -182,7 +184,10 @@ export function createRepo(): Deps {
         return {
           isDemo: row.isDemo,
           registrationOpen: row.registrationOpen,
-          maintenance: { enabled: !!maintenance.enabled, message: maintenance.message ?? null },
+          maintenance: {
+            enabled: !!maintenance.enabled,
+            message: maintenance.message ?? null,
+          },
         }
       })
     },
@@ -224,7 +229,11 @@ export function createRepo(): Deps {
       // here: its `userId: null` means `app.current_user_id()` is null inside the transaction, so every
       // one of those `user_id = app.current_user_id()` policies would reject every row.
       return withContext(selfCtx(userId), async (tx) => {
-        const rows = await tx.raw<{ department_id: string; department_name: string; role: string }>(
+        const rows = await tx.raw<{
+          department_id: string
+          department_name: string
+          role: string
+        }>(
           sql`select m.department_id, d.name as department_name, m.role
               from app.memberships m
               join app.departments d on d.id = m.department_id
@@ -246,7 +255,9 @@ export function createRepo(): Deps {
       return withContext(toDbContext(ctx), async (tx) => {
         const before = await selectUserById(tx, userId)
         if (!before) throw new Error('updateUserProfile: user not found')
-        const updates: Partial<typeof schema.users.$inferInsert> = { updatedAt: new Date() }
+        const updates: Partial<typeof schema.users.$inferInsert> = {
+          updatedAt: new Date(),
+        }
         if (patch.locale !== undefined) updates.locale = patch.locale
         if (patch.timezone !== undefined) updates.timezone = patch.timezone
         const rows = await tx.drizzle
@@ -291,7 +302,11 @@ export function createRepo(): Deps {
           expiresAt,
           issuedReason: 'first_boot',
         })
-        tx.audit({ action: 'setup.token_issued', subjectType: 'setup_token', subjectId: null })
+        tx.audit({
+          action: 'setup.token_issued',
+          subjectType: 'setup_token',
+          subjectId: null,
+        })
         return { token, expiresAt }
       })
     },
@@ -300,7 +315,10 @@ export function createRepo(): Deps {
       const tokenHash = sha256Hex(rawToken)
       return withContext(toDbContext(ctx), async (tx): Promise<ConsumeSetupTokenResult> => {
         const tokenRows = await tx.drizzle
-          .select({ id: schema.setupTokens.id, expiresAt: schema.setupTokens.expiresAt })
+          .select({
+            id: schema.setupTokens.id,
+            expiresAt: schema.setupTokens.expiresAt,
+          })
           .from(schema.setupTokens)
           .where(
             and(eq(schema.setupTokens.tokenHash, tokenHash), isNull(schema.setupTokens.consumedAt)),
@@ -371,7 +389,11 @@ export function createRepo(): Deps {
             expiresAt,
           })
           .returning({ id: schema.sessions.id })
-        tx.audit({ action: 'session.created', subjectType: 'session', subjectId: rows[0]!.id })
+        tx.audit({
+          action: 'session.created',
+          subjectType: 'session',
+          subjectId: rows[0]!.id,
+        })
         return rows[0]!.id
       })
       return { sessionId, rawToken, rawCsrf, expiresAt }

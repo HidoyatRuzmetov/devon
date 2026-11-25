@@ -165,7 +165,10 @@ function SessionsSection() {
   const locale = useLocale()
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
-  const query = useQuery({ queryKey: ['accounts', 'sessions'], queryFn: fetchSessions })
+  const query = useQuery({
+    queryKey: ['accounts', 'sessions'],
+    queryFn: fetchSessions,
+  })
   const [revokeAllOpen, setRevokeAllOpen] = React.useState(false)
   const [showAll, setShowAll] = React.useState(false)
 
@@ -173,7 +176,9 @@ function SessionsSection() {
     mutationFn: (id: string) => revokeSession(id, csrfToken),
     onSuccess: () => {
       toast(t('accounts.sessions.revokedToast'))
-      void queryClient.invalidateQueries({ queryKey: ['accounts', 'sessions'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['accounts', 'sessions'],
+      })
     },
   })
   const revokeAll = useMutation({
@@ -193,7 +198,10 @@ function SessionsSection() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => void query.refetch(),
+        }}
       />
     )
   } else if (query.data.sessions.length === 0) {
@@ -350,11 +358,15 @@ function TwoFactorSection() {
   const t = useT()
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
-  const statusQuery = useQuery({ queryKey: ['accounts', '2fa'], queryFn: fetchTwoFactorStatus })
+  const statusQuery = useQuery({
+    queryKey: ['accounts', '2fa'],
+    queryFn: fetchTwoFactorStatus,
+  })
 
-  const [enrolling, setEnrolling] = React.useState<{ secret: string; otpauthUri: string } | null>(
-    null,
-  )
+  const [enrolling, setEnrolling] = React.useState<{
+    secret: string
+    otpauthUri: string
+  } | null>(null)
   const [code, setCode] = React.useState('')
   const [recoveryCodes, setRecoveryCodes] = React.useState<string[] | null>(null)
   const [disableOpen, setDisableOpen] = React.useState(false)
@@ -406,7 +418,10 @@ function TwoFactorSection() {
       <StateView
         kind="error"
         titleKey="state.error.title"
-        action={{ labelKey: 'state.error.action', onAction: () => void statusQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => void statusQuery.refetch(),
+        }}
       />
     )
   } else if (recoveryCodes) {
@@ -680,7 +695,10 @@ function DeleteAccountSection() {
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
   const meQuery = useMeQuery()
-  const statusQuery = useQuery({ queryKey: ['accounts', 'deletion'], queryFn: fetchDeletionStatus })
+  const statusQuery = useQuery({
+    queryKey: ['accounts', 'deletion'],
+    queryFn: fetchDeletionStatus,
+  })
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [typedLogin, setTypedLogin] = React.useState('')
 
@@ -689,14 +707,18 @@ function DeleteAccountSection() {
     onSuccess: () => {
       setConfirmOpen(false)
       setTypedLogin('')
-      void queryClient.invalidateQueries({ queryKey: ['accounts', 'deletion'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['accounts', 'deletion'],
+      })
     },
   })
   const cancel = useMutation({
     mutationFn: () => cancelAccountDeletion(csrfToken),
     onSuccess: () => {
       toast(t('accounts.delete.cancelled'))
-      void queryClient.invalidateQueries({ queryKey: ['accounts', 'deletion'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['accounts', 'deletion'],
+      })
     },
   })
 
@@ -716,12 +738,17 @@ function DeleteAccountSection() {
         <StateView
           kind="error"
           titleKey="state.error.title"
-          action={{ labelKey: 'state.error.action', onAction: () => void statusQuery.refetch() }}
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => void statusQuery.refetch(),
+          }}
         />
       ) : scheduledFor ? (
         <div className="flex items-center gap-3">
           <p className="text-small text-foreground">
-            {t('accounts.delete.scheduled', { date: formatDate(new Date(scheduledFor), locale) })}
+            {t('accounts.delete.scheduled', {
+              date: formatDate(new Date(scheduledFor), locale),
+            })}
           </p>
           <Button
             variant="secondary"
@@ -765,7 +792,9 @@ function DeleteAccountSection() {
             ) : null}
             <label className="flex flex-col gap-1.5">
               <span className="text-small text-foreground">
-                {t('accounts.delete.dialog.loginLabel', { login: expectedLogin })}
+                {t('accounts.delete.dialog.loginLabel', {
+                  login: expectedLogin,
+                })}
               </span>
               <Input value={typedLogin} onChange={(e) => setTypedLogin(e.target.value)} />
             </label>
@@ -870,7 +899,9 @@ export default function AccountSettingsScreen() {
             variant="secondary"
             loading={logout.isPending}
             onClick={() =>
-              logout.mutate(undefined, { onSettled: () => navigate('/login?signedOut=1') })
+              logout.mutate(undefined, {
+                onSettled: () => navigate('/login?signedOut=1'),
+              })
             }
           >
             <LogOut className="size-4" aria-hidden="true" />
@@ -882,6 +913,7 @@ export default function AccountSettingsScreen() {
         <SettingsNavigation path={path} />
         <section
           key={path}
+          data-onboarding="settings-panel"
           aria-label={t('settings.content')}
           className="flex min-w-0 flex-1 flex-col gap-4 [&_[id]]:scroll-mt-20"
         >

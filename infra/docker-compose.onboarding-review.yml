@@ -1,0 +1,109 @@
+# Isolated local review, using the production images with local development configuration.
+# Start through scripts/onboarding-docker-review.mjs. No production .env or shared volumes.
+name: devon-onboarding-review
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+    environment:
+      POSTGRES_DB: devon_qa_onboarding_docker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${REVIEW_DB_ROOT:?Start through the review script}
+    volumes: [review_database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d devon_qa_onboarding_docker]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  valkey:
+    image: valkey/valkey:8-alpine@sha256:cfb2aa4c8352930130fd45eb231a57310ac326d7323edae12b384b9270c46dda
+    command: [valkey-server, --save, '', --appendonly, 'no']
+    healthcheck:
+      test: [CMD, valkey-cli, ping]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  migrate:
+    image: devon-api:onboarding-review
+    profiles: [tools]
+    command: [node_modules/.bin/tsx, /repo/packages/db/src/cli-migrate.ts]
+    environment:
+      MIGRATION_DATABASE_URL: postgres://postgres:${REVIEW_DB_ROOT}@postgres:5432/devon_qa_onboarding_docker
+      POSTGRES_APP_PASSWORD: ${REVIEW_DB_APP}
+      POSTGRES_MIGRATOR_PASSWORD: ${REVIEW_DB_MIGRATOR}
+    depends_on:
+      postgres: { condition: service_healthy }
+  api:
+    image: devon-api:onboarding-review
+    environment:
+      NODE_ENV: development
+      API_HOST: 0.0.0.0
+      API_PORT: '3000'
+      DEVON_PUBLIC_URL: http://127.0.0.1:48942
+      DEVON_SETUP_REMOTE: '1'
+      DATABASE_URL: postgres://devon_app:${REVIEW_DB_APP}@postgres:5432/devon_qa_onboarding_docker
+      CSRF_SECRET: ${REVIEW_CSRF}
+      DB_POOL_MAX: '8'
+      DB_POOL_MIN: '1'
+      QUEUE_DB_POOL_MAX: '2'
+      VALKEY_URL: redis://valkey:6379
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_DIR: /repo/apps/api/.data/storage
+      CLAMAV_MODE: 'off'
+      TELEGRAM_POLLING_ENABLED: 'false'
+      AI_API_KEY: ''
+      CENTRIFUGO_API_URL: http://centrifugo:8000
+      CENTRIFUGO_WS_URL: ws://127.0.0.1:48942/connection/websocket
+      CENTRIFUGO_API_KEY: ${REVIEW_REALTIME_API}
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${REVIEW_REALTIME_TOKEN}
+      LOG_LEVEL: info
+    ports: ['127.0.0.1:48941:3000']
+    volumes: [review_storage:/repo/apps/api/.data/storage]
+    depends_on:
+      postgres: { condition: service_healthy }
+      valkey: { condition: service_healthy }
+      centrifugo: { condition: service_healthy }
+  centrifugo:
+    image: centrifugo/centrifugo:v6@sha256:017d0a3d39757f94a09efa657b6ad7e68222564dd9ba7dd7193981d75cd8a025
+    environment:
+      CENTRIFUGO_HTTP_SERVER_ADDRESS: 0.0.0.0
+      CENTRIFUGO_HTTP_API_INSECURE: 'false'
+      CENTRIFUGO_HEALTH_ENABLED: 'true'
+      CENTRIFUGO_HTTP_API_KEY: ${REVIEW_REALTIME_API}
+      CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY: ${REVIEW_REALTIME_TOKEN}
+      CENTRIFUGO_CLIENT_ALLOWED_ORIGINS: http://127.0.0.1:48942
+      CENTRIFUGO_CLIENT_ALLOW_ANONYMOUS_CONNECT_WITHOUT_TOKEN: 'false'
+      CENTRIFUGO_ENGINE_TYPE: redis
+      CENTRIFUGO_ENGINE_REDIS_ADDRESS: redis://valkey:6379
+      CENTRIFUGO_ENGINE_REDIS_PREFIX: onboarding-review
+      CENTRIFUGO_CHANNEL_NAMESPACES: >-
+        [{"name":"dept","presence":false,"join_leave":false,"history_size":0},
+         {"name":"board","presence":true,"join_leave":true,"force_push_join_leave":true,
+          "allow_presence_for_subscriber":true},
+         {"name":"personal","presence":false,"allow_user_limited_channels":true,
+          "allow_subscribe_for_client":true}]
+    depends_on:
+      valkey: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, wget, -q, -O-, http://127.0.0.1:8000/health]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  web:
+    image: devon-web:onboarding-review
+  gateway:
+    image: caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+    ports: ['127.0.0.1:48942:8080']
+    volumes:
+      - ./review/onboarding.Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../artifacts/qa/onboarding:/srv/review:ro
+    depends_on:
+      api: { condition: service_healthy }
+      web: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, wget, -q, -O-, http://127.0.0.1:8080/healthz]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  review_database:
+  review_storage:

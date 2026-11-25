@@ -61,12 +61,32 @@ function ChainVerifyBadge({ ok }: { ok: boolean }) {
   )
 }
 
-const CATEGORIES = ['session', 'accounts', 'admin', 'departments', '__other__'] as const
+const CATEGORIES = [
+  'session',
+  'accounts',
+  'admin',
+  'departments',
+  'work',
+  'projects',
+  'events',
+  'personal',
+  'onboarding',
+  'ai',
+  'data',
+  '__other__',
+] as const
 const CATEGORY_LABEL_KEY: Record<(typeof CATEGORIES)[number], string> = {
   session: 'admin.console.audit.filter.session',
   accounts: 'admin.console.audit.filter.accounts',
   admin: 'admin.console.audit.filter.admin',
   departments: 'admin.console.audit.filter.departments',
+  work: 'admin.console.audit.filter.work',
+  projects: 'admin.console.audit.filter.projects',
+  events: 'admin.console.audit.filter.events',
+  personal: 'admin.console.audit.filter.personal',
+  onboarding: 'admin.console.audit.filter.onboarding',
+  ai: 'admin.console.audit.filter.ai',
+  data: 'admin.console.audit.filter.data',
   __other__: 'admin.console.audit.filter.other',
 }
 
@@ -264,7 +284,10 @@ function AuditBody() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => listQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => listQuery.refetch(),
+        }}
       />
     )
   }
@@ -333,7 +356,9 @@ function AuditBody() {
       {verify.data ? (
         <div className="flex items-center gap-2 rounded-md border border-border bg-card p-4 text-small text-foreground">
           <ChainVerifyBadge ok={verify.data.ok} />
-          {t('admin.console.audit.chainRowsChecked', { count: verify.data.rows })}
+          {t('admin.console.audit.chainRowsChecked', {
+            count: verify.data.rows,
+          })}
         </div>
       ) : null}
 

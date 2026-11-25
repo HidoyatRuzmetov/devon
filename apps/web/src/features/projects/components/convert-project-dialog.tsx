@@ -60,6 +60,7 @@ export function ConvertProjectDialog({
         <DialogTrigger asChild>
           {iconOnly ? (
             <IconButton
+              data-onboarding="convert-project"
               aria-label={t('projectEdit.convert')}
               tooltip={t('projectEdit.convert')}
               onClick={() => {

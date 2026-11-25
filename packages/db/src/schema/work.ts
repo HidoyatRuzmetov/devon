@@ -97,6 +97,7 @@ export const cards = appSchema.table('cards', {
 })
 
 export const cardChecklistItems = appSchema.table('card_checklist_items', {
+  onboardingKey: text('onboarding_key'),
   id: uuid('id').primaryKey().defaultRandom(),
   departmentId: uuid('department_id').notNull(),
   cardId: uuid('card_id').notNull(),

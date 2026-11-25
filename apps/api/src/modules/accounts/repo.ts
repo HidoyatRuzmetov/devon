@@ -97,11 +97,13 @@ function toUserRecord(row: typeof schema.users.$inferSelect): UserRecord {
     familyName: row.familyName,
     patronymic: row.patronymic,
     title: row.title,
+    workStartDate: row.workStartDate,
     avatarKey: row.avatarKey,
     locale: row.locale,
     timezone: row.timezone,
     role: row.role as Role,
     status: row.status,
+    onboardingRequired: row.onboardingRequired,
     mustChangePassword: row.mustChangePassword,
     lastLoginAt: row.lastLoginAt,
   }
@@ -134,7 +136,10 @@ export async function registerUser(input: RegisterBody, ctx: AuditCtx): Promise<
         subjectId: user.id,
         after: { login: user.login },
       })
-      tx.emit({ type: 'accounts.user.registered', payload: { userId: user.id } })
+      tx.emit({
+        type: 'accounts.user.registered',
+        payload: { userId: user.id },
+      })
       return user
     })
   } catch (err) {
@@ -200,7 +205,11 @@ export async function revokeOwnSession(
       .update(schema.sessions)
       .set({ revokedAt: new Date(), revokedReason: 'user_revoked' })
       .where(eq(schema.sessions.id, sessionId))
-    tx.audit({ action: 'accounts.session_revoked', subjectType: 'session', subjectId: sessionId })
+    tx.audit({
+      action: 'accounts.session_revoked',
+      subjectType: 'session',
+      subjectId: sessionId,
+    })
     return true
   })
 }
@@ -313,7 +322,11 @@ export async function verifyTotpEnroll(
           set totp_enabled = true, recovery_codes_hash = ${sql.param(hashes)}::text[], updated_at = now()
           where user_id = ${userId}`,
     )
-    tx.audit({ action: 'accounts.2fa_enabled', subjectType: 'user', subjectId: userId })
+    tx.audit({
+      action: 'accounts.2fa_enabled',
+      subjectType: 'user',
+      subjectId: userId,
+    })
     return { ok: true, recoveryCodes }
   })
 }
@@ -336,7 +349,11 @@ export async function disableTotp(
           set totp_enabled = false, totp_secret_enc = null, recovery_codes_hash = '{}', updated_at = now()
           where user_id = ${userId}`,
     )
-    tx.audit({ action: 'accounts.2fa_disabled', subjectType: 'user', subjectId: userId })
+    tx.audit({
+      action: 'accounts.2fa_disabled',
+      subjectType: 'user',
+      subjectId: userId,
+    })
     return true
   })
 }
@@ -362,7 +379,11 @@ export async function consumeLoginChallenge(
 ): Promise<{ ok: true; userId: string } | { ok: false; reason: 'invalid' | 'locked' }> {
   const tokenHash = sha256Hex(rawToken)
   return withContext(anonymousCtx(), async (tx) => {
-    const rows = await tx.raw<{ id: string; user_id: string; expires_at: Date | string }>(
+    const rows = await tx.raw<{
+      id: string
+      user_id: string
+      expires_at: Date | string
+    }>(
       sql`select id, user_id, expires_at from app.login_challenges
           where token_hash = ${tokenHash} and consumed_at is null`,
     )
@@ -443,7 +464,11 @@ export async function changePassword(
       .update(schema.users)
       .set({ passwordHash, mustChangePassword: false, updatedAt: new Date() })
       .where(eq(schema.users.id, userId))
-    tx.audit({ action: 'accounts.password_changed', subjectType: 'user', subjectId: userId })
+    tx.audit({
+      action: 'accounts.password_changed',
+      subjectType: 'user',
+      subjectId: userId,
+    })
     return true
   })
 }
@@ -516,7 +541,11 @@ export async function cancelAccountDeletion(userId: string, ctx: AuditCtx): Prom
           returning id`,
     )
     if (rows.length === 0) return false
-    tx.audit({ action: 'accounts.deletion_cancelled', subjectType: 'user', subjectId: userId })
+    tx.audit({
+      action: 'accounts.deletion_cancelled',
+      subjectType: 'user',
+      subjectId: userId,
+    })
     return true
   })
 }
@@ -550,7 +579,11 @@ export async function getPendingDeletion(userId: string): Promise<Date | null> {
  */
 export async function requestPasswordResetByLogin(login: string, ctx: AuditCtx): Promise<void> {
   await withContext(
-    { ...anonymousCtx(), requestId: ctx.requestId, actorRole: 'super_admin' as Role },
+    {
+      ...anonymousCtx(),
+      requestId: ctx.requestId,
+      actorRole: 'super_admin' as Role,
+    },
     async (tx) => {
       const users = await tx.raw<{ id: string }>(
         sql`select id from app.users
@@ -597,7 +630,10 @@ export async function getProfessionalProfile(userId: string, ctx: AuditCtx) {
       sql`select professional_profile || jsonb_build_object('position',case when title in ('specialist_first_class','leading_specialist','chief_specialist','division_head','department_head') then title else '' end) as profile, professional_profile_version as version from app.users where id = ${userId} and deleted_at is null`,
     )
     return row
-      ? { profile: parseStoredProfessionalProfile(row.profile), version: row.version }
+      ? {
+          profile: parseStoredProfessionalProfile(row.profile),
+          version: row.version,
+        }
       : null
   })
 }

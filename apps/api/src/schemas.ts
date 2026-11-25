@@ -44,6 +44,7 @@ const publicUserSchema = z.object({
 })
 
 export const meSchema = z.object({
+  onboardingRequired: z.boolean().default(false),
   user: publicUserSchema, // NOTE: no `email` -- restricted tier, never on a list/self endpoint by default
   memberships: z
     .array(

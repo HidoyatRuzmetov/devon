@@ -8,6 +8,7 @@ import {
   POSITION_CODES,
   EDUCATION_CODES,
   professionalProfileWriteSchema,
+  onboardingResumeMissing,
   type ProfessionalProfile,
 } from '@devon/contracts'
 import {
@@ -32,7 +33,7 @@ const profileKey = (ownerUserId: string) =>
   ['accounts', 'professional-profile', ownerUserId] as const
 type ProfileRecord = { profile: ProfessionalProfile; version: number }
 type SaveCommand = ProfileRecord & { ownerUserId: string; csrfToken: string }
-export function ProfessionalProfileSection() {
+export function ProfessionalProfileSection({ setupRequired = false }: { setupRequired?: boolean }) {
   const t = useT()
   const { data: me } = useMeQuery()
   const ownerUserId = me?.user.id ?? ''
@@ -52,7 +53,10 @@ export function ProfessionalProfileSection() {
         <StateView
           kind="error"
           titleKey="state.error.title"
-          action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => void query.refetch(),
+          }}
         />
       ) : null}
       {query.data && ownerUserId ? (
@@ -62,6 +66,7 @@ export function ProfessionalProfileSection() {
           version={query.data.version}
           ownerUserId={ownerUserId}
           csrfToken={me?.csrfToken ?? ''}
+          setupRequired={setupRequired}
         />
       ) : null}
     </SettingsSection>
@@ -73,11 +78,13 @@ function ProfileEditor({
   version,
   ownerUserId,
   csrfToken,
+  setupRequired,
 }: {
   initial: ProfessionalProfile
   version: number
   ownerUserId: string
   csrfToken: string
+  setupRequired: boolean
 }) {
   const t = useT(),
     qc = useQueryClient()
@@ -107,6 +114,7 @@ function ProfileEditor({
         current && current.version > record.version ? current : record,
       )
       void qc.invalidateQueries({ queryKey: ['structure', 'members'] })
+      void qc.invalidateQueries({ queryKey: ['onboarding'] })
       toast(t('profileEdit.saved'))
     },
   })
@@ -140,7 +148,13 @@ function ProfileEditor({
       required: ['name'],
       limit: 50,
     },
-    { key: 'links', icon: LinkIcon, fields: ['label', 'url'], required: ['url'], limit: 20 },
+    {
+      key: 'links',
+      icon: LinkIcon,
+      fields: ['label', 'url'],
+      required: ['url'],
+      limit: 20,
+    },
   ] as const
   function updateEntry(
     section: (typeof sections)[number]['key'],
@@ -157,8 +171,12 @@ function ProfileEditor({
   function submit(event: React.FormEvent) {
     event.preventDefault()
     const parsed = professionalProfileWriteSchema.safeParse(profile)
+    const next: Record<string, string> = {}
+    if (setupRequired) {
+      for (const field of onboardingResumeMissing(profile))
+        next[field] = t(`onboarding.resumeMissing.${field}`)
+    }
     if (!parsed.success) {
-      const next: Record<string, string> = {}
       for (const issue of parsed.error.issues) {
         const list = ['skills', 'languages', 'hobbies'].includes(String(issue.path[0]))
         const key = list ? String(issue.path[0]) : issue.path.join('.')
@@ -178,13 +196,20 @@ function ProfileEditor({
                     : 'settings.profile.invalidValue',
                 )
       }
+    }
+    if (Object.keys(next).length) {
       setErrors(next)
       const first = Object.keys(next)[0]
       if (first) formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus()
       return
     }
-    if (!save.isPending)
-      save.mutate({ profile: parsed.data, version: draft.baseRevision, ownerUserId, csrfToken })
+    if (parsed.success && !save.isPending)
+      save.mutate({
+        profile: parsed.data,
+        version: draft.baseRevision,
+        ownerUserId,
+        csrfToken,
+      })
   }
   return (
     <form ref={formRef} noValidate className="flex min-w-0 flex-col gap-5" onSubmit={submit}>
@@ -232,13 +257,30 @@ function ProfileEditor({
           ))}
         </div>
         <label className="flex flex-col gap-1.5 text-small">
-          {label('about')}
+          <span>
+            {label('about')}
+            {setupRequired ? (
+              <span className="ml-1 text-destructive" aria-hidden="true">
+                *
+              </span>
+            ) : null}
+          </span>
           <Textarea
+            name="about"
+            required={setupRequired}
+            aria-required={setupRequired}
+            aria-invalid={Boolean(errors['about'])}
+            aria-describedby={errors['about'] ? 'about-error' : undefined}
             maxLength={10000}
             rows={4}
             value={profile.about}
             onChange={(e) => set('about', e.target.value)}
           />
+          {errors['about'] ? (
+            <span id="about-error" className="text-caption text-destructive">
+              {errors['about']}
+            </span>
+          ) : null}
         </label>
       </fieldset>
       {sections.map(({ key: section, icon: Icon, fields, required, limit }) => (
@@ -247,9 +289,16 @@ function ProfileEditor({
             <Icon className="size-5 text-primary" aria-hidden="true" />
             {label(section)}
           </legend>
+          {errors[section] ? (
+            <p id={`${section}-error`} className="text-small text-destructive">
+              {errors[section]}
+            </p>
+          ) : null}
           {!profile[section].length ? (
             <p className="text-small text-muted-foreground">
-              {t('settings.profile.addHint', { section: label(section).toLowerCase() })}
+              {t('settings.profile.addHint', {
+                section: label(section).toLowerCase(),
+              })}
             </p>
           ) : null}
           {profile[section].map((item, index) => (
@@ -389,6 +438,8 @@ function ProfileEditor({
             </div>
           ))}
           <Button
+            name={section}
+            aria-describedby={errors[section] ? `${section}-error` : undefined}
             type="button"
             size="sm"
             variant="secondary"
@@ -414,7 +465,9 @@ function ProfileEditor({
             }}
           >
             <Plus className="size-4" aria-hidden="true" />
-            {t('settings.profile.addSection', { section: label(section).toLowerCase() })}
+            {t('settings.profile.addSection', {
+              section: label(section).toLowerCase(),
+            })}
           </Button>
         </fieldset>
       ))}
@@ -428,9 +481,18 @@ function ProfileEditor({
             key={key}
             className={`flex min-w-0 flex-col gap-1.5 text-small ${key === 'hobbies' ? 'sm:col-span-2' : ''}`}
           >
-            {label(key)}
+            <span>
+              {label(key)}
+              {setupRequired && key === 'skills' ? (
+                <span className="ml-1 text-destructive" aria-hidden="true">
+                  *
+                </span>
+              ) : null}
+            </span>
             <Input
               name={key}
+              required={setupRequired && key === 'skills'}
+              aria-required={setupRequired && key === 'skills'}
               aria-invalid={Boolean(errors[key])}
               aria-describedby={errors[key] ? `${key}-error` : undefined}
               maxLength={key === 'skills' ? 10099 : 5049}

@@ -27,7 +27,10 @@ export default function ProjectsListScreen() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void projectsQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => void projectsQuery.refetch(),
+        }}
       />
     )
   } else if (projectsQuery.data!.length === 0) {
@@ -47,7 +50,7 @@ export default function ProjectsListScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div data-onboarding="projects" className="flex flex-col gap-4">
       <PageHeader
         eyebrow={t('projects.eyebrow')}
         title={t('projects.title')}

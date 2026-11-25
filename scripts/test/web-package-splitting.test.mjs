@@ -29,6 +29,16 @@ function build(imports, expression) {
       join(fixture, 'src/vite.config.ts'),
       "import { defineConfig } from 'vite'; import { fileURLToPath } from 'node:url'; export default defineConfig({ root: fileURLToPath(new URL('.', import.meta.url)), publicDir: false, build: { outDir: '../dist', sourcemap: true } });",
     )
+    // The supported entry also builds the isolated dashboard; retain that build in the fixture.
+    mkdirSync(join(fixture, 'src/public-dashboard'))
+    writeFileSync(
+      join(fixture, 'src/public-dashboard/index.html'),
+      '<p>Public dashboard fixture</p>',
+    )
+    writeFileSync(
+      join(fixture, 'src/public-dashboard.vite.config.ts'),
+      "import { defineConfig } from 'vite'; import { fileURLToPath } from 'node:url'; export default defineConfig({ root: fileURLToPath(new URL('./public-dashboard', import.meta.url)), publicDir: false, base: '/view/', build: { outDir: '../../dist/view' } });",
+    )
     const result = spawnSync(process.execPath, [join(fixture, 'scripts/build.mjs')], {
       cwd: fixture,
       env: { ...process.env, NODE_OPTIONS: '', NODE_ENV: 'production' },

@@ -12,7 +12,8 @@
     "loginHint": "Kichik lotin harflari, raqamlar, . _ -",
     "saved": "Profil saqlandi",
     "loginTaken": "Bu login band. Boshqasini tanlang.",
-    "error": "Saqlab boʻlmadi. Maydonlarni tekshirib, qayta urinib koʻring."
+    "error": "Saqlab boʻlmadi. Maydonlarni tekshirib, qayta urinib koʻring.",
+    "workStartDate": "Ish boshlagan sana"
   },
   "projectEdit": {
     "edit": "Loyihani tahrirlash",

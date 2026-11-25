@@ -18,6 +18,7 @@ import { verifyTotp } from '../accounts/totp.js'
 import { decryptSecret as decryptAccountSecret } from '../accounts/crypto.js'
 import type { AuditCtx } from '../../types.js'
 import type { Locale } from '../../schemas.js'
+import { AUDIT_CATEGORIES } from './schemas.js'
 import { encryptSecret, decryptSecret } from './crypto.js'
 import { generateSentinelKeypair } from './sentinel-protocol.js'
 import { sendWipeCommand } from './sentinel-client.js'
@@ -291,7 +292,11 @@ export type AdminUserDetail = AdminUserRow & {
   mustChangePassword: boolean
   twoFactorEnabled: boolean
   lockedUntil: Date | null
-  memberships: { departmentId: string; departmentName: string; role: 'head' | 'member' }[]
+  memberships: {
+    departmentId: string
+    departmentName: string
+    role: 'head' | 'member'
+  }[]
 }
 
 /** Presentation only: the instance role must never be changed to grant department authority.
@@ -404,9 +409,10 @@ export async function getUserDetail(id: string): Promise<AdminUserDetail | null>
     const row = rows[0]
     if (!row) return null
 
-    const security = await tx.raw<{ totp_enabled: boolean; locked_until: string | null }>(
-      sql`select totp_enabled, locked_until from app.user_security where user_id = ${id}`,
-    )
+    const security = await tx.raw<{
+      totp_enabled: boolean
+      locked_until: string | null
+    }>(sql`select totp_enabled, locked_until from app.user_security where user_id = ${id}`)
     const memberships = await tx.raw<{
       department_id: string
       department_name: string
@@ -565,7 +571,11 @@ export async function forceTwoFactorReset(id: string, ctx: AuditCtx): Promise<bo
       values (${id}, false, null, '{}')
       on conflict (user_id) do update set totp_enabled = false, totp_secret_enc = null, recovery_codes_hash = '{}', updated_at = now()
     `)
-    tx.audit({ action: 'admin.user.two_factor_reset', subjectType: 'user', subjectId: id })
+    tx.audit({
+      action: 'admin.user.two_factor_reset',
+      subjectType: 'user',
+      subjectId: id,
+    })
     return true
   })
 }
@@ -582,7 +592,11 @@ export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean>
   return withContext(adminCtx(ctx), async (tx) => {
     const lockedDepartments = await lockUserDepartments(tx, id)
     const before = await tx.drizzle
-      .select({ status: schema.users.status, login: schema.users.login, role: schema.users.role })
+      .select({
+        status: schema.users.status,
+        login: schema.users.login,
+        role: schema.users.role,
+      })
       .from(schema.users)
       .where(eq(schema.users.id, id))
       .limit(1)
@@ -699,7 +713,12 @@ export async function restoreDeletedIdentity(
 
 export type AdminAnalytics = {
   generatedAt: Date
-  departments: { total: number; active: number; paused: number; archived: number }
+  departments: {
+    total: number
+    active: number
+    paused: number
+    archived: number
+  }
   people: {
     total: number
     active: number
@@ -720,7 +739,11 @@ export type AdminAnalytics = {
     available: boolean
     tokensThisMonth: number
     costUzsThisMonth: number
-    byDepartment: { departmentId: string; departmentName: string; tokens: number }[]
+    byDepartment: {
+      departmentId: string
+      departmentName: string
+      tokens: number
+    }[]
   }
 }
 
@@ -803,7 +826,11 @@ export async function getGlobalAnalytics(): Promise<AdminAnalytics> {
     // `select ... from app.cards` would still throw "relation does not exist" on a checkout without
     // that table -- table presence has to be resolved as its own, separate round trip first, and only
     // the queries for tables that actually exist get to run at all.
-    const presence = await tx.raw<{ cards: boolean; events: boolean; ai: boolean }>(
+    const presence = await tx.raw<{
+      cards: boolean
+      events: boolean
+      ai: boolean
+    }>(
       sql`select (to_regclass('app.cards') is not null) as cards, (to_regclass('app.events') is not null) as events,
         (to_regclass('app.ai_traces') is not null) as ai`,
     )
@@ -925,13 +952,19 @@ export type AuditEventFilters = {
   to?: string | undefined
 }
 function auditEventConditions(
-  input: AuditEventFilters & { cursor?: number | undefined; throughSeq?: number | undefined },
+  input: AuditEventFilters & {
+    cursor?: number | undefined
+    throughSeq?: number | undefined
+  },
 ) {
   const conditions = [sql`1 = 1`]
   if (input.action) conditions.push(sql`action = ${input.action}`)
   if (input.category === '__other__') {
     conditions.push(
-      sql`action not like 'session.%' and action not like 'accounts.%' and action not like 'admin.%' and action not like 'departments.%'`,
+      sql.join(
+        AUDIT_CATEGORIES.map((category) => sql`action not like ${category + '.%'}`),
+        sql` and `,
+      ),
     )
   } else if (input.category) conditions.push(sql`action like ${input.category + '.%'}`)
   if (input.actorUserId) conditions.push(sql`actor_user_id = ${input.actorUserId}::uuid`)
@@ -1041,7 +1074,11 @@ export async function listAuditEvents(
  * someone else's contact details for a reason that has nothing to do with mutation. */
 export async function recordAuditExport(ctx: AuditCtx): Promise<void> {
   await withContext(adminCtx(ctx), async (tx) => {
-    tx.audit({ action: 'admin.audit.exported', subjectType: 'audit_export', subjectId: null })
+    tx.audit({
+      action: 'admin.audit.exported',
+      subjectType: 'audit_export',
+      subjectId: null,
+    })
   })
 }
 
@@ -1091,7 +1128,10 @@ export async function getSystemHealth(): Promise<{
     } catch (err) {
       return {
         status: 'down',
-        detail: { code: 'error.raw', params: { message: rawErrorMessage(err) } },
+        detail: {
+          code: 'error.raw',
+          params: { message: rawErrorMessage(err) },
+        },
         latencyMs: null,
       }
     }
@@ -1113,14 +1153,21 @@ export async function getSystemHealth(): Promise<{
         status: degraded ? 'degraded' : 'ok',
         detail:
           oldest > 0
-            ? { code: 'queue.pendingOldest', params: { count: pending, seconds: oldest } }
+            ? {
+                code: 'queue.pendingOldest',
+                params: { count: pending, seconds: oldest },
+              }
             : { code: 'queue.pending', params: { count: pending } },
         latencyMs: null,
       }
     } catch {
       // `processed_at` is `events-worker.ts`'s own bookkeeping column; if a checkout's outbox schema
       // differs, report degraded rather than crashing the whole health page over one card.
-      return { status: 'degraded', detail: { code: 'queue.unreadable' }, latencyMs: null }
+      return {
+        status: 'degraded',
+        detail: { code: 'queue.unreadable' },
+        latencyMs: null,
+      }
     }
   })()
 
@@ -1235,7 +1282,10 @@ async function getActiveSentinelKeypair(
   csrfSecret: string,
 ): Promise<{ publicKeyB64: string; privateKeyB64: string } | null> {
   return withContext(anonymousAdminCtx(), async (tx) => {
-    const rows = await tx.raw<{ public_key_b64: string; private_key_enc: string }>(
+    const rows = await tx.raw<{
+      public_key_b64: string
+      private_key_enc: string
+    }>(
       sql`select public_key_b64, private_key_enc from app.sentinel_keys where active = true order by created_at desc limit 1`,
     )
     const row = rows[0]
@@ -1251,7 +1301,10 @@ const WIPE_COUNTDOWN_SECONDS = 60
 
 export type WipeStartResult =
   | { ok: true; id: string; countdownEndsAt: Date; countdownSeconds: number }
-  | { ok: false; reason: 'bad_phrase' | 'bad_password' | 'bad_totp' | 'no_sentinel_key' }
+  | {
+      ok: false
+      reason: 'bad_phrase' | 'bad_password' | 'bad_totp' | 'no_sentinel_key'
+    }
 
 export async function startWipe(
   input: {
@@ -1282,7 +1335,10 @@ export async function startWipe(
       return { ok: false, reason: 'bad_password' }
     }
 
-    const security = await tx.raw<{ totp_secret_enc: string | null; totp_enabled: boolean }>(
+    const security = await tx.raw<{
+      totp_secret_enc: string | null
+      totp_enabled: boolean
+    }>(
       sql`select totp_secret_enc, totp_enabled from app.user_security where user_id = ${ctx.userId}`,
     )
     if (security[0]?.totp_enabled && security[0].totp_secret_enc) {
@@ -1324,7 +1380,12 @@ export async function startWipe(
       subjectId: id,
       after: { countdownEndsAt: countdownEndsAt.toISOString() },
     })
-    return { ok: true, id, countdownEndsAt, countdownSeconds: WIPE_COUNTDOWN_SECONDS }
+    return {
+      ok: true,
+      id,
+      countdownEndsAt,
+      countdownSeconds: WIPE_COUNTDOWN_SECONDS,
+    }
   })
 }
 
@@ -1391,7 +1452,11 @@ export async function executeWipe(csrfSecret: string, ctx: AuditCtx): Promise<Wi
 
   const actorLogin = await withContext(adminCtx(ctx), async (tx) => {
     await tx.raw(sql`update app.wipe_requests set status = 'executing' where id = ${pending.id}`)
-    tx.audit({ action: 'admin.wipe.executing', subjectType: 'wipe_request', subjectId: pending.id })
+    tx.audit({
+      action: 'admin.wipe.executing',
+      subjectType: 'wipe_request',
+      subjectId: pending.id,
+    })
     const rows = await tx.drizzle
       .select({ login: schema.users.login })
       .from(schema.users)

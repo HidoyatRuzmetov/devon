@@ -5,6 +5,20 @@ import { translate } from '../../src/t.js'
 /** Verified emitted audit calls (including conditional branches) that the admin console lacked.
  * Personal internal action names use the console's documented vocabulary aliases. */
 const actions = [
+  'data.record.created',
+  'data.record.updated',
+  'data.record.deleted',
+  'onboarding.started',
+  'onboarding.document_uploaded',
+  'onboarding.document_published',
+  'onboarding.document_rejected',
+  'onboarding.document_read',
+  'onboarding.setup_completed',
+  'onboarding.step_viewed',
+  'onboarding.guide_paused',
+  'onboarding.guide_resumed',
+  'onboarding.tour_completed',
+
   'accounts.password_reset_by_head',
   'accounts.password_reset_requested',
   'accounts.profile_updated',

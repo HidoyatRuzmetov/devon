@@ -21,6 +21,13 @@ import { AuthShell } from './shell/auth-shell.js'
 import { RouteErrorBoundary } from './shell/route-error-boundary.js'
 import { LocaleLoadNotice } from './shell/locale-load-notice.js'
 import { LocalePreferenceNotice } from './shell/locale-preference-notice.js'
+import { OnboardingProvider, useOnboarding } from './features/onboarding/context.js'
+import { SetupGate } from './features/onboarding/setup-gate.js'
+const TourController = React.lazy(() =>
+  import('./features/onboarding/tour-controller.js').then((m) => ({
+    default: m.TourController,
+  })),
+)
 import { PomodoroController } from './features/personal/pomodoro-controller.js'
 
 // H4.3 (route-level code splitting): every `features/*/manifest.ts(x)` route is already
@@ -178,7 +185,10 @@ export function RouteOutlet() {
           kind="error"
           titleKey="state.error.title"
           bodyKey="state.error.body"
-          action={{ labelKey: 'state.error.action', onAction: () => void meQuery.refetch() }}
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => void meQuery.refetch(),
+          }}
         />
       </ErrorShell>
     )
@@ -194,7 +204,10 @@ export function RouteOutlet() {
           kind="forbidden"
           titleKey="state.denied.title"
           bodyKey="state.denied.body"
-          action={{ labelKey: 'state.denied.action', onAction: () => navigate('/') }}
+          action={{
+            labelKey: 'state.denied.action',
+            onAction: () => navigate('/'),
+          }}
         />
       </AppShell>
     )
@@ -272,8 +285,13 @@ export function App() {
         <TooltipProvider delayDuration={200}>
           <PublicInstanceBoot />
           <LocaleReconciler />
-          <PomodoroController />
-          <RouteOutlet />
+          <OnboardingProvider>
+            <SetupGate>
+              <PomodoroController />
+              <RouteOutlet />
+            </SetupGate>
+            <OnboardingTour />
+          </OnboardingProvider>
         </TooltipProvider>
       </MotionProvider>
     </QueryClientProvider>
@@ -282,3 +300,12 @@ export function App() {
 
 // Exported for the shell tests, which assert the auth-route list without mounting a whole route.
 export { AUTH_ROUTES }
+
+function OnboardingTour() {
+  const { playing } = useOnboarding()
+  return playing ? (
+    <React.Suspense fallback={null}>
+      <TourController />
+    </React.Suspense>
+  ) : null
+}

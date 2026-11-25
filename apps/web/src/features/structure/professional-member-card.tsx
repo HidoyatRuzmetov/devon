@@ -43,6 +43,8 @@ import { unitColorClass } from '../../lib/unit-palette.js'
 import type { Member, Unit } from './api.js'
 import { CopyValue, ResumeCopyFields } from './resume-copy.js'
 import { downloadResume } from './resume-export.js'
+import { useOptionalOnboarding } from '../onboarding/context.js'
+import { tourSteps } from '../onboarding/steps.js'
 
 export function fullName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymic'>): string {
   return [m.givenName, m.familyName].filter(Boolean).join(' ')
@@ -90,6 +92,11 @@ export function MemberCard({
   const t = useT()
   const locale = useLocale()
   const [open, setOpen] = React.useState(false)
+  const onboarding = useOptionalOnboarding()
+  const guidedProfile = onboarding?.playing && tourSteps[onboarding.step]?.key === 'peopleProfile'
+  React.useEffect(() => {
+    if (onboarding?.playing && !guidedProfile) setOpen(false)
+  }, [onboarding?.playing, guidedProfile])
   const { department } = useDepartment()
   const [recordOpen, setRecordOpen] = React.useState(false)
   const [recordScript, setRecordScript] = React.useState<'latin' | 'cyrillic'>('latin')
@@ -201,6 +208,10 @@ export function MemberCard({
         <button
           type="button"
           onClick={() => setOpen(true)}
+          data-onboarding="open-member-profile"
+          data-onboarding-profile-filled={Boolean(
+            profile.about || profile.experience.length || profile.education.length,
+          )}
           style={style}
           data-unit-color={colour}
           className={cn(
@@ -327,8 +338,13 @@ export function MemberCard({
           </div>
         ) : null}
       </div>
-      <Sheet open={open} onOpenChange={setOpen} direction="right">
-        <SheetContent side="right" title={fullName(member)} className="w-full sm:w-[36rem]">
+      <Sheet open={open} onOpenChange={setOpen} direction="right" modal={!onboarding?.playing}>
+        <SheetContent
+          data-onboarding="member-panel"
+          side="right"
+          title={fullName(member)}
+          className="w-full sm:w-[36rem]"
+        >
           <ResumeCopyFields
             className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [overflow-wrap:anywhere]"
             style={style}

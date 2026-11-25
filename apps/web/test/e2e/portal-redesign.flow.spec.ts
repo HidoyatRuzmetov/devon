@@ -7,7 +7,7 @@ import {
   examplePassword,
   loginAsSuperAdmin,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   uniqueLogin,
 } from './flow-api.js'
 

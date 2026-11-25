@@ -12,7 +12,8 @@
     "loginHint": "Lowercase letters, numbers, . _ -",
     "saved": "Profile saved",
     "loginTaken": "That username is already taken. Choose another.",
-    "error": "Could not save. Check the fields and try again."
+    "error": "Could not save. Check the fields and try again.",
+    "workStartDate": "Work start date"
   },
   "projectEdit": {
     "edit": "Edit project",

@@ -70,6 +70,30 @@ function substituteAndRename(sql: string, vars: Record<string, string>): string 
 
 export type FlowDatabase = { appUrl: string }
 
+/** Model an account that predates onboarding in existing-workflow tests. The registration
+ * contract and production default stay intact; newcomer journeys never call this fixture. */
+export function markFlowUserEstablished(userId: string): void {
+  assertLocalTestDatabase({
+    host: FLOW_DB_HOST,
+    database: FLOW_DB_NAME,
+    container: FLOW_DB_CONTAINER,
+    port: FLOW_DB_PORT,
+  })
+  if (!/^[a-f0-9-]{36}$/i.test(userId)) throw new Error('Invalid fixture user id')
+  const context = spawnSync(
+    'docker',
+    ['context', 'inspect', '--format', '{{.Endpoints.docker.Host}}'],
+    { encoding: 'utf8' },
+  )
+  if (context.status !== 0) throw new Error('Local Docker fixture is unavailable')
+  assertLocalDockerEndpoint(context.stdout.trim())
+  if (process.env['DOCKER_HOST']) assertLocalDockerEndpoint(process.env['DOCKER_HOST'])
+  runPsqlInContainer(
+    `update app.users set onboarding_required=false where id='${userId}';`,
+    FLOW_DB_NAME,
+  )
+}
+
 /** Drops and recreates `FLOW_DB_NAME`, applies every migration fresh, and returns a TCP connection
  * string for the suite's own dedicated app role. Idempotent across repeated `npx playwright test`
  * invocations on the same machine -- always starts from a clean slate, so `@flow` specs never inherit

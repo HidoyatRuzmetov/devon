@@ -167,7 +167,10 @@ export default function StructureScreen() {
         kind="offline"
         titleKey="state.offline.banner"
         bodyKey="state.offline.empty"
-        action={{ labelKey: 'state.error.action', onAction: () => window.location.reload() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => window.location.reload(),
+        }}
       />
     )
   }
@@ -185,7 +188,10 @@ export default function StructureScreen() {
         kind="forbidden"
         titleKey="state.denied.title"
         bodyKey="state.denied.body"
-        action={{ labelKey: 'state.denied.action', onAction: () => window.history.back() }}
+        action={{
+          labelKey: 'state.denied.action',
+          onAction: () => window.history.back(),
+        }}
       />
     )
   }
@@ -195,7 +201,10 @@ export default function StructureScreen() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => overviewQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => overviewQuery.refetch(),
+        }}
       />
     )
   }
@@ -308,11 +317,11 @@ export default function StructureScreen() {
   const tabs =
     units.length === 0 ? undefined : (
       <TabsList>
-        <TabsTrigger value="tree">
+        <TabsTrigger value="tree" data-onboarding-structure-tab="tree">
           <List className="size-4" aria-hidden="true" />
           {t('structure.units.view.tree')}
         </TabsTrigger>
-        <TabsTrigger value="chart">
+        <TabsTrigger value="chart" data-onboarding-structure-tab="chart">
           <Network className="size-4" aria-hidden="true" />
           {t('structure.units.view.chart')}
         </TabsTrigger>
@@ -320,7 +329,12 @@ export default function StructureScreen() {
     )
 
   return (
-    <Tabs value={view} onValueChange={(v) => setView(v as View)} className="flex flex-col gap-6">
+    <Tabs
+      data-onboarding="structure"
+      value={view}
+      onValueChange={(v) => setView(v as View)}
+      className="flex flex-col gap-6"
+    >
       <DepartmentHeader
         titleKey="structure.units.title"
         subtitleKey="structure.units.subtitle"
@@ -343,7 +357,13 @@ export default function StructureScreen() {
         </Reveal>
       ) : null}
 
-      {units.length === 0 ? body : <TabsContent value={view}>{body}</TabsContent>}
+      {units.length === 0 ? (
+        body
+      ) : (
+        <TabsContent value={view} data-onboarding-structure-view={view}>
+          {body}
+        </TabsContent>
+      )}
 
       <AddUnitDialog
         open={addParentId !== undefined}
@@ -356,13 +376,17 @@ export default function StructureScreen() {
           createMutation.reset()
         }}
         onCreate={(body) => {
-          createMutation.mutate(body, { onSuccess: () => setAddParentId(undefined) })
+          createMutation.mutate(body, {
+            onSuccess: () => setAddParentId(undefined),
+          })
         }}
       />
 
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent
-          title={t('structure.units.deleteConfirm.title', { name: deleteTarget?.name ?? '' })}
+          title={t('structure.units.deleteConfirm.title', {
+            name: deleteTarget?.name ?? '',
+          })}
         >
           <p className="text-body text-muted-foreground">
             {t('structure.units.deleteConfirm.body')}
@@ -380,14 +404,20 @@ export default function StructureScreen() {
                   onSuccess: ({ deletedAt }) => {
                     invalidateAll()
                     toastWithUndo({
-                      message: t('structure.units.deletedToast', { name: unit.name }),
+                      message: t('structure.units.deletedToast', {
+                        name: unit.name,
+                      }),
                       undoLabel: t('structure.units.undo'),
                       onUndo: () =>
                         restoreMutation.mutate(
                           { unitId: unit.id, deletedAt },
                           {
                             onSuccess: () =>
-                              toast(t('structure.units.restoredToast', { name: unit.name })),
+                              toast(
+                                t('structure.units.restoredToast', {
+                                  name: unit.name,
+                                }),
+                              ),
                           },
                         ),
                     })

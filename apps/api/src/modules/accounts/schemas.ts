@@ -53,6 +53,10 @@ export const loginIdSchema = z
 
 export const profileSchema = z
   .object({
+    workStartDate: z.iso
+      .date()
+      .refine((value) => value >= '1900-01-01')
+      .nullable(),
     dateOfBirth: z.iso
       .date()
       .refine((value) => validBirthDate(value), 'invalid birth date')
@@ -116,7 +120,10 @@ export function toAccountPublicUser(user: UserRecord) {
   }
 }
 
-export const registerResultSchema = z.object({ user: publicUserSchema, csrfToken: z.string() })
+export const registerResultSchema = z.object({
+  user: publicUserSchema,
+  csrfToken: z.string(),
+})
 
 export const sessionViewSchema = z.object({
   id: z.string().uuid(),
@@ -128,7 +135,9 @@ export const sessionViewSchema = z.object({
   expiresAt: z.string(),
   isCurrent: z.boolean(),
 })
-export const sessionListSchema = z.object({ sessions: z.array(sessionViewSchema) })
+export const sessionListSchema = z.object({
+  sessions: z.array(sessionViewSchema),
+})
 
 export const totpEnrollResultSchema = z.object({
   secret: z.string(),
@@ -136,7 +145,9 @@ export const totpEnrollResultSchema = z.object({
 })
 
 export const totpVerifyBodySchema = z.object({ code: z.string().length(6) }).strict()
-export const totpVerifyResultSchema = z.object({ recoveryCodes: z.array(z.string()) })
+export const totpVerifyResultSchema = z.object({
+  recoveryCodes: z.array(z.string()),
+})
 
 export const totpDisableBodySchema = z.object({ password: z.string().min(1) }).strict()
 
@@ -151,7 +162,9 @@ export const changePasswordBodySchema = z
   .object({ currentPassword: z.string().min(1), newPassword: passwordSchema })
   .strict()
 
-export const resetPasswordResultSchema = z.object({ temporaryPassword: z.string() })
+export const resetPasswordResultSchema = z.object({
+  temporaryPassword: z.string(),
+})
 
 export const deleteAccountResultSchema = z.object({ scheduledFor: z.string() })
 

@@ -14,6 +14,7 @@ import {
 } from './audit.js'
 import { insertOutboxEvent, type OutboxEventInput } from './events.js'
 import * as schema from './schema/index.js'
+import { trackWrites } from './audit-writes.js'
 
 export type Role = 'super_admin' | 'head' | 'member'
 
@@ -224,7 +225,8 @@ export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promis
         ],
       )
 
-      const db = drizzle(client, { schema })
+      const writes: AuditEventInput[] = []
+      const db = drizzle(trackWrites(client, writes), { schema })
       const auditQueue: AuditEventInput[] = []
       const privateReadQueue: PrivateReadInput[] = []
       const eventQueue: OutboxEventInput[] = []
@@ -261,6 +263,9 @@ export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promis
       }
 
       const result = await fn(tx)
+      // Prefer the feature's meaningful event. A successful domain write without one still
+      // receives an attributed, payload-free receipt, atomically with the change.
+      if (auditQueue.length === 0) auditQueue.push(...writes)
 
       // I-5: flush inside this transaction, before commit, so a domain write and its audit row are
       // atomic. If `fn` threw, we never reach here and the rollback below discards everything. A

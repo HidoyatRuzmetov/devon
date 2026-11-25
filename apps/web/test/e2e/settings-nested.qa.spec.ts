@@ -7,7 +7,7 @@ import {
   authedPatch,
   examplePassword,
   newFlowContext,
-  registerUser,
+  registerEstablishedUser as registerUser,
   uniqueLogin,
 } from './flow-api.js'
 import { FLOW_WEB_BASE_URL } from './flow-env.js'

@@ -19,26 +19,58 @@ export const SETTINGS_GROUPS = [
   {
     labelKey: 'accounts.settings.profile',
     items: [
-      { path: '/account', labelKey: 'settings.accountProfile', icon: UserRound },
-      { path: '/account/professional', labelKey: 'profileChoices.resume', icon: Fingerprint },
-      { path: '/account/personnel', labelKey: 'profileChoices.record', icon: FileUser },
+      {
+        path: '/account',
+        labelKey: 'settings.accountProfile',
+        icon: UserRound,
+      },
+      {
+        path: '/account/professional',
+        labelKey: 'profileChoices.resume',
+        icon: Fingerprint,
+      },
+      {
+        path: '/account/personnel',
+        labelKey: 'profileChoices.record',
+        icon: FileUser,
+      },
     ],
   },
   {
     labelKey: 'settings.workspace',
     items: [
-      { path: '/account/notifications', labelKey: 'inbox.preferences.title', icon: Bell },
+      {
+        path: '/account/notifications',
+        labelKey: 'inbox.preferences.title',
+        icon: Bell,
+      },
       { path: '/account/telegram', labelKey: 'telegram.title', icon: Send },
-      { path: '/account/calendar', labelKey: 'calendar.title', icon: CalendarDays },
-      { path: '/account/department', labelKey: 'settings.department', icon: Building2 },
+      {
+        path: '/account/calendar',
+        labelKey: 'calendar.title',
+        icon: CalendarDays,
+      },
+      {
+        path: '/account/department',
+        labelKey: 'settings.department',
+        icon: Building2,
+      },
       { path: '/account/ai', labelKey: 'ai.title', icon: Sparkles },
     ],
   },
   {
     labelKey: 'accounts.settings.security',
     items: [
-      { path: '/account/security', labelKey: 'settings.signInSecurity', icon: ShieldCheck },
-      { path: '/account/delete', labelKey: 'accounts.delete.title', icon: Trash2 },
+      {
+        path: '/account/security',
+        labelKey: 'settings.signInSecurity',
+        icon: ShieldCheck,
+      },
+      {
+        path: '/account/delete',
+        labelKey: 'accounts.delete.title',
+        icon: Trash2,
+      },
     ],
   },
 ] as const
@@ -60,6 +92,7 @@ export function SettingsNavigation({ path }: { path: string }) {
       <label className="flex flex-col gap-2 text-small lg:hidden">
         <span className="font-medium">{t('accounts.settings.subnavAria')}</span>
         <select
+          data-onboarding-settings-picker
           value={path}
           onChange={(event) => navigate(event.target.value)}
           className="min-h-11 w-full rounded-md border border-border bg-card px-3 text-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -88,6 +121,7 @@ export function SettingsNavigation({ path }: { path: string }) {
               {group.items.map((item) => (
                 <li key={item.path}>
                   <RouterLink
+                    data-onboarding-nav={item.path}
                     href={item.path}
                     aria-current={path === item.path ? 'page' : undefined}
                     className={cn(

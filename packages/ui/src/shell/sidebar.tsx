@@ -322,6 +322,7 @@ function SidebarItem({
   const row = (
     <Link
       href={entry.route}
+      data-onboarding-nav={entry.route}
       tabIndex={0}
       aria-current={active ? 'page' : undefined}
       // H5.2 "prefetch on hover/focus": a mouse hover and a keyboard tab-to-focus are the two ways a

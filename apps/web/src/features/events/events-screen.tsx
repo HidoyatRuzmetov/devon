@@ -95,7 +95,10 @@ export default function EventsScreen() {
         kind="offline"
         titleKey="events.offline.title"
         bodyKey="events.offline.body"
-        action={{ labelKey: 'events.actions.retry', onAction: () => eventsQuery.refetch() }}
+        action={{
+          labelKey: 'events.actions.retry',
+          onAction: () => eventsQuery.refetch(),
+        }}
       />
     )
   }
@@ -122,7 +125,10 @@ export default function EventsScreen() {
         kind="error"
         titleKey="events.error.title"
         bodyKey="events.error.body"
-        action={{ labelKey: 'events.actions.retry', onAction: () => eventsQuery.refetch() }}
+        action={{
+          labelKey: 'events.actions.retry',
+          onAction: () => eventsQuery.refetch(),
+        }}
         {...(requestId ? { requestId } : {})}
       />
     )
@@ -137,7 +143,10 @@ export default function EventsScreen() {
           kind="empty"
           titleKey="events.empty.title"
           bodyKey="events.empty.body"
-          action={{ labelKey: 'events.empty.action', onAction: () => navigate('/events?new=1') }}
+          action={{
+            labelKey: 'events.empty.action',
+            onAction: () => navigate('/events?new=1'),
+          }}
         />
       )
     }
@@ -193,7 +202,7 @@ export default function EventsScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div data-onboarding="events" className="flex flex-col gap-6">
       <PageHeader
         eyebrow={t('events.eyebrow')}
         title={t('events.title')}

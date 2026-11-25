@@ -488,7 +488,10 @@ function SetupGuide({ departmentId }: { departmentId: string | null }) {
   )
 }
 
-export default function TelegramScreen({ embedded = false }: { embedded?: boolean } = {}) {
+export default function TelegramScreen({
+  embedded = false,
+  setupOnly = false,
+}: { embedded?: boolean; setupOnly?: boolean } = {}) {
   const t = useT()
   const forced = useForcedState()
   const online = useOnline()
@@ -535,10 +538,13 @@ export default function TelegramScreen({ embedded = false }: { embedded?: boolea
 
       <PersonalLinkCard />
 
-      {departmentId && telegram.data?.configured && (isHead || telegram.data?.canConnectGroup) ? (
+      {!setupOnly &&
+      departmentId &&
+      telegram.data?.configured &&
+      (isHead || telegram.data?.canConnectGroup) ? (
         <GroupsCard departmentId={departmentId} canManage={isHead} />
       ) : null}
-      <SetupGuide departmentId={isHead ? departmentId : null} />
+      {!setupOnly ? <SetupGuide departmentId={isHead ? departmentId : null} /> : null}
     </div>
   )
 }

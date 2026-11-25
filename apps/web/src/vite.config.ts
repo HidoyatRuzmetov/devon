@@ -76,6 +76,15 @@ export default defineConfig(({ command, mode }) => {
     // nested-task tree (many rows, frequent local state updates) -- see each file's own `'use memo'`
     // for its profiling note.
     plugins: [
+      {
+        name: 'independent-public-dashboard',
+        configureServer(server) {
+          server.middlewares.use((req, _res, next) => {
+            if (/^\/view(?:\/|\?|$)/.test(req.url ?? '')) req.url = '/public-dashboard/index.html'
+            next()
+          })
+        },
+      },
       react({ compiler: { compilationMode: 'annotation' } }),
       tailwindcss(),
       robotsTxtPlugin(),

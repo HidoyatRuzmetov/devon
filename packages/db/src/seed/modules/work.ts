@@ -333,6 +333,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         id: u.id,
         login: u.login,
         passwordHash,
+        onboardingRequired: false, // Demo users model established accounts.
         givenName: u.givenName,
         familyName: u.familyName,
         patronymic: u.patronymic,

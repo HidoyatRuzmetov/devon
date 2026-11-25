@@ -25,7 +25,9 @@ export function BoardNavigation({
   onNavigate?: (id: string) => void
 }) {
   const t = useT()
-  const [pendingTarget, setPendingTarget] = React.useState<{ id: string } | null>(null)
+  const [pendingTarget, setPendingTarget] = React.useState<{
+    id: string
+  } | null>(null)
 
   React.useEffect(() => {
     if (!pendingTarget) return
@@ -95,9 +97,10 @@ export function BoardNavigation({
             { value: 'unassigned', label: t('work.board.unassigned') },
           ]}
         />
-        {!mobile && currentUserId && members.some((member) => member.userId === currentUserId) ? (
+        {currentUserId && members.some((member) => member.userId === currentUserId) ? (
           <IconButton
-            className="hidden md:inline-flex md:size-8"
+            data-onboarding="my-column"
+            className="md:size-8"
             aria-label={t('work.board.myColumn')}
             tooltip={t('work.board.myColumn')}
             onClick={() => jumpTo(currentUserId)}

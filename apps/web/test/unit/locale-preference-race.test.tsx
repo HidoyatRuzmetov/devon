@@ -17,6 +17,7 @@ const qaExampleCredential1 = 'fixture-csrf'
 
 function me(id = 'current-owner'): Me {
   return {
+    onboardingRequired: false,
     user: {
       id,
       login: 'fixture',
@@ -39,7 +40,9 @@ function me(id = 'current-owner'): Me {
   }
 }
 function fixture() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+  const client = new QueryClient({
+    defaultOptions: { mutations: { retry: false } },
+  })
   client.setQueryData(['me'], me())
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
@@ -137,7 +140,10 @@ it('a refused latest preference retains its owner and last choice for visible re
     locale: 'ru',
     ownerUserId: 'current-owner',
   })
-  vi.mocked(patchMe).mockResolvedValueOnce({ ...me(), user: { ...me().user, locale: 'ru' } })
+  vi.mocked(patchMe).mockResolvedValueOnce({
+    ...me(),
+    user: { ...me().user, locale: 'ru' },
+  })
   act(() => result.current.mutate('ru'))
   await waitFor(() => expect(client.isMutating()).toBe(0))
   expect(patchMe).toHaveBeenCalledTimes(2)
@@ -181,7 +187,9 @@ it('a failed old-owner command cannot install recovery in a replacement session'
   client.setQueryData(['me'], me('new-owner'))
   reject(new Error('Old owner refusal'))
   await waitFor(() => expect(client.isMutating()).toBe(0))
-  expect(client.getQueryData(['locale-preference-recovery'])).toMatchObject({ status: 'pending' })
+  expect(client.getQueryData(['locale-preference-recovery'])).toMatchObject({
+    status: 'pending',
+  })
   expect(client.getQueryData<Me>(['me'])?.user.id).toBe('new-owner')
   unmount()
   client.clear()

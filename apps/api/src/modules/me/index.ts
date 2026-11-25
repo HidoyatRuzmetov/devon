@@ -29,6 +29,7 @@ function toMe(
 ) {
   return {
     user: toPublicUser(user),
+    onboardingRequired: user.onboardingRequired ?? false,
     memberships: memberships.map((m) => ({
       departmentId: m.departmentId,
       name: m.departmentName,

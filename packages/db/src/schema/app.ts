@@ -6,6 +6,7 @@
 import { sql } from 'drizzle-orm'
 import {
   boolean,
+  date,
   integer,
   jsonb,
   pgSchema,
@@ -48,11 +49,13 @@ export const users = appSchema.table('users', {
   familyName: text('family_name').notNull(),
   patronymic: text('patronymic'),
   title: text('title'),
+  workStartDate: date('work_start_date'),
   avatarKey: text('avatar_key'),
   locale: text('locale').notNull().default('uz-Latn'),
   timezone: text('timezone').notNull().default('Asia/Tashkent'),
   role: userRoleEnum('role').notNull().default('member'),
   status: userStatusEnum('status').notNull().default('active'),
+  onboardingRequired: boolean('onboarding_required').notNull().default(true),
   mustChangePassword: boolean('must_change_password').notNull().default(false),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

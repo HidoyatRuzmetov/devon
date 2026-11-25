@@ -22,9 +22,11 @@ export const USER_FIELD_TIER: Readonly<Record<string, FieldTier>> = Object.freez
   // Bracket-quoted rather than a plain identifier-colon-value pair: the secrets gate's per-line
   // heuristic for a credential assignment does not know this is a field-tier flag, not a literal
   // value, and this equivalent form does not match its pattern.
+  ['onboardingRequired']: 'internal',
   ['mustChangePassword']: 'internal',
 
   email: 'restricted',
+  workStartDate: 'restricted',
 
   passwordHash: 'secret',
 })
