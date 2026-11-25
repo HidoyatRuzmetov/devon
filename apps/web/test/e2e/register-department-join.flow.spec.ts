@@ -100,7 +100,16 @@ test('@flow register -> department request -> super_admin approval -> invite -> 
   await expect(memberPage.getByText(departmentName)).toBeVisible()
   await memberPage.getByLabel('Parol').fill(approved.joinPassword)
   await memberPage.getByRole('button', { name: 'Qoʻshilish' }).click()
-  await expect(memberPage.getByText('Boshqarmaga qoʻshildingiz')).toBeVisible()
+  // Joining now opens required setup immediately, replacing the old join-success screen.
+  await expect(
+    memberPage.getByRole('heading', { name: 'Hisobingizni ishga tayyorlang' }),
+  ).toBeVisible()
+  await memberPage.goto('/work')
+  await expect(
+    memberPage.getByRole('heading', { name: 'Hisobingizni ishga tayyorlang' }),
+  ).toBeVisible()
+  await stripSecureCookies(memberContext)
+  expect((await memberContext.request.get('/api/v1/cards')).status()).toBe(403)
 
   await memberContext.close()
 

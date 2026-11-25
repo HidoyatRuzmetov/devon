@@ -57,12 +57,22 @@ describe('self-service profile', () => {
       patronymic: 'Family',
       title: 'chief_specialist',
       email: 'example@example.test',
+      workStartDate: '2026-01-15',
     }
     const response = await request('/accounts/profile', 'PATCH', profile)
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ ...profile, dateOfBirth: null })
     const me = (await (await request('/me')).json()) as { user: Record<string, unknown> }
     expect(me.user['givenName']).toBe('New')
+    expect(await (await request('/accounts/profile')).json()).toEqual({
+      ...profile,
+      dateOfBirth: null,
+    })
+    expect(
+      await superuserQuery(db, 'select work_start_date::text from app.users where id=$1', [
+        owner.id,
+      ]),
+    ).toEqual([{ work_start_date: profile.workStartDate }])
     expect(me.user).not.toHaveProperty('email')
     expect((await loginAs(server.baseUrl, login)).cookie).toBeTruthy()
     const untouched = (await (
