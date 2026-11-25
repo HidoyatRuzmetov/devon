@@ -682,8 +682,10 @@ export default function PagesScreen() {
             href="/help"
             className="flex flex-col gap-1 rounded-md border border-primary/20 bg-primary/5 p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
           >
-            <span className="font-medium text-primary">{t('help.title')}</span>
-            <span className="text-small text-muted-foreground">{t('help.description')}</span>
+            <span className="font-medium text-primary">{t('onboarding.title')}</span>
+            <span className="text-small text-muted-foreground">
+              {t('onboarding.centerDescription')}
+            </span>
           </RouterLink>
           {tab === 'onboarding' && canManageOnboarding ? (
             <OnboardingTemplatesPanel />

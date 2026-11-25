@@ -129,6 +129,9 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.page_versions': 'department_owned',
   'app.onboarding_templates': 'department_owned',
   'app.onboarding_runs': 'department_owned',
+  'app.onboarding_documents': 'department_owned',
+  'app.onboarding_publications': 'department_owned',
+  'app.portal_onboarding': 'user_owned',
 
   // EPIC-018/EPIC-019 realtime + calendar + web push (v1.1 SPEC §10, migration 1800).
   'app.calendar_feeds': 'global',

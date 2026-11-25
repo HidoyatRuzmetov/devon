@@ -119,17 +119,19 @@ for (const role of ['head', 'member'] as const) {
         .poll(async () => (await context.request.get(`/api/v1/cards/${created.id}`)).status())
         .toBe(200)
       await page.goto('/pages')
-      await page.getByRole('link', { name: /Quick help/ }).click()
-      await page.getByRole('searchbox').fill('quiet hours')
+      await page.getByRole('link', { name: /Getting started/ }).click()
       await expect(
-        page.getByText('How do I connect Telegram and control notifications?'),
+        page.getByRole('heading', { name: 'Getting started', exact: true }),
       ).toBeVisible()
-      await expect(page.locator('details')).toHaveCount(1)
+      await expect(page.getByRole('button', { name: 'Start guide', exact: true })).toBeVisible()
       await page.setViewportSize({ width: 390, height: 844 })
-      await expect(page.getByRole('searchbox')).toBeVisible()
+      await page.getByRole('button', { name: 'Start guide', exact: true }).click()
+      await expect(page.locator('.driver-popover')).toBeVisible()
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
       ).toBe(true)
+      await page.locator('.driver-popover-close-btn').click()
+      await expect(page.locator('.driver-popover')).toHaveCount(0)
     } finally {
       await Promise.all([admin.close(), head.close(), member.close()])
     }

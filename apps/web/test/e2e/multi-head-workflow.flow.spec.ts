@@ -196,7 +196,8 @@ test('@flow multiple heads retain management across every department workspace a
     })
 
     await secondPage.goto(membersPath)
-    await secondPage.getByRole('button', { name: 'Step down as head' }).click()
+    await secondPage.getByRole('button', { name: 'Actions for Nodira Review' }).click()
+    await secondPage.getByRole('menuitem', { name: 'Step down as head' }).click()
     await settleCapture(secondPage)
     await secondPage.screenshot({
       path: resolve(screenshots, '32-step-down-confirmation.png'),

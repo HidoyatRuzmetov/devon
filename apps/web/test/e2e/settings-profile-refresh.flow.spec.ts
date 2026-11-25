@@ -352,12 +352,13 @@ test('settings panes, legacy links and professional profiles work on desktop and
         async () => (await navigator.clipboard.readText()) === 'https://www.linkedin.com/',
       ),
     ).toBe(true)
-    // A head retains the full department toolset; four tabs must wrap cleanly at phone width.
+    // A head retains the full department toolset, including public dashboard sharing on phones.
     expect((await authedPatch(head, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
     const headPage = await head.newPage()
     await headPage.setViewportSize({ width: 390, height: 844 })
     await headPage.goto('/account/department')
-    await expect(headPage.getByRole('tab')).toHaveCount(4)
+    await expect(headPage.getByRole('tab')).toHaveCount(5)
+    await expect(headPage.getByRole('tab', { name: 'Public dashboard', exact: true })).toBeVisible()
     await expect(headPage.getByRole('tab', { name: /Invite/ })).toBeVisible()
     await expect(headPage.getByRole('tab', { name: /Danger/ })).toBeVisible()
     await headPage.waitForLoadState('networkidle')

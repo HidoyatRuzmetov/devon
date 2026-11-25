@@ -95,6 +95,7 @@ describe('reset sweep coverage', () => {
       ['app.event_rsvps', 'app.events'],
       ['app.page_versions', 'app.pages'],
       ['app.onboarding_runs', 'app.onboarding_templates'],
+      ['app.onboarding_publications', 'app.onboarding_documents'],
       ['app.unit_roles', 'app.units'],
     ]
     for (const [child, parent] of pairs) {

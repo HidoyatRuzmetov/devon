@@ -76,6 +76,8 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   // Custom fields: requests and values both reference a definition.
   { table: 'app.notification_department_settings' },
   // Pages and onboarding: a run references its template, a version references its page.
+  { table: 'app.onboarding_publications' },
+  { table: 'app.onboarding_documents' },
   { table: 'app.onboarding_runs' },
   { table: 'app.onboarding_templates' },
   { table: 'app.page_versions' },
@@ -117,6 +119,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
  * same shape `personal.ts` and `notifications.ts` already use to *write* them.
  */
 export const USER_SWEEP_ORDER: readonly { table: string; column: string | null }[] = [
+  { table: 'app.portal_onboarding', column: 'user_id' },
   { table: 'app.birthday_greetings', column: 'owner_user_id' },
   { table: 'app.account_birthdays', column: 'owner_user_id' },
   { table: 'app.personal_calendar_entries', column: 'user_id' },
@@ -402,6 +405,20 @@ export async function sweepDemoResidue(tx: Tx, scope: DemoScope): Promise<number
   let deleted = 0
   for (const userId of scope.userIds) {
     deleted += await sweepUserResidue(tx, userId)
+  }
+  if (scope.departmentIds.length) {
+    // A real account may have joined (and later left) a demo department. Its onboarding run
+    // still references that department's card/document. Remove only that run, under its owner
+    // context, before deleting those parents; keep the account and all other personal data.
+    const users = await tx.raw<{ id: string }>(sql`select id from app.users`)
+    for (const user of users.filter((row) => !scope.userIds.includes(row.id))) {
+      const rows = await asUser(tx, user.id, () =>
+        // nosemgrep: query-in-loop -- Owner-only RLS requires one owner context per account.
+        tx.raw(sql`delete from app.portal_onboarding where user_id=${user.id}
+          and department_id=any(${sql.raw(uuidArray(scope.departmentIds))}) returning user_id`),
+      )
+      deleted += rows.length
+    }
   }
   for (const departmentId of scope.departmentIds) {
     deleted += await sweepDepartmentResidue(tx, departmentId, scope.userIds)

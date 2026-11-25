@@ -75,8 +75,64 @@ describe('used demo reset with group receipts and private AI uploads', () => {
         )
       ).rows,
     ).toHaveLength(2)
+    // Onboarding documents and personal runs can be created after the demo was seeded. A real
+    // person who left the demo still needs their account preserved when its department is reset.
+    const visitor = randomUUID(),
+      otherUser = randomUUID(),
+      otherDepartment = randomUUID(),
+      document = randomUUID()
+    await client.query(
+      `insert into app.users(id,login,password_hash,given_name,family_name)
+      values ($1::uuid,$1::text,'unused-example-hash','Visitor','Example'),($2::uuid,$2::text,'unused-example-hash','Other','Example')`,
+      [visitor, otherUser],
+    )
+    await client.query(
+      'insert into app.departments(id,name,slug) values ($1::uuid,$1::text,$1::text)',
+      [otherDepartment],
+    )
+    await client.query(
+      `insert into app.onboarding_documents(id,department_id,uploaded_by,title,filename,html)
+      values ($1,$2,$3,'Example','example.html','<p>Example</p>')`,
+      [document, DEMO_DEPARTMENT.id, DEMO_USERS[0]!.id],
+    )
+    await client.query(
+      `insert into app.onboarding_publications(department_id,document_id,published_by)
+      values ($1,$2,$3)`,
+      [DEMO_DEPARTMENT.id, document, DEMO_USERS[0]!.id],
+    )
+    await client.query(
+      `insert into app.portal_onboarding(user_id,department_id,document_id,card_id)
+      select $1,$2,$3,id from app.cards where department_id=$2 limit 1`,
+      [visitor, DEMO_DEPARTMENT.id, document],
+    )
+    await client.query('insert into app.portal_onboarding(user_id,department_id) values ($1,$2)', [
+      otherUser,
+      otherDepartment,
+    ])
+    expect((await client.query('select user_id from app.portal_onboarding')).rows).toHaveLength(2)
     const reset = await runResetDemo({ NODE_ENV: 'test', DATABASE_URL: db.appUrl })
     expect(reset.deleted).toBe(true)
+    expect(
+      (await client.query('select id from app.onboarding_documents where id=$1', [document])).rows,
+    ).toEqual([])
+    expect(
+      (
+        await client.query(
+          'select department_id from app.onboarding_publications where department_id=$1',
+          [DEMO_DEPARTMENT.id],
+        )
+      ).rows,
+    ).toEqual([])
+    expect((await client.query('select user_id from app.portal_onboarding')).rows).toEqual([
+      { user_id: otherUser },
+    ])
+    expect(
+      (
+        await client.query('select id from app.users where id=any($1::uuid[])', [
+          [visitor, otherUser],
+        ])
+      ).rows,
+    ).toHaveLength(2)
     expect(
       (await client.query('select id from app.attachments where id=any($1::uuid[])', [fileIds]))
         .rows,
