@@ -976,6 +976,10 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   },
 
   // --- notifications (this module's own bookkeeping) ------------------------------------------------
+  'onboarding.document_published': {
+    notify: false,
+    why: 'Refreshes the shared introduction and open readers through realtime. Private submission decisions do not create department-wide notifications.',
+  },
   'notifications.notification.created': {
     notify: false,
     why: 'Emitted by `insertNotification` itself. Notifying on it would notify on the notification, forever.',
