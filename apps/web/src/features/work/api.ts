@@ -182,7 +182,6 @@ export type Board = z.infer<typeof boardSchema>
 
 export type WorkViewLayout = 'people_board' | 'table' | 'timeline' | 'calendar' | 'mine'
 
-
 export const unfurlResultSchema = z.object({
   url: z.string(),
   title: z.string(),
