@@ -124,7 +124,20 @@ for (const role of ['head', 'member'] as const) {
       await expect(proposal).toContainText('Applied')
       await proposal.getByRole('link', { name: 'Open result', exact: true }).click()
       await expect(page).toHaveURL(isPage ? /\/pages\?page=/ : /\/work\?.*card=/)
-      const download = page.getByRole('link', { name: fileName, exact: true })
+      if (isPage) {
+        await page.getByRole('button', { name: `Open ${fileName}`, exact: true }).click()
+        await expect(page.getByRole('dialog', { name: 'File viewer', exact: true })).toBeVisible()
+        await expect(
+          page
+            .frameLocator(`iframe[title="${fileName}"]`)
+            .getByText('Synthetic directory for browser verification.'),
+        ).toBeVisible()
+      }
+      const download = isPage
+        ? page
+            .getByRole('dialog', { name: 'File viewer', exact: true })
+            .getByRole('link', { name: 'Download original', exact: true })
+        : page.getByRole('link', { name: fileName, exact: true })
       await expect(download).toBeVisible()
       const response = await context.request.get((await download.getAttribute('href'))!)
       expect(response.status()).toBe(200)

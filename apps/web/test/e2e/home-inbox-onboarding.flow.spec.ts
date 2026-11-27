@@ -31,18 +31,25 @@ test('@flow personal inbox remains reachable before joining a department and for
         await authedPatch(context, '/api/v1/me', { locale: 'en' })
         const page = await context.newPage()
         await page.goto('/account')
-        await page
+        const notifications = page
           .getByRole('banner')
           .getByRole('button', { name: /^Notifications:/ })
-          .click()
-        await expect(page).toHaveURL(/\/\?inbox=all$/)
+        await expect(notifications).toBeVisible()
+        const unread = Number((await notifications.getAttribute('aria-label'))?.match(/\d+/)?.[0])
+        expect(Number.isFinite(unread)).toBe(true)
+        await notifications.click()
+        await expect(page).toHaveURL(
+          (url) =>
+            url.pathname === '/' &&
+            url.searchParams.get('inbox') === (unread > 0 ? 'unread' : 'all') &&
+            Boolean(url.searchParams.get('focusInbox')),
+        )
         const inbox = page.getByTestId('home-inbox')
         await expect(inbox).toBeVisible()
         await expect(page.getByRole('button', { name: entry, exact: true })).toBeVisible()
-        await expect(inbox.getByRole('tab', { name: 'All', exact: true })).toHaveAttribute(
-          'aria-selected',
-          'true',
-        )
+        await expect(
+          inbox.getByRole('tab', { name: unread > 0 ? 'Unread' : 'All', exact: true }),
+        ).toHaveAttribute('aria-selected', 'true')
         await page.goto('/inbox?status=archived')
         await expect(page).toHaveURL(/\/\?inbox=archived$/)
         await expect(inbox).toBeVisible()

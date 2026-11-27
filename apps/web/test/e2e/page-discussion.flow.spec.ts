@@ -9,7 +9,7 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 
-test('@flow page reading, Markdown editing, safe HTML downloads and comment revisions', async ({
+test('@flow page reading, Markdown editing, isolated HTML previews, downloads and comment revisions', async ({
   browser,
 }, testInfo) => {
   test.setTimeout(90_000)
@@ -35,6 +35,8 @@ test('@flow page reading, Markdown editing, safe HTML downloads and comment revi
     expect(response.status()).toBe(201)
     const created = (await response.json()) as { id: string }
     const page = await context.newPage()
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
     await page.goto(`/pages?page=${created.id}`)
     await expect(
       page.getByRole('heading', { name: 'Center-wide phonebook', exact: true }),
@@ -60,18 +62,27 @@ test('@flow page reading, Markdown editing, safe HTML downloads and comment revi
         '<!doctype html><title>Phonebook</title><h1>Directory</h1><script>throw new Error("must never run")</script>',
       ),
     })
-    const download = page.getByRole('link', { name: 'phonebook.html', exact: true })
-    await expect(download).toBeVisible()
+    const attachment = page.getByRole('button', { name: 'Open phonebook.html', exact: true })
+    await expect(attachment).toBeVisible()
     await page.getByRole('button', { name: 'Done editing', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Edit page', exact: true })).toBeVisible()
     await expect(page.locator('input[type="file"]')).toHaveCount(0)
-    await expect(download).toBeVisible()
+    await attachment.click()
+    const viewer = page.getByRole('dialog', { name: 'File viewer', exact: true })
+    await expect(viewer).toBeVisible()
+    const preview = page.frameLocator('iframe[title="phonebook.html"]')
+    await expect(preview.getByRole('heading', { name: 'Directory', exact: true })).toBeVisible()
+    await expect(viewer.locator('iframe')).toHaveAttribute('sandbox', '')
+    await expect(preview.locator('script')).toHaveCount(0)
+    expect(errors).toEqual([])
+    const download = viewer.getByRole('link', { name: 'Download original', exact: true })
     const href = await download.getAttribute('href')
     expect(href).toBeTruthy()
     const file = await context.request.get(href!)
     expect(file.status()).toBe(200)
     expect(file.headers()['content-disposition']).toContain('attachment')
     expect(file.headers()['x-content-type-options']).toBe('nosniff')
+    await viewer.getByRole('button', { name: 'Close viewer', exact: true }).click()
     await page.reload()
     await expect(
       page.getByRole('heading', { name: 'Using the directory', exact: true }),

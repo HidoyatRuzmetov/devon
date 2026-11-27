@@ -73,7 +73,7 @@ async function fixture(other = false) {
   // Keep ordinary edit cases independent of the weekday on which CI runs.
   await superuserQuery(
     db,
-    "update app.checkin_cycles set checkin_locked_at=null,checkin_deadline=now()+interval '1 day' where id=$1",
+    "update app.checkin_cycles set checkin_locked_at=null,checkin_deadline=now()+interval '1 day',checkout_deadline=now()+interval '2 days' where id=$1",
     [board.currentCycleId],
   )
 
@@ -403,6 +403,12 @@ describe('check-in lifecycle and source integrity', () => {
       userAgent: 'test',
     }
     const dates = cycleDates(f.board.cycles[0]!.startsOn)
+    // Restore calendar deadlines after the ordinary-edit fixture extends them beyond today.
+    await superuserQuery(
+      db,
+      'update app.checkin_cycles set checkin_deadline=$2,checkout_deadline=$3 where id=$1',
+      [f.cycleId, dates.checkinDeadline, dates.checkoutDeadline],
+    )
     const future = new Date(dates.checkoutDeadline.getTime() + 1000)
     const next = await withContext(ctx, (tx) => maintainCycles(tx, ctx, future))
     expect(next).not.toBe(f.cycleId)
@@ -496,14 +502,24 @@ describe('check-in lifecycle and source integrity', () => {
       [secondItem, f.department.id, f.cardId, second.id],
     )
     const secondId = await add(f, secondItem)
+    // A future cycle is always too early, including when CI runs on checkout Friday.
+    const futureCycleId = randomUUID()
+    await superuserQuery(
+      db,
+      `insert into app.checkin_cycles(id,department_id,starts_on,ends_on,checkin_deadline,checkout_deadline)
+       select $2,department_id,starts_on+14,ends_on+14,checkin_deadline+interval '14 days',checkout_deadline+interval '14 days'
+       from app.checkin_cycles where id=$1`,
+      [f.cycleId, futureCycleId],
+    )
     expect(
       (
-        await request(f.headSession, `/checkins/cycles/${f.cycleId}/lock`, 'POST', {
+        await request(f.headSession, `/checkins/cycles/${futureCycleId}/lock`, 'POST', {
           phase: 'checkout',
           memberUserId: f.member.id,
         })
       ).status,
     ).toBe(409)
+    await superuserQuery(db, 'delete from app.checkin_cycles where id=$1', [futureCycleId])
     // Make this an earlier cycle whose scheduled cutoff is still open, to exercise manual checkout.
     await superuserQuery(
       db,
