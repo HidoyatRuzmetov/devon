@@ -206,7 +206,11 @@ export function SetupGate({ children }: { children: React.ReactNode }) {
             mutation.mutate(
               { htmlDone: true },
               {
-                onSuccess: () => {
+                onSuccess: (data) => {
+                  if (!data.run?.htmlDone) {
+                    setReading(true)
+                    return
+                  }
                   setCelebrate(true)
                   setReading(false)
                   navigate(firstMissing.path)
