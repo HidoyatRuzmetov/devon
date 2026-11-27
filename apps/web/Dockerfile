@@ -54,10 +54,10 @@ ENV NGINX_VERSION=1.30.7
 # The pinned upstream image predates these library fixes, including libexpat
 # CVE-2026-117610 / CVE-2026-118370 and zlib CVE-2026-85091. Alpine replaced
 # libexpat 2.10.0 with 2.11.0 on 2026-11-25; keep the published signed package pinned.
-# libxml2 r3 also includes the fix for CVE-2026-86144.
+# libxml2 r5 supersedes the removed r3 package and retains its CVE-2026-86144 fix.
 RUN apk add --no-cache tiff=4.7.2-r0 libexpat=2.11.0-r0 libx11=1.8.14-r0 \
     brotli-libs=1.2.1-r0 curl=8.23.0-r0 libcurl=8.23.0-r0 zlib=1.4-r0 \
-    musl=1.2.6-r3 musl-utils=1.2.6-r3 libxslt=1.1.43-r4 libxml2=2.13.9-r3
+    musl=1.2.6-r3 musl-utils=1.2.6-r3 libxslt=1.1.43-r4 libxml2=2.13.9-r5
 USER 101
 # `nginx-unprivileged` already runs its worker AND master process as the `nginx` user (uid 101) on an
 # unprivileged port -- a real non-root container, not just non-root worker processes behind a root
