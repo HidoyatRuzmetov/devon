@@ -133,6 +133,10 @@ jobs:
           current="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
           [ "$current" = "$RELEASE_SHA" ] || { echo 'Main changed during build; refusing stale deployment'; exit 1; }
           port="${PROD_PORT:-22}"
+          # Validate with the server's Compose version before replacing any live configuration.
+          ssh -p "$port" "${PROD_USER}@${PROD_HOST}" \
+            'docker compose --env-file /opt/devon/.env --project-directory /opt/devon/infra -f - --profile clamav --profile centrifugo config --quiet' \
+            < infra/docker-compose.prod.yml
           tar -czf - \
             infra/docker-compose.prod.yml \
             infra/docker-compose.yml \
