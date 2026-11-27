@@ -198,6 +198,10 @@ const INVALIDATIONS: ReadonlyArray<{
   { match: /^personal\.calendar\./, keys: [['personal', 'calendar']] },
   { match: /^structure\./, keys: [['structure']] },
   {
+    match: /^onboarding\.document_published$/,
+    keys: [['onboarding-documents'], ['onboarding-document'], ['onboarding']],
+  },
+  {
     match: /^attachments\./,
     keys: [
       ['work', 'attachments'],

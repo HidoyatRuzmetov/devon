@@ -136,7 +136,7 @@ for (const role of ['head', 'member'] as const) {
       const download = isPage
         ? page
             .getByRole('dialog', { name: 'File viewer', exact: true })
-            .getByRole('link', { name: 'Download original', exact: true })
+            .getByRole('link', { name: 'Download file', exact: true })
         : page.getByRole('link', { name: fileName, exact: true })
       await expect(download).toBeVisible()
       const response = await context.request.get((await download.getAttribute('href'))!)

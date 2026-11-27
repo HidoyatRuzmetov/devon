@@ -90,12 +90,13 @@
 	# `connect-src` is `'self'` plus whatever `DEVON_CSP_CONNECT_EXTRA` names -- set it to the MinIO
 	# public endpoint when `STORAGE_DRIVER=s3`, because the browser then PUTs avatar bytes straight to
 	# a presigned URL on that origin (`apps/web/src/lib/api-client.ts`'s `uploadFile`).
-	@not_miniapp not path /miniapp /miniapp/* /api/v1/onboarding/documents/*/render
+	# These authenticated HTML responses provide their own SAMEORIGIN header and sandbox CSP.
+	@not_miniapp not path /miniapp /miniapp/* /api/v1/onboarding/documents/*/render /api/v1/pages/*/attachments/*/preview/html
 	header @not_miniapp X-Frame-Options "DENY"
 	@spa not path /api/* /healthz /readyz /realtime/* /miniapp /miniapp/*
 	header @spa Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' {$DEVON_CSP_CONNECT_EXTRA:} ; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; frame-src 'self'; child-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 	# Permit only Telegram's official SDK and Telegram Web's embedding origin on this surface.
-	# The main portal retains its no-external-scripts policy; only its isolated onboarding reader may load a same-origin frame.
+	# The main portal retains its no-external-scripts policy; document readers use isolated same-origin frame responses.
 	@miniapp path /miniapp /miniapp/*
 	header @miniapp Content-Security-Policy "default-src 'self'; script-src 'self' https://telegram.org/js/telegram-web-app.js; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; frame-src 'none'; child-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self' https://web.telegram.org; upgrade-insecure-requests"
 

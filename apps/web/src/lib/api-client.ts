@@ -131,6 +131,7 @@ async function postBlob(path: string, body: unknown, signal?: AbortSignal): Prom
   let size = 0
   try {
     for (;;) {
+      // nosemgrep: query-in-loop -- Bound each response chunk before reading more bytes; this is a stream, not a database query.
       const item = await reader.read()
       if (item.done) break
       size += item.value.length

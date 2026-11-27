@@ -19,7 +19,6 @@ export function DocumentsPanel() {
     queryKey: ['onboarding-documents', departmentId, me.user.id, view],
     queryFn: () => fetchDocuments(view),
     enabled: Boolean(departmentId),
-    refetchInterval: 30_000,
   })
   const [title, setTitle] = React.useState('')
   const [file, setFile] = React.useState<File | null>(null)

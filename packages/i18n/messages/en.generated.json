@@ -4075,7 +4075,7 @@
       "publishedEmpty": "No approved introduction yet.",
       "mineEmpty": "You have not submitted an introduction yet.",
       "reviewEmpty": "No submissions are waiting for review.",
-      "superseded": "Replaced"
+      "superseded": "Outdated"
     },
     "chapters": {
       "0": "Profile & settings",

@@ -3,6 +3,20 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it('invalidates open introduction readers and lists when a new edition is published', () => {
+    const client = new QueryClient()
+    const keys = ['onboarding-documents', 'onboarding-document', 'onboarding']
+    for (const key of keys) client.setQueryData([key, 'reader'], 'previous edition')
+    const bridge = createRealtimeInvalidator(client)
+    try {
+      bridge.receive('onboarding.document_published')
+      for (const key of keys)
+        expect(client.getQueryState([key, 'reader'])?.isInvalidated).toBe(true)
+    } finally {
+      bridge.dispose()
+      client.clear()
+    }
+  })
   it('refreshes every role-sensitive workspace after a co-head changes membership', () => {
     const client = new QueryClient()
     const prefixes = [

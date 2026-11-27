@@ -47,15 +47,18 @@ export default function InteractiveHtml({
     const receive = (event: MessageEvent) => {
       if (
         event.source !== frame.current?.contentWindow ||
-        event.data?.type !== 'workportal:file-html-ready'
+        event.origin !== 'null' ||
+        event.data?.type !== 'workportal:file-html-ready' ||
+        event.ports.length !== 1
       )
         return
       clearTimeout(timer)
-      // An opaque sandbox has origin "null", so a source-checked handshake needs this target.
-      frame.current?.contentWindow?.postMessage(
-        { type: 'workportal:file-html', html: prepared.html },
-        '*',
-      )
+      window.removeEventListener('message', receive)
+      // The authenticated opaque frame supplies a dedicated, one-use channel.
+      // Uploaded content is never sent through a wildcard window message.
+      const port = event.ports[0]!
+      port.postMessage({ type: 'workportal:file-html', html: prepared.html })
+      port.close()
       setReady(true)
     }
     window.addEventListener('message', receive)

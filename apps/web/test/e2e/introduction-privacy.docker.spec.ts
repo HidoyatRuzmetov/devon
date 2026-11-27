@@ -135,6 +135,31 @@ test('Only the current approved introduction is shared; submission status belong
       ).status(),
     ).toBe(200)
     expect((await list(peer)).items.map((item: { id: string }) => item.id)).toEqual([first])
+    // Model a newcomer who had the formerly approved edition open before publication changed.
+    const peerMe = await (await peer.request.get('/api/v1/me')).json()
+    const pinned = spawnSync(
+      'docker',
+      [
+        'exec',
+        '-i',
+        'devon-onboarding-review-postgres-1',
+        'psql',
+        '-X',
+        '-q',
+        '-v',
+        'ON_ERROR_STOP=1',
+        '-U',
+        'postgres',
+        '-d',
+        'devon_qa_onboarding_docker',
+      ],
+      {
+        input: `insert into app.portal_onboarding(user_id,department_id,document_id) values('${peerMe.user.id}','${department.departmentId}','${first}');`,
+        encoding: 'utf8',
+        timeout: 15_000,
+      },
+    )
+    expect(pinned.status, pinned.stderr).toBe(0)
     expect(
       (await list(author, 'mine')).items.find((item: { id: string }) => item.id === declined)
         .rejected,
@@ -223,14 +248,29 @@ test('Only the current approved introduction is shared; submission status belong
       expect((await list(context)).items.map((item: { id: string }) => item.id)).toEqual([
         replacement,
       ])
+    for (const context of [head, peer])
+      for (const suffix of ['', '/render'])
+        expect(
+          (await context.request.get(`/api/v1/onboarding/documents/${first}${suffix}`)).status(),
+        ).toBe(404)
     for (const suffix of ['', '/render'])
       expect(
-        (await peer.request.get(`/api/v1/onboarding/documents/${first}${suffix}`)).status(),
-      ).toBe(404)
+        (await author.request.get(`/api/v1/onboarding/documents/${first}${suffix}`)).status(),
+      ).toBe(200)
+    const resumed = await authedPost(peer, '/api/v1/onboarding/session', { htmlDone: true })
+    expect(resumed.status()).toBe(200)
+    expect((await resumed.json()).run).toMatchObject({ documentId: replacement, htmlDone: false })
     expect(
       (await list(author, 'mine')).items.find((item: { id: string }) => item.id === first)
         .superseded,
     ).toBe(true)
+    await authorPage.reload()
+    await authorPage.getByRole('button', { name: 'My submissions', exact: true }).click()
+    await expect(authorPage.getByText('Outdated', { exact: true })).toBeVisible()
+    await authorPage.screenshot({
+      path: resolve(output, '05-outdated-author-only.png'),
+      animations: 'disabled',
+    })
     expect((await list(head, 'review')).items.map((item: { id: string }) => item.id)).toEqual([
       privateDraft,
     ])

@@ -184,7 +184,19 @@ export async function session(
         run: null,
         ...(run && user!.required ? { resumeDepartmentId: run.departmentId } : {}),
       }
-    const htmlDone = run.htmlDone || update?.htmlDone === true
+    // An unfinished reader follows the current publication. Superseded editions are private
+    // to their uploader; completed onboarding is never made compulsory again by a new edition.
+    const [publication] = await tx.raw<{ documentId: string }>(
+      sql`select document_id as "documentId" from app.onboarding_publications where department_id=${ctx.departmentId}`,
+    )
+    const replaced = !run.htmlDone && run.documentId !== (publication?.documentId ?? null)
+    if (replaced) {
+      run.documentId = publication?.documentId ?? null
+      await tx.raw(
+        sql`update app.portal_onboarding set document_id=${run.documentId} where user_id=${ctx.userId}`,
+      )
+    }
+    const htmlDone = run.htmlDone || !run.documentId || (!replaced && update?.htmlDone === true)
     const setupCompleted =
       run.setupCompleted ||
       (update?.completeSetup === true && htmlDone && Object.values(facts).every(Boolean))
@@ -216,7 +228,7 @@ export async function session(
         departmentId: ctx.departmentId,
       })
     }
-    if (update?.htmlDone && !run.htmlDone)
+    if (update?.htmlDone && htmlDone && !run.htmlDone)
       tx.audit({
         action: 'onboarding.document_read',
         subjectType: 'onboarding_document',
@@ -319,8 +331,6 @@ export async function document(ctx: RequestContext, id: string) {
         or (not app.is_view_as() and d.approved_at is null and d.rejected_at is null
           and exists(select 1 from app.memberships m where m.department_id=d.department_id and m.user_id=${ctx.userId}
             and m.role='head' and m.status='active' and m.deleted_at is null))
-        or (not app.is_view_as() and d.approved_at is not null and d.rejected_at is null
-          and exists(select 1 from app.portal_onboarding r where r.user_id=${ctx.userId} and r.document_id=d.id))
       )`,
     )
     return row
@@ -352,6 +362,12 @@ export async function decide(
       await tx.raw(sql`insert into app.onboarding_publications(department_id,document_id,published_by)
         values(${ctx.departmentId},${id},${ctx.userId}) on conflict(department_id) do update
         set document_id=excluded.document_id,published_by=excluded.published_by,published_at=now(),revision=app.onboarding_publications.revision+1`)
+      // Only publication is department-wide. Private submissions and decisions are not broadcast.
+      tx.emit({
+        type: 'onboarding.document_published',
+        departmentId: ctx.departmentId,
+        payload: {},
+      })
     } else
       await tx.raw(
         sql`update app.onboarding_documents set rejected_at=now(),rejected_by=${ctx.userId} where id=${id}`,

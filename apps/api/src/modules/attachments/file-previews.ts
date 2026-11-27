@@ -75,9 +75,10 @@ export const HTML_PREVIEW_CSP =
   "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'"
 export const HTML_PREVIEW_SHELL = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HTML preview</title></head><body><script>
 (() => {
+  const channel = new MessageChannel();
   const receive = event => {
-    if (event.source !== parent || event.data?.type !== 'workportal:file-html' || typeof event.data.html !== 'string' || event.data.html.length > 2097152) return;
-    removeEventListener('message', receive);
+    if (event.data?.type !== 'workportal:file-html' || typeof event.data.html !== 'string' || event.data.html.length > 2097152) return;
+    channel.port1.close();
     // Parse only inside the isolated frame: parser-initiated requests also obey its CSP.
     const doc = new DOMParser().parseFromString(event.data.html, 'text/html');
     doc.querySelectorAll('base,meta[http-equiv="refresh" i],iframe,object,embed').forEach(node => node.remove());
@@ -92,8 +93,8 @@ export const HTML_PREVIEW_SHELL = `<!doctype html><html><head><meta charset="utf
     }
     document.open(); document.write('<!doctype html>' + doc.documentElement.outerHTML); document.close();
   };
-  addEventListener('message', receive);
-  parent.postMessage({type:'workportal:file-html-ready'}, '*');
+  channel.port1.onmessage = receive;
+  parent.postMessage({type:'workportal:file-html-ready'}, '*', [channel.port2]);
 })();
 </script></body></html>`
 

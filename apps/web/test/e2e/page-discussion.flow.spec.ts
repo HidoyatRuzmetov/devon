@@ -59,7 +59,7 @@ test('@flow page reading, Markdown editing, isolated HTML previews, downloads an
       name: 'phonebook.html',
       mimeType: 'text/html',
       buffer: Buffer.from(
-        '<!doctype html><title>Phonebook</title><h1>Directory</h1><script>throw new Error("must never run")</script>',
+        '<!doctype html><title>Phonebook</title><h1>Directory</h1><button id="next">Show contact</button><p id="result"></p><script>next.onclick=()=>{result.textContent="Contact shown"};try{parent.document.body.dataset.escaped="yes"}catch{document.body.dataset.isolated="yes"}</script>',
       ),
     })
     const attachment = page.getByRole('button', { name: 'Open phonebook.html', exact: true })
@@ -72,10 +72,16 @@ test('@flow page reading, Markdown editing, isolated HTML previews, downloads an
     await expect(viewer).toBeVisible()
     const preview = page.frameLocator('iframe[title="phonebook.html"]')
     await expect(preview.getByRole('heading', { name: 'Directory', exact: true })).toBeVisible()
-    await expect(viewer.locator('iframe')).toHaveAttribute('sandbox', '')
-    await expect(preview.locator('script')).toHaveCount(0)
+    await expect(viewer.locator('iframe')).toHaveAttribute(
+      'sandbox',
+      'allow-scripts allow-popups allow-popups-to-escape-sandbox',
+    )
+    await preview.getByRole('button', { name: 'Show contact', exact: true }).click()
+    await expect(preview.getByText('Contact shown', { exact: true })).toBeVisible()
+    await expect(preview.locator('body')).toHaveAttribute('data-isolated', 'yes')
+    await expect(page.locator('body')).not.toHaveAttribute('data-escaped', 'yes')
     expect(errors).toEqual([])
-    const download = viewer.getByRole('link', { name: 'Download original', exact: true })
+    const download = viewer.getByRole('link', { name: 'Download file', exact: true })
     const href = await download.getAttribute('href')
     expect(href).toBeTruthy()
     const file = await context.request.get(href!)

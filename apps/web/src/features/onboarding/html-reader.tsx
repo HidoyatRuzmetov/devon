@@ -50,9 +50,9 @@ export function HtmlReader({
               <Button onClick={() => void doc.refetch()}>{t('onboarding.retry')}</Button>
             </div>
           ) : null}
-          {doc.data ? (
+          {doc.data && !doc.isError ? (
             <iframe
-              key={reload}
+              key={`${id}:${reload}`}
               title={doc.data.title}
               src={`/api/v1/onboarding/documents/${encodeURIComponent(id)}/render`}
               sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
