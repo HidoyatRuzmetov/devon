@@ -20,6 +20,7 @@ import * as repo from './repo.js'
 import { getPage } from '../pages/repo.js'
 import { getProject } from '../projects/repo.js'
 import { getConversation } from '../ai/conversations.js'
+import { registerFilePreviews } from './file-previews.js'
 import {
   APPROVAL_THRESHOLD,
   requestApproval,
@@ -29,7 +30,9 @@ import {
 } from './approvals.js'
 
 const paramsSchema = z.object({ id: z.string().uuid() })
-const historyQuery = z.object({ includeDeleted: z.enum(['true', 'false']).optional() })
+const historyQuery = z.object({
+  includeDeleted: z.enum(['true', 'false']).optional(),
+})
 const attachmentParams = paramsSchema.extend({
   attachmentId: z.string().uuid(),
 })
@@ -121,6 +124,16 @@ async function allowed(
 const attachmentRoutes: FastifyPluginAsyncZod = async (app) => {
   // Admit one scan per API process before reading bytes; a busy upload remains retryable.
   const scanState = { finalizing: false }
+  registerFilePreviews(app, async (req, reply) => {
+    const { id, attachmentId } = attachmentParams.parse(req.params)
+    if (!(await allowed(req, reply, id, false, 'page'))) return false
+    const row = await repo.get(contextFromRequest(req), id, attachmentId, 'page')
+    if (!row || row.scan_status !== 'clean') {
+      sendProblem(reply, 'not_found')
+      return false
+    }
+    return true
+  })
   app.get(
     '/admin/file-upload-approvals',
     {

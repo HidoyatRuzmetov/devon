@@ -180,7 +180,7 @@ docker pull "$DEVON_WEB_IMAGE"
 
 echo "[deploy] ensuring the data and optional service tier is healthy"
 "${COMPOSE[@]}" up -d --no-build --wait --wait-timeout 600 \
-  postgres valkey clamav centrifugo
+  postgres valkey clamav centrifugo document-preview
 
 contract_status="$("${COMPOSE[@]}" run --rm --no-deps -e MIGRATION_DATABASE_URL api \
   /repo/apps/api/node_modules/.bin/tsx /repo/packages/db/src/cli-contract-status.ts)"

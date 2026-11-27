@@ -1,13 +1,26 @@
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Dialog, DialogContent, DialogDescription, DialogClose } from '@devon/ui'
-import { Download, X, FileText, PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react'
+import {
+  Download,
+  FolderDown,
+  X,
+  Maximize2,
+  Minimize2,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react'
 import { FilePreview, NoPreview, PreviewFailure, type PreviewFile } from './file-preview.js'
 import { fileKind, formatFileSize, PreviewError, previewLimits } from './file-types.js'
 import { AttachmentIcon } from './file-icon.js'
 import './file-viewer.css'
 
-export type ViewableAttachment = { id: string; name: string; size: number; url: string }
+export type ViewableAttachment = {
+  id: string
+  name: string
+  size: number
+  url: string
+}
 export async function fetchPreview(file: ViewableAttachment, signal: AbortSignal) {
   if (file.size > previewLimits.file) throw new PreviewError('size')
   const url = new URL(file.url, window.location.origin)
@@ -46,7 +59,7 @@ export async function fetchPreview(file: ViewableAttachment, signal: AbortSignal
     data.set(chunk, offset)
     offset += chunk.length
   }
-  return { name: file.name, data }
+  return { name: file.name, data, sourceUrl: file.url }
 }
 class PreviewBoundary extends React.Component<
   { children: React.ReactNode; fallback: React.ReactNode },
@@ -105,7 +118,8 @@ export default function FileViewer({
 }) {
   const t = useT()
   const [selected, setSelected] = React.useState(initialId)
-  const [sidebar, setSidebar] = React.useState(true)
+  const [sidebar, setSidebar] = React.useState(() => files.length > 1 && window.innerWidth >= 1000)
+  const [expanded, setExpanded] = React.useState(false)
   const file = files.find((item) => item.id === selected) ?? files[0]
   const [fileList, setFileList] = React.useState<HTMLElement | null>(null)
   React.useEffect(() => {
@@ -131,27 +145,74 @@ export default function FileViewer({
         title={t('files.viewer')}
         titleHidden
         showClose={false}
-        className="file-viewer-dialog"
+        onEscapeKeyDown={(event) => {
+          // Radix listens in capture phase, before the search input's React handler.
+          if (event.target instanceof Element && event.target.closest('.file-findbar'))
+            event.preventDefault()
+        }}
+        className={`file-viewer-dialog ${expanded ? 'file-viewer-expanded' : ''}`}
       >
         <DialogDescription className="sr-only">{t('files.description')}</DialogDescription>
         <header className="file-viewer-header">
           <div className="file-viewer-brand">
+            {files.length > 1 ? (
+              <button
+                className="file-header-button"
+                onClick={() => setSidebar(!sidebar)}
+                aria-label={t(sidebar ? 'files.hideFiles' : 'files.showFiles')}
+                aria-expanded={sidebar}
+                title={t(sidebar ? 'files.hideFiles' : 'files.showFiles')}
+              >
+                {sidebar ? <PanelLeftClose /> : <PanelLeftOpen />}
+              </button>
+            ) : null}
             <span className="file-viewer-brand-icon">
-              <FileText />
+              <AttachmentIcon name={file?.name ?? ''} />
             </span>
             <div>
-              <strong>{t('files.viewer')}</strong>
-              <span>{t('files.readOnly')}</span>
+              <strong title={file?.name}>{file?.name ?? t('files.viewer')}</strong>
+              <span>
+                {file ? formatFileSize(file.size) + ' · ' : ''}
+                {t('files.readOnly')}
+              </span>
             </div>
           </div>
           <div className="file-viewer-header-actions">
             {file ? (
-              <a href={file.url} download={file.name} className="file-download">
-                <Download />
-                <span>{t('files.download')}</span>
+              <a
+                href={file.url}
+                download={file.name}
+                className="file-download"
+                aria-label={t(
+                  fileKind(file.name) === 'archive'
+                    ? 'files.downloadArchive'
+                    : 'files.downloadFile',
+                )}
+                title={file.name}
+              >
+                {fileKind(file.name) === 'archive' ? <FolderDown /> : <Download />}
+                <span>
+                  {t(
+                    fileKind(file.name) === 'archive'
+                      ? 'files.downloadArchive'
+                      : 'files.downloadFile',
+                  )}
+                </span>
               </a>
             ) : null}
-            <DialogClose className="file-close" aria-label={t('files.close')}>
+            <button
+              className="file-header-button file-expand"
+              aria-label={t(expanded ? 'files.restoreSize' : 'files.expand')}
+              title={t(expanded ? 'files.restoreSize' : 'files.expand')}
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? <Minimize2 /> : <Maximize2 />}
+            </button>
+            <DialogClose
+              className="file-close"
+              aria-label={t('files.close')}
+              title={t('files.close')}
+            >
               <X />
             </DialogClose>
           </div>
@@ -168,7 +229,10 @@ export default function FileViewer({
                   <button
                     key={item.id}
                     aria-current={item.id === file?.id ? 'true' : undefined}
-                    onClick={() => setSelected(item.id)}
+                    onClick={() => {
+                      setSelected(item.id)
+                      if (window.innerWidth < 900) setSidebar(false)
+                    }}
                   >
                     <AttachmentIcon name={item.name} />
                     <span>
@@ -178,29 +242,9 @@ export default function FileViewer({
                   </button>
                 ))}
               </nav>
-              <div className="file-viewer-private">
-                <ShieldCheck />
-                <span>{t('files.localPreview')}</span>
-              </div>
             </aside>
           ) : null}
           <div className="file-viewer-main">
-            <div className="file-viewer-current">
-              <button
-                onClick={() => setSidebar(!sidebar)}
-                aria-label={t(sidebar ? 'files.hideFiles' : 'files.showFiles')}
-                aria-expanded={sidebar}
-              >
-                {sidebar ? <PanelLeftClose /> : <PanelLeftOpen />}
-              </button>
-              {file ? (
-                <>
-                  <AttachmentIcon name={file.name} />
-                  <strong title={file.name}>{file.name}</strong>
-                  <span>{formatFileSize(file.size)}</span>
-                </>
-              ) : null}
-            </div>
             <div className="file-viewer-stage">
               {file ? (
                 <LoadedFile key={file.id} file={file} />

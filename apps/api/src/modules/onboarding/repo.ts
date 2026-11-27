@@ -260,7 +260,10 @@ export async function session(
   })
 }
 
-export async function documents(ctx: RequestContext) {
+export async function documents(
+  ctx: RequestContext,
+  view: 'published' | 'mine' | 'review' = 'published',
+) {
   return withContext(ctx, async (tx) => {
     const [publication] = await tx.raw<{ revision: number }>(
       sql`select revision from app.onboarding_publications where department_id=${ctx.departmentId}`,
@@ -268,10 +271,21 @@ export async function documents(ctx: RequestContext) {
     const items =
       await tx.raw<OnboardingDocument>(sql`select d.id,d.title,d.filename,d.uploaded_by as "uploadedBy",
       concat_ws(' ',u.given_name,u.family_name) as "uploaderName", d.created_at::text as "createdAt",
-      d.rejected_at is not null as rejected, coalesce(p.document_id=d.id,false) as published
+      d.rejected_at is not null as rejected, coalesce(p.document_id=d.id,false) as published,
+      (d.approved_at is not null and d.rejected_at is null and coalesce(p.document_id<>d.id,true)) as superseded
       from app.onboarding_documents d join app.users u on u.id=d.uploaded_by
       left join app.onboarding_publications p on p.department_id=d.department_id
-      where d.department_id=${ctx.departmentId} order by d.created_at desc limit 100`)
+      where d.department_id=${ctx.departmentId}
+      and ${
+        view === 'published'
+          ? sql`p.document_id=d.id and d.rejected_at is null`
+          : view === 'mine'
+            ? sql`d.uploaded_by=${ctx.userId} and not app.is_view_as()`
+            : sql`d.approved_at is null and d.rejected_at is null and not app.is_view_as()
+          and exists(select 1 from app.memberships m where m.department_id=d.department_id and m.user_id=${ctx.userId}
+            and m.role='head' and m.status='active' and m.deleted_at is null)`
+      }
+      order by d.created_at desc limit 100`)
     return { revision: publication?.revision ?? 0, items }
   })
 }
@@ -298,7 +312,16 @@ export async function upload(
 export async function document(ctx: RequestContext, id: string) {
   return withContext(ctx, async (tx) => {
     const [row] = await tx.raw<{ title: string; html: string }>(
-      sql`select title,html from app.onboarding_documents where id=${id} and department_id=${ctx.departmentId}`,
+      sql`select d.title,d.html from app.onboarding_documents d
+      where d.id=${id} and d.department_id=${ctx.departmentId} and (
+        exists(select 1 from app.onboarding_publications p where p.department_id=d.department_id and p.document_id=d.id)
+        or (not app.is_view_as() and d.uploaded_by=${ctx.userId})
+        or (not app.is_view_as() and d.approved_at is null and d.rejected_at is null
+          and exists(select 1 from app.memberships m where m.department_id=d.department_id and m.user_id=${ctx.userId}
+            and m.role='head' and m.status='active' and m.deleted_at is null))
+        or (not app.is_view_as() and d.approved_at is not null and d.rejected_at is null
+          and exists(select 1 from app.portal_onboarding r where r.user_id=${ctx.userId} and r.document_id=d.id))
+      )`,
     )
     return row
   })
@@ -321,10 +344,11 @@ export async function decide(
     )
     if ((published?.revision ?? 0) !== input.revision) return false
     const [doc] = await tx.raw(
-      sql`select id from app.onboarding_documents where id=${id} and department_id=${ctx.departmentId} and rejected_at is null for update`,
+      sql`select id from app.onboarding_documents where id=${id} and department_id=${ctx.departmentId} and rejected_at is null and approved_at is null for update`,
     )
     if (!doc || (input.action === 'reject' && published?.documentId === id)) return false
     if (input.action === 'publish') {
+      await tx.raw(sql`update app.onboarding_documents set approved_at=now() where id=${id}`)
       await tx.raw(sql`insert into app.onboarding_publications(department_id,document_id,published_by)
         values(${ctx.departmentId},${id},${ctx.userId}) on conflict(department_id) do update
         set document_id=excluded.document_id,published_by=excluded.published_by,published_at=now(),revision=app.onboarding_publications.revision+1`)
@@ -337,6 +361,8 @@ export async function decide(
       subjectType: 'onboarding_document',
       subjectId: id,
       departmentId: ctx.departmentId,
+      before: { documentId: published?.documentId ?? null },
+      after: { documentId: id, action: input.action },
     })
     return true
   })

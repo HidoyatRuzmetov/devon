@@ -83,6 +83,9 @@ const routes: FastifyPluginAsyncZod = async (app) => {
     {
       config: { permission: { action: 'read', subject: child } },
       schema: {
+        querystring: z.object({
+          view: z.enum(['published', 'mine', 'review']).default('published'),
+        }),
         response: {
           200: z.object({
             revision: z.number().int(),
@@ -91,7 +94,17 @@ const routes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (req) => repo.documents(contextFromRequest(req)),
+    async (req, reply) => {
+      reply.header('cache-control', 'private, no-store')
+      const view = req.query.view
+      const context = contextFromRequest(req)
+      if (
+        (view !== 'published' && context.viewAs) ||
+        (view === 'review' && context.departmentRole !== 'head')
+      )
+        return sendProblem(reply, 'forbidden')
+      return repo.documents(context, view)
+    },
   )
 
   app.post(

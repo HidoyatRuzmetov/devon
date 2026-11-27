@@ -12,9 +12,9 @@ export type ProgressUpdate = {
 export function updateOnboarding(csrf: string, update: ProgressUpdate = {}) {
   return apiClient.post('/api/v1/onboarding/session', update, onboardingSessionSchema, csrf)
 }
-export function fetchDocuments() {
+export function fetchDocuments(view: 'published' | 'mine' | 'review' = 'published') {
   return apiClient.get(
-    '/api/v1/onboarding/documents',
+    `/api/v1/onboarding/documents?view=${view}`,
     z.object({
       revision: z.number(),
       items: z.array(onboardingDocumentSchema),

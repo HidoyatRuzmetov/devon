@@ -1,189 +1,366 @@
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex -- The document region needs native keyboard scrolling. */
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions -- Ctrl/Cmd+F bubbles from the native controls and focusable document region to open document search. */
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { ChevronLeft, ChevronRight, Minus, Plus, FileText } from 'lucide-react'
+import { ChevronUp, ChevronDown, Minus, Plus, Search, RotateCw, X } from 'lucide-react'
+import { AnnotationMode, getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
 import {
-  getDocument,
-  GlobalWorkerOptions,
-  type PDFDocumentProxy,
-  type RenderTask,
-} from 'pdfjs-dist'
+  EventBus,
+  PDFViewer,
+  PDFLinkService,
+  PDFFindController,
+} from 'pdfjs-dist/web/pdf_viewer.mjs'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import 'pdfjs-dist/web/pdf_viewer.css'
 
 GlobalWorkerOptions.workerSrc = workerUrl
 
+/** Continuous pages, selection and search use Mozilla's viewer. No scripting manager or editing. */
 export default function PdfPreview({ data }: { data: Uint8Array<ArrayBuffer> }) {
   const t = useT()
-  const [pdf, setPdf] = React.useState<PDFDocumentProxy>()
-  const [page, setPage] = React.useState(1)
-  const [zoom, setZoom] = React.useState(1)
-  const [width, setWidth] = React.useState(700)
+  const surface = React.useRef<HTMLDivElement>(null)
+  const pages = React.useRef<HTMLDivElement>(null)
+  const viewer = React.useRef<PDFViewer | null>(null)
+  const bus = React.useRef<EventBus | null>(null)
+  const passwordReply = React.useRef<((value: string) => void) | null>(null)
+  const findInput = React.useRef<HTMLInputElement>(null)
+  const [ready, setReady] = React.useState(false)
   const [error, setError] = React.useState(false)
+  const [page, setPage] = React.useState(1)
+  const [pageInput, setPageInput] = React.useState('1')
+  const [count, setCount] = React.useState(0)
+  const [zoom, setZoom] = React.useState(100)
+  const [scaleMode, setScaleMode] = React.useState('page-width')
   const [password, setPassword] = React.useState('')
   const [passwordNeeded, setPasswordNeeded] = React.useState(false)
-  const [text, setText] = React.useState('')
-  const [showText, setShowText] = React.useState(false)
-  const updatePassword = React.useRef<((password: string) => void) | null>(null)
-  const surface = React.useRef<HTMLDivElement>(null)
-  const canvas = React.useRef<HTMLCanvasElement>(null)
+  const [passwordWrong, setPasswordWrong] = React.useState(false)
+  const [findOpen, setFindOpen] = React.useState(false)
+  const [query, setQuery] = React.useState('')
+  const [matches, setMatches] = React.useState({ current: 0, total: 0 })
   React.useEffect(() => {
-    let current = true
+    if (!surface.current || !pages.current) return
+    let active = true
+    const eventBus = new EventBus()
+    const linkService = new PDFLinkService({
+      eventBus,
+      externalLinkTarget: 2,
+      externalLinkRel: 'noopener noreferrer',
+    })
+    const findController = new PDFFindController({ eventBus, linkService })
+    const pdfViewer = new PDFViewer({
+      container: surface.current,
+      viewer: pages.current,
+      eventBus,
+      linkService,
+      findController,
+      annotationMode: AnnotationMode.ENABLE,
+      maxCanvasPixels: 12_000_000,
+      maxCanvasDim: 8192,
+      enableDetailCanvas: false,
+      enableAutoLinking: false,
+    })
+    linkService.setViewer(pdfViewer)
+    viewer.current = pdfViewer
+    bus.current = eventBus
+    setReady(false)
+    setError(false)
     const task = getDocument({
       data: data.slice(),
       useSystemFonts: true,
       useWasm: false,
       stopAtErrors: true,
     })
-    const deadline = setTimeout(() => {
-      if (current) setError(true)
-      void task.destroy()
-    }, 20_000)
-    task.onPassword = (update: (password: string) => void) => {
+    let deadline: ReturnType<typeof setTimeout>
+    const armDeadline = () => {
       clearTimeout(deadline)
-      if (current) {
-        updatePassword.current = update
-        setPasswordNeeded(true)
+      deadline = setTimeout(() => {
+        if (active) setError(true)
+        void task.destroy()
+      }, 30_000)
+    }
+    armDeadline()
+    task.onPassword = (update: (password: string) => void, reason: number) => {
+      clearTimeout(deadline)
+      if (!active) return
+      setPasswordNeeded(true)
+      setPasswordWrong(reason === 2)
+      passwordReply.current = (value) => {
+        armDeadline()
+        update(value)
       }
     }
+    eventBus.on('pagesinit', () => {
+      if (!active) return
+      pdfViewer.currentScaleValue = 'page-width'
+      setReady(true)
+    })
+    eventBus.on('pagechanging', ({ pageNumber }: { pageNumber: number }) => {
+      if (active) {
+        setPage(pageNumber)
+        setPageInput(String(pageNumber))
+      }
+    })
+    eventBus.on('scalechanging', ({ scale }: { scale: number }) => {
+      if (active) setZoom(Math.round(scale * 100))
+    })
+    eventBus.on('updatefindmatchescount', ({ matchesCount }: { matchesCount: typeof matches }) => {
+      if (active) setMatches(matchesCount)
+    })
+    eventBus.on('updatefindcontrolstate', ({ matchesCount }: { matchesCount: typeof matches }) => {
+      if (active) setMatches(matchesCount)
+    })
+    eventBus.on('pagerendered', ({ error: renderError }: { error?: unknown }) => {
+      if (active && renderError) setError(true)
+    })
     void task.promise
-      .then((result) => {
+      .then((pdf) => {
         clearTimeout(deadline)
-        if (current) {
-          setPdf(result)
-          setPasswordNeeded(false)
+        if (!active) return
+        if (pdf.numPages > 2000) {
+          setError(true)
+          void task.destroy()
+          return
         }
+        setCount(pdf.numPages)
+        setPasswordNeeded(false)
+        linkService.setDocument(pdf)
+        pdfViewer.setDocument(pdf)
       })
       .catch(() => {
         clearTimeout(deadline)
-        if (current) setError(true)
+        if (active) setError(true)
       })
+    const observer = new ResizeObserver(() => {
+      const currentScaleMode = pdfViewer.currentScaleValue
+      if (
+        pdfViewer.pdfDocument &&
+        ['page-width', 'page-fit', 'auto'].includes(pdfViewer.currentScaleValue)
+      )
+        pdfViewer.currentScaleValue = currentScaleMode
+      pdfViewer.update()
+    })
+    observer.observe(surface.current)
     return () => {
-      current = false
+      active = false
       clearTimeout(deadline)
-      updatePassword.current = null
+      observer.disconnect()
+      passwordReply.current = null
+      viewer.current = null
+      bus.current = null
+      pdfViewer.setDocument(null)
+      linkService.setDocument(null)
       void task.destroy()
     }
   }, [data])
-  React.useEffect(() => {
-    if (!surface.current) return
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry) setWidth(Math.max(180, entry.contentRect.width - 48))
+  const find = (value: string, again = false, previous = false) => {
+    bus.current?.dispatch('find', {
+      source: surface.current,
+      type: again ? 'again' : '',
+      query: value,
+      caseSensitive: false,
+      entireWord: false,
+      highlightAll: true,
+      findPrevious: previous,
+      matchDiacritics: false,
     })
-    observer.observe(surface.current)
-    return () => observer.disconnect()
-  }, [])
-  React.useEffect(() => {
-    if (!pdf || !canvas.current) return
-    let current = true
-    let render: RenderTask | undefined
-    const deadline = setTimeout(() => {
-      if (current) setError(true)
-      render?.cancel()
-    }, 20_000)
-    void pdf
-      .getPage(page)
-      .then(async (sheet) => {
-        if (!current || !canvas.current) return
-        const size = sheet.getViewport({ scale: 1 })
-        const pixelRatio = Math.min(2, window.devicePixelRatio || 1)
-        if (!Number.isFinite(size.width * size.height) || size.width <= 0 || size.height <= 0)
-          throw new Error('Invalid PDF page size')
-        // A hostile page can declare enormous dimensions inside a tiny PDF. Bound the
-        // actual canvas allocation as well as the uploaded file size.
-        const scale = Math.min(
-          Math.min(2, width / size.width) * zoom,
-          8192 / (size.width * pixelRatio),
-          8192 / (size.height * pixelRatio),
-          Math.sqrt(16_000_000 / (size.width * size.height)) / pixelRatio,
-        )
-        const viewport = sheet.getViewport({ scale })
-        const target = canvas.current
-        target.width = Math.ceil(viewport.width * pixelRatio)
-        target.height = Math.ceil(viewport.height * pixelRatio)
-        target.style.width = `${viewport.width}px`
-        target.style.height = `${viewport.height}px`
-        const context = target.getContext('2d')
-        if (!context) throw new Error('canvas')
-        render = sheet.render({
-          canvas: target,
-          canvasContext: context,
-          viewport,
-          transform: [pixelRatio, 0, 0, pixelRatio, 0, 0],
-        })
-        await render.promise
-        const content = await sheet.getTextContent()
-        if (current)
-          setText(
-            content.items
-              .map((item) => ('str' in item ? item.str + (item.hasEOL ? '\n' : ' ') : ''))
-              .join(''),
-          )
-      })
-      .catch((reason: unknown) => {
-        if (current && !(reason instanceof Error && reason.name === 'RenderingCancelledException'))
-          setError(true)
-      })
-      .finally(() => clearTimeout(deadline))
-    return () => {
-      current = false
-      clearTimeout(deadline)
-      render?.cancel()
-    }
-  }, [pdf, page, width, zoom])
-  if (error)
-    return (
-      <div className="file-viewer-message" role="alert">
-        {t('files.error.format')}
-      </div>
-    )
+  }
+  const changePage = (value: number) => {
+    if (!viewer.current || !ready) return
+    viewer.current.currentPageNumber = Math.min(count, Math.max(1, value || 1))
+    setPageInput(String(viewer.current.currentPageNumber))
+  }
+  const scale = (value: string) => {
+    if (!viewer.current || !ready) return
+    setScaleMode(value)
+    viewer.current.currentScaleValue = value
+  }
+  const zoomBy = (direction: number) => {
+    if (!viewer.current || !ready) return
+    scale(String(Math.min(4, Math.max(0.25, viewer.current.currentScale + direction * 0.15))))
+  }
   return (
-    <div className="file-pdf">
-      <div className="file-preview-controls">
+    <div
+      className="file-pdf"
+      role="group"
+      aria-label={t('files.documentPages')}
+      onKeyDown={(event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+          event.preventDefault()
+          setFindOpen(true)
+          requestAnimationFrame(() => findInput.current?.focus())
+        }
+      }}
+    >
+      <div
+        className="file-preview-controls file-document-toolbar"
+        role="toolbar"
+        aria-label={t('files.documentControls')}
+      >
         <button
           aria-label={t('files.previousPage')}
-          onClick={() => setPage((value) => Math.max(1, value - 1))}
-          disabled={!pdf || page === 1}
+          title={t('files.previousPage')}
+          disabled={!ready || page <= 1}
+          onClick={() => changePage(page - 1)}
         >
-          <ChevronLeft />
+          <ChevronUp />
         </button>
-        <span>
-          {page} / {pdf?.numPages ?? '—'}
-        </span>
+        <input
+          className="file-page-input"
+          aria-label={t('files.pageNumber')}
+          inputMode="numeric"
+          value={pageInput}
+          disabled={!ready}
+          onChange={(event) => setPageInput(event.target.value.replace(/\D/g, ''))}
+          onBlur={() => changePage(Number(pageInput))}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              changePage(Number(pageInput))
+              event.currentTarget.blur()
+            }
+          }}
+        />
+        <span className="file-page-count">/ {count || '—'}</span>
         <button
           aria-label={t('files.nextPage')}
-          onClick={() => setPage((value) => Math.min(pdf?.numPages ?? 1, value + 1))}
-          disabled={!pdf || page === pdf.numPages}
+          title={t('files.nextPage')}
+          disabled={!ready || page >= count}
+          onClick={() => changePage(page + 1)}
         >
-          <ChevronRight />
+          <ChevronDown />
         </button>
         <span className="file-control-divider" />
         <button
           aria-label={t('files.zoomOut')}
-          onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}
-          disabled={zoom <= 0.5}
+          className="file-zoom-step"
+          title={t('files.zoomOut')}
+          disabled={!ready || zoom <= 25}
+          onClick={() => zoomBy(-1)}
         >
           <Minus />
         </button>
-        <button onClick={() => setZoom(1)}>
-          {zoom === 1 ? t('files.fit') : `${Math.round(zoom * 100)}%`}
-        </button>
+        <select
+          aria-label={t('files.zoom')}
+          value={['page-width', 'page-fit'].includes(scaleMode) ? scaleMode : String(zoom / 100)}
+          disabled={!ready}
+          onChange={(event) => scale(event.target.value)}
+        >
+          <option value="page-width">{t('files.fitWidth')}</option>
+          <option value="page-fit">{t('files.fitPage')}</option>
+          {[...new Set([50, 75, 100, 125, 150, 200, 300, 400, zoom])]
+            .sort((a, b) => a - b)
+            .map((value) => (
+              <option key={value} value={String(value / 100)}>
+                {value}%
+              </option>
+            ))}
+        </select>
         <button
           aria-label={t('files.zoomIn')}
-          onClick={() => setZoom((value) => Math.min(2, value + 0.25))}
-          disabled={zoom >= 2}
+          className="file-zoom-step"
+          title={t('files.zoomIn')}
+          disabled={!ready || zoom >= 400}
+          onClick={() => zoomBy(1)}
         >
           <Plus />
         </button>
-        <button aria-pressed={showText} onClick={() => setShowText(!showText)}>
-          <FileText />
-          {t('files.text')}
+        <span className="file-control-divider" />
+        <button
+          aria-label={t('files.rotate')}
+          title={t('files.rotate')}
+          disabled={!ready}
+          onClick={() => {
+            if (viewer.current)
+              viewer.current.pagesRotation = (viewer.current.pagesRotation + 90) % 360
+          }}
+        >
+          <RotateCw />
+        </button>
+        <button
+          aria-label={t('files.findDocument')}
+          title={t('files.findDocument')}
+          aria-expanded={findOpen}
+          disabled={!ready}
+          onClick={() => {
+            setFindOpen(!findOpen)
+            if (findOpen)
+              bus.current?.dispatch('findbarclose', {
+                source: surface.current,
+              })
+            requestAnimationFrame(() => findInput.current?.focus())
+          }}
+        >
+          <Search />
         </button>
       </div>
-      {passwordNeeded ? (
+      {findOpen ? (
+        <div className="file-preview-controls file-findbar">
+          <Search />
+          <input
+            ref={findInput}
+            type="search"
+            aria-label={t('files.findDocument')}
+            placeholder={t('files.findDocument')}
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value)
+              find(event.target.value)
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault()
+                event.stopPropagation()
+                setFindOpen(false)
+                bus.current?.dispatch('findbarclose', {
+                  source: surface.current,
+                })
+              }
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                find(query, true, event.shiftKey)
+              }
+            }}
+          />
+          <span role="status">
+            {query ? `${matches?.current || 0} / ${matches?.total || 0}` : ''}
+          </span>
+          <button
+            aria-label={t('files.previousMatch')}
+            disabled={!query}
+            onClick={() => find(query, true, true)}
+          >
+            <ChevronUp />
+          </button>
+          <button
+            aria-label={t('files.nextMatch')}
+            disabled={!query}
+            onClick={() => find(query, true)}
+          >
+            <ChevronDown />
+          </button>
+          <button
+            aria-label={t('files.closeSearch')}
+            onClick={() => {
+              setFindOpen(false)
+              bus.current?.dispatch('findbarclose', {
+                source: surface.current,
+              })
+            }}
+          >
+            <X />
+          </button>
+        </div>
+      ) : null}
+      {error ? (
+        <div className="file-viewer-message" role="alert">
+          {t('files.error.format')}
+        </div>
+      ) : null}
+      {passwordNeeded && !error ? (
         <form
           className="file-viewer-message"
           onSubmit={(event) => {
             event.preventDefault()
-            updatePassword.current?.(password)
+            passwordReply.current?.(password)
             setPassword('')
             setPasswordNeeded(false)
           }}
@@ -197,13 +374,26 @@ export default function PdfPreview({ data }: { data: Uint8Array<ArrayBuffer> }) 
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
+          {passwordWrong ? <p role="alert">{t('files.error.password')}</p> : null}
           <button type="submit">{t('files.open')}</button>
         </form>
       ) : null}
-      <div className="file-pdf-surface" ref={surface}>
-        {!pdf && !passwordNeeded ? <p role="status">{t('files.loading')}</p> : null}
-        {showText ? <pre className="file-page-text">{text || t('files.noText')}</pre> : null}
-        <canvas ref={canvas} hidden={showText} aria-label={t('files.pdfPage', { page })} />
+      {!ready && !error && !passwordNeeded ? (
+        <div className="file-document-loading" role="status">
+          <span className="file-spinner" />
+          {t('files.loading')}
+        </div>
+      ) : null}
+      <div className="file-pdf-workspace" hidden={error || passwordNeeded}>
+        <div
+          className="file-pdf-surface"
+          ref={surface}
+          tabIndex={0}
+          role="region"
+          aria-label={t('files.documentPages')}
+        >
+          <div ref={pages} className="pdfViewer" />
+        </div>
       </div>
     </div>
   )

@@ -112,6 +112,39 @@ async function getBlob(path: string): Promise<Blob> {
   return res.blob()
 }
 
+/** Authenticated, cancellable binary result for the private document renderer. */
+async function postBlob(path: string, body: unknown, signal?: AbortSignal): Promise<Blob> {
+  const res = await raw(path, {
+    method: 'POST',
+    headers: { ...csrfHeaders(), 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+    ...(signal ? { signal } : {}),
+  })
+  if (!res.ok) await parseErrorAndThrow(res)
+  if (Number(res.headers.get('content-length')) > 32 * 1024 * 1024) {
+    await res.body?.cancel()
+    throw new Error('Preview too large')
+  }
+  if (!res.body) throw new Error('Empty preview response')
+  const reader = res.body.getReader()
+  const parts: Uint8Array<ArrayBuffer>[] = []
+  let size = 0
+  try {
+    for (;;) {
+      const item = await reader.read()
+      if (item.done) break
+      size += item.value.length
+      if (size > 32 * 1024 * 1024) throw new Error('Preview too large')
+      parts.push(item.value)
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined)
+  }
+  return new Blob(parts, {
+    type: res.headers.get('content-type') ?? 'application/octet-stream',
+  })
+}
+
 /** No feature needed a DELETE call until structure's bo'lim/unit-role removal (EPIC-003) -- added
  * here, next to `get`/`send`, rather than reinventing it per-feature, the same "one place `fetch` is
  * called" reasoning this file's own header states. Two shapes, both real: structure's unit delete
@@ -167,7 +200,12 @@ async function send<T>(
  */
 async function uploadFile(
   url: string,
-  init: { method: 'PUT'; headers: Record<string, string>; body: Blob; signal?: AbortSignal },
+  init: {
+    method: 'PUT'
+    headers: Record<string, string>
+    body: Blob
+    signal?: AbortSignal
+  },
 ): Promise<void> {
   const sameOrigin = url.startsWith('/') || url.startsWith(`${window.location.origin}/`)
   let res: Response
@@ -199,6 +237,7 @@ async function uploadFile(
  * ```
  */
 export const apiClient = {
+  postBlob,
   get,
   getBlob,
   post: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>

@@ -13,10 +13,13 @@ export function DocumentsPanel() {
   const { department, departmentId } = useDepartment()
   const me = useMeQuery().data!
   const qc = useQueryClient()
+  const [selectedView, setView] = React.useState<'published' | 'mine' | 'review'>('published')
+  const view = selectedView === 'review' && department?.role !== 'head' ? 'published' : selectedView
   const query = useQuery({
-    queryKey: ['onboarding-documents', departmentId],
-    queryFn: fetchDocuments,
+    queryKey: ['onboarding-documents', departmentId, me.user.id, view],
+    queryFn: () => fetchDocuments(view),
     enabled: Boolean(departmentId),
+    refetchInterval: 30_000,
   })
   const [title, setTitle] = React.useState('')
   const [file, setFile] = React.useState<File | null>(null)
@@ -42,6 +45,9 @@ export function DocumentsPanel() {
   const decide = useMutation({
     mutationFn: ({ id, action }: { id: string; action: 'publish' | 'reject' }) =>
       decideDocument(id, action, query.data!.revision, me.csrfToken),
+    onSuccess: (_result, input) => {
+      if (input.action === 'publish') setView('published')
+    },
     onSettled: () =>
       qc.invalidateQueries({
         queryKey: ['onboarding-documents', departmentId],
@@ -53,73 +59,98 @@ export function DocumentsPanel() {
       <div>
         <h2 className="text-h3">{t('onboarding.documents.title')}</h2>
         <p className="mt-2 max-w-2xl text-small text-muted-foreground">
-          {t('onboarding.documents.description')}
+          {t(`onboarding.documents.${view}Description`)}
         </p>
       </div>
-      <form
-        className="rounded-xl border border-border bg-card p-5"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (file && title.trim() && !fileError) upload.mutate()
-        }}
+      <div
+        className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1"
+        role="group"
+        aria-label={t('onboarding.documents.tab')}
       >
-        <div className="grid items-end gap-4 md:grid-cols-2">
-          <label className="text-small font-medium">
-            {t('onboarding.documents.name')}
-            <Input
-              className="mt-2"
-              required
-              maxLength={120}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t('onboarding.documents.placeholder')}
-            />
-          </label>
-          <label className="text-small font-medium">
-            {t('onboarding.documents.file')}
-            <input
-              ref={input}
-              type="file"
-              accept=".html,.htm,text/html"
-              className="mt-2 block min-h-11 w-full rounded-md border border-border px-3 py-2 text-small file:mr-3 file:rounded file:border-0 file:bg-muted file:px-3 file:py-1 file:text-foreground"
-              onChange={(e) => {
-                const selected = e.target.files?.[0] ?? null
-                const invalid = Boolean(
-                  selected &&
-                  (!/\.html?$/i.test(selected.name) ||
-                    selected.size > 2_097_152 ||
-                    selected.size === 0),
-                )
-                setFileError(invalid)
-                setFile(invalid ? null : selected)
-                upload.reset()
-              }}
-            />
-          </label>
-        </div>
-        <p className="mt-3 text-caption text-muted-foreground">
-          {t('onboarding.documents.fileHint')}
-        </p>
-        {fileError || upload.isError ? (
-          <p role="alert" className="mt-3 text-small text-destructive">
-            {t(fileError ? 'onboarding.documents.invalid' : 'onboarding.saveError')}
-          </p>
-        ) : null}
-        <Button
-          type="submit"
-          className="mt-4"
-          disabled={!file || !title.trim() || fileError}
-          loading={upload.isPending}
+        {(
+          [
+            'published',
+            'mine',
+            ...(department?.role === 'head' ? (['review'] as const) : []),
+          ] as const
+        ).map((item) => (
+          <Button
+            key={item}
+            size="sm"
+            variant={view === item ? 'secondary' : 'ghost'}
+            aria-pressed={view === item}
+            onClick={() => setView(item)}
+          >
+            {t(`onboarding.documents.${item}View`)}
+          </Button>
+        ))}
+      </div>
+      {view === 'mine' ? (
+        <form
+          className="rounded-xl border border-border bg-card p-5"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (file && title.trim() && !fileError) upload.mutate()
+          }}
         >
-          <Upload className="size-4" />
-          {t('onboarding.documents.submit')}
-        </Button>
-        {upload.isSuccess ? (
-          <p role="status" className="mt-3 text-small text-primary">
-            {t('onboarding.documents.submitted')}
+          <div className="grid items-end gap-4 md:grid-cols-2">
+            <label className="text-small font-medium">
+              {t('onboarding.documents.name')}
+              <Input
+                className="mt-2"
+                required
+                maxLength={120}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t('onboarding.documents.placeholder')}
+              />
+            </label>
+            <label className="text-small font-medium">
+              {t('onboarding.documents.file')}
+              <input
+                ref={input}
+                type="file"
+                accept=".html,.htm,text/html"
+                className="mt-2 block min-h-11 w-full rounded-md border border-border px-3 py-2 text-small file:mr-3 file:rounded file:border-0 file:bg-muted file:px-3 file:py-1 file:text-foreground"
+                onChange={(e) => {
+                  const selected = e.target.files?.[0] ?? null
+                  const invalid = Boolean(
+                    selected &&
+                    (!/\.html?$/i.test(selected.name) ||
+                      selected.size > 2_097_152 ||
+                      selected.size === 0),
+                  )
+                  setFileError(invalid)
+                  setFile(invalid ? null : selected)
+                  upload.reset()
+                }}
+              />
+            </label>
+          </div>
+          <p className="mt-3 text-caption text-muted-foreground">
+            {t('onboarding.documents.fileHint')}
           </p>
-        ) : null}
-      </form>
+          {fileError || upload.isError ? (
+            <p role="alert" className="mt-3 text-small text-destructive">
+              {t(fileError ? 'onboarding.documents.invalid' : 'onboarding.saveError')}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            className="mt-4"
+            disabled={!file || !title.trim() || fileError}
+            loading={upload.isPending}
+          >
+            <Upload className="size-4" />
+            {t('onboarding.documents.submit')}
+          </Button>
+          {upload.isSuccess ? (
+            <p role="status" className="mt-3 text-small text-primary">
+              {t('onboarding.documents.submitted')}
+            </p>
+          ) : null}
+        </form>
+      ) : null}
       {decide.isError ? (
         <p role="alert" className="text-small text-destructive">
           {t('onboarding.documents.conflict')}
@@ -134,7 +165,7 @@ export function DocumentsPanel() {
         </div>
       ) : !query.data?.items.length ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-small text-muted-foreground">
-          {t('onboarding.documents.empty')}
+          {t(`onboarding.documents.${view}Empty`)}
         </p>
       ) : (
         <div className="divide-y divide-border rounded-xl border border-border bg-card">
@@ -154,7 +185,9 @@ export function DocumentsPanel() {
                     ? 'onboarding.documents.published'
                     : doc.rejected
                       ? 'onboarding.documents.rejected'
-                      : 'onboarding.documents.pending',
+                      : doc.superseded
+                        ? 'onboarding.documents.superseded'
+                        : 'onboarding.documents.pending',
                 )}
               </Badge>
               <div className="flex flex-wrap gap-2">
@@ -162,7 +195,11 @@ export function DocumentsPanel() {
                   <Eye className="size-4" />
                   {t('onboarding.documents.preview')}
                 </Button>
-                {department?.role === 'head' && !doc.published && !doc.rejected ? (
+                {view === 'review' &&
+                department?.role === 'head' &&
+                !doc.published &&
+                !doc.rejected &&
+                !doc.superseded ? (
                   <>
                     <Button
                       size="sm"

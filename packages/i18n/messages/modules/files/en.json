@@ -53,6 +53,30 @@
       "archive": "This archive contains unsafe paths, embedded programs, links or an unsupported archive layout. It has not been extracted.",
       "password": "A password is required, or the entered password is incorrect.",
       "timeout": "Opening took too long and was stopped. Download the file to open it with a desktop application."
-    }
+    },
+    "downloadArchive": "Download archive",
+    "downloadFile": "Download file",
+    "downloadEntry": "Download this file",
+    "expand": "Expand viewer",
+    "restoreSize": "Restore size",
+    "documentControls": "Document controls",
+    "pageNumber": "Page number",
+    "zoom": "Zoom",
+    "fitWidth": "Fit width",
+    "fitPage": "Fit page",
+    "rotate": "Rotate page",
+    "findDocument": "Find in document",
+    "previousMatch": "Previous match",
+    "nextMatch": "Next match",
+    "closeSearch": "Close search",
+    "documentPages": "Document pages",
+    "interactiveHtml": "Interactive HTML",
+    "htmlIsolation": "Runs in an isolated frame. External connections and access to your account are blocked.",
+    "restartHtml": "Restart",
+    "officeFailure": "The document could not be rendered. Try again or download the original file.",
+    "preparingPages": "Preparing document pages…",
+    "documentView": "Document view",
+    "gridView": "Spreadsheet",
+    "printLayout": "Print layout"
   }
 }

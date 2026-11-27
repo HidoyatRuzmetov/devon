@@ -11,8 +11,21 @@ import {
   parseDelimited,
   safeDocument,
 } from '../../src/features/files/document-formats.js'
+import { previewEndpoint } from '../../src/features/files/interactive-html.js'
 
 describe('read-only file previews', () => {
+  it('restricts renderer URLs to same-origin page attachments', () => {
+    expect(() =>
+      previewEndpoint('https://example.com/api/v1/pages/123/attachments/456/download', 'html'),
+    ).toThrow()
+    expect(() => previewEndpoint('/api/v1/accounts/export', 'office')).toThrow()
+    expect(
+      previewEndpoint(
+        '/api/v1/pages/00000000-0000-4000-8000-000000000001/attachments/00000000-0000-4000-8000-000000000002/download',
+        'html',
+      ),
+    ).toMatch(/\/preview\/html$/)
+  })
   it('refuses executables and macro formats, including a renamed executable', () => {
     for (const name of [
       'run.EXE',
@@ -47,7 +60,12 @@ describe('read-only file previews', () => {
     expect(safeArchivePath('.notes.txt')).toBe('.notes.txt')
   })
   it('caps archive expansion and prevents duplicate/file-directory collisions', () => {
-    const item = { path: 'document.txt', directory: false, encrypted: false, size: 20 }
+    const item = {
+      path: 'document.txt',
+      directory: false,
+      encrypted: false,
+      size: 20,
+    }
     expect(() => validateArchive([item, item], 100)).toThrow()
     expect(() =>
       validateArchive([item, { ...item, path: 'document.txt/inside.txt' }], 100),

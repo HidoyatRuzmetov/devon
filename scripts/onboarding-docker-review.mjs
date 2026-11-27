@@ -57,7 +57,7 @@ function compose(args, capture = false) {
 if (action === 'stop') compose(['stop'])
 else if (action === 'status') compose(['ps'])
 else {
-  compose(['up', '-d', '--wait', 'postgres', 'valkey', 'centrifugo'])
+  compose(['up', '-d', '--wait', 'postgres', 'valkey', 'centrifugo', 'document-preview'])
   compose(['run', '--rm', 'migrate'])
   compose(['up', '-d', '--wait', 'api', 'web', 'gateway'])
   if (!existsSync(adminFile)) {
@@ -76,7 +76,11 @@ else {
         method: 'POST',
         redirect: 'error',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...admin, givenName: 'Review', familyName: 'Administrator' }),
+        body: JSON.stringify({
+          ...admin,
+          givenName: 'Review',
+          familyName: 'Administrator',
+        }),
         signal: AbortSignal.timeout(15_000),
       },
     )

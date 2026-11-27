@@ -47,10 +47,15 @@ async function capture(page: Page, name: string) {
   await page.evaluate(() => document.fonts.ready)
   // Let the app's short spring transitions settle before capturing the final layout.
   await page.waitForTimeout(350)
-  await page.screenshot({ path: resolve(evidence, name + '.png'), animations: 'disabled' })
+  await page.screenshot({
+    path: resolve(evidence, name + '.png'),
+    animations: 'disabled',
+  })
 }
 async function upload(context: BrowserContext, pageId: string, name: string) {
-  const data = readFileSync(resolve(fixtures, name))
+  return uploadBytes(context, pageId, name, readFileSync(resolve(fixtures, name)))
+}
+async function uploadBytes(context: BrowserContext, pageId: string, name: string, data: Buffer) {
   const base = `/api/v1/pages/${pageId}/attachments`
   const signedResponse = await authedPost(context, `${base}/upload-url`, {
     name,
@@ -72,10 +77,17 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
   const admin = await newFlowContext(browser)
   const head = await newFlowContext(browser)
   const outsider = await newFlowContext(browser)
-  const credentials = { login: uniqueLogin('file.review'), password: examplePassword() }
+  const credentials = {
+    login: uniqueLogin('file.review'),
+    password: examplePassword(),
+  }
   try {
     await loginAsSuperAdmin(admin)
-    await registerUser(head, { ...credentials, givenName: 'Nodira', familyName: 'Review' })
+    await registerUser(head, {
+      ...credentials,
+      givenName: 'Nodira',
+      familyName: 'Review',
+    })
     const me = await (await head.request.get('/api/v1/me')).json()
     database(`update app.users set onboarding_required=false where id='${me.user.id}';`)
     expect((await authedPatch(head, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
@@ -129,6 +141,9 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
       'Unknown-format.xyz',
       'Unsafe-path.zip',
       'Broken.pdf',
+      'Paginated-notes.docx',
+      'Protected.pdf',
+      'Long-review.pdf',
     ]
     let protectedUrl = ''
     for (const name of names) {
@@ -136,6 +151,9 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
       if (!protectedUrl) protectedUrl = url
     }
     expect((await outsider.request.get(protectedUrl)).status()).toBe(401)
+    const htmlEndpoint = protectedUrl.replace(/\/download$/, '/preview/html')
+    const officeEndpoint = protectedUrl.replace(/\/download$/, '/preview/office')
+    expect((await outsider.request.get(htmlEndpoint)).status()).toBe(401)
     await registerUser(outsider, {
       login: uniqueLogin('file.outsider'),
       password: examplePassword(),
@@ -143,26 +161,70 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
       familyName: 'Review',
     })
     expect([403, 404]).toContain((await outsider.request.get(protectedUrl)).status())
+    expect([403, 404]).toContain((await outsider.request.get(htmlEndpoint)).status())
+    const officeBody = {
+      name: 'Working-notes.docx',
+      data: readFileSync(resolve(fixtures, 'Working-notes.docx')).toString('base64'),
+    }
+    expect((await head.request.post(officeEndpoint, { data: officeBody })).status()).toBe(403)
+    expect([403, 404]).toContain((await authedPost(outsider, officeEndpoint, officeBody)).status())
+    expect(
+      (
+        await authedPost(head, officeEndpoint, {
+          name: 'Fake.docx',
+          data: Buffer.from('not a document').toString('base64'),
+        })
+      ).status(),
+    ).toBe(422)
+    const shell = await head.request.get(htmlEndpoint)
+    expect(shell.status()).toBe(200)
+    expect(shell.headers()['content-security-policy']).toContain("connect-src 'none'")
+    expect(shell.headers()['content-security-policy']).not.toContain('allow-same-origin')
     writeFileSync(
       resolve(scratch, 'file-viewer-account.json'),
-      JSON.stringify({ ...credentials, pageId, departmentId: department.departmentId }),
+      JSON.stringify({
+        ...credentials,
+        pageId,
+        departmentId: department.departmentId,
+      }),
     )
-    await head.storageState({ path: resolve(scratch, 'file-viewer-state.json') })
+    await head.storageState({
+      path: resolve(scratch, 'file-viewer-state.json'),
+    })
     const page = await head.newPage()
     await page.setViewportSize({ width: 1440, height: 1000 })
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     const outbound: string[] = []
+    const blockedOutbound: string[] = []
+    const completedOutbound: string[] = []
     page.on('request', (request) => {
       if (/example\.invalid/.test(request.url())) outbound.push(request.url())
     })
+    page.on('console', (message) => {
+      if (
+        /example\.invalid/.test(message.text()) &&
+        message.text().includes('Content Security Policy') &&
+        message.text().includes('blocked')
+      )
+        blockedOutbound.push(message.text())
+    })
+    page.on('requestfinished', (request) => {
+      if (/example\.invalid/.test(request.url())) completedOutbound.push(request.url())
+    })
     await page.goto(`/pages?page=${pageId}`)
     await expect(
-      page.getByRole('button', { name: 'Open Service-review.pdf', exact: true }),
+      page.getByRole('button', {
+        name: 'Open Service-review.pdf',
+        exact: true,
+      }),
     ).toBeVisible()
     await capture(page, '01-pages-library')
     await page.getByRole('button', { name: 'Open Service-review.pdf', exact: true }).click()
-    const viewer = page.getByRole('dialog', { name: 'File viewer', exact: true })
+    const viewer = page.getByRole('dialog', {
+      name: 'File viewer',
+      exact: true,
+    })
     await expect(viewer.locator('.file-viewer-sidebar [aria-current="true"]')).toBeInViewport()
     const select = async (name: string) => {
       await viewer
@@ -171,23 +233,52 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
         .filter({ hasText: name })
         .click()
     }
-    await expect(viewer.locator('canvas')).toBeVisible()
+    await expect(viewer.locator('canvas').first()).toBeVisible()
     await expect
-      .poll(() => viewer.locator('canvas').evaluate((node) => (node as HTMLCanvasElement).width))
+      .poll(() =>
+        viewer
+          .locator('canvas')
+          .first()
+          .evaluate((node) => (node as HTMLCanvasElement).width),
+      )
       .toBeGreaterThan(100)
     await capture(page, '02-pdf')
-    await viewer.getByRole('button', { name: 'Next page', exact: true }).click()
-    await expect(viewer.getByText('2 / 2', { exact: true })).toBeVisible()
+    await viewer.locator('.file-pdf-surface').hover()
+    await page.mouse.wheel(0, 1800)
+    await expect(viewer.getByLabel('Page number', { exact: true })).toHaveValue('2')
+    await capture(page, '02b-pdf-continuous-scroll')
+    await viewer.getByRole('button', { name: 'Find in document', exact: true }).click()
+    await viewer.getByRole('searchbox', { name: 'Find in document', exact: true }).fill('service')
+    await expect(viewer.locator('.file-findbar [role="status"]')).not.toHaveText('0 / 0')
+    await capture(page, '02c-pdf-search')
     await select('Working-notes.docx')
-    await expect(viewer.frameLocator('iframe').getByText('Department working notes')).toBeVisible()
+    await expect(
+      viewer.locator('.textLayer').getByText('Department working notes', { exact: true }),
+    ).toBeVisible({ timeout: 60_000 })
     await capture(page, '03-word')
+    await select('Paginated-notes.docx')
+    await expect
+      .poll(() => viewer.locator('.pdfViewer > .page').count(), {
+        timeout: 60_000,
+      })
+      .toBeGreaterThan(2)
+    await viewer.getByRole('combobox', { name: 'Zoom', exact: true }).selectOption('0.75')
+    await viewer.getByLabel('Page number', { exact: true }).fill('2')
+    await viewer.getByLabel('Page number', { exact: true }).press('Enter')
+    await expect(
+      viewer.locator('.textLayer').getByText('Second-page review', { exact: true }),
+    ).toBeVisible()
+    await capture(page, '03b-word-page-breaks')
     await select('Cycle-overview.xlsx')
     await expect(viewer.getByRole('tab', { name: 'Cycle overview', exact: true })).toBeVisible()
     await expect(viewer.getByRole('cell', { name: 'Digital services', exact: true })).toBeVisible()
     await capture(page, '04-spreadsheet')
     await viewer.getByRole('tab', { name: 'Definitions', exact: true }).click()
     await expect(
-      viewer.getByRole('cell', { name: 'Agreed result delivered', exact: true }),
+      viewer.getByRole('cell', {
+        name: 'Agreed result delivered',
+        exact: true,
+      }),
     ).toBeVisible()
     await select('Department-pack.zip')
     await expect(
@@ -196,7 +287,13 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
     await capture(page, '05-zip-folders')
     await viewer.locator('.file-archive-entry').filter({ hasText: 'Documents' }).click()
     await viewer.locator('.file-archive-entry').filter({ hasText: 'Working-notes.docx' }).click()
-    await expect(viewer.frameLocator('iframe').getByText('Department working notes')).toBeVisible()
+    await expect(
+      viewer.locator('.textLayer').getByText('Department working notes', { exact: true }),
+    ).toBeVisible({ timeout: 60_000 })
+    await expect(viewer.getByRole('link', { name: 'Download archive', exact: true })).toBeVisible()
+    await expect(
+      viewer.getByRole('link', { name: 'Download this file', exact: true }),
+    ).toBeVisible()
     await capture(page, '06-word-inside-zip')
     await viewer.getByRole('button', { name: 'Archive root folder', exact: true }).click()
     await viewer.locator('.file-archive-entry').filter({ hasText: 'Examples' }).click()
@@ -216,17 +313,34 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
     await expect(
       viewer.frameLocator('iframe').getByRole('heading', { name: 'A useful place to start.' }),
     ).toBeVisible()
-    await expect(viewer.locator('iframe')).toHaveAttribute('sandbox', '')
+    await expect(viewer.locator('iframe')).toHaveAttribute(
+      'sandbox',
+      'allow-scripts allow-popups allow-popups-to-escape-sandbox',
+    )
+    await viewer
+      .frameLocator('iframe')
+      .getByRole('button', { name: 'Show the next section', exact: true })
+      .click()
+    await expect(viewer.frameLocator('iframe').getByRole('status')).toHaveText(
+      'The next section is open.',
+    )
+    await expect(
+      viewer.frameLocator('iframe').getByRole('link', { name: 'Open the reference' }),
+    ).toHaveAttribute('target', '_blank')
     expect(await page.locator('body').getAttribute('data-preview-escaped')).toBeNull()
-    expect(outbound).toEqual([])
+    await expect
+      .poll(() => outbound.every((url) => blockedOutbound.some((message) => message.includes(url))))
+      .toBe(true)
+    expect(completedOutbound).toEqual([])
+    expect(await page.evaluate(() => localStorage.getItem('viewer-escape'))).toBeNull()
     await capture(page, '09-html')
     await select('Team-overview.png')
     await expect(viewer.locator('.file-image-surface img')).toBeVisible()
     await capture(page, '10-image')
     await select('Team-briefing.pptx')
     await expect(
-      viewer.frameLocator('iframe').getByRole('heading', { name: 'Digital services' }),
-    ).toBeVisible()
+      viewer.locator('.textLayer').getByText('Digital services', { exact: true }),
+    ).toBeVisible({ timeout: 60_000 })
     await capture(page, '11-presentation')
     await select('Data.csv')
     await expect(viewer.getByRole('cell', { name: 'Research', exact: true })).toBeVisible()
@@ -263,8 +377,19 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
     await expect(viewer.locator('.file-archive-entry')).toHaveCount(0)
     await select('Broken.pdf')
     await expect(viewer.getByRole('alert')).toBeVisible()
+    await select('Protected.pdf')
+    await viewer.getByLabel('Enter the file password', { exact: true }).fill('ReviewExample123')
+    await viewer.getByRole('button', { name: 'Open', exact: true }).click()
+    await expect(viewer.locator('canvas').first()).toBeVisible()
+    await select('Long-review.pdf')
+    await expect(viewer.locator('.pdfViewer > .page')).toHaveCount(40)
+    await viewer.getByLabel('Page number', { exact: true }).fill('40')
+    await viewer.getByLabel('Page number', { exact: true }).press('Enter')
+    await expect(viewer.locator('.pdfViewer > .page').last().locator('canvas')).toBeVisible()
+    expect(await viewer.locator('canvas').count()).toBeLessThan(15)
     await select('Cycle-overview.xlsx')
     await page.setViewportSize({ width: 390, height: 844 })
+    await viewer.getByRole('button', { name: 'Hide file list', exact: true }).click()
     await expect(viewer.getByRole('cell', { name: 'Digital services', exact: true })).toBeVisible()
     await capture(page, '14-mobile-spreadsheet')
     expect(await viewer.evaluate((node) => node.getBoundingClientRect().right)).toBeLessThanOrEqual(
@@ -295,6 +420,7 @@ test('Pages files open inside the portal, archives stay isolated, and changes ar
           checkedAt: new Date().toISOString(),
           pageErrors: errors,
           externalRequests: outbound,
+          blockedExternalRequests: blockedOutbound,
         },
         null,
         2,
@@ -363,7 +489,11 @@ test('Structure excludes removed and deleted members while retaining current col
       ).toBe(200)
       expect(
         (
-          await authedPost(head, `${base}/unit-roles`, { unitId, userId: user.id, role: 'member' })
+          await authedPost(head, `${base}/unit-roles`, {
+            unitId,
+            userId: user.id,
+            role: 'member',
+          })
         ).status(),
       ).toBe(201)
     }
@@ -444,7 +574,11 @@ test('Pages guide, readable positions, stable navigation and useful notification
       const card = await created.json()
       if (task.stage)
         expect(
-          (await authedPatch(head, `/api/v1/cards/${card.id}`, { workStage: task.stage })).status(),
+          (
+            await authedPatch(head, `/api/v1/cards/${card.id}`, {
+              workStage: task.stage,
+            })
+          ).status(),
         ).toBe(200)
       if (task.done) {
         const checklist = await authedPost(head, `/api/v1/cards/${card.id}/checklist`, {
@@ -461,7 +595,11 @@ test('Pages guide, readable positions, stable navigation and useful notification
           ).status(),
         ).toBe(204)
         expect(
-          (await authedPatch(head, `/api/v1/cards/${card.id}`, { status: 'done' })).status(),
+          (
+            await authedPatch(head, `/api/v1/cards/${card.id}`, {
+              status: 'done',
+            })
+          ).status(),
         ).toBe(200)
       }
       if (task.deleted)
@@ -487,18 +625,20 @@ test('Pages guide, readable positions, stable navigation and useful notification
     await capture(page, '15-by-person-columns')
     const sidebar = page.locator('.devon-sidebar')
     await sidebar.getByRole('button', { name: /Knowledge/ }).click()
-    const baseline = await sidebar
-      .locator('[data-shell-label]')
-      .evaluateAll((nodes) =>
-        nodes.map((node) => ({ text: node.textContent, y: node.getBoundingClientRect().y })),
-      )
+    const baseline = await sidebar.locator('[data-shell-label]').evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        text: node.textContent,
+        y: node.getBoundingClientRect().y,
+      })),
+    )
     await sidebar.getByRole('link', { name: 'Pages', exact: true }).click()
     await expect(page).toHaveURL(/\/pages/)
-    const after = await sidebar
-      .locator('[data-shell-label]')
-      .evaluateAll((nodes) =>
-        nodes.map((node) => ({ text: node.textContent, y: node.getBoundingClientRect().y })),
-      )
+    const after = await sidebar.locator('[data-shell-label]').evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        text: node.textContent,
+        y: node.getBoundingClientRect().y,
+      })),
+    )
     expect(after).toEqual(baseline)
     expect(
       await sidebar.evaluate(
@@ -533,7 +673,9 @@ test('Pages guide, readable positions, stable navigation and useful notification
     await expect(page.locator('.driver-popover')).toHaveCount(0)
     await page.goto('/')
     await expect(page.locator(`[data-inbox-opener="${notificationId}"]`).first()).toBeVisible()
-    const bell = page.getByRole('button', { name: /^Notifications: \d+ unread$/ })
+    const bell = page.getByRole('button', {
+      name: /^Notifications: \d+ unread$/,
+    })
     await bell.click()
     await expect(page.getByRole('tab', { name: /^Unread/ })).toHaveAttribute('data-state', 'active')
     const focusedRow = page.locator(
@@ -550,6 +692,155 @@ test('Pages guide, readable positions, stable navigation and useful notification
         `select read_at is null from app.notifications where id='${notificationId}';`,
       ).trim(),
     ).toBe('t')
+  } finally {
+    await head.close()
+  }
+})
+
+test('Document controls fit small screens and the real standalone introduction works inside the viewer', async ({
+  browser,
+}) => {
+  const account = JSON.parse(
+    readFileSync(resolve(scratch, 'file-viewer-account.json'), 'utf8'),
+  ) as { login: string; password: string; pageId: string }
+  const head = await newFlowContext(browser)
+  try {
+    await login(head, { login: account.login, password: account.password })
+    const source = process.env['ONBOARDING_REVIEW_HTML']
+    if (source)
+      await uploadBytes(head, account.pageId, 'Department_Onboarding.html', readFileSync(source))
+    const page = await head.newPage()
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`/pages?page=${account.pageId}`)
+    await page.getByRole('button', { name: 'Open Service-review.pdf', exact: true }).click()
+    const viewer = page.getByRole('dialog', {
+      name: 'File viewer',
+      exact: true,
+    })
+    await expect(viewer.locator('canvas').first()).toBeVisible()
+    for (const [width, height] of [
+      [390, 844],
+      [320, 568],
+    ] as const) {
+      await page.setViewportSize({ width, height })
+      await expect(viewer.locator('.file-document-toolbar')).toBeVisible()
+      expect(
+        await viewer.locator('.file-document-toolbar').evaluate((node) =>
+          Array.from(node.querySelectorAll('button,select,input'))
+            .filter((item) => item.getBoundingClientRect().width > 0)
+            .every((item) => {
+              const r = item.getBoundingClientRect()
+              return r.left >= 0 && r.right <= innerWidth
+            }),
+        ),
+      ).toBe(true)
+      await capture(page, `19-pdf-mobile-${width}`)
+    }
+    await viewer.getByRole('button', { name: 'Find in document', exact: true }).click()
+    const search = viewer.getByRole('searchbox', {
+      name: 'Find in document',
+      exact: true,
+    })
+    await search.fill('service')
+    await search.press('Escape')
+    await expect(search).toHaveCount(0)
+    await expect(viewer).toBeVisible()
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    const a11y = await new AxeBuilder({ page }).include('.file-viewer-dialog').analyze()
+    expect(a11y.violations).toEqual([])
+    const select = async (name: string) => {
+      if (await viewer.getByRole('button', { name: 'Show file list', exact: true }).isVisible())
+        await viewer.getByRole('button', { name: 'Show file list', exact: true }).click()
+      await viewer
+        .locator('.file-viewer-sidebar')
+        .getByRole('button')
+        .filter({ hasText: name })
+        .first()
+        .click()
+    }
+    await select('Team-overview.png')
+    await expect(viewer.locator('.file-image-surface img')).toBeVisible()
+    for (let i = 0; i < 8; i++)
+      await viewer.getByRole('button', { name: 'Zoom in', exact: true }).click()
+    const imageBounds = await viewer.locator('.file-image-surface').evaluate((node) => {
+      const surface = node.getBoundingClientRect(),
+        image = node.querySelector('img')!.getBoundingClientRect()
+      return {
+        left: image.left >= surface.left,
+        top: image.top >= surface.top,
+        scrollable: node.scrollWidth > node.clientWidth || node.scrollHeight > node.clientHeight,
+      }
+    })
+    expect(imageBounds).toEqual({ left: true, top: true, scrollable: true })
+    await capture(page, '20-image-zoom')
+    await select('Cycle-overview.xlsx')
+    await viewer.getByRole('button', { name: 'Print layout', exact: true }).click()
+    await expect(viewer.locator('canvas').first()).toBeVisible({
+      timeout: 60_000,
+    })
+    await capture(page, '21-spreadsheet-print-layout')
+    if (source) {
+      await select('Department_Onboarding.html')
+      await viewer.getByRole('button', { name: 'Hide file list', exact: true }).click()
+      const frame = viewer.frameLocator('iframe')
+      await expect(frame.locator('.step:not([hidden])')).toHaveAttribute('id', 'welcome')
+      await frame.locator('#next').click()
+      await expect(frame.locator('.step:not([hidden])')).toHaveAttribute('id', 'ministry')
+      await expect
+        .poll(() =>
+          frame
+            .locator('#ministry img')
+            .evaluateAll((nodes) =>
+              nodes.every(
+                (node) =>
+                  (node as HTMLImageElement).complete &&
+                  (node as HTMLImageElement).naturalWidth > 0,
+              ),
+            ),
+        )
+        .toBe(true)
+      const structureLink = frame.locator('#ministry a[href*="structure"]').first()
+      await expect(structureLink).toHaveAttribute('target', '_blank')
+      await expect(structureLink).toHaveAttribute('rel', /noopener/)
+      await head.route('https://gov.uz/**', (route) =>
+        route.fulfill({
+          contentType: 'text/html',
+          body: '<h1>Official structure destination reached</h1>',
+        }),
+      )
+      const popupPromise = head.waitForEvent('page')
+      await structureLink.click()
+      const popup = await popupPromise
+      await expect(
+        popup.getByRole('heading', {
+          name: 'Official structure destination reached',
+        }),
+      ).toBeVisible()
+      expect(await popup.evaluate(() => window.opener === null)).toBe(true)
+      await popup.close()
+      for (const [width, height] of [
+        [1440, 1000],
+        [854, 480],
+      ] as const) {
+        await page.setViewportSize({ width, height })
+        await expect
+          .poll(() =>
+            frame.locator('html').evaluate((node) => {
+              const win = node.ownerDocument.defaultView!
+              return (
+                node.scrollWidth <= win.innerWidth + 1 && node.scrollHeight <= win.innerHeight + 1
+              )
+            }),
+          )
+          .toBe(true)
+        await capture(page, `22-onboarding-in-viewer-${width}`)
+      }
+      await frame.locator('#next').click()
+      await expect(frame.locator('.step:not([hidden])')).toHaveAttribute('id', 'centre')
+    }
+    expect(errors).toEqual([])
   } finally {
     await head.close()
   }

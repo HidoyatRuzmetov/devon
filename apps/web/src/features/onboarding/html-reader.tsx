@@ -4,6 +4,7 @@ import { useT } from '@devon/i18n'
 import { Button, Dialog, DialogContent } from '@devon/ui'
 import { BookOpen, Check, RotateCcw } from 'lucide-react'
 import { fetchDocument } from './api.js'
+import { useMeQuery } from '../../lib/session.js'
 
 export function HtmlReader({
   id,
@@ -17,12 +18,16 @@ export function HtmlReader({
   pending?: boolean
 }) {
   const t = useT()
+  const userId = useMeQuery().data?.user.id
   const doc = useQuery({
-    queryKey: ['onboarding-document', id],
+    queryKey: ['onboarding-document', userId, id],
     queryFn: () => fetchDocument(id),
   })
   const [loaded, setLoaded] = React.useState(false)
   const [reload, setReload] = React.useState(0)
+  React.useEffect(() => {
+    setLoaded(false)
+  }, [id])
   return (
     <Dialog open onOpenChange={(open) => !open && !pending && onClose()}>
       <DialogContent

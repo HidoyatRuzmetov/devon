@@ -24,6 +24,7 @@ export const onboardingDocumentSchema = z.object({
   createdAt: z.string(),
   rejected: z.boolean(),
   published: z.boolean(),
+  superseded: z.boolean().default(false),
 })
 export const onboardingSessionSchema = z.object({
   resumeDepartmentId: z.uuid().optional(),

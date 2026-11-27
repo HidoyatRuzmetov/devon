@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify'
+import type { CSSProperties } from 'react'
 import { PreviewError, previewLimits, extension } from './file-types.js'
 import { ArchiveClient, type DocumentPart } from './archive-client.js'
 
@@ -86,7 +87,10 @@ export async function documentParts(
 }
 async function officePackage(parts: DocumentPart[]) {
   const { ZipWriter, Uint8ArrayWriter, Uint8ArrayReader } = await import('@zip.js/zip.js')
-  const writer = new ZipWriter(new Uint8ArrayWriter(), { useWebWorkers: false, level: 0 })
+  const writer = new ZipWriter(new Uint8ArrayWriter(), {
+    useWebWorkers: false,
+    level: 0,
+  })
   try {
     // Each addition advances the same ZIP writer; keep its output ordered and bounded.
     for (let index = 0; index < parts.length; index++) {
@@ -131,7 +135,20 @@ export async function wordDocument(
   signal.throwIfAborted()
   return safeDocument(container.innerHTML, name)
 }
-export type Sheet = { name: string; rows: string[][]; truncated: boolean }
+export type SheetCell = {
+  style?: CSSProperties
+  rowSpan?: number
+  colSpan?: number
+  covered?: boolean
+}
+export type Sheet = {
+  name: string
+  rows: string[][]
+  truncated: boolean
+  cells?: Record<string, SheetCell>
+  widths?: number[]
+  heights?: number[]
+}
 export function parseDelimited(text: string, separator: string): Sheet[] {
   const rows: string[][] = []
   let row: string[] = [],

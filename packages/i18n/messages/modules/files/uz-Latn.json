@@ -53,6 +53,30 @@
       "archive": "Arxivda xavfli yo‘llar, dasturlar, havolalar yoki qo‘llanmaydigan tuzilma bor. U ochilmadi.",
       "password": "Parol kerak yoki kiritilgan parol noto‘g‘ri.",
       "timeout": "Ochish juda uzoq davom etdi va to‘xtatildi. Faylni yuklab olib, kompyuterdagi dasturda oching."
-    }
+    },
+    "downloadArchive": "Arxivni yuklab olish",
+    "downloadFile": "Faylni yuklab olish",
+    "downloadEntry": "Shu faylni yuklab olish",
+    "expand": "Ko‘rish oynasini kengaytirish",
+    "restoreSize": "O‘lchamni tiklash",
+    "documentControls": "Hujjat boshqaruvi",
+    "pageNumber": "Sahifa raqami",
+    "zoom": "Masshtab",
+    "fitWidth": "Eniga moslash",
+    "fitPage": "Sahifaga moslash",
+    "rotate": "Sahifani aylantirish",
+    "findDocument": "Hujjatdan qidirish",
+    "previousMatch": "Oldingi moslik",
+    "nextMatch": "Keyingi moslik",
+    "closeSearch": "Qidiruvni yopish",
+    "documentPages": "Hujjat sahifalari",
+    "interactiveHtml": "Interaktiv HTML",
+    "htmlIsolation": "Ajratilgan oynada ishlaydi. Tashqi ulanishlar va hisobingizga kirish bloklangan.",
+    "restartHtml": "Qayta boshlash",
+    "officeFailure": "Hujjatni ko‘rsatib bo‘lmadi. Qayta urinib ko‘ring yoki asl faylni yuklab oling.",
+    "preparingPages": "Hujjat sahifalari tayyorlanmoqda…",
+    "documentView": "Hujjat ko‘rinishi",
+    "gridView": "Jadval",
+    "printLayout": "Sahifa maketi"
   }
 }

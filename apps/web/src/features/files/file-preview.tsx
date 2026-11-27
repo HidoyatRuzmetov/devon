@@ -15,6 +15,9 @@ import {
   Maximize2,
   Plus,
   Minus,
+  FileDown,
+  LayoutGrid,
+  Files,
 } from 'lucide-react'
 import { ArchiveClient } from './archive-client.js'
 import {
@@ -39,7 +42,13 @@ import {
 } from './document-formats.js'
 
 const PdfPreview = React.lazy(() => import('./pdf-preview.js'))
-export type PreviewFile = { name: string; data: Uint8Array<ArrayBuffer> }
+const OfficePreview = React.lazy(() => import('./office-preview.js'))
+const InteractiveHtml = React.lazy(() => import('./interactive-html.js'))
+export type PreviewFile = {
+  name: string
+  data: Uint8Array<ArrayBuffer>
+  sourceUrl?: string
+}
 function useBlobUrl(data: Uint8Array<ArrayBuffer>, mime: string) {
   const [url, setUrl] = React.useState('')
   React.useEffect(() => {
@@ -125,6 +134,12 @@ function SheetPreview({ sheets }: { sheets: Sheet[] }) {
         aria-labelledby={`${id}-tab-${selected}`}
       >
         <table>
+          <colgroup>
+            <col style={{ width: 44 }} />
+            {Array.from({ length: width }, (_, index) => (
+              <col key={index} style={{ width: sheet.widths?.[index] || 160 }} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
               <th scope="col">
@@ -132,7 +147,11 @@ function SheetPreview({ sheets }: { sheets: Sheet[] }) {
                 <span aria-hidden="true">#</span>
               </th>
               {Array.from({ length: width }, (_, index) => (
-                <th key={index} scope="col">
+                <th
+                  key={index}
+                  scope="col"
+                  style={sheet.widths?.[index] === 0 ? { display: 'none' } : undefined}
+                >
                   {columnName(index)}
                 </th>
               ))}
@@ -140,13 +159,32 @@ function SheetPreview({ sheets }: { sheets: Sheet[] }) {
           </thead>
           <tbody>
             {rows.map(({ cells, index }) => (
-              <tr key={index}>
+              <tr
+                key={index}
+                style={{
+                  height: sheet.heights?.[index],
+                  ...(sheet.heights?.[index] === 0 ? { display: 'none' } : {}),
+                }}
+              >
                 <th scope="row">{index + 1}</th>
-                {Array.from({ length: width }, (_, column) => (
-                  <td key={column} title={cells[column] ?? ''}>
-                    {cells[column] ?? ''}
-                  </td>
-                ))}
+                {Array.from({ length: width }, (_, column) => {
+                  const cell = sheet.cells?.[`${index}:${column}`]
+                  if (cell?.covered && !query) return null
+                  return (
+                    <td
+                      key={column}
+                      title={cells[column] ?? ''}
+                      rowSpan={query ? 1 : cell?.rowSpan}
+                      colSpan={query ? 1 : cell?.colSpan}
+                      style={{
+                        ...cell?.style,
+                        ...(sheet.widths?.[column] === 0 ? { display: 'none' } : {}),
+                      }}
+                    >
+                      {cells[column] ?? ''}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>
@@ -227,6 +265,7 @@ function SlidesPreview({ slides }: { slides: Slide[] }) {
 }
 function RichPreview({ file }: { file: PreviewFile }) {
   const t = useT()
+  const [layout, setLayout] = React.useState(false)
   const [result, setResult] = React.useState<{
     html?: string
     sheets?: Sheet[]
@@ -238,11 +277,17 @@ function RichPreview({ file }: { file: PreviewFile }) {
     async function read() {
       const kind = fileKind(file.name)
       if (kind === 'word')
-        return { html: await wordDocument(file.name, file.data, controller.signal) }
+        return {
+          html: await wordDocument(file.name, file.data, controller.signal),
+        }
       if (kind === 'sheet')
-        return { sheets: await workbook(file.name, file.data, controller.signal) }
+        return {
+          sheets: await workbook(file.name, file.data, controller.signal),
+        }
       if (kind === 'slides')
-        return { slides: await slideDeck(file.name, file.data, controller.signal) }
+        return {
+          slides: await slideDeck(file.name, file.data, controller.signal),
+        }
       if (kind === 'opendocument') return openDocument(file.name, file.data, controller.signal)
       return { html: safeDocument(decodeText(file.data), file.name) }
     }
@@ -263,7 +308,40 @@ function RichPreview({ file }: { file: PreviewFile }) {
         {t('files.loading')}
       </div>
     )
-  if (result.sheets) return <SheetPreview sheets={result.sheets} />
+  if (result.sheets)
+    return (
+      <div className="file-spreadsheet">
+        {file.sourceUrl && ['xlsx', 'xltx', 'ods'].includes(extension(file.name)) ? (
+          <div
+            className="file-preview-controls file-layout-controls"
+            role="group"
+            aria-label={t('files.documentView')}
+          >
+            <button aria-pressed={!layout} onClick={() => setLayout(false)}>
+              <LayoutGrid />
+              {t('files.gridView')}
+            </button>
+            <button aria-pressed={layout} onClick={() => setLayout(true)}>
+              <Files />
+              {t('files.printLayout')}
+            </button>
+          </div>
+        ) : null}
+        {layout ? (
+          <React.Suspense
+            fallback={
+              <div className="file-viewer-message" role="status">
+                {t('files.preparingPages')}
+              </div>
+            }
+          >
+            <OfficePreview {...file} />
+          </React.Suspense>
+        ) : (
+          <SheetPreview sheets={result.sheets} />
+        )}
+      </div>
+    )
   if (result.slides) return <SlidesPreview slides={result.slides} />
   return <DocumentFrame html={result.html ?? ''} name={file.name} />
 }
@@ -305,6 +383,26 @@ function ImagePreview({ file }: { file: PreviewFile }) {
   const url = useBlobUrl(file.data, fileMime(file.name))
   const [zoom, setZoom] = React.useState(1)
   const [error, setError] = React.useState(false)
+  const surface = React.useRef<HTMLDivElement>(null)
+  const [natural, setNatural] = React.useState({ width: 0, height: 0 })
+  const [available, setAvailable] = React.useState({ width: 0, height: 0 })
+  React.useEffect(() => {
+    const node = surface.current
+    if (!node) return
+    const observer = new ResizeObserver(() =>
+      setAvailable({
+        width: Math.max(1, node.clientWidth - 24),
+        height: Math.max(1, node.clientHeight - 24),
+      }),
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+  const fit = Math.min(
+    1,
+    available.width / (natural.width || 1),
+    available.height / (natural.height || 1),
+  )
   return (
     <div className="file-image-view">
       <div className="file-preview-controls">
@@ -327,16 +425,39 @@ function ImagePreview({ file }: { file: PreviewFile }) {
           <Plus />
         </button>
       </div>
-      <div className="file-image-surface">
+      <div
+        className="file-image-surface"
+        ref={surface}
+        tabIndex={0}
+        role="region"
+        aria-label={file.name}
+      >
         {error ? (
           <PreviewFailure error={new PreviewError('format')} />
         ) : url ? (
-          <img
-            src={url}
-            alt={file.name}
-            onError={() => setError(true)}
-            style={{ scale: zoom, transformOrigin: 'center' }}
-          />
+          <div
+            className="file-image-content"
+            style={
+              natural.width
+                ? {
+                    width: natural.width * fit * zoom,
+                    height: natural.height * fit * zoom,
+                  }
+                : undefined
+            }
+          >
+            <img
+              src={url}
+              alt={file.name}
+              onError={() => setError(true)}
+              onLoad={(event) =>
+                setNatural({
+                  width: event.currentTarget.naturalWidth,
+                  height: event.currentTarget.naturalHeight,
+                })
+              }
+            />
+          </div>
         ) : null}
       </div>
     </div>
@@ -417,7 +538,11 @@ function ArchivePreview({ file, depth }: { file: PreviewFile; depth: number }) {
     try {
       const data = await client.current?.extract(entry.path, retainedPassword.current)
       if (id === requestId.current && data)
-        setSelected({ name: entry.path.split('/').pop() ?? entry.path, data })
+        setSelected({
+          name: entry.path.split('/').pop() ?? entry.path,
+          data,
+          ...(file.sourceUrl ? { sourceUrl: file.sourceUrl } : {}),
+        })
     } catch (reason) {
       if (id === requestId.current) setError(reason)
     } finally {
@@ -444,38 +569,50 @@ function ArchivePreview({ file, depth }: { file: PreviewFile; depth: number }) {
   const needsPassword = error instanceof PreviewError && error.code === 'password'
   return (
     <div className="file-archive">
-      <div className="file-archive-path">
-        <button aria-label={t('files.archiveRoot')} onClick={() => go('')}>
-          <Folder />
-          {file.name}
-        </button>
-        {folder
-          .split('/')
-          .filter(Boolean)
-          .map((part, index, all) => (
-            <React.Fragment key={index}>
-              <ChevronRight />
-              <button onClick={() => go(all.slice(0, index + 1).join('/'))}>{part}</button>
-            </React.Fragment>
-          ))}
+      <div className="file-archive-navigation">
         {selected ? (
-          <>
-            <ChevronRight />
-            <span>{selected.name}</span>
-          </>
+          <button
+            className="file-folder-back"
+            onClick={() => go(folder)}
+            aria-label={t('files.backToFolder')}
+            title={t('files.backToFolder')}
+          >
+            <ArrowLeft />
+          </button>
+        ) : null}
+        <nav className="file-archive-path" aria-label={t('files.archiveRoot')}>
+          <button aria-label={t('files.archiveRoot')} onClick={() => go('')}>
+            <Folder />
+            {file.name}
+          </button>
+          {folder
+            .split('/')
+            .filter(Boolean)
+            .map((part, index, all) => (
+              <React.Fragment key={index}>
+                <ChevronRight />
+                <button onClick={() => go(all.slice(0, index + 1).join('/'))}>{part}</button>
+              </React.Fragment>
+            ))}
+          {selected ? (
+            <>
+              <ChevronRight />
+              <span>{selected.name}</span>
+            </>
+          ) : null}
+        </nav>
+        {selected ? (
+          <a
+            className="file-entry-download"
+            href={downloadUrl}
+            download={selected.name}
+            title={selected.name}
+          >
+            <FileDown />
+            {t('files.downloadEntry')}
+          </a>
         ) : null}
       </div>
-      {selected ? (
-        <div className="file-preview-controls">
-          <button onClick={() => go(folder)}>
-            <ArrowLeft />
-            {t('files.backToFolder')}
-          </button>
-          <a href={downloadUrl} download={selected.name}>
-            {t('files.download')}
-          </a>
-        </div>
-      ) : null}
       {needsPassword ? (
         <form
           className="file-viewer-message"
@@ -576,7 +713,13 @@ export function FilePreview({ file, depth = 0 }: { file: PreviewFile; depth?: nu
   if (kind === 'archive' && depth >= previewLimits.depth)
     return <PreviewFailure error={new PreviewError('size')} />
   if (kind === 'archive') return <ArchivePreview file={file} depth={depth} />
-  if (kind === 'pdf')
+  if (
+    kind === 'pdf' ||
+    kind === 'html' ||
+    kind === 'word' ||
+    kind === 'slides' ||
+    ['odt', 'ott', 'odp', 'xls'].includes(extension(file.name))
+  )
     return (
       <React.Suspense
         fallback={
@@ -585,7 +728,13 @@ export function FilePreview({ file, depth = 0 }: { file: PreviewFile; depth?: nu
           </div>
         }
       >
-        <PdfPreview data={file.data} />
+        {kind === 'pdf' ? (
+          <PdfPreview data={file.data} />
+        ) : kind === 'html' ? (
+          <InteractiveHtml {...file} />
+        ) : (
+          <OfficePreview {...file} />
+        )}
       </React.Suspense>
     )
   if (kind === 'image') return <ImagePreview file={file} />

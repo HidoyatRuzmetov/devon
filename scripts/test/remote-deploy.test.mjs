@@ -95,7 +95,7 @@ case "$name" in
       [ "$SCENARIO" = orphan-volume ]
     elif [[ "$*" == 'pull '* ]]; then
       if [ "$SCENARIO" = pull-failed ]; then exit 42; fi
-    elif [[ "$*" == *' postgres valkey clamav centrifugo' ]]; then
+    elif [[ "$*" == *' postgres valkey clamav centrifugo document-preview' ]]; then
       if [ "$SCENARIO" = data-tier-failed ]; then exit 43; fi
     elif [[ "$*" == *'cli-contract-status.ts'* ]]; then
       case "$SCENARIO" in contract-*) echo required ;; *) echo none ;; esac

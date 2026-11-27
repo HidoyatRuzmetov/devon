@@ -44,10 +44,10 @@ export function fileKind(name: string, bytes?: Uint8Array): FileKind {
   )
     return 'risky'
   if (ext === 'pdf') return 'pdf'
-  if (['docx', 'dotx'].includes(ext)) return 'word'
-  if (['xlsx', 'xltx', 'csv', 'tsv'].includes(ext)) return 'sheet'
-  if (['pptx', 'ppsx', 'potx'].includes(ext)) return 'slides'
-  if (['odt', 'ods', 'odp', 'epub'].includes(ext)) return 'opendocument'
+  if (['docx', 'dotx', 'doc', 'rtf'].includes(ext)) return 'word'
+  if (['xlsx', 'xltx', 'xls', 'csv', 'tsv'].includes(ext)) return 'sheet'
+  if (['pptx', 'ppsx', 'potx', 'ppt'].includes(ext)) return 'slides'
+  if (['odt', 'ott', 'ods', 'odp', 'epub'].includes(ext)) return 'opendocument'
   if (['html', 'htm', 'xhtml'].includes(ext)) return 'html'
   if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg'].includes(ext))
     return 'image'
@@ -99,7 +99,12 @@ export class PreviewError extends Error {
     super(code)
   }
 }
-export type ArchiveEntry = { path: string; directory: boolean; size: number; encrypted: boolean }
+export type ArchiveEntry = {
+  path: string
+  directory: boolean
+  size: number
+  encrypted: boolean
+}
 export function safeArchivePath(name: string): string {
   const normalized = name.replaceAll('\\', '/')
   if (

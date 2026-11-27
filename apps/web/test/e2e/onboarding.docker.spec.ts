@@ -126,6 +126,7 @@ test('Docker: approval, required setup, seven chapters, safe practice and respon
 
     const uploadPage = await member.newPage()
     await uploadPage.goto('/help?tab=materials')
+    await uploadPage.getByRole('button', { name: 'My submissions', exact: true }).click()
     await uploadPage
       .getByLabel('Title', { exact: true })
       .fill('Welcome to the digital services department')
@@ -138,7 +139,9 @@ test('Docker: approval, required setup, seven chapters, safe practice and respon
     await expect(uploadPage.getByText('Awaiting approval', { exact: true })).toBeVisible()
     await expect(uploadPage.getByRole('button', { name: 'Approve and publish' })).toHaveCount(0)
     await capture(uploadPage, '01-member-html-submission')
-    const documents = await (await head.request.get('/api/v1/onboarding/documents')).json()
+    const documents = await (
+      await head.request.get('/api/v1/onboarding/documents?view=review')
+    ).json()
     const documentId = documents.items[0].id
     expect(
       (
@@ -151,13 +154,17 @@ test('Docker: approval, required setup, seven chapters, safe practice and respon
 
     const headPage = await head.newPage()
     await headPage.goto('/help?tab=materials')
+    await headPage.getByRole('button', { name: 'Review submissions', exact: true }).click()
     await headPage.getByRole('button', { name: 'Preview', exact: true }).click()
     const frame = headPage.frameLocator('iframe')
     await expect(frame.locator('body')).toHaveAttribute('data-isolated', 'yes')
     await frame.getByRole('button', { name: 'A note from the team' }).click()
     await expect(frame.locator('#detail')).toBeVisible()
     await head.route('https://example.invalid/onboarding-source', (route) =>
-      route.fulfill({ contentType: 'text/html', body: '<h1>Official source example</h1>' }),
+      route.fulfill({
+        contentType: 'text/html',
+        body: '<h1>Official source example</h1>',
+      }),
     )
     const popupPromise = headPage.waitForEvent('popup')
     await frame.getByRole('link', { name: 'Open the official source' }).click()
@@ -740,7 +747,10 @@ test('Docker: the final guide returns to Home help with a short completion anima
       const animation = document.querySelector('[data-onboarding-finale]')?.getAnimations()[0]
       return animation && Number(animation.currentTime) > 900
     })
-    await page.screenshot({ path: resolve(evidence, '38a-completion-scene.png'), fullPage: true })
+    await page.screenshot({
+      path: resolve(evidence, '38a-completion-scene.png'),
+      fullPage: true,
+    })
     await page.waitForFunction(() => {
       const ring = document.querySelector('.onboarding-landing-ring')
       return ring && Number(getComputedStyle(ring).opacity) > 0.15
@@ -773,10 +783,16 @@ test('Docker: project owners, colleagues and other department members can assign
     outsider = await newFlowContext(browser),
     foreign = await newFlowContext(browser)
   try {
-    await login(owner, { login: accounts.member.login, password: accounts.member.password })
+    await login(owner, {
+      login: accounts.member.login,
+      password: accounts.member.password,
+    })
     const established = await (await authedPost(owner, '/api/v1/onboarding/session', {})).json()
     expect(established).toMatchObject({ required: false, run: null })
-    await login(colleague, { login: accounts.newcomer.login, password: accounts.newcomer.password })
+    await login(colleague, {
+      login: accounts.newcomer.login,
+      password: accounts.newcomer.password,
+    })
     const outsiderUser = await user(outsider, 'Jamshid', true)
     const foreignUser = await user(foreign, 'Outside', true)
     expect(
@@ -831,7 +847,10 @@ test('Docker: project owners, colleagues and other department members can assign
     expect(third.status(), await third.text()).toBe(201)
     expect(
       (
-        await authedPost(owner, '/api/v1/cards', { ...body, assigneeUserId: foreignUser.id })
+        await authedPost(owner, '/api/v1/cards', {
+          ...body,
+          assigneeUserId: foreignUser.id,
+        })
       ).status(),
     ).toBe(422)
     expect(

@@ -66,7 +66,8 @@ human-friendly name.
 
 1. CI's integration profile must pass for `main`.
 2. API and web images are built, scanned for fixable high/critical vulnerabilities, tagged with the
-   full commit SHA, and pushed to GHCR. The workflow checks again that `main` has not advanced.
+   full commit SHA, and pushed to GHCR. The pinned Office document renderer is scanned by the same
+   gate. The workflow checks again that `main` has not advanced.
 3. Only non-secret operational manifests are copied to `/opt/devon`.
 4. The server takes an encrypted backup if a database already exists. Before a contract migration,
    it checks access to the configured restore-verification service, stops writers, takes another
@@ -83,8 +84,16 @@ human-friendly name.
 
 Production never starts the separate `worker` Compose service on the 8 GB ECS because the API entry
 point already runs the durable background loops. This avoids running the same HTTP server and loops
-twice. PostgreSQL, Valkey, ClamAV, Centrifugo, API, web, and Caddy remain enabled. Uploads use the
+twice. PostgreSQL, Valkey, ClamAV, Centrifugo, API, web, Caddy, and the document renderer remain enabled. Uploads use the
 persistent local-storage volume on the 500 GB data disk; the optional MinIO profile is not enabled.
+
+The document renderer runs on an internal Docker network shared only with the API. It has no host
+port, application storage, credentials, or external network access. Chromium routes, macros, remote
+downloads, and webhooks are disabled. Conversion is limited to one active API request, 32 MB input
+and output, and a 50-second deadline; the container is limited to 1.5 GB of memory. The deployment
+waits for its health check before rolling out the application. Existing PDFs do not require this
+service; Word, presentation and Office print-layout previews do. HTML runs in an opaque browser
+frame with embedded assets and scripts, without account access or outbound resource requests.
 
 ## Backup monitoring and recovery
 

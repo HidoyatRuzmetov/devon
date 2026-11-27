@@ -99,7 +99,10 @@ jobs:
           docker build --pull -f apps/api/Dockerfile -t "${image_root}-api:${RELEASE_SHA}" .
           docker build --pull -f apps/web/Dockerfile -t "${image_root}-web:${RELEASE_SHA}" .
           node scripts/check-miniapp-image.mjs "${image_root}-web:${RELEASE_SHA}"
-          for image in "${image_root}-api:${RELEASE_SHA}" "${image_root}-web:${RELEASE_SHA}"; do
+          preview_image="$(awk '/^  document-preview:/{getline; print $2; exit}' infra/docker-compose.prod.yml)"
+          [[ "$preview_image" =~ ^gotenberg/gotenberg:[0-9.]+@sha256:[a-f0-9]{64}$ ]] || { echo 'Missing pinned document renderer image' >&2; exit 1; }
+          docker pull "$preview_image"
+          for image in "${image_root}-api:${RELEASE_SHA}" "${image_root}-web:${RELEASE_SHA}" "$preview_image"; do
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
               -v devon-trivy-cache:/root/.cache/trivy aquasec/trivy:0.74.0 \
               image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$image"

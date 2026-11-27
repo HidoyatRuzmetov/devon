@@ -47,6 +47,7 @@ services:
       QUEUE_DB_POOL_MAX: '2'
       VALKEY_URL: redis://valkey:6379
       STORAGE_DRIVER: local
+      DOCUMENT_PREVIEW_URL: http://document-preview:3000
       STORAGE_LOCAL_DIR: /repo/apps/api/.data/storage
       CLAMAV_MODE: 'off'
       TELEGRAM_POLLING_ENABLED: 'false'
@@ -58,6 +59,7 @@ services:
       LOG_LEVEL: info
     ports: ['127.0.0.1:48941:3000']
     volumes: [review_storage:/repo/apps/api/.data/storage]
+    networks: [default, document_preview]
     depends_on:
       postgres: { condition: service_healthy }
       valkey: { condition: service_healthy }
@@ -88,6 +90,39 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  document-preview:
+    image: gotenberg/gotenberg:9.10.2@sha256:daede2c52129da3b9eef655fdad5de0c0a978f1119bb1c459ee88388982b1b70
+    command:
+      [
+        gotenberg,
+        --api-timeout=45s,
+        --api-body-limit=34MB,
+        --api-disable-download-from=true,
+        --chromium-disable-routes=true,
+        --libreoffice-auto-start=true,
+        --libreoffice-enable-macros=false,
+        --libreoffice-deny-private-ips=true,
+        --libreoffice-deny-public-ips=true,
+        --libreoffice-max-memory=900MB,
+        --libreoffice-max-queue-size=2,
+        --libreoffice-restart-after=10,
+        --pdf-disable-routes=true,
+        --pdf-disable-stages=true,
+        --webhook-disable=true,
+      ]
+    networks: [document_preview]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ['/tmp:size=512m', '/home/gotenberg:size=128m,uid=1001,gid=1001']
+    mem_limit: 1536m
+    cpus: 1.5
+    pids_limit: 256
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://127.0.0.1:3000/health]
+      interval: 5s
+      timeout: 3s
+      retries: 12
   web:
     image: devon-web:onboarding-review
   gateway:
@@ -107,3 +142,7 @@ services:
 volumes:
   review_database:
   review_storage:
+networks:
+  default:
+  document_preview:
+    internal: true

@@ -73,6 +73,8 @@ const configSchema = z
       .max(1024 * 1024 * 1024)
       .default(1024 * 1024 * 1024),
     STORAGE_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+    // Internal document renderer. No credentials or uploaded documents go to a public service.
+    DOCUMENT_PREVIEW_URL: z.string().url().optional(),
 
     // --- ClamAV (TECH-SPEC §6 "ClamAV before visibility"; HARDENING 1.8) -----------------------
     // `clamd`: every upload is streamed to clamd (the `clamav` Compose profile) before it can become

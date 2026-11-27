@@ -40,6 +40,8 @@ x-app-stop-grace: &app-stop-grace
   stop_grace_period: 30s
 
 networks:
+  document_preview:
+    internal: true
   devon:
     name: devon
     driver: bridge
@@ -126,6 +128,7 @@ services:
     environment:
       NODE_ENV: production
       STORAGE_LOCAL_DIR: /repo/apps/api/.data/storage
+      DOCUMENT_PREVIEW_URL: http://document-preview:3000
       DEVON_BACKUP_STATUS_FILE: /run/devon-backup/latest.json
       # `.env`'s `DATABASE_URL`/`POSTGRES_HOST` are written from the host process's point of view
       # (design.md convention already used by infra/backup/*.sh) -- inside this compose network the
@@ -152,7 +155,49 @@ services:
       - api_storage:/repo/apps/api/.data/storage
       - ${BACKUP_STATUS_DIR:-/var/lib/devon/backup-status}:/run/devon-backup:ro
       - ./certs:/run/devon-public-certs:ro
-    networks: [devon]
+    networks: [devon, document_preview]
+
+  # Private Office rendering: no host ports, no application storage, no external network.
+  document-preview:
+    image: gotenberg/gotenberg:9.10.2@sha256:daede2c52129da3b9eef655fdad5de0c0a978f1119bb1c459ee88388982b1b70
+    container_name: devon-document-preview
+    restart: unless-stopped
+    logging: *default-logging
+    command:
+      [
+        gotenberg,
+        --api-timeout=45s,
+        --api-body-limit=34MB,
+        --api-disable-download-from=true,
+        --chromium-disable-routes=true,
+        --libreoffice-auto-start=true,
+        --libreoffice-enable-macros=false,
+        --libreoffice-deny-private-ips=true,
+        --libreoffice-deny-public-ips=true,
+        --libreoffice-max-memory=900MB,
+        --libreoffice-max-queue-size=2,
+        --libreoffice-restart-after=10,
+        --pdf-disable-routes=true,
+        --pdf-disable-stages=true,
+        --webhook-disable=true,
+      ]
+    networks: [document_preview]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ['/tmp:size=512m', '/home/gotenberg:size=128m,uid=1001,gid=1001']
+    pids_limit: 256
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536m
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://127.0.0.1:3000/health]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   worker:
     <<: *app-stop-grace

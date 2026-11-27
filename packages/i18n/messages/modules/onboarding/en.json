@@ -49,7 +49,7 @@
     "openTask": "Open onboarding card",
     "documents": {
       "tab": "Department introduction",
-      "title": "Your department’s first welcome",
+      "title": "Department introduction",
       "description": "Any member can submit an HTML introduction. A department head previews and approves it before new members see it.",
       "name": "Title",
       "placeholder": "Welcome to our department",
@@ -67,7 +67,17 @@
       "reviewFirst": "Preview the file before publishing.",
       "publish": "Approve and publish",
       "reject": "Decline",
-      "versionHint": "Publishing replaces the introduction for future newcomers. People already reading keep their current version."
+      "versionHint": "Only the current approved introduction is shared with the department.",
+      "publishedView": "Published introduction",
+      "mineView": "My submissions",
+      "reviewView": "Review submissions",
+      "publishedDescription": "Read the current introduction approved for your department.",
+      "mineDescription": "Your uploads and their approval status. Other members cannot see unpublished submissions.",
+      "reviewDescription": "Preview each submission before approving it. Approval replaces the current introduction.",
+      "publishedEmpty": "No approved introduction yet.",
+      "mineEmpty": "You have not submitted an introduction yet.",
+      "reviewEmpty": "No submissions are waiting for review.",
+      "superseded": "Replaced"
     },
     "chapters": {
       "0": "Profile & settings",

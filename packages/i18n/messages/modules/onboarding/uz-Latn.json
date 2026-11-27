@@ -49,7 +49,7 @@
     "openTask": "Tanishish vazifasini ochish",
     "documents": {
       "tab": "Boshqarma materiallari",
-      "title": "Boshqarmangizning ilk tanishtiruvi",
+      "title": "Boshqarma bilan tanishuv",
       "description": "Har bir aʼzo HTML material yuborishi mumkin. Yangi aʼzolar koʻrishidan oldin boshqarma boshligʻi koʻrib, tasdiqlaydi.",
       "name": "Sarlavha",
       "placeholder": "Boshqarmamizga xush kelibsiz",
@@ -67,7 +67,17 @@
       "reviewFirst": "Nashr qilishdan oldin faylni koʻrib chiqing.",
       "publish": "Tasdiqlash va nashr qilish",
       "reject": "Rad etish",
-      "versionHint": "Nashr qilish kelajakdagi yangi aʼzolar uchun materialni almashtiradi. Oʻqishni boshlaganlar joriy nusxada davom etadi."
+      "versionHint": "Boshqarmaga faqat joriy tasdiqlangan tanishuv ko‘rsatiladi.",
+      "publishedView": "Tasdiqlangan tanishuv",
+      "mineView": "Mening arizalarim",
+      "reviewView": "Arizalarni ko‘rib chiqish",
+      "publishedDescription": "Boshqarmangiz uchun tasdiqlangan joriy tanishuv materialini o‘qing.",
+      "mineDescription": "Yuklagan fayllaringiz va tasdiqlash holati. Boshqa aʼzolar tasdiqlanmagan arizalarni ko‘rmaydi.",
+      "reviewDescription": "Tasdiqlashdan oldin arizani ko‘rib chiqing. Yangi tanishuv joriy materialning o‘rnini oladi.",
+      "publishedEmpty": "Hali tasdiqlangan tanishuv yo‘q.",
+      "mineEmpty": "Siz hali tanishuv materialini yubormagansiz.",
+      "reviewEmpty": "Ko‘rib chiqishni kutayotgan arizalar yo‘q.",
+      "superseded": "Almashtirilgan"
     },
     "chapters": {
       "0": "Profil va sozlamalar",

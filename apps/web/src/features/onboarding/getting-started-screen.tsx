@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import { Button, cn } from '@devon/ui'
 import {
@@ -16,17 +17,25 @@ import {
   UserRound,
 } from 'lucide-react'
 import { navigate, useSearchParams } from '../../lib/router.js'
-import { useDepartment } from '../../lib/session.js'
+import { useDepartment, useMeQuery } from '../../lib/session.js'
 import { useOnboarding } from './context.js'
 import { DocumentsPanel } from './documents-panel.js'
 import { HtmlReader } from './html-reader.js'
 import { chapterStarts } from './steps.js'
+import { fetchDocuments } from './api.js'
 
 const icons = [UserRound, LayoutDashboard, ListChecks, FolderKanban, CalendarDays, Users, Clock3]
 export default function GettingStartedScreen() {
   const t = useT()
   const { query, start, mutation } = useOnboarding()
   const { departmentId } = useDepartment()
+  const userId = useMeQuery().data?.user.id
+  const publication = useQuery({
+    queryKey: ['onboarding-documents', departmentId, userId, 'published'],
+    queryFn: () => fetchDocuments(),
+    enabled: Boolean(departmentId),
+  })
+  const introductionId = publication.data?.items[0]?.id
   const search = useSearchParams()
   const materials = search.get('tab') === 'materials'
   const [reading, setReading] = React.useState(false)
@@ -114,7 +123,7 @@ export default function GettingStartedScreen() {
                           : 'onboarding.startGuide',
                       )}
                     </Button>
-                    {run?.documentId ? (
+                    {introductionId ? (
                       <Button variant="secondary" onClick={() => setReading(true)}>
                         {t('onboarding.openIntroduction')}
                       </Button>
@@ -204,8 +213,8 @@ export default function GettingStartedScreen() {
           )}
         </>
       )}
-      {reading && run?.documentId ? (
-        <HtmlReader id={run.documentId} onClose={() => setReading(false)} />
+      {reading && introductionId ? (
+        <HtmlReader id={introductionId} onClose={() => setReading(false)} />
       ) : null}
     </div>
   )
