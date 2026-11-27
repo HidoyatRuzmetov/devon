@@ -878,7 +878,7 @@ function useBoardRiskDigest(
         <AiResultPanel
           title={t('work.ai.boardDigestPreviewTitle')}
           status={digestAi.isPending ? 'pending' : digestAi.isError ? 'error' : 'ready'}
-          errorMessage={t('work.quickAdd.aiError')}
+          errorMessage={t('work.aiError')}
           {...(digest ? { meta: digest.meta } : {})}
           // Read-only: each row already carries its own action, and a single Accept over a ranked
           // list of five different problems would mean nothing.

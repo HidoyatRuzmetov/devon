@@ -1679,9 +1679,6 @@
     "eyebrow": "WORK",
     "title": "Cards",
     "description": "The People board: one column per department member.",
-    "filterChrome": {
-      "toggle": "Filters and quick add"
-    },
     "view": {
       "board": "Board",
       "table": "Table",
@@ -1689,37 +1686,14 @@
       "calendar": "Calendar",
       "mine": "Mine"
     },
-    "quickAdd": {
-      "placeholder": "Quick add: \"Nodira: prepare the monthly report, friday\"",
-      "created": "\"{title}\" created",
-      "error": "Could not create the card",
-      "unknownAssignee": "No member matches \"{name}\"",
-      "aiParse": "Parse with AI",
-      "aiPreviewTitle": "AI-parsed card",
-      "aiError": "Could not parse that text",
-      "aiMeta": "{tokens} tokens · {ms} ms",
-      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood.",
-      "fromTemplate": "Create from a template",
-      "duplicateTitle": "Something similar already exists"
-    },
     "filter": {
-      "placeholder": "assignee:@me due:<=friday label:urgent",
-      "apply": "Apply",
       "clear": "Clear",
-      "saveAs": "Save as view",
-      "viewName": "View name",
-      "saved": "View saved",
-      "saveError": "Could not save the view",
-      "savedViews": "Saved views",
-      "noSavedViews": "No saved views yet",
       "me": "Me",
       "addFilter": "Filter",
       "fieldStep": "Search fields",
       "valueStep": "Search values",
       "noOptions": "Nothing found",
       "removeChip": "Remove the \"{chip}\" filter",
-      "showAdvanced": "Advanced",
-      "hideAdvanced": "Hide advanced",
       "op": {
         "lte": "≤",
         "gte": "≥",
@@ -2185,6 +2159,9 @@
       "overCap": "{over} over the cap",
       "forbiddenAction": "Open the board"
     },
+    "created": "\"{title}\" created",
+    "createError": "Could not create the card",
+    "aiError": "Could not parse that text",
     "templateEditor": {
       "new": "New card template",
       "edit": "Edit {name}",
@@ -3114,6 +3091,62 @@
     "headHelp": "Your department has not enabled this feature yet. Open Features in department settings to turn it on.",
     "memberHelp": "Ask your department head to enable this feature."
   },
+  "files": {
+    "viewer": "File viewer",
+    "description": "Read documents and browse archive folders. Files cannot be edited here.",
+    "readOnly": "Read only",
+    "files": "Files",
+    "localPreview": "Previewed on your device",
+    "openName": "Open {name}",
+    "open": "Open",
+    "download": "Download original",
+    "close": "Close viewer",
+    "hideFiles": "Hide file list",
+    "showFiles": "Show file list",
+    "loading": "Opening file…",
+    "previewUnavailable": "This preview could not be opened",
+    "retry": "Try again",
+    "riskyTitle": "Download only — use caution",
+    "riskyBody": "This file can run commands or contain macros. It will not run in WorkPortal. Download it only if you trust its source, and scan it before opening.",
+    "unsupportedTitle": "Download to open this format",
+    "unsupportedBody": "This format needs a compatible application. You can download the original file without changing it.",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "fit": "Fit",
+    "pdfPage": "PDF page {page}",
+    "password": "Enter the file password",
+    "encrypted": "Password protected",
+    "findRows": "Find in rows",
+    "rowCount": "{count} rows",
+    "row": "Row",
+    "empty": "No content to display",
+    "noResults": "No matches found",
+    "sheetLimit": "Preview shows up to 1,000 rows, 100 columns and 30 sheets. Download the original for the full workbook.",
+    "sheets": "Worksheets",
+    "contentPreview": "Content preview · original layout may differ",
+    "lineCount": "{count} lines",
+    "wrap": "Wrap lines",
+    "text": "Text",
+    "noText": "This page has no text layer. Use the page image to read it.",
+    "archiveRoot": "Archive root folder",
+    "backToFolder": "Back to folder",
+    "findFiles": "Find in this archive",
+    "itemCount": "{count} items",
+    "name": "Name",
+    "size": "Size",
+    "folder": "Folder",
+    "emptyFolder": "This folder is empty",
+    "error": {
+      "load": "The file could not be loaded. Check your connection and access to this page.",
+      "format": "The file is damaged, encrypted, or uses a format this browser cannot display. Download it to open in a compatible application.",
+      "size": "This file exceeds the preview limits. Download the original to open it. Archives are limited to 1,500 entries, 80 MB expanded and three nested levels; individual previews to 32 MB.",
+      "archive": "This archive contains unsafe paths, embedded programs, links or an unsupported archive layout. It has not been extracted.",
+      "password": "A password is required, or the entered password is incorrect.",
+      "timeout": "Opening took too long and was stopped. Download the file to open it with a desktop application."
+    }
+  },
   "headScope": {
     "leadership": "Department leadership",
     "departmentWide": "Department-wide"
@@ -4025,7 +4058,7 @@
       "2": "Find, open and organise work",
       "3": "Try the real layout with temporary examples",
       "4": "Calendar, private cards and focus timer",
-      "5": "Events, colleagues and structure",
+      "5": "Pages, events, colleagues and structure",
       "6": "Check in, check out and find help again"
     },
     "steps": {
@@ -4132,6 +4165,10 @@
       "orgChart": {
         "title": "Organisation chart",
         "body": "Open Org chart to see how units and leadership connect. Zoom or move the chart to follow a branch."
+      },
+      "pages": {
+        "title": "Pages",
+        "body": "Find department rules, job descriptions and shared documents here. Open a page, then select a file to read it in the viewer."
       }
     },
     "practice": {

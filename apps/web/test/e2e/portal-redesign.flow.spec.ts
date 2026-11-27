@@ -11,70 +11,6 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 
-type DisclosureFrame = {
-  top: number
-  bottom: number
-  panelHeight: number
-  scrollY: number
-  scrollTop: number
-  scrollLeft: number
-}
-
-type DisclosureWindow = Window & { __disclosureFrames?: Promise<DisclosureFrame[]> }
-
-async function captureFilterTransition(page: Page): Promise<DisclosureFrame[]> {
-  await page.evaluate(() => {
-    const board = document.querySelector<HTMLElement>('.devon-board-scroller')!
-    const verticalScroller = window.matchMedia('(max-width: 767px)').matches
-      ? board.querySelector<HTMLElement>('[data-board-column]')!
-      : board
-    ;(window as DisclosureWindow).__disclosureFrames = new Promise((resolve) => {
-      const frames: DisclosureFrame[] = []
-      const captureFrame = () => {
-        const bounds = board.getBoundingClientRect()
-        frames.push({
-          top: bounds.top,
-          bottom: bounds.bottom,
-          panelHeight:
-            document.getElementById('work-shell-mobile-chrome')?.getBoundingClientRect().height ??
-            0,
-          scrollY: window.scrollY,
-          scrollTop: verticalScroller.scrollTop,
-          scrollLeft: board.scrollLeft,
-        })
-      }
-      captureFrame()
-      // Begin with the actual disclosure state change, even if the pointer action waits on CI.
-      // Sampling from evaluate() alone can finish before a delayed click ever starts the motion.
-      const trigger = document.querySelector('[aria-controls="work-shell-mobile-chrome"]')!
-      const observer = new MutationObserver(() => {
-        observer.disconnect()
-        const start = performance.now()
-        const capture = () => {
-          captureFrame()
-          if (performance.now() - start < 500) requestAnimationFrame(capture)
-          else resolve(frames)
-        }
-        capture()
-      })
-      observer.observe(trigger, { attributes: true, attributeFilter: ['aria-expanded'] })
-    })
-  })
-  await page.getByRole('button', { name: 'Filters and quick add', exact: true }).click()
-  return page.evaluate(async () => (await (window as DisclosureWindow).__disclosureFrames)!)
-}
-
-function expectStableFilterTransition(frames: DisclosureFrame[]): void {
-  const range = (values: number[]) => Math.max(...values) - Math.min(...values)
-  expect(range(frames.map((frame) => frame.panelHeight))).toBeGreaterThan(30)
-  // Every animation frame shares one bottom edge; neither flex gaps nor scroll anchoring jump.
-  expect(range(frames.map((frame) => frame.bottom))).toBeLessThanOrEqual(2)
-  expect(range(frames.map((frame) => frame.top - frame.panelHeight))).toBeLessThanOrEqual(2)
-  expect(range(frames.map((frame) => frame.scrollY))).toBe(0)
-  expect(range(frames.map((frame) => frame.scrollTop))).toBeLessThanOrEqual(1)
-  expect(range(frames.map((frame) => frame.scrollLeft))).toBeLessThanOrEqual(1)
-}
-
 type PortalFixture = {
   context: BrowserContext
   page: Page
@@ -427,12 +363,11 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
   await expect(headColumn.locator('[data-dnd-card]').first()).toContainText('Research task 3')
   await page.getByRole('button', { name: 'Sort cards: Attention', exact: true }).click()
   await page.getByRole('menuitemradio', { name: 'Manual order', exact: true }).click()
-  await headColumn.getByRole('button', { name: 'Add with AI', exact: true }).click()
-  await expect(page.getByRole('dialog', { name: 'Add with AI', exact: true })).toContainText(
-    'Assignee: Test Head',
-  )
-  await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(board.getByRole('textbox', { name: '+ Add card', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Add with AI', exact: true })).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Filters and quick add', exact: true }),
+  ).toHaveCount(0)
   const initial = await board.boundingBox()
   expect(initial!.height).toBeGreaterThan(500)
   expect(initial!.y + initial!.height).toBeGreaterThan(930)
@@ -442,20 +377,7 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
   await page.mouse.wheel(180, 60)
   await expect.poll(() => board.evaluate((el) => el.scrollLeft)).toBeGreaterThan(100)
   await expect.poll(() => board.evaluate((el) => el.scrollTop)).toBeGreaterThan(30)
-  const opening = await captureFilterTransition(page)
-  await expect
-    .poll(async () => (await board.boundingBox())!.height)
-    .toBeLessThan(initial!.height - 30)
-  const closing = await captureFilterTransition(page)
-  await expect
-    .poll(async () => (await board.boundingBox())!.height)
-    .toBeGreaterThan(initial!.height - 5)
-  await testInfo.attach('filter-transition-frames', {
-    body: JSON.stringify({ opening, closing }),
-    contentType: 'application/json',
-  })
-  expectStableFilterTransition(opening)
-  expectStableFilterTransition(closing)
+  expect((await board.boundingBox())!.height).toBeCloseTo(initial!.height, 0)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await board.evaluate((el) => el.scrollTo({ left: 0, top: 0, behavior: 'instant' }))
   // Both cases share one pointer and viewport, so their hover transitions must run in order.
@@ -585,14 +507,10 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
   await headColumn.hover({ position: { x: 120, y: 220 } })
   await page.mouse.wheel(0, 60)
   await expect.poll(() => headColumn.evaluate((el) => el.scrollTop)).toBeGreaterThan(30)
-  const phoneOpening = await captureFilterTransition(page)
-  const phoneClosing = await captureFilterTransition(page)
-  await testInfo.attach('filter-transition-phone-frames', {
-    body: JSON.stringify({ opening: phoneOpening, closing: phoneClosing }),
-    contentType: 'application/json',
-  })
-  expectStableFilterTransition(phoneOpening)
-  expectStableFilterTransition(phoneClosing)
+  await expect(
+    page.getByRole('button', { name: 'Filters and quick add', exact: true }),
+  ).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Add with AI', exact: true })).toHaveCount(0)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await headColumn.evaluate((el) => el.scrollTo({ top: 0, behavior: 'instant' }))
   await board.focus()

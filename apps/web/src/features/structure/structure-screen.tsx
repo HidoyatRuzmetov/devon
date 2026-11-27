@@ -224,11 +224,13 @@ export default function StructureScreen() {
   }
 
   const { units, settings, myRole } = overviewQuery.data
-  const roles = rolesQuery.data ?? []
-  const members = membersQuery.data ?? []
+  const members = (membersQuery.data ?? []).filter((member) => member.accountStatus !== 'deleted')
+  const membersById = new Map<string, Member>(members.map((m) => [m.userId, m]))
+  // Roster and assignment requests can settle separately after a removal. Only show
+  // assignments that still have a current member in this department.
+  const roles = (rolesQuery.data ?? []).filter((role) => membersById.has(role.userId))
   const rolesByUnit = new Map<string, typeof roles>()
   for (const r of roles) rolesByUnit.set(r.unitId, [...(rolesByUnit.get(r.unitId) ?? []), r])
-  const membersById = new Map<string, Member>(members.map((m) => [m.userId, m]))
   // How many people belong to each unit (§25 of the departments-people-events UI pass: the tree row
   // shows a real member count, not the count of role *assignments*, which can be zero for a unit
   // everyone still belongs to).

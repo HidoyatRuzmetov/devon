@@ -1,14 +1,13 @@
 import { positionLabel } from '../../../lib/profile-labels.js'
 import { avatarUrl } from '../../../lib/avatar.js'
 // One People-board column: a sticky, colour-tagged member header (avatar, name, workload count),
-// their group-project tiles (EPIC-005), then their cards, an inline "+ Add card" quick-add at the
-// foot, and a collapse toggle that shrinks the whole column to a thin rail -- Trello/Plane's own
+// their group-project tiles (EPIC-005), then their cards and a collapse toggle that shrinks the
+// whole column to a thin rail -- Trello/Plane's own
 // column shape (DESIGN.md §9.3). The drop target for "append to the end of this column" is the
 // fallback a card's own `dropTargetForElements` (`card-tile.tsx`) never claims because the pointer
 // isn't over any card.
 import * as React from 'react'
 import { navigate } from '../../../lib/router.js'
-import { useDepartment, useMeQuery } from '../../../lib/session.js'
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
 import { ChevronsLeftRight, ChevronsRightLeft } from 'lucide-react'
 import { numberFlowLocale, useLocale, useT } from '@devon/i18n'
@@ -27,7 +26,6 @@ import { fullName } from '../lib/format.js'
 import { unitColorClass } from '../../../lib/unit-palette.js'
 import { useIsTouchDropTarget } from '../lib/touch-drag.js'
 import { CARD_DRAG_TYPE, CardTile, type CardDropSpec } from './card-tile.js'
-import { QuickAddBar } from './quick-add-bar.js'
 
 export interface BoardColumnProps {
   member: MemberSummary | null // null = the "unassigned" column
@@ -99,8 +97,6 @@ export function BoardColumn({
   onRejectionShown,
 }: BoardColumnProps) {
   const t = useT()
-  const { department } = useDepartment()
-  const viewerId = useMeQuery().data?.user.id
   // `uz-Latn` groups with an ASCII comma on a real embedded-Chromium ICU; `numberFlowLocale` maps it
   // to `uz-Cyrl`, which groups the way DESIGN.md §5 asks for. Same shim KpiTile's call sites use.
   const locale = numberFlowLocale(useLocale())
@@ -296,9 +292,6 @@ export function BoardColumn({
             <ChevronsRightLeft className="size-4" />
           </IconButton>
         </div>
-        {department?.role === 'head' || viewerId === userId ? (
-          <QuickAddBar members={members} defaultAssigneeUserId={userId} compact />
-        ) : null}
         <div className="flex items-center justify-between text-caption text-muted-foreground md:hidden">
           <span>{t('work.board.loadCount', { count: cards.length })}</span>
           {overdueCount > 0 ? (
@@ -310,7 +303,7 @@ export function BoardColumn({
       </div>
 
       {/* One shared two-axis region owns scrolling. Card lists remain plain blocks; the sticky
-          member and quick-add header gives every column the same direct action at any depth. */}
+          member header keeps every column identifiable at any depth. */}
       <div
         ref={listRef}
         data-dnd-column={columnKey}

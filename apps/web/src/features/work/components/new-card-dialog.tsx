@@ -7,15 +7,13 @@ import { WORK_TITLE_MAX } from '@devon/contracts'
 //
 // This is that composer. `?new=1` on `/work` opens it -- the same query-string convention `/events?
 // new=1` already uses, because `src/lib/router.tsx` is exact-path-only -- and presents regular
-// labelled fields first. The board's `QuickAddBar` remains available under an optional
-// disclosure, so experienced users can still use the typed grammar and AI parse. Closing clears
+// labelled fields. Closing clears
 // the parameter, so Back does what it looks like it does and the URL is shareable.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Button, Dialog, DialogContent, Input, toast } from '@devon/ui'
 import { replaceSearchParam, useSearchParams } from '../../../lib/router.js'
 import { useBoardQuery, useCreateCardMutation } from '../hooks.js'
-import { QuickAddBar } from './quick-add-bar.js'
 import { useDepartment, useMeQuery } from '../../../lib/session.js'
 
 export function NewCardDialog({ defaultAssigneeUserId }: { defaultAssigneeUserId?: string } = {}) {
@@ -66,7 +64,7 @@ export function NewCardDialog({ defaultAssigneeUserId }: { defaultAssigneeUserId
                     onSuccess: (card) => {
                       close()
                       replaceSearchParam('card', card.id)
-                      toast(t('work.quickAdd.created', { title: card.title }))
+                      toast(t('work.created', { title: card.title }))
                     },
                   },
                 )
@@ -113,7 +111,7 @@ export function NewCardDialog({ defaultAssigneeUserId }: { defaultAssigneeUserId
               </div>
               {create.isError ? (
                 <p role="alert" className="text-small text-destructive">
-                  {t('work.quickAdd.error')}
+                  {t('work.createError')}
                 </p>
               ) : null}
               <Button
@@ -125,26 +123,6 @@ export function NewCardDialog({ defaultAssigneeUserId }: { defaultAssigneeUserId
                 {t('work.actions.create')}
               </Button>
             </form>
-            <details className="border-t border-border pt-3">
-              <summary className="cursor-pointer text-small text-muted-foreground">
-                {t('work.composer.quickEntry')}
-              </summary>
-              <p className="py-2 text-small text-muted-foreground">
-                {t('work.quickAdd.dialogHint')}
-              </p>
-              <QuickAddBar
-                members={members}
-                defaultAssigneeUserId={
-                  isHead ? assignee || defaultAssigneeUserId || null : viewerId
-                }
-                onCreated={() => {
-                  // One card, then out of the way: a composer that stayed open after creating would
-                  // make "did that work?" the next question. The board behind it has already
-                  // invalidated and re-rendered with the new card in place.
-                  close()
-                }}
-              />
-            </details>
           </div>
         </DialogContent>
       ) : null}

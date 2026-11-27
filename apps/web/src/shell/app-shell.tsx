@@ -393,7 +393,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           label={t('shell.inbox.unreadAria', { count: inboxCount })}
           locale={locale}
           active={route === '/' && search.has('inbox')}
-          onClick={() => navigate('/?inbox=all')}
+          onClick={() =>
+            navigate(
+              `/?inbox=${inboxCount > 0 ? 'unread' : 'all'}&focusInbox=${crypto.randomUUID()}`,
+            )
+          }
         />
       ) : null}
       <ThemeToggle

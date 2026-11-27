@@ -84,7 +84,7 @@
       "2": "Find, open and organise work",
       "3": "Try the real layout with temporary examples",
       "4": "Calendar, private cards and focus timer",
-      "5": "Events, colleagues and structure",
+      "5": "Pages, events, colleagues and structure",
       "6": "Check in, check out and find help again"
     },
     "steps": {
@@ -191,6 +191,10 @@
       "orgChart": {
         "title": "Organisation chart",
         "body": "Open Org chart to see how units and leadership connect. Zoom or move the chart to follow a branch."
+      },
+      "pages": {
+        "title": "Pages",
+        "body": "Find department rules, job descriptions and shared documents here. Open a page, then select a file to read it in the viewer."
       }
     },
     "practice": {

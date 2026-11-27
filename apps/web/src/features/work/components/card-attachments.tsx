@@ -3,9 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { useT } from '@devon/i18n'
 import { Button, IconButton, toast, toastWithUndo } from '@devon/ui'
-import { Download, File, Paperclip, Trash2 } from 'lucide-react'
+import { Download, File, Paperclip, Trash2, ChevronRight } from 'lucide-react'
 import { ApiError, apiClient } from '../../../lib/api-client.js'
 import { useMeQuery } from '../../../lib/session.js'
+
+import { AttachmentIcon } from '../../files/file-icon.js'
+import { formatFileSize } from '../../files/file-types.js'
+import '../../files/file-viewer.css'
+const FileViewer = React.lazy(() => import('../../files/file-viewer.js'))
 
 const attachmentSchema = z.object({
   id: z.string(),
@@ -33,6 +38,7 @@ export function CardAttachments({
   subjectType?: 'card' | 'page' | 'project'
 }) {
   const t = useT()
+  const [previewId, setPreviewId] = React.useState<string | null>(null)
   const csrf = useMeQuery().data?.csrfToken ?? ''
   const qc = useQueryClient()
   const fileInput = React.useRef<HTMLInputElement>(null)
@@ -47,6 +53,16 @@ export function CardAttachments({
     queryKey: key,
     queryFn: () => apiClient.get(base + historyQuery, z.array(attachmentSchema)),
   })
+  const viewableFiles = React.useMemo(
+    () =>
+      (list.data ?? []).map((file) => ({
+        id: file.id,
+        name: file.name,
+        size: file.size,
+        url: `${base}/${encodeURIComponent(file.id)}/download${historyQuery}`,
+      })),
+    [list.data, base, historyQuery],
+  )
   const approvals = useQuery({
     queryKey: [...key, 'approvals'],
     queryFn: () =>
@@ -181,28 +197,46 @@ export function CardAttachments({
       {list.data?.length === 0 ? (
         <p className="text-small text-muted-foreground">{t('attachments.empty')}</p>
       ) : null}
-      <ul className="flex flex-col gap-2">
+      <ul className={subjectType === 'page' ? 'page-file-list' : 'flex flex-col gap-2'}>
         {list.data?.map((file) => (
           <li
             key={file.id}
             className="group flex items-center gap-3 rounded-md border border-border bg-card p-2.5"
           >
-            <File className="size-5 shrink-0 text-primary/70" aria-hidden="true" />
-            <a
-              className="flex min-w-0 flex-1 items-center gap-3 text-small font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-              href={`${base}/${encodeURIComponent(file.id)}/download${historyQuery}`}
-              download={file.name}
-              title={file.name}
-              aria-label={file.name}
-            >
-              <span className="min-w-0 flex-1 truncate">{file.name}</span>
-              <span className="shrink-0 text-caption text-muted-foreground">
-                {file.size >= 1024 * 1024
-                  ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-                  : `${Math.max(1, Math.round(file.size / 1024))} KB`}
-              </span>
-              <Download className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            </a>
+            {subjectType === 'page' ? (
+              <button
+                className="page-file-open"
+                onClick={() => setPreviewId(file.id)}
+                title={file.name}
+                aria-label={t('files.openName', { name: file.name })}
+              >
+                <AttachmentIcon name={file.name} />
+                <span>
+                  <strong>{file.name}</strong>
+                  <small>{formatFileSize(file.size)}</small>
+                </span>
+                <ChevronRight aria-hidden="true" />
+              </button>
+            ) : (
+              <>
+                <File className="size-5 shrink-0 text-primary/70" aria-hidden="true" />
+                <a
+                  className="flex min-w-0 flex-1 items-center gap-3 text-small font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                  href={`${base}/${encodeURIComponent(file.id)}/download${historyQuery}`}
+                  download={file.name}
+                  title={file.name}
+                  aria-label={file.name}
+                >
+                  <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                  <span className="shrink-0 text-caption text-muted-foreground">
+                    {file.size >= 1024 * 1024
+                      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                      : `${Math.max(1, Math.round(file.size / 1024))} KB`}
+                  </span>
+                  <Download className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </a>
+              </>
+            )}
             {canEdit ? (
               <IconButton
                 className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
@@ -217,6 +251,15 @@ export function CardAttachments({
           </li>
         ))}
       </ul>
+      {previewId && list.data ? (
+        <React.Suspense fallback={<p role="status">{t('files.loading')}</p>}>
+          <FileViewer
+            initialId={previewId}
+            onClose={() => setPreviewId(null)}
+            files={viewableFiles}
+          />
+        </React.Suspense>
+      ) : null}
       <div aria-live="polite" className="space-y-2">
         {approvals.data?.map((request) => (
           <p key={request.id} className="break-words rounded-sm bg-muted/40 p-2 text-small">

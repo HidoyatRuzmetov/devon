@@ -33,7 +33,6 @@ import type {
   DraftReplyOutput,
   DuplicateCheckOutput,
   PlanSprintOutput,
-  QuickAddOutput,
   SubtaskBreakdownOutput,
   SuggestAssigneeOutput,
   SummarizeThreadOutput,
@@ -47,75 +46,6 @@ function useDateText(): (iso: string | null) => string {
   return React.useCallback(
     (iso) => (iso ? formatDate(new Date(`${iso}T00:00:00`), locale) : t('ai.preview.noDate')),
     [locale, t],
-  )
-}
-
-// --- F1 quick_add_parse -------------------------------------------------------------------------
-
-export function QuickAddPreview({
-  output,
-  memberName,
-  labelName,
-  projectName,
-}: {
-  output: QuickAddOutput
-  memberName: (id: string) => string | null
-  labelName: (id: string) => string | null
-  projectName: (id: string) => string | null
-}): React.JSX.Element {
-  const t = useT()
-  const dateText = useDateText()
-  const labels = output.labelIds.map((id) => labelName(id)).filter((n): n is string => n !== null)
-  return (
-    <div className="flex flex-col divide-y divide-border">
-      <FieldRow label={t('ai.preview.quickAdd.title')}>
-        <span className="font-medium">{output.title}</span>
-      </FieldRow>
-      <FieldRow label={t('ai.preview.quickAdd.assignee')}>
-        {output.assigneeUserId ? (
-          <>
-            <span>{memberName(output.assigneeUserId) ?? t('ai.preview.unknownPerson')}</span>
-            <ConfidenceChip level={output.confidence.assignee} />
-          </>
-        ) : (
-          <span className="text-muted-foreground">{t('ai.preview.quickAdd.noAssignee')}</span>
-        )}
-      </FieldRow>
-      <FieldRow label={t('ai.preview.quickAdd.due')}>
-        <span className="tabular-nums">{dateText(output.dueDate)}</span>
-        {output.dueDate ? <ConfidenceChip level={output.confidence.dueDate} /> : null}
-      </FieldRow>
-      <FieldRow label={t('ai.preview.quickAdd.priority')}>
-        <Badge tone={output.priority === 'urgent' ? 'destructive' : 'neutral'}>
-          {t(`work.priority.${output.priority}`)}
-        </Badge>
-        <ConfidenceChip level={output.confidence.priority} />
-      </FieldRow>
-      {labels.length > 0 ? (
-        <FieldRow label={t('ai.preview.quickAdd.labels')}>
-          {labels.map((name) => (
-            <Badge key={name} tone="neutral">
-              {name}
-            </Badge>
-          ))}
-        </FieldRow>
-      ) : null}
-      {output.projectId ? (
-        <FieldRow label={t('ai.preview.quickAdd.project')}>
-          <span>{projectName(output.projectId) ?? t('ai.preview.unknownProject')}</span>
-        </FieldRow>
-      ) : null}
-      {output.ambiguous.length > 0 ? (
-        <FieldRow label={t('ai.preview.quickAdd.ambiguous')}>
-          <span className="text-warning">{output.ambiguous.join(', ')}</span>
-        </FieldRow>
-      ) : null}
-      {output.notes ? (
-        <div className="pt-2">
-          <PreviewNote>{output.notes}</PreviewNote>
-        </div>
-      ) : null}
-    </div>
   )
 }
 

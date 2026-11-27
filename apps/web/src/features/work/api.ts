@@ -180,25 +180,8 @@ export const boardSchema = z.object({
 })
 export type Board = z.infer<typeof boardSchema>
 
-export const savedViewLayoutSchema = z.enum([
-  'people_board',
-  'table',
-  'timeline',
-  'calendar',
-  'mine',
-])
-export type SavedViewLayout = z.infer<typeof savedViewLayoutSchema>
+export type WorkViewLayout = 'people_board' | 'table' | 'timeline' | 'calendar' | 'mine'
 
-export const savedViewSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  filter: z.string(),
-  layout: savedViewLayoutSchema,
-  shared: z.boolean(),
-  ownerUserId: z.string(),
-})
-export type SavedView = z.infer<typeof savedViewSchema>
-export const savedViewListSchema = z.array(savedViewSchema)
 
 export const unfurlResultSchema = z.object({
   url: z.string(),
@@ -419,26 +402,6 @@ export function createLabel(
   csrfToken: string,
 ): Promise<Label> {
   return apiClient.post('/api/v1/labels', input, labelSchema, csrfToken)
-}
-
-export function fetchSavedViews(): Promise<SavedView[]> {
-  return apiClient.get('/api/v1/views', savedViewListSchema)
-}
-
-export function createSavedView(
-  input: {
-    name: string
-    filter: string
-    layout: SavedViewLayout
-    shared?: boolean
-  },
-  csrfToken: string,
-): Promise<SavedView> {
-  return apiClient.post('/api/v1/views', input, savedViewSchema, csrfToken)
-}
-
-export async function deleteSavedView(id: string, csrfToken: string): Promise<void> {
-  await apiClient.delete(`/api/v1/views/${encodeURIComponent(id)}`, csrfToken)
 }
 
 export function unfurlLink(url: string, csrfToken: string): Promise<UnfurlResult> {

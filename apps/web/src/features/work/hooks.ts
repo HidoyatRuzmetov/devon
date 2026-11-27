@@ -19,7 +19,7 @@ import { useT } from '@devon/i18n'
 import { useMeQuery } from '../../lib/session.js'
 import { useIsLive } from '../../lib/realtime/index.js'
 import * as api from './api.js'
-import type { Board, Card, CardDetail, Label, SavedView } from './api.js'
+import type { Board, Card, CardDetail, Label } from './api.js'
 import {
   focusFirst,
   sortBoardCards,
@@ -42,7 +42,6 @@ const BOARD_KEY = ['work', 'board'] as const
 const CARDS_KEY = ['work', 'cards'] as const
 const CARD_KEY = (id: string) => ['work', 'card', id] as const
 const LABELS_KEY = ['work', 'labels'] as const
-const VIEWS_KEY = ['work', 'views'] as const
 
 // The four-second poll that stood in for real-time push until v1.1 (EPIC-018 built the transport:
 // `lib/realtime` + Centrifugo). It is still here, and deliberately so -- Centrifugo is an optional
@@ -111,10 +110,6 @@ export function useCardQuery(id: string | null): UseQueryResult<CardDetail, Erro
 
 export function useLabelsQuery(): UseQueryResult<Label[], Error> {
   return useQuery({ queryKey: LABELS_KEY, queryFn: api.fetchLabels })
-}
-
-export function useSavedViewsQuery(): UseQueryResult<SavedView[], Error> {
-  return useQuery({ queryKey: VIEWS_KEY, queryFn: api.fetchSavedViews })
 }
 
 // --- shared cache-patching helpers --------------------------------------------------------------
@@ -534,25 +529,6 @@ export function useCreateLabelMutation() {
   return useMutation({
     mutationFn: (input: { name: string; colour?: string }) => api.createLabel(input, csrf),
     onSuccess: () => void qc.invalidateQueries({ queryKey: LABELS_KEY }),
-  })
-}
-
-export function useCreateSavedViewMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (input: Parameters<typeof api.createSavedView>[0]) =>
-      api.createSavedView(input, csrf),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: VIEWS_KEY }),
-  })
-}
-
-export function useDeleteSavedViewMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (id: string) => api.deleteSavedView(id, csrf),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: VIEWS_KEY }),
   })
 }
 

@@ -544,6 +544,44 @@ export function InboxPanel() {
   // memoised and only the rows re-render when the selection moves.
   const selectedId = items[selectedIndex]?.id ?? null
   const unreadCount = notificationsQuery.data?.unreadCount ?? 0
+  const focusRequest = search.get('focusInbox')
+  const focusedRequest = React.useRef<string | null>(null)
+  React.useEffect(() => {
+    if (!focusRequest || focusedRequest.current === focusRequest || notificationsQuery.isPending)
+      return
+    if (status !== (requested === 'unread' ? 'unread' : 'inbox')) return
+    const frame = requestAnimationFrame(() => {
+      const panel = inboxRef.current
+      if (!panel) return
+      const first = items.find((item) => item.readAt === null) ?? items[0]
+      const row = first
+        ? panel.querySelector<HTMLElement>(
+            `[role="tabpanel"][data-state="active"] [data-inbox-opener="${CSS.escape(first.id)}"]`,
+          )
+        : null
+      if (row) {
+        for (
+          let parent = row.parentElement;
+          parent && parent !== panel;
+          parent = parent.parentElement
+        ) {
+          if (parent instanceof HTMLDetailsElement) parent.open = true
+        }
+        setSelectedIndex(items.findIndex((item) => item.id === first?.id))
+      }
+      const target =
+        row ?? panel.querySelector<HTMLElement>('[role="tab"][data-state="active"]') ?? panel
+      target.focus({ preventScroll: true })
+      target.scrollIntoView({
+        block: 'center',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'instant'
+          : 'smooth',
+      })
+      focusedRequest.current = focusRequest
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [focusRequest, requested, status, notificationsQuery.isPending, items])
   const [openSnapshot, setOpenSnapshot] = React.useState<NotificationDto | null>(null)
   const openNotification =
     items.find((n) => n.id === openId) ?? (openSnapshot?.id === openId ? openSnapshot : null)

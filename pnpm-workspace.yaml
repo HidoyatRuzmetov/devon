@@ -80,3 +80,8 @@ minimumReleaseAgeExclude:
   - '@oxc-transform-react/binding-win32-ia32-msvc@0.149.0'
   - '@oxc-transform-react/binding-win32-x64-msvc@0.149.0'
   - oxc-transform-react@0.149.0
+
+# Preserve strict browser CSP: replace the decoder binding helper's dynamic Function
+# constructor with an equivalent static closure. The archive data is never evaluated.
+patchedDependencies:
+  node-unrar-js@2.0.2: patches/node-unrar-js-csp.patch

@@ -153,6 +153,14 @@ export const tourSteps: readonly TourStep[] = [
   },
   {
     chapter: 5,
+    key: 'pages',
+    path: '/pages',
+    target: '[data-onboarding="pages"]',
+    nav: '/pages',
+    overview: true,
+  },
+  {
+    chapter: 5,
     key: 'events',
     path: '/events',
     target: '[data-onboarding="events"]',
@@ -215,4 +223,4 @@ export const tourSteps: readonly TourStep[] = [
     nav: '/',
   },
 ]
-export const chapterStarts = [0, 5, 7, 13, 15, 18, 23] as const
+export const chapterStarts = [0, 5, 7, 13, 15, 18, 24] as const

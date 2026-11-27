@@ -287,32 +287,6 @@ export const createLabelBodySchema = z.object({
     .optional(),
 })
 
-export const savedViewLayoutSchema = z.enum([
-  'people_board',
-  'table',
-  'timeline',
-  'calendar',
-  'mine',
-])
-export type SavedViewLayout = z.infer<typeof savedViewLayoutSchema>
-
-export const savedViewSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  filter: z.string(),
-  layout: savedViewLayoutSchema,
-  shared: z.boolean(),
-  ownerUserId: z.string().uuid(),
-})
-export const savedViewListSchema = z.array(savedViewSchema)
-export const createSavedViewBodySchema = z.object({
-  name: z.string().min(1).max(120),
-  filter: z.string().max(1000),
-  layout: z.enum(['people_board', 'table', 'timeline', 'calendar', 'mine']),
-  shared: z.boolean().optional(),
-})
-export const patchSavedViewBodySchema = createSavedViewBodySchema.partial()
-
 export const unfurlBodySchema = z.object({ url: z.string().url() })
 export const unfurlResultSchema = z.object({
   url: z.string(),

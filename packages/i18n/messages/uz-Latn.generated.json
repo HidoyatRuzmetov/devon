@@ -1679,9 +1679,6 @@
     "eyebrow": "ISH",
     "title": "Vazifalar",
     "description": "Xodimlar doskasi: har bir xodimga bitta ustun.",
-    "filterChrome": {
-      "toggle": "Filtrlar va tezkor qoʻshish"
-    },
     "view": {
       "board": "Doska",
       "table": "Jadval",
@@ -1689,37 +1686,14 @@
       "calendar": "Taqvim",
       "mine": "Mening vazifalarim"
     },
-    "quickAdd": {
-      "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma»",
-      "created": "«{title}» qoʻshildi",
-      "error": "Kartani qoʻshib boʻlmadi",
-      "unknownAssignee": "«{name}» degan xodim topilmadi",
-      "aiParse": "AI bilan aniqlash",
-      "aiPreviewTitle": "AI aniqlagan karta",
-      "aiError": "Matn tushunarsiz boʻldi",
-      "aiMeta": "{tokens} token · {ms} ms",
-      "dialogHint": "Nomini yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
-      "fromTemplate": "Andozadan yaratish",
-      "duplicateTitle": "Bunga oʻxshash ish allaqachon bor"
-    },
     "filter": {
-      "placeholder": "assignee:@me due:<=friday label:urgent",
-      "apply": "Qoʻllash",
       "clear": "Tozalash",
-      "saveAs": "Koʻrinish sifatida saqlash",
-      "viewName": "Koʻrinish nomi",
-      "saved": "Saqlandi",
-      "saveError": "Koʻrinishni saqlab boʻlmadi",
-      "savedViews": "Saqlangan koʻrinishlar",
-      "noSavedViews": "Saqlangan koʻrinish yoʻq",
       "me": "Men",
       "addFilter": "Filtr",
       "fieldStep": "Maydonni qidirish",
       "valueStep": "Qiymatni qidirish",
       "noOptions": "Hech narsa topilmadi",
       "removeChip": "«{chip}» filtrini olib tashlash",
-      "showAdvanced": "Kengaytirilgan",
-      "hideAdvanced": "Yashirish",
       "op": {
         "lte": "≤",
         "gte": "≥",
@@ -2185,6 +2159,9 @@
       "overCap": "Chegaradan {over} taga oshib ketdi",
       "forbiddenAction": "Doskani ochish"
     },
+    "created": "«{title}» qoʻshildi",
+    "createError": "Kartani qoʻshib boʻlmadi",
+    "aiError": "Matn tushunarsiz boʻldi",
     "templateEditor": {
       "new": "Yangi kartochka andozasi",
       "edit": "{name} andozasini tahrirlash",
@@ -3114,6 +3091,62 @@
     "headHelp": "Boshqarmangizda bu imkoniyat hali yoqilmagan. Uni yoqish uchun boshqarma sozlamalaridagi Imkoniyatlar boʻlimini oching.",
     "memberHelp": "Bu imkoniyatni yoqishni boshqarma boshligʻidan soʻrang."
   },
+  "files": {
+    "viewer": "Fayl ko‘rish",
+    "description": "Hujjatlarni o‘qing va arxiv papkalarini ko‘ring. Bu yerda fayllar tahrirlanmaydi.",
+    "readOnly": "Faqat o‘qish",
+    "files": "Fayllar",
+    "localPreview": "Qurilmangizda ochiladi",
+    "openName": "{name} faylini ochish",
+    "open": "Ochish",
+    "download": "Aslini yuklab olish",
+    "close": "Ko‘rishni yopish",
+    "hideFiles": "Fayllarni yashirish",
+    "showFiles": "Fayllarni ko‘rsatish",
+    "loading": "Fayl ochilmoqda…",
+    "previewUnavailable": "Faylni ko‘rsatib bo‘lmadi",
+    "retry": "Qayta urinish",
+    "riskyTitle": "Faqat yuklab olish — ehtiyot bo‘ling",
+    "riskyBody": "Bu fayl buyruqlar yoki makroslarni ishga tushirishi mumkin. U WorkPortal’da ishga tushmaydi. Faqat manbasiga ishonsangiz yuklab oling va ochishdan oldin tekshiring.",
+    "unsupportedTitle": "Bu formatni yuklab olib oching",
+    "unsupportedBody": "Bu format mos dasturni talab qiladi. Asl faylni o‘zgartirmasdan yuklab olishingiz mumkin.",
+    "previousPage": "Oldingi sahifa",
+    "nextPage": "Keyingi sahifa",
+    "zoomOut": "Kichraytirish",
+    "zoomIn": "Kattalashtirish",
+    "fit": "Moslash",
+    "pdfPage": "PDF sahifa {page}",
+    "password": "Fayl parolini kiriting",
+    "encrypted": "Parol bilan himoyalangan",
+    "findRows": "Qatorlardan qidirish",
+    "rowCount": "{count} qator",
+    "row": "Qator",
+    "empty": "Ko‘rsatish uchun ma’lumot yo‘q",
+    "noResults": "Mos natija topilmadi",
+    "sheetLimit": "Ko‘rishda 1 000 qator, 100 ustun va 30 varaqqacha ko‘rsatiladi. To‘liq faylni yuklab oling.",
+    "sheets": "Varaqlar",
+    "contentPreview": "Mazmun ko‘rinishi · asl joylashuv farq qilishi mumkin",
+    "lineCount": "{count} satr",
+    "wrap": "Satrlarni o‘rash",
+    "text": "Matn",
+    "noText": "Bu sahifada matn qatlami yo‘q. Sahifa rasmini o‘qing.",
+    "archiveRoot": "Arxivning asosiy papkasi",
+    "backToFolder": "Papkaga qaytish",
+    "findFiles": "Arxivdan qidirish",
+    "itemCount": "{count} element",
+    "name": "Nomi",
+    "size": "Hajmi",
+    "folder": "Papka",
+    "emptyFolder": "Bu papka bo‘sh",
+    "error": {
+      "load": "Fayl yuklanmadi. Ulanish va sahifaga ruxsatingizni tekshiring.",
+      "format": "Fayl buzilgan, shifrlangan yoki brauzer ko‘rsata olmaydigan formatda. Mos dasturda ochish uchun yuklab oling.",
+      "size": "Fayl ko‘rish chegarasidan oshgan. Aslini yuklab oling. Arxiv: 1 500 element, ochilganda 80 MB va uch ichki daraja; bitta fayl: 32 MB.",
+      "archive": "Arxivda xavfli yo‘llar, dasturlar, havolalar yoki qo‘llanmaydigan tuzilma bor. U ochilmadi.",
+      "password": "Parol kerak yoki kiritilgan parol noto‘g‘ri.",
+      "timeout": "Ochish juda uzoq davom etdi va to‘xtatildi. Faylni yuklab olib, kompyuterdagi dasturda oching."
+    }
+  },
   "headScope": {
     "leadership": "Boshqarma rahbariyati",
     "departmentWide": "Boshqarma bo‘yicha"
@@ -4025,7 +4058,7 @@
       "2": "Ishni toping va tartiblang",
       "3": "Haqiqiy koʻrinishda vaqtinchalik mashq",
       "4": "Taqvim, shaxsiy kartochkalar va taymer",
-      "5": "Tadbirlar, hamkasblar va tuzilma",
+      "5": "Sahifalar, tadbirlar, hamkasblar va tuzilma",
       "6": "Davr natijalari va qoʻllanmaga qaytish"
     },
     "steps": {
@@ -4132,6 +4165,10 @@
       "orgChart": {
         "title": "Tashkiliy sxema",
         "body": "Boʻlinmalar va rahbarlar qanday bogʻlanganini sxemada koʻring. Kerakli qismni koʻrish uchun uni yaqinlashtiring yoki suring."
+      },
+      "pages": {
+        "title": "Sahifalar",
+        "body": "Bo‘lim nizomi, lavozim yo‘riqnomalari va umumiy hujjatlar shu yerda. Sahifani ochib, hujjatni ko‘rish uchun faylni tanlang."
       }
     },
     "practice": {

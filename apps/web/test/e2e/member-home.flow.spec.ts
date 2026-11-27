@@ -315,36 +315,31 @@ test('@flow member Home owns work categories, integrated inbox and event cues on
       await headPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
     await headPage.close()
-    // Exercise the normal API and deterministic local provider: preview never creates a task.
+    // Cards use the regular composer; the removed Quick Add controls stay absent on phones.
     await page.goto('/work')
-    const column = page.locator(`[data-board-column="${me.user.id}"]`)
-    await column.getByRole('button', { name: 'Add with AI', exact: true }).click()
-    const quickAdd = page.getByRole('dialog', { name: 'Add with AI', exact: true })
-    const composer = quickAdd.getByRole('textbox', { name: 'Describe the card', exact: true })
-    await composer.fill('Prepare the monthly report\nby Friday, urgent')
-    await expect(composer).toHaveAttribute('rows', '3')
-    await page.screenshot({ path: testInfo.outputPath('ai-quick-add-phone.png') })
-    await quickAdd.getByRole('button', { name: 'Preview card', exact: true }).click()
-    await expect(quickAdd.getByText('Nodira Karimova', { exact: true })).toBeVisible()
-    await expect(quickAdd.getByText('Urgent', { exact: true })).toBeVisible()
-    const beforeAccept = (await (
-      await member.request.get('/api/v1/cards?q=assignee%3A%40me')
-    ).json()) as { items: { id: string }[] }
-    expect(beforeAccept.items).toHaveLength(3)
-    await quickAdd.getByRole('button', { name: 'Edit', exact: true }).click()
-    await expect(composer).toHaveValue('Prepare the monthly report\nby Friday, urgent')
-    await expect(composer).toBeFocused()
-    await composer.press('Control+Enter')
-    await expect(quickAdd.getByText('Urgent', { exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Add with AI', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('textbox', { name: '+ Add card', exact: true })).toHaveCount(0)
+    await page.goto('/work?new=1')
+    const composer = page.getByRole('dialog', { name: 'New card', exact: true })
+    await composer
+      .getByRole('textbox', { name: 'Title', exact: true })
+      .fill('Prepare the monthly report')
+    const assignee = composer.getByRole('combobox', { name: 'Assignee', exact: true })
+    await expect(assignee).toHaveValue(me.user.id)
+    await expect(assignee.locator('option')).toHaveCount(1)
+    await page.screenshot({ path: testInfo.outputPath('new-card-phone.png') })
     const createdResponse = page.waitForResponse(
       (response) =>
         response.url().endsWith('/api/v1/cards') && response.request().method() === 'POST',
     )
-    await quickAdd.getByRole('button', { name: 'Create card', exact: true }).click()
+    await composer.getByRole('button', { name: 'New card', exact: true }).click()
     const created = await createdResponse
     expect(created.status()).toBe(201)
-    expect(await created.json()).toMatchObject({ assigneeUserId: me.user.id, priority: 'urgent' })
-    await expect(quickAdd).toHaveCount(0)
+    expect(await created.json()).toMatchObject({
+      assigneeUserId: me.user.id,
+      title: 'Prepare the monthly report',
+    })
+    await expect(composer).toHaveCount(0)
     // Private to-dos have notes, not scheduling fields: the preview and persisted data agree.
     await page.goto('/personal?tab=tasks')
     const privateComposer = page.getByPlaceholder('Add a to-do')

@@ -447,7 +447,7 @@ export default function ProjectPageScreen() {
                   <AiResultPanel
                     title={t('projects.ai.catchUpPreviewTitle')}
                     status={catchUpAi.isPending ? 'pending' : catchUpAi.isError ? 'error' : 'ready'}
-                    errorMessage={t('work.quickAdd.aiError')}
+                    errorMessage={t('work.aiError')}
                     {...(catchUp ? { meta: catchUp.meta } : {})}
                     // Nothing to accept: a briefing is something you read, and every risk it names is
                     // already a link to the card it is about.
@@ -602,7 +602,7 @@ export default function ProjectPageScreen() {
                   <AiResultPanel
                     title={t('projects.ai.planPreviewTitle')}
                     status={planAi.isPending ? 'pending' : planAi.isError ? 'error' : 'ready'}
-                    errorMessage={t('work.quickAdd.aiError')}
+                    errorMessage={t('work.aiError')}
                     acceptLabel={t('projects.ai.applyPlan')}
                     editLabel={t('work.ai.edit')}
                     {...(plan ? { meta: plan.meta } : {})}

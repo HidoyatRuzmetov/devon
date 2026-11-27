@@ -84,7 +84,7 @@
       "2": "Ishni toping va tartiblang",
       "3": "Haqiqiy koʻrinishda vaqtinchalik mashq",
       "4": "Taqvim, shaxsiy kartochkalar va taymer",
-      "5": "Tadbirlar, hamkasblar va tuzilma",
+      "5": "Sahifalar, tadbirlar, hamkasblar va tuzilma",
       "6": "Davr natijalari va qoʻllanmaga qaytish"
     },
     "steps": {
@@ -191,6 +191,10 @@
       "orgChart": {
         "title": "Tashkiliy sxema",
         "body": "Boʻlinmalar va rahbarlar qanday bogʻlanganini sxemada koʻring. Kerakli qismni koʻrish uchun uni yaqinlashtiring yoki suring."
+      },
+      "pages": {
+        "title": "Sahifalar",
+        "body": "Bo‘lim nizomi, lavozim yo‘riqnomalari va umumiy hujjatlar shu yerda. Sahifani ochib, hujjatni ko‘rish uchun faylni tanlang."
       }
     },
     "practice": {

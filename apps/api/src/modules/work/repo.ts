@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
 import { can, recurrenceRuleSchema, type Actor, type RecurrenceRule } from '@devon/contracts'
-import type { CardDTO, MemberSummary, SavedViewLayout } from './schemas.js'
+import type { CardDTO, MemberSummary } from './schemas.js'
 import { columnOrder, lockCardOrder, rankForPosition } from './ordering.js'
 
 // --- row shapes returned by hand-written SQL (snake_case, as Postgres sends them) ------------------
@@ -1255,80 +1255,6 @@ export async function createLabel(
       departmentId,
     })
     return { id, name, colour }
-  })
-}
-
-export async function listSavedViews(
-  ctx: RequestContext,
-  departmentId: string,
-  ownerUserId: string,
-) {
-  return withContext(ctx, async (tx) => {
-    const rows = await tx.raw<{
-      id: string
-      name: string
-      filter: string
-      layout: 'people_board' | 'table' | 'timeline' | 'calendar' | 'mine'
-      shared: boolean
-      owner_user_id: string
-    }>(
-      sql`select id, name, filter, layout, shared, owner_user_id from app.saved_views
-          where department_id = ${departmentId} and deleted_at is null
-            and (shared = true or owner_user_id = ${ownerUserId})
-          order by name asc`,
-    )
-    return rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      filter: r.filter,
-      layout: r.layout,
-      shared: r.shared,
-      ownerUserId: r.owner_user_id,
-    }))
-  })
-}
-
-export async function createSavedView(
-  ctx: RequestContext,
-  departmentId: string,
-  ownerUserId: string,
-  input: {
-    name: string
-    filter: string
-    layout: SavedViewLayout
-    shared?: boolean | undefined
-  },
-) {
-  return withContext(ctx, async (tx) => {
-    const id = randomUUID()
-    await tx.raw(
-      sql`insert into app.saved_views (id, department_id, owner_user_id, name, filter, layout, shared)
-          values (${id}, ${departmentId}, ${ownerUserId}, ${input.name}, ${input.filter}, ${input.layout}, ${input.shared ?? false})`,
-    )
-    return {
-      id,
-      name: input.name,
-      filter: input.filter,
-      layout: input.layout,
-      shared: input.shared ?? false,
-      ownerUserId,
-    }
-  })
-}
-
-export async function deleteSavedView(
-  ctx: RequestContext,
-  departmentId: string,
-  ownerUserId: string,
-  id: string,
-): Promise<boolean> {
-  return withContext(ctx, async (tx) => {
-    const result = await tx.raw<{ id: string }>(
-      sql`update app.saved_views set deleted_at = now()
-          where id = ${id} and department_id = ${departmentId} and owner_user_id = ${ownerUserId}
-          returning id`,
-    )
-    return result.length > 0
   })
 }
 

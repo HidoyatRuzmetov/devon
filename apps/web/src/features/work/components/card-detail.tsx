@@ -106,7 +106,7 @@ import {
   useUnfurlMutation,
 } from '../hooks.js'
 import { fullName, PRIORITY_LABEL_KEY, RISK_BADGE_TONE, RISK_LABEL_KEY } from '../lib/format.js'
-import { resolveQuickAddAssignee } from '../lib/quick-add.js'
+import { resolveMentionMember } from '../lib/resolve-member.js'
 import { CardPlusSections } from './card-plus-sections.js'
 import { MemberPicker } from './member-picker.js'
 
@@ -712,7 +712,7 @@ export function CardDetailContent({
           <AiResultPanel
             title={t('work.ai.explainRiskPreviewTitle')}
             status={riskAi.isPending ? 'pending' : riskAi.isError ? 'error' : 'ready'}
-            errorMessage={t('work.quickAdd.aiError')}
+            errorMessage={t('work.aiError')}
             {...(riskExplain ? { meta: riskExplain.meta } : {})}
             // Read-only by design: this helper explains a verdict the server already reached. There is
             // nothing to accept, and an Accept button over an explanation would read as a bug.
@@ -783,7 +783,7 @@ export function CardDetailContent({
                   className="mt-2"
                   title={t('work.ai.suggestAssigneePreviewTitle')}
                   status={assigneeAi.isPending ? 'pending' : assigneeAi.isError ? 'error' : 'ready'}
-                  errorMessage={t('work.quickAdd.aiError')}
+                  errorMessage={t('work.aiError')}
                   {...(assigneeSuggestions ? { meta: assigneeSuggestions.meta } : {})}
                   // No Accept: the head chooses a person from the list, one click per row. A single
                   // "Accept" over a ranked list of three people would mean "take the first", which is
@@ -898,7 +898,7 @@ export function CardDetailContent({
               className="mt-2"
               title={t('work.ai.translatePreviewTitle')}
               status={translateAi.isPending ? 'pending' : translateAi.isError ? 'error' : 'ready'}
-              errorMessage={t('work.quickAdd.aiError')}
+              errorMessage={t('work.aiError')}
               acceptLabel={t('work.ai.accept')}
               editLabel={t('work.ai.edit')}
               {...(translatePreview?.meta ? { meta: translatePreview.meta } : {})}
@@ -1536,7 +1536,7 @@ function Checklist({
           <AiResultPanel
             title={t('work.ai.subtasksPreviewTitle')}
             status={subtaskAi.isPending ? 'pending' : subtaskAi.isError ? 'error' : 'ready'}
-            errorMessage={t('work.quickAdd.aiError')}
+            errorMessage={t('work.aiError')}
             acceptLabel={t('work.ai.accept')}
             editLabel={t('work.ai.edit')}
             {...(suggested ? { meta: suggested.meta } : {})}
@@ -1601,7 +1601,7 @@ function Comments({
     return [
       ...new Set(
         [...value.matchAll(/@([\p{L}]+)/gu)]
-          .map((match) => resolveQuickAddAssignee(match[1]!, members)?.userId)
+          .map((match) => resolveMentionMember(match[1]!, members)?.userId)
           .filter((id): id is string => Boolean(id)),
       ),
     ]
@@ -1723,7 +1723,7 @@ function Comments({
     if (!text.trim()) return
     const mentionMatches = [...text.matchAll(/@([\p{L}]+)/gu)].map((m) => m[1]!)
     const mentions = mentionMatches
-      .map((token) => resolveQuickAddAssignee(token, members)?.userId)
+      .map((token) => resolveMentionMember(token, members)?.userId)
       .filter((id): id is string => Boolean(id))
     await addComment.mutateAsync({ text: text.trim(), mentions })
     setText('')
@@ -1891,7 +1891,7 @@ function Comments({
           <AiResultPanel
             title={t('work.ai.summarizePreviewTitle')}
             status={summarizeAi.isPending ? 'pending' : summarizeAi.isError ? 'error' : 'ready'}
-            errorMessage={t('work.quickAdd.aiError')}
+            errorMessage={t('work.aiError')}
             acceptLabel={t('work.ai.postSummary')}
             editLabel={t('work.ai.edit')}
             {...(summary ? { meta: summary.meta } : {})}
@@ -1922,7 +1922,7 @@ function Comments({
           <AiResultPanel
             title={t('work.ai.draftReplyPreviewTitle')}
             status={replyAi.isPending ? 'pending' : replyAi.isError ? 'error' : 'ready'}
-            errorMessage={t('work.quickAdd.aiError')}
+            errorMessage={t('work.aiError')}
             acceptLabel={t('work.ai.useDraft')}
             editLabel={t('work.ai.edit')}
             {...(reply ? { meta: reply.meta } : {})}

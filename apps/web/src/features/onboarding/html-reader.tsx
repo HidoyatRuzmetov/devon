@@ -50,7 +50,7 @@ export function HtmlReader({
               key={reload}
               title={doc.data.title}
               src={`/api/v1/onboarding/documents/${encodeURIComponent(id)}/render`}
-              sandbox="allow-scripts"
+              sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
               referrerPolicy="no-referrer"
               className="h-full w-full border-0"
               onLoad={() => setLoaded(true)}

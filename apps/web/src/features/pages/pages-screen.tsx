@@ -523,7 +523,7 @@ function PageDetail({
           </Button>
         </div>
       ) : null}
-      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="flex min-w-0 flex-col gap-5">
         <div className="min-w-0 rounded-md border border-border bg-card p-4 shadow-1 sm:p-6">
           <PageEditor
             title={editing ? localTitle : page.title}
@@ -622,6 +622,7 @@ export default function PagesScreen() {
       {pageId ? (
         <motion.div
           key={pageId}
+          data-onboarding="pages"
           initial={{ opacity: 0, y: reduced ? 0 : 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
@@ -642,6 +643,7 @@ export default function PagesScreen() {
       ) : (
         <motion.div
           key="pages-list"
+          data-onboarding="pages"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

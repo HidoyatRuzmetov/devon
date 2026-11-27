@@ -7,7 +7,7 @@ import { useDepartment, useSession } from '../../../lib/session.js'
 import { useChecklistCommentChange, useChecklistComments } from '../checklist-comments.js'
 import { useMembers } from '../hooks.js'
 import { fullName } from '../lib/format.js'
-import { resolveQuickAddAssignee } from '../lib/quick-add.js'
+import { resolveMentionMember } from '../lib/resolve-member.js'
 import type { CardComment } from '../api.js'
 
 export function ChecklistDiscussion({
@@ -41,7 +41,7 @@ export function ChecklistDiscussion({
     return [
       ...new Set(
         [...value.matchAll(/@([\p{L}]+)/gu)]
-          .map((match) => resolveQuickAddAssignee(match[1]!, members)?.userId)
+          .map((match) => resolveMentionMember(match[1]!, members)?.userId)
           .filter((id): id is string => Boolean(id)),
       ),
     ]

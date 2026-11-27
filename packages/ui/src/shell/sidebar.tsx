@@ -1,10 +1,7 @@
 import * as React from 'react'
-import { motion } from 'motion/react'
 import { ChevronDown } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { cn } from '../lib/cn.js'
-import { useReducedMotion } from '../lib/use-reduced-motion.js'
-import { springSettle, tweenPage } from '../motion/tokens.js'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../primitives/tooltip.js'
 import { resolveNavEntries, type NavContext, type NavEntry } from './nav-registry.js'
 
@@ -53,7 +50,7 @@ export interface SidebarProps {
 }
 
 /** design.md §3 Sidebar / spec.md §3.2-§3.6, rebuilt to UI-OVERHAUL.md §2 row 1 (Linear / Huly /
- * Notion / Vercel): grouped entries with counts, a morphing active pill, collapse to an icon rail
+ * Notion / Vercel): grouped entries with counts, a stable active pill, collapse to an icon rail
  * with tooltips, a department switcher on top and a user block at the foot.
  *
  * Fixed 264px (rail 64px when the user collapses it -- spec.md §3.3: this is a *user toggle*, never
@@ -315,7 +312,6 @@ function SidebarItem({
   Link: React.ElementType
 }) {
   const t = useT()
-  const reduced = useReducedMotion()
   const Icon = entry.icon
   const label = t(entry.labelKey)
 
@@ -339,20 +335,8 @@ function SidebarItem({
         collapsed && 'gap-0',
       )}
     >
-      {/* UI-OVERHAUL.md §3 "Sidebar active item": the fill is one object that *moves* between rows
-          via a shared layout id, so the eye tracks a single pill rather than two blinks. Under
-          reduced motion the same pill is drawn without the shared layout -- it simply appears. */}
       {active ? (
-        reduced ? (
-          <span aria-hidden="true" className="absolute inset-0 rounded-sm bg-sidebar-accent" />
-        ) : (
-          <motion.span
-            layoutId="devon-sidebar-active"
-            aria-hidden="true"
-            className="absolute inset-0 rounded-sm bg-sidebar-accent"
-            transition={springSettle}
-          />
-        )
+        <span aria-hidden="true" className="absolute inset-0 rounded-sm bg-sidebar-accent" />
       ) : null}
       <Icon className="relative size-4.5 shrink-0" aria-hidden="true" />
       {/* wraps rather than truncates -- design.md §3.5 anti-truncation contract */}
@@ -382,12 +366,7 @@ function SidebarItem({
   )
 
   return (
-    <motion.li
-      className="min-w-0"
-      layout={reduced ? false : 'position'}
-      transition={tweenPage}
-      initial={false}
-    >
+    <li className="min-w-0">
       {collapsed ? (
         // Its own provider rather than relying on the app's: the collapsed rail is the one place a
         // label is *only* available as a tooltip, so it must work wherever the sidebar is mounted
@@ -404,6 +383,6 @@ function SidebarItem({
       ) : (
         row
       )}
-    </motion.li>
+    </li>
   )
 }

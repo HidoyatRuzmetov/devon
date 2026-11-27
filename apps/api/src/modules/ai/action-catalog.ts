@@ -51,7 +51,6 @@ import {
   createCardBodySchema,
   moveCardBodySchema,
   createLabelBodySchema,
-  createSavedViewBodySchema,
   createChecklistItemBodySchema,
   createCommentBodySchema,
   patchCardBodySchema,
@@ -291,13 +290,6 @@ export const ACTIONS: Record<string, Action> = {
     ...endpoint('POST', '/labels', body(createLabelBodySchema), 'HEAD ONLY: create a task label.'),
     headOnly: true,
   },
-  'view.create': endpoint(
-    'POST',
-    '/views',
-    body(createSavedViewBodySchema),
-    'Save a card view with filters.',
-  ),
-  'view.delete': endpoint('DELETE', '/views/:id', target, 'Delete a saved card view.'),
   'project.fromCard': endpoint(
     'POST',
     '/projects/from-card',

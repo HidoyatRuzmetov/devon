@@ -16,6 +16,7 @@ FROM ${NODE_IMAGE} AS build
 RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
 WORKDIR /repo
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
+COPY patches patches
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY apps/miniapp/package.json apps/miniapp/package.json

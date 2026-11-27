@@ -3,9 +3,6 @@
     "eyebrow": "ISH",
     "title": "Vazifalar",
     "description": "Xodimlar doskasi: har bir xodimga bitta ustun.",
-    "filterChrome": {
-      "toggle": "Filtrlar va tezkor qoʻshish"
-    },
     "view": {
       "board": "Doska",
       "table": "Jadval",
@@ -37,37 +34,14 @@
       "collapseAllColumns": "Barcha ustunlarni yigʻish",
       "moveFailed": "Koʻchirib boʻlmadi. Karta oldingi joyiga qaytdi."
     },
-    "quickAdd": {
-      "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma»",
-      "created": "«{title}» qoʻshildi",
-      "error": "Kartani qoʻshib boʻlmadi",
-      "unknownAssignee": "«{name}» degan xodim topilmadi",
-      "aiParse": "AI bilan aniqlash",
-      "aiPreviewTitle": "AI aniqlagan karta",
-      "aiError": "Matn tushunarsiz boʻldi",
-      "aiMeta": "{tokens} token · {ms} ms",
-      "dialogHint": "Nomini yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
-      "fromTemplate": "Andozadan yaratish",
-      "duplicateTitle": "Bunga oʻxshash ish allaqachon bor"
-    },
     "filter": {
-      "placeholder": "assignee:@me due:<=friday label:urgent",
-      "apply": "Qoʻllash",
       "clear": "Tozalash",
-      "saveAs": "Koʻrinish sifatida saqlash",
-      "viewName": "Koʻrinish nomi",
-      "saved": "Saqlandi",
-      "saveError": "Koʻrinishni saqlab boʻlmadi",
-      "savedViews": "Saqlangan koʻrinishlar",
-      "noSavedViews": "Saqlangan koʻrinish yoʻq",
       "me": "Men",
       "addFilter": "Filtr",
       "fieldStep": "Maydonni qidirish",
       "valueStep": "Qiymatni qidirish",
       "noOptions": "Hech narsa topilmadi",
       "removeChip": "«{chip}» filtrini olib tashlash",
-      "showAdvanced": "Kengaytirilgan",
-      "hideAdvanced": "Yashirish",
       "op": {
         "lte": "≤",
         "gte": "≥",
@@ -532,7 +506,10 @@
       "capUsed": "chegaraning {pct}%i",
       "overCap": "Chegaradan {over} taga oshib ketdi",
       "forbiddenAction": "Doskani ochish"
-    }
+    },
+    "created": "«{title}» qoʻshildi",
+    "createError": "Kartani qoʻshib boʻlmadi",
+    "aiError": "Matn tushunarsiz boʻldi"
   },
   "common": {
     "cancel": "Bekor qilish",

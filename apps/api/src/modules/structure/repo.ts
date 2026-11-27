@@ -133,7 +133,7 @@ export async function myDepartments(actor: ActorCtx): Promise<MyDepartment[]> {
       select d.id as department_id, d.name, m.role
       from app.memberships m
       join app.departments d on d.id = m.department_id
-      where m.user_id = ${actor.userId} and m.status = 'active' and d.deleted_at is null
+      where m.user_id = ${actor.userId} and m.status = 'active' and m.deleted_at is null and d.deleted_at is null
       order by d.name
     `)
     return rows.map((r) => ({
@@ -542,10 +542,15 @@ function toUnitRoleDto(r: UnitRoleRow) {
 export async function listUnitRoles(actor: ActorCtx, departmentId: string) {
   return withDept(actor, departmentId, async (tx) => {
     const rows = await tx.raw<UnitRoleRow>(sql`
-      select id, unit_id, user_id, role, assigned_by, assigned_at
-      from app.unit_roles
-      where department_id = ${departmentId} and deleted_at is null
-      order by assigned_at
+      select ur.id, ur.unit_id, ur.user_id, ur.role, ur.assigned_by, ur.assigned_at
+      from app.unit_roles ur
+      join app.memberships m on m.department_id=ur.department_id and m.user_id=ur.user_id
+        and m.status='active' and m.deleted_at is null
+      join app.users u on u.id=ur.user_id and u.status<>'deleted' and u.deleted_at is null
+      join app.units unit on unit.id=ur.unit_id and unit.department_id=ur.department_id
+        and unit.deleted_at is null
+      where ur.department_id = ${departmentId} and ur.deleted_at is null
+      order by ur.assigned_at
     `)
     return rows.map(toUnitRoleDto)
   })
@@ -575,8 +580,10 @@ export async function assignUnitRole(
     await loadUnit(tx, departmentId, body.unitId)
 
     const memberRows = await tx.raw<{ user_id: string }>(sql`
-      select user_id from app.memberships
-      where department_id = ${departmentId} and user_id = ${body.userId} and status = 'active'
+      select m.user_id from app.memberships m
+      join app.users u on u.id=m.user_id and u.status<>'deleted' and u.deleted_at is null
+      where m.department_id = ${departmentId} and m.user_id = ${body.userId}
+        and m.status = 'active' and m.deleted_at is null
     `)
     if (!memberRows[0])
       throw new StructureError('not_found', 'That person is not a member of this department')
@@ -683,7 +690,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
           else null end as personnel_updated_at,
         m.role as membership_role, u.status as account_status, ur.unit_id, ur.role as unit_role
       from app.memberships m
-      join app.users u on u.id = m.user_id and u.deleted_at is null
+      join app.users u on u.id = m.user_id and u.deleted_at is null and u.status<>'deleted'
       left join app.directory_birth_dates() bd on bd.owner_user_id = u.id
       left join app.unit_roles ur
         on ur.department_id = m.department_id and ur.user_id = m.user_id and ur.deleted_at is null

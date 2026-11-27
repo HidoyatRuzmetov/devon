@@ -126,7 +126,7 @@ async function insideViewport(scroller: Locator, element: Locator) {
   )
 }
 
-test('normal desktop board reaches distant people and keeps quick add visible while native card moves retain order', async ({
+test('normal desktop board reaches distant people, creates cards through the composer and preserves native card order', async ({
   browser,
 }, info) => {
   const f = await fixture(browser)
@@ -137,7 +137,10 @@ test('normal desktop board reaches distant people and keeps quick add visible wh
     await page.goto('/work')
     const viewport = page.getByRole('region', { name: 'People board', exact: true })
     const column = (id: string) => page.locator(`[data-board-column="${id}"]`)
-    const ownAdd = column(f.memberId).getByRole('textbox', { name: '+ Add card', exact: true })
+    const ownHeading = column(f.memberId).getByRole('button', {
+      name: 'View Zarina Navigator’s tasks',
+      exact: true,
+    })
     const headHeading = column(f.headId).getByRole('button', {
       name: 'View Head Navigator’s tasks',
       exact: true,
@@ -149,7 +152,7 @@ test('normal desktop board reaches distant people and keeps quick add visible wh
     )
     await expect(page.getByRole('button', { name: 'Previous columns', exact: true })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Next columns', exact: true })).toHaveCount(0)
-    // Members can add only to their own column. Other people's sticky headers remain navigable.
+    // Column Quick Add is removed; sticky person headers remain navigable.
     await expect(
       column(f.headId).getByRole('textbox', { name: '+ Add card', exact: true }),
     ).toHaveCount(0)
@@ -162,27 +165,39 @@ test('normal desktop board reaches distant people and keeps quick add visible wh
     await expect.poll(() => viewport.evaluate((element) => element.scrollTop)).toBeGreaterThan(200)
     await expect.poll(() => insideViewport(viewport, headHeading)).toBe(true)
     await settleCapture(page, false)
-    await page.screenshot({ path: info.outputPath('sticky-quick-add.png') })
+    await page.screenshot({ path: info.outputPath('sticky-person-header.png') })
     await page.getByRole('button', { name: 'My column', exact: true }).click()
-    await expect.poll(() => insideViewport(viewport, ownAdd)).toBe(true)
+    await expect.poll(() => insideViewport(viewport, ownHeading)).toBe(true)
     await expect.poll(() => viewport.evaluate((element) => element.scrollTop)).toBe(0)
     await viewport.hover({ position: { x: 120, y: 160 } })
     await page.mouse.wheel(0, 700)
     await expect.poll(() => viewport.evaluate((element) => element.scrollTop)).toBeGreaterThan(200)
-    await expect.poll(() => insideViewport(viewport, ownAdd)).toBe(true)
+    await expect.poll(() => insideViewport(viewport, ownHeading)).toBe(true)
     await page.getByRole('button', { name: 'My column', exact: true }).click()
     await expect.poll(() => viewport.evaluate((element) => element.scrollTop)).toBe(0)
-    await ownAdd.fill('Created directly in my distant column')
+    await page.goto('/work?new=1')
+    const composer = page.getByRole('dialog', { name: 'New card', exact: true })
+    await composer
+      .getByRole('textbox', { name: 'Title', exact: true })
+      .fill('Created through the card composer')
+    const assignee = composer.getByRole('combobox', { name: 'Assignee', exact: true })
+    await expect(assignee).toHaveValue(f.memberId)
+    await expect(assignee.locator('option')).toHaveCount(1)
     const created = page.waitForResponse(
       (response) =>
         response.request().method() === 'POST' &&
         new URL(response.url()).pathname === '/api/v1/cards',
     )
-    await ownAdd.press('Enter')
+    await composer.getByRole('button', { name: 'New card', exact: true }).click()
     const response = await created
     expect(response.status()).toBe(201)
     const card = (await response.json()) as Card
     expect(card.assigneeUserId).toBe(f.memberId)
+    await expect(composer).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await page.getByRole('button', { name: 'My column', exact: true }).click()
     expect(
       (await f.board()).columns
         .find((item) => item.member.userId === f.memberId)
@@ -217,16 +232,16 @@ test('normal desktop board reaches distant people and keeps quick add visible wh
     await headPage.goto('/work')
     await expect(headPage.locator('[data-board-column]')).toHaveCount(10)
     const headViewport = headPage.getByRole('region', { name: 'People board', exact: true })
-    const headAdd = headPage
+    const stickyHead = headPage
       .locator(`[data-board-column="${f.headId}"]`)
-      .getByRole('textbox', { name: '+ Add card', exact: true })
-    await expect.poll(() => insideViewport(headViewport, headAdd)).toBe(true)
+      .getByRole('button', { name: 'View Head Navigator’s tasks', exact: true })
+    await expect.poll(() => insideViewport(headViewport, stickyHead)).toBe(true)
     await headViewport.hover({ position: { x: 120, y: 160 } })
     await headPage.mouse.wheel(0, 700)
     await expect
       .poll(() => headViewport.evaluate((element) => element.scrollTop))
       .toBeGreaterThan(200)
-    await expect.poll(() => insideViewport(headViewport, headAdd)).toBe(true)
+    await expect.poll(() => insideViewport(headViewport, stickyHead)).toBe(true)
     await headPage.getByRole('button', { name: 'My column', exact: true }).click()
     await expect.poll(() => headViewport.evaluate((element) => element.scrollTop)).toBe(0)
     const moved = before.columns.find((item) => item.member.userId === f.headId)!.cards[0]!
@@ -321,8 +336,11 @@ test('normal phone touch navigation pages between people and preserves native ke
     await page.getByPlaceholder('Search people…', { exact: true }).fill('Zarina')
     await page.getByRole('option', { name: /^Zarina Navigator\b/ }).tap()
     await expectPerson(f.memberId)
-    const ownAdd = column(f.memberId).getByRole('textbox', { name: '+ Add card', exact: true })
-    await expect.poll(() => insideViewport(viewport, ownAdd)).toBe(true)
+    const ownCard = column(f.memberId).getByRole('button', {
+      name: 'Colleague delivery 8',
+      exact: true,
+    })
+    await expect.poll(() => insideViewport(viewport, ownCard)).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     )

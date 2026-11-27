@@ -18,7 +18,7 @@
     reverse_proxy centrifugo:8000
   }
   handle {
-    header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'self'; child-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+    header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; frame-src 'self'; child-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
     header X-Frame-Options "DENY"
     reverse_proxy web:8080
   }

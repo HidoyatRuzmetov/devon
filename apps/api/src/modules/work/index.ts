@@ -33,14 +33,12 @@ import {
   createChecklistItemBodySchema,
   createCommentBodySchema,
   createLabelBodySchema,
-  createSavedViewBodySchema,
   idParamsSchema,
   labelListSchema,
   moveCardBodySchema,
   patchCardBodySchema,
   patchChecklistItemBodySchema,
   patchCommentBodySchema,
-  savedViewListSchema,
   unfurlBodySchema,
   unfurlResultSchema,
   type CardDTO,
@@ -900,78 +898,6 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.colour ?? '#6366f1',
       )
       return reply.code(201).send(label)
-    },
-  )
-
-  app.get(
-    '/views',
-    {
-      config: {
-        permission: {
-          action: 'read',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: { response: { 200: savedViewListSchema } },
-    },
-    async (req, reply) => {
-      const departmentId = requireDepartmentId(req)
-      if (!departmentId) return reply.send([])
-      return reply.send(
-        await repo.listSavedViews(contextFromRequest(req), departmentId, req.actor!.userId),
-      )
-    },
-  )
-
-  app.post(
-    '/views',
-    {
-      config: {
-        permission: {
-          action: 'create',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: {
-        body: createSavedViewBodySchema,
-        response: { 201: savedViewListSchema.element },
-      },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      const view = await repo.createSavedView(
-        contextFromRequest(req),
-        departmentId,
-        req.actor!.userId,
-        req.body,
-      )
-      return reply.code(201).send(view)
-    },
-  )
-
-  app.delete(
-    '/views/:id',
-    {
-      config: {
-        permission: {
-          action: 'delete',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
-        },
-      },
-      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
-    },
-    async (req, reply) => {
-      if (!checkCsrf(req, reply)) return
-      const departmentId = requireDepartmentId(req)!
-      const ok = await repo.deleteSavedView(
-        contextFromRequest(req),
-        departmentId,
-        req.actor!.userId,
-        req.params.id,
-      )
-      if (!ok) return sendProblem(reply, 'not_found')
-      return reply.code(204).send()
     },
   )
 

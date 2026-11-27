@@ -186,7 +186,6 @@ export default function PersonScreen() {
 
   return (
     <WorkShell
-      showQuickAdd={false}
       hideMeControl
       fillViewport
       mobileToolbar={<div className="min-w-0 flex-1">{personPicker}</div>}

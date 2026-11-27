@@ -1,3 +1,4 @@
+import { positionLabel } from '../../lib/profile-labels.js'
 import { ViewSkeleton } from '../../lib/view-skeleton.js'
 import { SettingsSection } from '../accounts/settings-section.js'
 import { PublicDashboardLinks } from './public-dashboard-links.js'
@@ -963,7 +964,9 @@ function MemberRow({
       <div className="min-w-0 flex-1">
         <p className="truncate text-body text-foreground">
           {name}{' '}
-          {member.title ? <span className="text-muted-foreground">· {member.title}</span> : null}
+          {member.title ? (
+            <span className="text-muted-foreground">· {positionLabel(member.title, t)}</span>
+          ) : null}
         </p>
         <span className="flex flex-wrap items-center gap-2 text-small text-muted-foreground">
           <Badge
@@ -1034,6 +1037,8 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     void queryClient.invalidateQueries({
       queryKey: ['departments', 'detail', id],
     })
+    void queryClient.invalidateQueries({ queryKey: ['structure'] })
+    void queryClient.invalidateQueries({ queryKey: ['people'] })
     void queryClient.invalidateQueries({ queryKey: ['me'] })
   }
   const remove = useMutation({

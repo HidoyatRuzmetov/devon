@@ -46,7 +46,7 @@ function database(statement: string) {
 }
 const introduction = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Our department</title><style>
 *{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#172d3e;font:16px/1.6 system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:5vw}small{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:#39758a}h1{font-size:clamp(36px,5vw,64px);line-height:1.05;letter-spacing:-.04em;max-width:600px;margin:24px 0}p{max-width:620px;color:#576a79}.line{height:1px;background:#cfdae2;margin:42px 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}article{background:white;border:1px solid #dbe3e9;border-radius:14px;padding:24px}article b{color:#39758a;font-size:13px}article h2{font-size:20px;line-height:1.3}article p{font-size:14px}button{margin-top:28px;border:0;border-radius:8px;padding:14px 20px;background:#173d50;color:white;font:inherit;cursor:pointer}#detail{padding:20px;background:#e5edf2;border-radius:10px;margin-top:18px}@media(max-width:650px){.grid{grid-template-columns:1fr}main{padding:28px}h1{margin-top:18px}}
-</style></head><body><main><small>Example onboarding HTML · Digital services department</small><h1>Good work starts with a shared understanding.</h1><p>Welcome to the team. We make public services simpler, support one another, and keep our commitments visible.</p><div class="line"></div><div class="grid"><article><b>01 / OUR PURPOSE</b><h2>Make services work for people.</h2><p>Start with a clear outcome and understand who it helps.</p></article><article><b>02 / OUR HABITS</b><h2>Share progress early.</h2><p>Keep tasks current, raise blockers, and leave a useful handover.</p></article><article><b>03 / YOUR FIRST WEEK</b><h2>Meet your team.</h2><p>Learn the department, complete your profile, and explore Devon.</p></article></div><button id="more" onclick="document.getElementById('detail').hidden=false">A note from the team</button><div id="detail" hidden>Ask when something is unclear. Good questions help everyone work better.</div></main><script>try{parent.document.body.dataset.onboardingEscaped='yes';document.body.dataset.isolated='no'}catch{document.body.dataset.isolated='yes'}</script></body></html>`
+</style></head><body><main><small>Example onboarding HTML · Digital services department</small><h1>Good work starts with a shared understanding.</h1><p>Welcome to the team. We make public services simpler, support one another, and keep our commitments visible.</p><div class="line"></div><div class="grid"><article><b>01 / OUR PURPOSE</b><h2>Make services work for people.</h2><p>Start with a clear outcome and understand who it helps.</p></article><article><b>02 / OUR HABITS</b><h2>Share progress early.</h2><p>Keep tasks current, raise blockers, and leave a useful handover.</p></article><article><b>03 / YOUR FIRST WEEK</b><h2>Meet your team.</h2><p>Learn the department, complete your profile, and explore Devon.</p></article></div><button id="more" onclick="document.getElementById('detail').hidden=false">A note from the team</button><p><a href="https://example.invalid/onboarding-source" target="_blank" rel="noopener noreferrer">Open the official source</a></p><div id="detail" hidden>Ask when something is unclear. Good questions help everyone work better.</div></main><script>try{parent.document.body.dataset.onboardingEscaped='yes';document.body.dataset.isolated='no'}catch{document.body.dataset.isolated='yes'}</script></body></html>`
 
 async function capture(page: Page, name: string) {
   await page.evaluate(() => document.fonts.ready)
@@ -156,6 +156,16 @@ test('Docker: approval, required setup, seven chapters, safe practice and respon
     await expect(frame.locator('body')).toHaveAttribute('data-isolated', 'yes')
     await frame.getByRole('button', { name: 'A note from the team' }).click()
     await expect(frame.locator('#detail')).toBeVisible()
+    await head.route('https://example.invalid/onboarding-source', (route) =>
+      route.fulfill({ contentType: 'text/html', body: '<h1>Official source example</h1>' }),
+    )
+    const popupPromise = headPage.waitForEvent('popup')
+    await frame.getByRole('link', { name: 'Open the official source' }).click()
+    const popup = await popupPromise
+    await expect(popup.getByRole('heading', { name: 'Official source example' })).toBeVisible()
+    expect(await popup.evaluate(() => window.opener === null)).toBe(true)
+    await popup.close()
+    await expect(headPage).toHaveURL(/\/help\?tab=materials/)
     expect(
       await headPage.evaluate(() => document.body.dataset['onboardingEscaped']),
     ).toBeUndefined()
@@ -404,6 +414,7 @@ test('Docker: approval, required setup, seven chapters, safe practice and respon
       '22a-personal-calendar',
       '22b-personal-cards',
       '22c-personal-focus',
+      '22d-tour-pages',
       '23-tour-events',
       '24-tour-people',
       '24b-colleague-profile',

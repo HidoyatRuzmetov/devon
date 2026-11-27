@@ -3,9 +3,6 @@
     "eyebrow": "ИШ",
     "title": "Вазифалар",
     "description": "Ходимлар доскаси: ҳар бир ходимга битта устун.",
-    "filterChrome": {
-      "toggle": "Филтрлар ва тезкор қўшиш"
-    },
     "view": {
       "board": "Доска",
       "table": "Жадвал",
@@ -37,37 +34,14 @@
       "collapseAllColumns": "Барча устунларни йиғиш",
       "moveFailed": "Кўчириб бўлмади. Карта олдинги жойига қайтди."
     },
-    "quickAdd": {
-      "placeholder": "Тез қўшиш: «Нодира: ойлик ҳисобот, жума»",
-      "created": "«{title}» қўшилди",
-      "error": "Картани қўшиб бўлмади",
-      "unknownAssignee": "«{name}» деган ходим топилмади",
-      "aiParse": "AI билан аниқлаш",
-      "aiPreviewTitle": "AI аниқлаган карта",
-      "aiError": "Матн тушунарсиз бўлди",
-      "aiMeta": "{tokens} токен · {ms} мс",
-      "dialogHint": "Номини ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади.",
-      "fromTemplate": "Андозадан яратиш",
-      "duplicateTitle": "Бунга ўхшаш иш аллақачон бор"
-    },
     "filter": {
-      "placeholder": "assignee:@me due:<=friday label:urgent",
-      "apply": "Қўллаш",
       "clear": "Тозалаш",
-      "saveAs": "Кўриниш сифатида сақлаш",
-      "viewName": "Кўриниш номи",
-      "saved": "Сақланди",
-      "saveError": "Кўринишни сақлаб бўлмади",
-      "savedViews": "Сақланган кўринишлар",
-      "noSavedViews": "Сақланган кўриниш йўқ",
       "me": "Мен",
       "addFilter": "Филтр",
       "fieldStep": "Майдонни қидириш",
       "valueStep": "Қийматни қидириш",
       "noOptions": "Ҳеч нарса топилмади",
       "removeChip": "«{chip}» филтрини олиб ташлаш",
-      "showAdvanced": "Кенгайтирилган",
-      "hideAdvanced": "Яшириш",
       "op": {
         "lte": "≤",
         "gte": "≥",
@@ -532,7 +506,10 @@
       "capUsed": "чегаранинг {pct}%и",
       "overCap": "Чегарадан {over} тага ошиб кетди",
       "forbiddenAction": "Доскани очиш"
-    }
+    },
+    "created": "«{title}» қўшилди",
+    "createError": "Картани қўшиб бўлмади",
+    "aiError": "Матн тушунарсиз бўлди"
   },
   "common": {
     "cancel": "Бекор қилиш",
