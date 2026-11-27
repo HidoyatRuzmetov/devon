@@ -23,6 +23,7 @@ async function bounded(stream: ReadableStream<Uint8Array>, limit: number) {
   let length = 0
   try {
     for (;;) {
+      // nosemgrep: query-in-loop -- Consume one stream chunk at a time and enforce the expanded-byte limit before reading again.
       const next = await reader.read()
       if (next.done) break
       length += next.value.length
@@ -227,6 +228,7 @@ self.onmessage = async (event: MessageEvent<Request>) => {
         if (/vbaProject|ActiveX|embeddings\//i.test(entry.path)) throw new PreviewError('archive')
         if (/\.(?:xml|rels)$/i.test(entry.path) && entry.size > previewLimits.text)
           throw new PreviewError('size')
+        // nosemgrep: query-in-loop -- Extraction shares one archive reader; serial decompression keeps its working memory bounded.
         parts.push({ path: entry.path, data: await extract(entry.path) })
       }
       result = parts

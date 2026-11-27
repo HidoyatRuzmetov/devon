@@ -100,6 +100,7 @@ async function officePackage(parts: DocumentPart[]) {
         }
         data = new TextEncoder().encode(new XMLSerializer().serializeToString(doc))
       }
+      // nosemgrep: query-in-loop -- Each part advances the same ZIP output stream; sequential writes bound the compression buffers.
       await writer.add(part.path, new Uint8ArrayReader(data))
     }
     return await writer.close()

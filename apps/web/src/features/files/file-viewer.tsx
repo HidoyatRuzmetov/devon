@@ -30,6 +30,7 @@ export async function fetchPreview(file: ViewableAttachment, signal: AbortSignal
   let total = 0
   try {
     for (;;) {
+      // nosemgrep: query-in-loop -- Check each downloaded chunk against the size limit before requesting the next stream chunk.
       const next = await reader.read()
       if (next.done) break
       total += next.value.length
