@@ -319,6 +319,39 @@ test('the current production assets are checked while stale source maps cannot s
   }
 })
 
+test('production inspection permits only synthetic re-export facades and still checks their target', () => {
+  const scratch = mkdtempSync(join(tmpdir(), 'devon-reexport-map-'))
+  const assets = join(scratch, 'assets')
+  const maps = join(scratch, 'maps')
+  mkdirSync(assets)
+  mkdirSync(maps)
+  try {
+    writeFileSync(join(assets, 'target.js'), 'fixture only')
+    writeFileSync(
+      join(maps, 'target.js.map'),
+      JSON.stringify({ sources: ['react-dom/cjs/react-dom-client.production.js'] }),
+    )
+    const facade =
+      'import{F as e,I as t}from"./target.js";export{e as ZipReader,t as getEntryDataDescriptorLength};'
+    writeFileSync(join(assets, 'zip-reader.js'), facade)
+    assert.equal(inspectProductionRuntime(assets, maps).length, 1)
+    writeFileSync(join(assets, 'zip-reader.js'), facade + 'console.log("not a facade");')
+    assert.throws(() => inspectProductionRuntime(assets, maps), /no source map/)
+    writeFileSync(join(assets, 'zip-reader.js'), facade.replace('./target.js', './missing.js'))
+    assert.throws(() => inspectProductionRuntime(assets, maps), /no source map/)
+    writeFileSync(join(assets, 'zip-reader.js'), facade)
+    writeFileSync(
+      join(maps, 'target.js.map'),
+      JSON.stringify({ sources: ['react-dom/cjs/react-dom-client.development.js'] }),
+    )
+    assert.throws(() => inspectProductionRuntime(assets, maps), /genuine production/)
+    rmSync(join(maps, 'target.js.map'))
+    assert.throws(() => inspectProductionRuntime(assets, maps), /no source map/)
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
+  }
+})
+
 test('built route budgets refuse slow, shifting, low-scoring or incomplete measurements', () => {
   const report = (lcp, cls, score) => ({
     audits: {

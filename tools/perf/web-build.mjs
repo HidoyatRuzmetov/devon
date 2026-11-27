@@ -16,7 +16,7 @@ export function productionBuildInputs(root) {
   try {
     const manifest = source.manifest.filter(
       ({ path }) =>
-        /^(apps\/web\/(src|scripts|public)\/|packages\/(ui|i18n|contracts)\/(src|messages|public)\/|packages\/config\/)/.test(
+        /^(apps\/web\/(src|scripts|public)\/|packages\/(ui|i18n|contracts)\/(src|messages|public)\/|packages\/config\/|patches\/)/.test(
           path,
         ) ||
         /^(?:package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.base\.json|apps\/web\/index\.html)$/.test(
@@ -37,6 +37,13 @@ export function inspectProductionRuntime(assets, maps) {
       const map = resolve(maps, file + '.map')
       if (!existsSync(map)) {
         if (/^rolldown-runtime-[A-Za-z0-9_-]+\.js$/.test(file)) return []
+        // Rolldown can emit a synthetic import/export-only facade for a lazy dependency.
+        // It has no source statements to map. Only accept this exact syntax and a sibling
+        // target: that target is still independently inspected by this same asset scan.
+        const facade = readFileSync(resolve(assets, file), 'utf8').match(
+          /^import\{[\w$,\s]+\}from["']\.\/([A-Za-z0-9_.-]+\.js)["'];export\{[\w$,\s]+\};\s*$/,
+        )
+        if (facade && facade[1] !== file && existsSync(resolve(assets, facade[1]))) return []
         throw new Error('Current production asset has no source map: ' + file)
       }
       return JSON.parse(readFileSync(map, 'utf8')).sources.map((source) => ({
